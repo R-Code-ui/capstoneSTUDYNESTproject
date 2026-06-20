@@ -8,7 +8,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
+        username: '',  // Changed from 'email' to 'username'
         password: '',
         remember: false,
     });
@@ -33,20 +33,21 @@ export default function Login({ status, canResetPassword }) {
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="username" value="Username / LRN / Teacher ID / Principal ID" />
 
                     <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
+                        id="username"
+                        type="text"
+                        name="username"
+                        value={data.username}
                         className="mt-1 block w-full"
                         autoComplete="username"
                         isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={(e) => setData('username', e.target.value)}
+                        placeholder="Enter your LRN, Teacher ID, or Principal ID"
                     />
 
-                    <InputError message={errors.email} className="mt-2" />
+                    <InputError message={errors.username} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
@@ -93,6 +94,13 @@ export default function Login({ status, canResetPassword }) {
                     <PrimaryButton className="ms-4" disabled={processing}>
                         Log in
                     </PrimaryButton>
+                </div>
+
+                {/* Optional: Add a helpful hint for students */}
+                <div className="mt-6 text-center text-sm text-gray-500">
+                    <p>Students: Use your LRN</p>
+                    <p>Teachers: Use your Teacher ID</p>
+                    <p>Principal: Use your Principal ID</p>
                 </div>
             </form>
         </GuestLayout>
