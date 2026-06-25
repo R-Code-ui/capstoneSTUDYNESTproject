@@ -177,6 +177,21 @@ class TeacherMonitoringController extends Controller
 
         $teacher = User::role('teacher')->with('gradeAssignments')->findOrFail($id);
 
+        // ===== CALCULATE STATUS (Same logic as index method) =====
+        $lastActivity = $teacher->last_login_at;
+        $isActive = $teacher->is_active;
+
+        $status = 'Inactive';
+        if (!$isActive) {
+            $status = 'Inactive';
+        } elseif ($lastActivity && $lastActivity->diffInDays(now()) <= 7) {
+            $status = 'Active';
+        } elseif ($lastActivity && $lastActivity->diffInDays(now()) <= 14) {
+            $status = 'Moderately Active';
+        } else {
+            $status = 'Inactive';
+        }
+
         // Get all lessons, assignments, quizzes by this teacher
         $lessons = $teacher->lessons()->orderBy('created_at', 'desc')->get();
         $assignments = $teacher->assignments()->orderBy('created_at', 'desc')->get();
@@ -218,7 +233,8 @@ class TeacherMonitoringController extends Controller
                 'name' => $teacher->name,
                 'teacher_id' => $teacher->teacher_id,
                 'grades' => $gradeLevels,
-                'is_active' => $teacher->is_active,
+                'status' => $status, // ✅ ADDED: Calculated status
+                'is_active' => $isActive,
                 'last_login' => $teacher->last_login_at ? $teacher->last_login_at->format('Y-m-d H:i') : 'Never',
                 'total_lessons' => $lessons->count(),
                 'total_assignments' => $assignments->count(),

@@ -12,13 +12,21 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { formatDate } from '@/Utils/dateHelpers'; // ✅ Import date helper
 
-export default function PrincipalAnnouncements({ announcements, categories, statuses, audience_options, filters }) {
+export default function PrincipalAnnouncements({
+    announcements = [],
+    categories = [],
+    statuses = [],
+    audience_options = [],
+    filters = {},
+}) {
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters?.category || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -66,20 +74,53 @@ export default function PrincipalAnnouncements({ announcements, categories, stat
         }
     };
 
+    // ✅ SAFE: Use fallback empty arrays if props are undefined
     const categoryOptions = [
         { value: '', label: 'All Categories' },
-        ...categories.map((cat) => ({ value: cat, label: cat })),
+        ...(categories || []).map((cat) => ({ value: cat, label: cat })),
     ];
 
     const statusOptions = [
         { value: '', label: 'All Status' },
-        ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
+        ...(statuses || []).map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
-    const audienceOptions = audience_options.map((aud) => ({
+    const audienceOptions = (audience_options || []).map((aud) => ({
         value: aud,
         label: aud.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     }));
+
+    // ===== SVG ICONS =====
+    const ViewIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+    );
+
+    const EditIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+    );
+
+    const PublishIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg>
+    );
+
+    const ArchiveIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+    );
+
+    const DeleteIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+    );
 
     const columns = [
         { key: 'title', label: 'Title' },
@@ -90,11 +131,42 @@ export default function PrincipalAnnouncements({ announcements, categories, stat
     ];
 
     const actions = (row) => [
-        { label: 'View', icon: '👁️', color: 'primary', onClick: () => { setSelectedAnnouncement(row); } },
-        { label: 'Edit', icon: '✏️', color: 'primary', onClick: () => { setSelectedAnnouncement(row); setShowEditModal(true); } },
-        ...(row.status === 'draft' ? [{ label: 'Publish', icon: '📤', color: 'success', onClick: () => handlePublish(row) }] : []),
-        ...(row.status !== 'archived' ? [{ label: 'Archive', icon: '📦', color: 'warning', onClick: () => handleArchive(row) }] : []),
-        { label: 'Delete', icon: '🗑️', color: 'danger', onClick: () => handleDelete(row) },
+        {
+            label: 'View',
+            icon: <ViewIcon />,
+            color: 'primary',
+            onClick: () => {
+                setSelectedAnnouncement(row);
+                setShowViewModal(true);
+            }
+        },
+        {
+            label: 'Edit',
+            icon: <EditIcon />,
+            color: 'primary',
+            onClick: () => {
+                setSelectedAnnouncement(row);
+                setShowEditModal(true);
+            }
+        },
+        ...(row.status === 'draft' ? [{
+            label: 'Publish',
+            icon: <PublishIcon />,
+            color: 'success',
+            onClick: () => handlePublish(row)
+        }] : []),
+        ...(row.status !== 'archived' ? [{
+            label: 'Archive',
+            icon: <ArchiveIcon />,
+            color: 'warning',
+            onClick: () => handleArchive(row)
+        }] : []),
+        {
+            label: 'Delete',
+            icon: <DeleteIcon />,
+            color: 'danger',
+            onClick: () => handleDelete(row)
+        },
     ];
 
     const priorityOptions = ['normal', 'important', 'urgent'];
@@ -173,10 +245,22 @@ export default function PrincipalAnnouncements({ announcements, categories, stat
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
 
+                        const handleSuccess = () => {
+                            setShowCreateModal(false);
+                            setShowEditModal(false);
+                            setSelectedAnnouncement(null);
+                        };
+
                         if (showCreateModal) {
-                            router.post(route('principal.announcements.store'), data, { preserveState: true });
+                            router.post(route('principal.announcements.store'), data, {
+                                preserveState: true,
+                                onSuccess: handleSuccess,
+                            });
                         } else {
-                            router.put(route('principal.announcements.update', selectedAnnouncement?.id), data, { preserveState: true });
+                            router.put(route('principal.announcements.update', selectedAnnouncement?.id), data, {
+                                preserveState: true,
+                                onSuccess: handleSuccess,
+                            });
                         }
                     }}
                     className="space-y-4"
@@ -327,6 +411,56 @@ export default function PrincipalAnnouncements({ announcements, categories, stat
                         </PrimaryButton>
                     </div>
                 </form>
+            </Modal>
+
+            {/* ===== VIEW ANNOUNCEMENT MODAL ===== */}
+            <Modal
+                show={showViewModal}
+                onClose={() => { setShowViewModal(false); setSelectedAnnouncement(null); }}
+                title="Announcement Details"
+                size="lg"
+            >
+                {selectedAnnouncement && (
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    {selectedAnnouncement.title}
+                                </h3>
+                                <div className="mt-1 flex flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span>Category: {selectedAnnouncement.category}</span>
+                                    <span>•</span>
+                                    <span>Audience: {selectedAnnouncement.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                    <span>•</span>
+                                    <span>Status: <StatusBadge status={selectedAnnouncement.status} /></span>
+                                </div>
+                            </div>
+                            <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+                                <div>Posted: {selectedAnnouncement.created_at}</div>
+                                <div>Views: {selectedAnnouncement.view_count}</div>
+                                {selectedAnnouncement.expiration_date && (
+                                    // ✅ FIX: Format expiration date using the helper
+                                    <div>Expires: {formatDate(selectedAnnouncement.expiration_date)}</div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                {selectedAnnouncement.content}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                                onClick={() => { setShowViewModal(false); setSelectedAnnouncement(null); }}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </AuthenticatedLayout>
     );

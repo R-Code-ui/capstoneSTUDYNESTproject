@@ -46,12 +46,14 @@ class AnnouncementController extends Controller
                     'id' => $announcement->id,
                     'title' => $announcement->title,
                     'category' => $announcement->category,
+                    'content' => $announcement->content, // ✅ ADDED: content field
                     'audience' => $announcement->target_audience,
                     'status' => $announcement->status,
                     'priority' => $announcement->priority,
                     'is_pinned' => $announcement->is_pinned,
-                    'publish_date' => $announcement->publish_date,
-                    'expiration_date' => $announcement->expiration_date,
+                    // ✅ Keep dates formatted for inputs
+                    'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : null,
+                    'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : null,
                     'view_count' => $announcement->view_count,
                     'created_at' => $announcement->created_at->diffForHumans(),
                     'posted_by' => $announcement->user->name ?? 'Unknown',

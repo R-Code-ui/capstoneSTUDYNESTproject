@@ -16,6 +16,7 @@ export default function StatusBadge({
         passed: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Passed' },
         graded: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Graded' },
         excellent: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Excellent' },
+        moderately_active: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Moderately Active' },
 
         // Draft/Pending states
         draft: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Draft' },
@@ -109,47 +110,6 @@ export default function StatusBadge({
                 <span className={`${iconSizeClasses[size]} ${config.dot} rounded-full`} />
             )}
             {displayLabel}
-        </span>
-    );
-}
-
-// Helper: Status badge with icon variants
-export function StatusIcon({ status, size = 'md', className = '' }) {
-    const icons = {
-        active: '✅',
-        published: '📗',
-        draft: '📝',
-        archived: '📦',
-        completed: '✅',
-        pending: '⏳',
-        submitted: '📤',
-        graded: '📊',
-        failed: '❌',
-        passed: '🎉',
-        urgent: '🚨',
-        important: '⭐',
-        normal: 'ℹ️',
-        unread: '📨',
-        read: '📖',
-        replied: '💬',
-        not_started: '⏸️',
-        in_progress: '🔄',
-        needs_support: '🆘',
-        needs_monitoring: '👀',
-        excellent: '🌟',
-    };
-
-    const sizeClasses = {
-        sm: 'text-sm',
-        md: 'text-base',
-        lg: 'text-xl',
-    };
-
-    const icon = icons[status] || '📌';
-
-    return (
-        <span className={`${sizeClasses[size]} ${className}`}>
-            {icon}
         </span>
     );
 }

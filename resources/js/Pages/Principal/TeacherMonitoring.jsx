@@ -6,14 +6,11 @@ import Table, { StatusBadge } from '@/Components/Table';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import Modal from '@/Components/Modal';
 
 export default function TeacherMonitoring({ teachers, grade_levels, status_options, filters }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
-    const [selectedTeacher, setSelectedTeacher] = useState(null);
-    const [showProfileModal, setShowProfileModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     // Handle search
@@ -44,10 +41,9 @@ export default function TeacherMonitoring({ teachers, grade_levels, status_optio
         });
     };
 
-    // View teacher profile
+    // View teacher profile - Navigate to full page
     const handleViewProfile = (teacher) => {
-        setSelectedTeacher(teacher);
-        setShowProfileModal(true);
+        router.visit(route('principal.teachers.show', teacher.id));
     };
 
     const gradeOptions = [
@@ -60,6 +56,13 @@ export default function TeacherMonitoring({ teachers, grade_levels, status_optio
         ...status_options.map((status) => ({ value: status, label: status })),
     ];
 
+    // SVG Icons
+    const ViewProfileIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+    );
+
     const columns = [
         { key: 'name', label: 'Teacher' },
         { key: 'grades', label: 'Grade Handled', render: (row) => row.grades?.join(', ') || 'None' },
@@ -71,7 +74,12 @@ export default function TeacherMonitoring({ teachers, grade_levels, status_optio
     ];
 
     const actions = (row) => [
-        { label: 'View Profile', icon: '👤', color: 'primary', onClick: () => handleViewProfile(row) },
+        {
+            label: 'View Profile',
+            icon: <ViewProfileIcon />,
+            color: 'primary',
+            onClick: () => handleViewProfile(row)
+        },
     ];
 
     return (
@@ -130,95 +138,6 @@ export default function TeacherMonitoring({ teachers, grade_levels, status_optio
                     </Card>
                 </div>
             </div>
-
-            {/* ===== TEACHER PROFILE MODAL ===== */}
-            <Modal
-                show={showProfileModal}
-                onClose={() => { setShowProfileModal(false); setSelectedTeacher(null); }}
-                title={`Teacher Profile: ${selectedTeacher?.name || ''}`}
-                size="xl"
-            >
-                {selectedTeacher && (
-                    <div className="space-y-6">
-                        {/* Basic Info */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Teacher ID</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedTeacher.teacher_id}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Status</div>
-                                <StatusBadge status={selectedTeacher.is_active ? 'active' : 'inactive'} />
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Assigned Grades</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedTeacher.grades?.join(', ') || 'None'}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Last Activity</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedTeacher.last_activity}</div>
-                            </div>
-                        </div>
-
-                        {/* Classroom Stats */}
-                        <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Classroom Statistics</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{selectedTeacher.classroom_stats?.total_students || 0}</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Total Students</div>
-                                </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{selectedTeacher.classroom_stats?.lesson_completion_rate || 0}%</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Lesson Completion</div>
-                                </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{selectedTeacher.classroom_stats?.assignment_completion_rate || 0}%</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Assignment Completion</div>
-                                </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{selectedTeacher.classroom_stats?.quiz_participation_rate || 0}%</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Quiz Participation</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent Activities */}
-                        <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Recent Activities</h4>
-                            <div className="space-y-2">
-                                {selectedTeacher.recent_activities?.length === 0 ? (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">No recent activities.</p>
-                                ) : (
-                                    selectedTeacher.recent_activities?.map((activity, index) => (
-                                        <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                                            <div>
-                                                <span className="text-gray-700 dark:text-gray-300">
-                                                    {activity.type === 'lesson' && '📚 '}
-                                                    {activity.type === 'assignment' && '📝 '}
-                                                    {activity.type === 'quiz' && '📊 '}
-                                                    {activity.title}
-                                                </span>
-                                            </div>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">{activity.date}</span>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Close Button */}
-                        <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <button
-                                onClick={() => { setShowProfileModal(false); setSelectedTeacher(null); }}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
         </AuthenticatedLayout>
     );
 }

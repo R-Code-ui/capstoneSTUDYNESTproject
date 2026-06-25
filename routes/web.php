@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Principal\DashboardController;
 use App\Http\Controllers\Principal\UserManagementController;
+use App\Http\Controllers\Principal\TeacherMonitoringController;
+use App\Http\Controllers\Principal\AnnouncementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -58,15 +60,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('/users/archive/{id}', [UserManagementController::class, 'archive'])->name('users.archive');
         Route::post('/users/restore/{id}', [UserManagementController::class, 'restore'])->name('users.restore');
 
-        // Teacher Monitoring
-        Route::get('/teachers', function () {
-            return Inertia::render('Principal/TeacherMonitoring');
-        })->name('teachers.index');
+        // ===== Teacher Monitoring =====
+        Route::get('/teachers', [TeacherMonitoringController::class, 'index'])->name('teachers.index');
+        Route::get('/teachers/{id}', [TeacherMonitoringController::class, 'show'])->name('teachers.show');
 
-        // Announcements
-        Route::get('/announcements', function () {
-            return Inertia::render('Principal/Announcements');
-        })->name('announcements.index');
+        // ===== Announcements =====
+        // ✅ All routes for announcements
+        Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+        Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+        Route::post('/announcements/{id}/archive', [AnnouncementController::class, 'archive'])->name('announcements.archive');
+        Route::post('/announcements/{id}/publish', [AnnouncementController::class, 'publish'])->name('announcements.publish');
 
         // Reports
         Route::get('/reports', function () {
