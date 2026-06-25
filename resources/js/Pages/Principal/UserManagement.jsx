@@ -12,9 +12,10 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
+import PasswordInput from '@/Components/PasswordInput';
 
 export default function UserManagement({ teachers, students, grade_levels, filters }) {
-    const [activeTab, setActiveTab] = useState('teachers');
+    const [activeTab, setActiveTab] = useState('teacher');
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -22,6 +23,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
     const [showResetModal, setShowResetModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [password, setPassword] = useState(''); // ✅ NEW state for password input
 
     const { errors } = usePage().props;
 
@@ -96,27 +98,52 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         { key: 'created_at', label: 'Date Created' },
     ];
 
+    // SVG Icons
+    const EditIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+    );
+
+    const KeyIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        </svg>
+    );
+
+    const ArchiveIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+    );
+
+    const RestoreIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+    );
+
     const teacherActions = (row) => [
-        { label: 'Edit', icon: '✏️', color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
-        { label: 'Reset Password', icon: '🔑', color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
+        { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
+        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
         ...(row.is_active
-            ? [{ label: 'Archive', icon: '📦', color: 'danger', onClick: () => handleArchive(row) }]
-            : [{ label: 'Restore', icon: '↩️', color: 'success', onClick: () => handleRestore(row) }]
+            ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
+            : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
         ),
     ];
 
     const studentActions = (row) => [
-        { label: 'Edit', icon: '✏️', color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
-        { label: 'Reset Password', icon: '🔑', color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
+        { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
+        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
         ...(row.is_active
-            ? [{ label: 'Archive', icon: '📦', color: 'danger', onClick: () => handleArchive(row) }]
-            : [{ label: 'Restore', icon: '↩️', color: 'success', onClick: () => handleRestore(row) }]
+            ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
+            : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
         ),
     ];
 
-    const currentData = activeTab === 'teachers' ? teachers : students;
-    const currentColumns = activeTab === 'teachers' ? teacherColumns : studentColumns;
-    const currentActions = activeTab === 'teachers' ? teacherActions : studentActions;
+    const currentData = activeTab === 'teacher' ? teachers : students;
+    const currentColumns = activeTab === 'teacher' ? teacherColumns : studentColumns;
+    const currentActions = activeTab === 'teacher' ? teacherActions : studentActions;
 
     return (
         <AuthenticatedLayout
@@ -131,9 +158,9 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                         <div className="border-b border-gray-200 dark:border-gray-700">
                             <nav className="-mb-px flex space-x-8">
                                 <button
-                                    onClick={() => handleTabChange('teachers')}
+                                    onClick={() => handleTabChange('teacher')}
                                     className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
-                                        activeTab === 'teachers'
+                                        activeTab === 'teacher'
                                             ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                                             : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                     }`}
@@ -141,9 +168,9 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                     Teachers ({teachers.length})
                                 </button>
                                 <button
-                                    onClick={() => handleTabChange('students')}
+                                    onClick={() => handleTabChange('student')}
                                     className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
-                                        activeTab === 'students'
+                                        activeTab === 'student'
                                             ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                                             : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                     }`}
@@ -159,7 +186,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                 <SearchBar
                                     value={search}
                                     onChange={handleSearch}
-                                    placeholder={`Search ${activeTab}...`}
+                                    placeholder={`Search ${activeTab}s...`}
                                     size="md"
                                 />
                             </div>
@@ -173,7 +200,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                     className="w-48"
                                 />
                                 <PrimaryButton onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}>
-                                    + Add {activeTab === 'teachers' ? 'Teacher' : 'Student'}
+                                    + Add {activeTab === 'teacher' ? 'Teacher' : 'Student'}
                                 </PrimaryButton>
                             </div>
                         </div>
@@ -187,7 +214,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                 columns={currentColumns}
                                 rows={currentData}
                                 actions={currentActions}
-                                emptyMessage={`No ${activeTab} found.`}
+                                emptyMessage={`No ${activeTab}s found.`}
                                 hoverable
                                 striped
                             />
@@ -200,7 +227,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
             <Modal
                 show={showCreateModal || showEditModal}
                 onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}
-                title={showCreateModal ? `Add ${activeTab === 'teachers' ? 'Teacher' : 'Student'}` : `Edit ${activeTab === 'teachers' ? 'Teacher' : 'Student'}`}
+                title={showCreateModal ? `Add ${activeTab === 'teacher' ? 'Teacher' : 'Student'}` : `Edit ${activeTab === 'teacher' ? 'Teacher' : 'Student'}`}
                 size="lg"
             >
                 <form
@@ -210,18 +237,37 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
 
-                        if (activeTab === 'teachers') {
+                        // ===== FIX: Handle grade_levels as array for teachers =====
+                        if (activeTab === 'teacher') {
+                            const gradeLevels = formData.getAll('grade_levels[]');
+                            data.grade_levels = gradeLevels.length ? gradeLevels : [];
+                        }
+
+                        // ===== FIX: Close modal on success =====
+                        const handleSuccess = () => {
+                            setShowCreateModal(false);
+                            setShowEditModal(false);
+                            setSelectedUser(null);
+                        };
+
+                        if (activeTab === 'teacher') {
                             const url = showCreateModal
                                 ? route('principal.users.store.teacher')
                                 : route('principal.users.update.teacher', selectedUser?.id);
                             const method = showCreateModal ? 'post' : 'put';
-                            router[method](url, data, { preserveState: true });
+                            router[method](url, data, {
+                                preserveState: true,
+                                onSuccess: handleSuccess,
+                            });
                         } else {
                             const url = showCreateModal
                                 ? route('principal.users.store.student')
                                 : route('principal.users.update.student', selectedUser?.id);
                             const method = showCreateModal ? 'post' : 'put';
-                            router[method](url, data, { preserveState: true });
+                            router[method](url, data, {
+                                preserveState: true,
+                                onSuccess: handleSuccess,
+                            });
                         }
                     }}
                     className="space-y-4"
@@ -240,7 +286,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                         <InputError message={errors?.name} className="mt-2" />
                     </div>
 
-                    {activeTab === 'teachers' ? (
+                    {activeTab === 'teacher' ? (
                         <>
                             <div>
                                 <InputLabel htmlFor="teacher_id" value="Teacher ID" />
@@ -328,31 +374,36 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
 
+                        // Add password from state to form data
+                        data.new_password = password;
+
                         router.put(route('principal.users.reset-password', selectedUser?.id), data, {
                             preserveState: true,
                             onSuccess: () => {
                                 setShowResetModal(false);
                                 setSelectedUser(null);
+                                setPassword(''); // Clear password after success
                             }
                         });
                     }}
                     className="space-y-4"
                 >
                     <div>
-                        <InputLabel htmlFor="new_password" value="New Password" />
-                        <TextInput
+                        <PasswordInput
                             id="new_password"
                             name="new_password"
-                            type="password"
-                            className="mt-1 block w-full"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            label="New Password"
                             required
                             minLength={8}
+                            placeholder="Enter new password"
+                            error={errors?.new_password}
                         />
-                        <InputError message={errors?.new_password} className="mt-2" />
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <SecondaryButton type="button" onClick={() => { setShowResetModal(false); setSelectedUser(null); }}>
+                        <SecondaryButton type="button" onClick={() => { setShowResetModal(false); setSelectedUser(null); setPassword(''); }}>
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit">Reset Password</PrimaryButton>

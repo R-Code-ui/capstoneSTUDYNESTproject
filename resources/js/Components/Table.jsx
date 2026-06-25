@@ -93,6 +93,23 @@ export default function Table({
     // Determine which columns to use
     const displayColumns = columns.length > 0 ? columns : headers;
 
+    // Helper to get actions for a row (handles both array and function)
+    const getRowActions = (row) => {
+        if (typeof actions === 'function') {
+            return actions(row);
+        }
+        return actions;
+    };
+
+    // Check if any actions exist (for header)
+    const hasActions = () => {
+        if (typeof actions === 'function') {
+            const sampleRow = rows.length > 0 ? rows[0] : {};
+            return actions(sampleRow).length > 0;
+        }
+        return actions.length > 0;
+    };
+
     return (
         <div className={`overflow-x-auto ${className}`}>
             <table className={`w-full text-sm text-left text-gray-500 dark:text-gray-400 ${tableClassName}`}>
@@ -122,7 +139,7 @@ export default function Table({
                                 </th>
                             );
                         })}
-                        {actions.length > 0 && (
+                        {hasActions() && (
                             <th className={`px-6 py-3 text-right ${compact ? 'px-4 py-2' : ''}`}>
                                 Actions
                             </th>
@@ -133,7 +150,7 @@ export default function Table({
                     {loading ? (
                         <tr>
                             <td
-                                colSpan={displayColumns.length + (actions.length > 0 ? 1 : 0)}
+                                colSpan={displayColumns.length + (hasActions() ? 1 : 0)}
                                 className="px-6 py-12 text-center"
                             >
                                 <div className="flex justify-center items-center">
@@ -148,74 +165,77 @@ export default function Table({
                     ) : sortedRows.length === 0 ? (
                         <tr>
                             <td
-                                colSpan={displayColumns.length + (actions.length > 0 ? 1 : 0)}
+                                colSpan={displayColumns.length + (hasActions() ? 1 : 0)}
                                 className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                             >
                                 {emptyMessage}
                             </td>
                         </tr>
                     ) : (
-                        sortedRows.map((row, rowIndex) => (
-                            <tr
-                                key={rowIndex}
-                                className={`
-                                    ${hoverable ? 'hover:bg-gray-50 dark:hover:bg-gray-700' : ''}
-                                    ${striped && rowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800' : ''}
-                                    ${bordered ? 'border-b border-gray-200 dark:border-gray-700' : ''}
-                                    ${onRowClick ? 'cursor-pointer' : ''}
-                                    ${rowClassName}
-                                `}
-                                onClick={() => onRowClick && onRowClick(row)}
-                            >
-                                {displayColumns.map((column, colIndex) => {
-                                    const display = renderCell
-                                        ? renderCell(row, column)
-                                        : getCellDisplay(row, column);
+                        sortedRows.map((row, rowIndex) => {
+                            const rowActions = getRowActions(row);
+                            return (
+                                <tr
+                                    key={rowIndex}
+                                    className={`
+                                        ${hoverable ? 'hover:bg-gray-50 dark:hover:bg-gray-700' : ''}
+                                        ${striped && rowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800' : ''}
+                                        ${bordered ? 'border-b border-gray-200 dark:border-gray-700' : ''}
+                                        ${onRowClick ? 'cursor-pointer' : ''}
+                                        ${rowClassName}
+                                    `}
+                                    onClick={() => onRowClick && onRowClick(row)}
+                                >
+                                    {displayColumns.map((column, colIndex) => {
+                                        const display = renderCell
+                                            ? renderCell(row, column)
+                                            : getCellDisplay(row, column);
 
-                                    return (
-                                        <td
-                                            key={colIndex}
-                                            className={`px-6 py-4 ${compact ? 'px-4 py-2' : ''}`}
-                                        >
-                                            {display}
+                                        return (
+                                            <td
+                                                key={colIndex}
+                                                className={`px-6 py-4 ${compact ? 'px-4 py-2' : ''}`}
+                                            >
+                                                {display}
+                                            </td>
+                                        );
+                                    })}
+                                    {rowActions.length > 0 && (
+                                        <td className={`px-6 py-4 text-right ${compact ? 'px-4 py-2' : ''}`}>
+                                            <div className="flex justify-end gap-2">
+                                                {rowActions.map((action, actionIndex) => (
+                                                    <button
+                                                        key={actionIndex}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            action.onClick(row);
+                                                        }}
+                                                        className={`
+                                                            text-sm font-medium
+                                                            ${action.color === 'danger' ? 'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300' : ''}
+                                                            ${action.color === 'success' ? 'text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300' : ''}
+                                                            ${action.color === 'warning' ? 'text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300' : ''}
+                                                            ${(!action.color || action.color === 'primary') ? 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300' : ''}
+                                                            ${action.className || ''}
+                                                        `}
+                                                        title={action.label}
+                                                    >
+                                                        {action.icon ? (
+                                                            <span className="inline-flex items-center gap-1">
+                                                                {action.icon}
+                                                                {action.label}
+                                                            </span>
+                                                        ) : (
+                                                            action.label
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </td>
-                                    );
-                                })}
-                                {actions.length > 0 && (
-                                    <td className={`px-6 py-4 text-right ${compact ? 'px-4 py-2' : ''}`}>
-                                        <div className="flex justify-end gap-2">
-                                            {actions.map((action, actionIndex) => (
-                                                <button
-                                                    key={actionIndex}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        action.onClick(row);
-                                                    }}
-                                                    className={`
-                                                        text-sm font-medium
-                                                        ${action.color === 'danger' ? 'text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300' : ''}
-                                                        ${action.color === 'success' ? 'text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300' : ''}
-                                                        ${action.color === 'warning' ? 'text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300' : ''}
-                                                        ${(!action.color || action.color === 'primary') ? 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300' : ''}
-                                                        ${action.className || ''}
-                                                    `}
-                                                    title={action.label}
-                                                >
-                                                    {action.icon ? (
-                                                        <span className="inline-flex items-center gap-1">
-                                                            {action.icon}
-                                                            {action.label}
-                                                        </span>
-                                                    ) : (
-                                                        action.label
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </td>
-                                )}
-                            </tr>
-                        ))
+                                    )}
+                                </tr>
+                            );
+                        })
                     )}
                 </tbody>
             </table>

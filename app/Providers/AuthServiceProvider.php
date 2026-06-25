@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use App\Models\Lesson;
 use App\Models\Assignment;
 use App\Models\Quiz;
 use App\Models\Announcement;
 use App\Models\Game;
+use App\Policies\UserPolicy;
 use App\Policies\LessonPolicy;
 use App\Policies\AssignmentPolicy;
 use App\Policies\QuizPolicy;
@@ -23,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
+        User::class => UserPolicy::class,           // ✅ ADD THIS
         Lesson::class => LessonPolicy::class,
         Assignment::class => AssignmentPolicy::class,
         Quiz::class => QuizPolicy::class,

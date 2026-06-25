@@ -41,25 +41,27 @@ export default function AuthenticatedLayout({ header, children }) {
         } else if (userRole === 'teacher') {
             links.push(
                 { href: route('teacher.dashboard'), label: 'Dashboard' },
-                { href: route('teacher.lessons.index'), label: 'Lessons' },
-                { href: route('teacher.assignments.index'), label: 'Assignments' },
-                { href: route('teacher.quizzes.index'), label: 'Quizzes' },
-                { href: route('teacher.games.index'), label: 'Games' },
-                { href: route('teacher.announcements.index'), label: 'Announcements' },
-                { href: route('teacher.messages.index'), label: 'Messages' },
-                { href: route('teacher.progress.index'), label: 'Progress' },
-                { href: route('teacher.reports.index'), label: 'Reports' },
+                // ===== COMMENTED OUT - Routes not yet defined =====
+                // { href: route('teacher.lessons.index'), label: 'Lessons' },
+                // { href: route('teacher.assignments.index'), label: 'Assignments' },
+                // { href: route('teacher.quizzes.index'), label: 'Quizzes' },
+                // { href: route('teacher.games.index'), label: 'Games' },
+                // { href: route('teacher.announcements.index'), label: 'Announcements' },
+                // { href: route('teacher.messages.index'), label: 'Messages' },
+                // { href: route('teacher.progress.index'), label: 'Progress' },
+                // { href: route('teacher.reports.index'), label: 'Reports' },
             );
         } else if (userRole === 'student') {
             links.push(
                 { href: route('student.dashboard'), label: 'Dashboard' },
-                { href: route('student.lessons.index'), label: 'Lessons' },
-                { href: route('student.assignments.index'), label: 'Assignments' },
-                { href: route('student.quizzes.index'), label: 'Quizzes' },
-                { href: route('student.games.index'), label: 'Games' },
-                { href: route('student.announcements.index'), label: 'Announcements' },
-                { href: route('student.messages.index'), label: 'Messages' },
-                { href: route('student.progress.index'), label: 'Progress' },
+                // ===== COMMENTED OUT - Routes not yet defined =====
+                // { href: route('student.lessons.index'), label: 'Lessons' },
+                // { href: route('student.assignments.index'), label: 'Assignments' },
+                // { href: route('student.quizzes.index'), label: 'Quizzes' },
+                // { href: route('student.games.index'), label: 'Games' },
+                // { href: route('student.announcements.index'), label: 'Announcements' },
+                // { href: route('student.messages.index'), label: 'Messages' },
+                // { href: route('student.progress.index'), label: 'Progress' },
             );
         }
 
