@@ -5,6 +5,7 @@ use App\Http\Controllers\Principal\DashboardController;
 use App\Http\Controllers\Principal\UserManagementController;
 use App\Http\Controllers\Principal\TeacherMonitoringController;
 use App\Http\Controllers\Principal\AnnouncementController;
+use App\Http\Controllers\Principal\ReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -65,7 +66,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/teachers/{id}', [TeacherMonitoringController::class, 'show'])->name('teachers.show');
 
         // ===== Announcements =====
-        // ✅ All routes for announcements
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
         Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
@@ -73,10 +73,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/announcements/{id}/archive', [AnnouncementController::class, 'archive'])->name('announcements.archive');
         Route::post('/announcements/{id}/publish', [AnnouncementController::class, 'publish'])->name('announcements.publish');
 
-        // Reports
-        Route::get('/reports', function () {
-            return Inertia::render('Principal/Reports');
-        })->name('reports.index');
+        // ===== Reports =====
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+        Route::get('/reports/export/pdf/{reportId}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+
+        // ✅ NEW: View a specific report
+        Route::get('/reports/{reportId}', [ReportController::class, 'show'])->name('reports.show');
 
         // Activity Logs
         Route::get('/logs', function () {

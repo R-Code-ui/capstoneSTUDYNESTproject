@@ -7,44 +7,83 @@ import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
-export default function PrincipalReports({ school_years, grade_levels, teachers, trimesters, report_history, filters }) {
+export default function PrincipalReports({
+    school_years,
+    grade_levels,
+    teachers,
+    trimesters,
+    filters,
+    report_title = null,
+    report_data = null,
+    report_id = null,
+    show_results = false,
+}) {
     const [selectedReport, setSelectedReport] = useState(null);
-    const [reportData, setReportData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [formData, setFormData] = useState({
         report_type: '',
         school_year: filters?.school_year || 'SY 2026-2027',
         grade_level: filters?.grade_level || '',
         teacher_id: filters?.teacher_id || '',
         trimester: filters?.trimester || '',
-        date_from: filters?.date_from || '',
-        date_to: filters?.date_to || '',
+        // date_from and date_to removed
     });
 
+    const { flash } = usePage().props;
+    const hasReportData = report_data && show_results;
+
+    // Safely extract data and summary
+    const resultData = hasReportData ? (report_data.data || []) : [];
+    const resultSummary = hasReportData ? (report_data.summary || null) : null;
+
+    // ===== SVG ICONS =====
+    const ReportIcons = {
+        teacher_activity: () => (
+            <svg className="w-10 h-10 mb-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        ),
+        student_participation: () => (
+            <svg className="w-10 h-10 mb-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        ),
+        school_summary: () => (
+            <svg className="w-10 h-10 mb-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+        ),
+    };
+
+    const PdfIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+    );
+
     const reportTypes = [
-        { value: 'teacher_activity', label: '📘 Teacher Activity Report' },
-        { value: 'student_participation', label: '📗 Student Participation Report' },
-        { value: 'assignment_completion', label: '📙 Assignment Completion Report' },
-        { value: 'quiz_performance', label: '📕 Quiz Performance Report' },
-        { value: 'school_summary', label: '📓 School Activity Summary Report' },
+        { value: 'teacher_activity', label: 'Teacher Activity Report', icon: 'teacher_activity' },
+        { value: 'student_participation', label: 'Student Participation Report', icon: 'student_participation' },
+        { value: 'school_summary', label: 'School Activity Summary Report', icon: 'school_summary' },
     ];
 
     const gradeOptions = [
         { value: '', label: 'All Grades' },
-        ...grade_levels.map((grade) => ({ value: grade, label: grade })),
+        ...(grade_levels || []).filter(g => g !== 'All Grades').map((grade) => ({ value: grade, label: grade })),
     ];
 
     const teacherOptions = [
         { value: '', label: 'All Teachers' },
-        ...teachers.map((teacher) => ({ value: teacher.id, label: teacher.name })),
+        ...(teachers || []).map((teacher) => ({ value: teacher.id, label: teacher.name })),
     ];
 
     const trimesterOptions = [
         { value: '', label: 'All Trimesters' },
-        ...trimesters.map((t) => ({ value: t, label: t })),
+        ...(trimesters || []).filter(t => t !== 'All Trimesters').map((t) => ({ value: t, label: t })),
     ];
 
-    const schoolYearOptions = school_years.map((year) => ({ value: year, label: year }));
+    const schoolYearOptions = (school_years || []).map((year) => ({ value: year, label: year }));
 
     const handleGenerate = () => {
         if (!formData.report_type) {
@@ -55,9 +94,8 @@ export default function PrincipalReports({ school_years, grade_levels, teachers,
         setIsLoading(true);
         router.post(route('principal.reports.generate'), formData, {
             preserveState: true,
-            onSuccess: (page) => {
+            onSuccess: () => {
                 setIsLoading(false);
-                setReportData(page.props.report_data);
             },
             onError: () => {
                 setIsLoading(false);
@@ -65,24 +103,39 @@ export default function PrincipalReports({ school_years, grade_levels, teachers,
         });
     };
 
-    const handleExport = (format) => {
-        // Handle export logic
-        alert(`Exporting as ${format.toUpperCase()}... (Feature coming soon)`);
+    const handleReset = () => {
+        setFormData({
+            ...formData,
+            grade_level: '',
+            teacher_id: '',
+            trimester: '',
+            // no date fields to reset
+        });
+        router.visit(route('principal.reports.index'), { preserveState: true });
+    };
+
+    const handleExportPdf = () => {
+        if (!report_id) {
+            alert('No report to export. Please generate a report first.');
+            return;
+        }
+
+        setIsExporting(true);
+        const url = route('principal.reports.export.pdf', report_id);
+        window.open(url, '_blank');
+        setTimeout(() => setIsExporting(false), 1000);
     };
 
     const renderReportResults = () => {
-        if (!reportData) return null;
-
-        const { data, summary } = reportData;
+        if (!hasReportData) return null;
 
         return (
             <div className="mt-6 space-y-4">
-                {/* Summary */}
-                {summary && (
+                {resultSummary && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {Object.entries(summary).map(([key, value]) => (
-                            <div key={key} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{value}</div>
+                        {Object.entries(resultSummary).map(([key, value]) => (
+                            <div key={key} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                                <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{value}</div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
                                     {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </div>
@@ -91,19 +144,20 @@ export default function PrincipalReports({ school_years, grade_levels, teachers,
                     </div>
                 )}
 
-                {/* Data Table */}
-                {data && data.length > 0 && (
+                {resultData.length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    {Object.keys(data[0]).map((key) => (
-                                        <th key={key} className="px-6 py-3">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</th>
+                                    {Object.keys(resultData[0]).map((key) => (
+                                        <th key={key} className="px-6 py-3">
+                                            {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        </th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.map((row, index) => (
+                                {resultData.map((row, index) => (
                                     <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                         {Object.values(row).map((value, i) => (
                                             <td key={i} className="px-6 py-4">
@@ -115,17 +169,24 @@ export default function PrincipalReports({ school_years, grade_levels, teachers,
                             </tbody>
                         </table>
                     </div>
+                ) : (
+                    <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                        No detailed rows found for this report.
+                    </p>
                 )}
 
-                {/* Export Buttons */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <SecondaryButton onClick={() => handleExport('print')}>🖨️ Print</SecondaryButton>
-                    <SecondaryButton onClick={() => handleExport('excel')}>📊 Excel</SecondaryButton>
-                    <SecondaryButton onClick={() => handleExport('csv')}>📑 CSV</SecondaryButton>
+                    <SecondaryButton onClick={handleExportPdf} disabled={isExporting}>
+                        <span className="flex items-center gap-1">
+                            <PdfIcon /> Download PDF
+                        </span>
+                    </SecondaryButton>
                 </div>
             </div>
         );
     };
+
+    const resultsTitle = report_title || 'Report Results';
 
     return (
         <AuthenticatedLayout
@@ -135,24 +196,30 @@ export default function PrincipalReports({ school_years, grade_levels, teachers,
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    {/* Report Selection */}
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {reportTypes.map((type) => (
-                            <Card
-                                key={type.value}
-                                className={`cursor-pointer transition hover:shadow-lg ${selectedReport === type.value ? 'ring-2 ring-blue-500' : ''}`}
-                                onClick={() => {
-                                    setSelectedReport(type.value);
-                                    setFormData({ ...formData, report_type: type.value });
-                                    setReportData(null);
-                                }}
-                            >
-                                <div className="text-3xl mb-2">{type.label.split(' ')[0]}</div>
-                                <h4 className="font-semibold text-gray-900 dark:text-white">
-                                    {type.label.split(' ').slice(1).join(' ')}
-                                </h4>
-                            </Card>
-                        ))}
+                    {/* Report Selection Cards */}
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {reportTypes.map((type) => {
+                            const IconComponent = ReportIcons[type.icon] || ReportIcons.school_summary;
+                            return (
+                                <Card
+                                    key={type.value}
+                                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${
+                                        selectedReport === type.value ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''
+                                    }`}
+                                    onClick={() => {
+                                        setSelectedReport(type.value);
+                                        setFormData({ ...formData, report_type: type.value });
+                                    }}
+                                >
+                                    <div className="flex flex-col items-center text-center">
+                                        <IconComponent />
+                                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                                            {type.label}
+                                        </h4>
+                                    </div>
+                                </Card>
+                            );
+                        })}
                     </div>
 
                     {/* Filter Panel */}
@@ -193,91 +260,28 @@ export default function PrincipalReports({ school_years, grade_levels, teachers,
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date From</label>
-                                    <input
-                                        type="date"
-                                        value={formData.date_from}
-                                        onChange={(e) => setFormData({ ...formData, date_from: e.target.value })}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date To</label>
-                                    <input
-                                        type="date"
-                                        value={formData.date_to}
-                                        onChange={(e) => setFormData({ ...formData, date_to: e.target.value })}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                                    />
-                                </div>
-                            </div>
-
+                            {/* Action Buttons */}
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <SecondaryButton
-                                    type="button"
-                                    onClick={() => {
-                                        setFormData({
-                                            ...formData,
-                                            grade_level: '',
-                                            teacher_id: '',
-                                            trimester: '',
-                                            date_from: '',
-                                            date_to: '',
-                                        });
-                                        setReportData(null);
-                                    }}
-                                >
+                                <SecondaryButton type="button" onClick={handleReset}>
                                     Reset Filters
                                 </SecondaryButton>
-                                <PrimaryButton onClick={handleGenerate} disabled={!formData.report_type || isLoading}>
+                                <PrimaryButton
+                                    type="button"
+                                    onClick={handleGenerate}
+                                    disabled={!formData.report_type || isLoading}
+                                >
                                     {isLoading ? 'Generating...' : 'Generate Report'}
                                 </PrimaryButton>
                             </div>
                         </Card>
                     </div>
 
-                    {/* Loading */}
-                    {isLoading && <LoadingSpinner overlay size="lg" />}
+                    {isLoading && <LoadingSpinner overlay size="lg" text="Generating report..." />}
 
-                    {/* Report Results */}
-                    {reportData && (
+                    {hasReportData && (
                         <div className="mt-6">
-                            <Card title="Report Results">
+                            <Card title={resultsTitle}>
                                 {renderReportResults()}
-                            </Card>
-                        </div>
-                    )}
-
-                    {/* Report History */}
-                    {report_history.length > 0 && (
-                        <div className="mt-6">
-                            <Card title="Report History">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                            <tr>
-                                                <th className="px-6 py-3">Report</th>
-                                                <th className="px-6 py-3">Generated Date</th>
-                                                <th className="px-6 py-3">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {report_history.map((report) => (
-                                                <tr key={report.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{report.report_type}</td>
-                                                    <td className="px-6 py-4">{report.generated_at}</td>
-                                                    <td className="px-6 py-4">
-                                                        <button className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                                                            View
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
                             </Card>
                         </div>
                     )}
