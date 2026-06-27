@@ -7,6 +7,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Modal from '@/Components/Modal';
+import { EyeIcon, XMarkIcon } from '@heroicons/react/24/outline'; // ✅ ADD THIS
 
 export default function ActivityLogs({ logs, summary, activity_types, grade_levels, filters }) {
     const [search, setSearch] = useState(filters?.search || '');
@@ -78,7 +79,12 @@ export default function ActivityLogs({ logs, summary, activity_types, grade_leve
     ];
 
     const actions = (row) => [
-        { label: 'View Details', icon: '👁️', color: 'primary', onClick: () => viewLogDetail(row) },
+        {
+            label: 'View Details',
+            icon: <EyeIcon className="w-4 h-4" />, // ✅ REPLACED EMOJI WITH HEROICON
+            color: 'primary',
+            onClick: () => viewLogDetail(row)
+        },
     ];
 
     return (
@@ -220,9 +226,9 @@ export default function ActivityLogs({ logs, summary, activity_types, grade_leve
                         <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
                             <button
                                 onClick={() => { setShowLogDetail(false); setSelectedLog(null); }}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                             >
-                                Close
+                                <XMarkIcon className="w-5 h-5" /> {/* ✅ REPLACED "Close" text with icon */}
                             </button>
                         </div>
                     </div>

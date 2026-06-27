@@ -8,12 +8,14 @@ use App\Models\Assignment;
 use App\Models\Quiz;
 use App\Models\Announcement;
 use App\Models\Game;
+use App\Models\ActivityLog; // ✅ ADD THIS
 use App\Policies\UserPolicy;
 use App\Policies\LessonPolicy;
 use App\Policies\AssignmentPolicy;
 use App\Policies\QuizPolicy;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\GamePolicy;
+use App\Policies\ActivityLogPolicy; // ✅ ADD THIS
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -25,12 +27,13 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        User::class => UserPolicy::class,           // ✅ ADD THIS
+        User::class => UserPolicy::class,
         Lesson::class => LessonPolicy::class,
         Assignment::class => AssignmentPolicy::class,
         Quiz::class => QuizPolicy::class,
         Announcement::class => AnnouncementPolicy::class,
         Game::class => GamePolicy::class,
+        ActivityLog::class => ActivityLogPolicy::class, // ✅ ADD THIS
     ];
 
     /**

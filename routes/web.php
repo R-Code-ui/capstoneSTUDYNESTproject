@@ -6,6 +6,7 @@ use App\Http\Controllers\Principal\UserManagementController;
 use App\Http\Controllers\Principal\TeacherMonitoringController;
 use App\Http\Controllers\Principal\AnnouncementController;
 use App\Http\Controllers\Principal\ReportController;
+use App\Http\Controllers\Principal\ActivityLogController; // ✅ ADD THIS
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -78,13 +79,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
         Route::get('/reports/export/pdf/{reportId}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
 
-        // ✅ NEW: View a specific report
+        // View a specific report
         Route::get('/reports/{reportId}', [ReportController::class, 'show'])->name('reports.show');
 
-        // Activity Logs
-        Route::get('/logs', function () {
-            return Inertia::render('Principal/ActivityLogs');
-        })->name('logs.index');
+        // ===== Activity Logs =====
+        Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index'); // ✅ MODIFIED - now uses controller
     });
 
     // ===========================================================
@@ -163,4 +162,4 @@ Route::middleware('auth')->group(function () {
 });
 
 // ========== AUTH ROUTES ==========
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

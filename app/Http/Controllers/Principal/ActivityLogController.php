@@ -110,28 +110,4 @@ class ActivityLogController extends Controller
             ],
         ]);
     }
-
-    /**
-     * Display a specific activity log entry.
-     */
-    public function show($id)
-    {
-        Gate::authorize('viewAny', ActivityLog::class);
-
-        $log = ActivityLog::with('user')->findOrFail($id);
-
-        return Inertia::render('Principal/ActivityLogDetail', [
-            'log' => [
-                'id' => $log->id,
-                'user' => $log->user->name ?? 'Unknown',
-                'role' => ucfirst($log->user_role),
-                'activity_type' => $log->activity_type,
-                'activity_description' => $log->activity_description,
-                'related_module' => $log->related_module,
-                'ip_address' => $log->ip_address,
-                'user_agent' => $log->user_agent,
-                'created_at' => $log->created_at->format('M d, Y h:i A'),
-            ],
-        ]);
-    }
 }
