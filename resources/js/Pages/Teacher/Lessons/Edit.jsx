@@ -19,6 +19,10 @@ export default function LessonsEdit({
     weeks,
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [fileErrors, setFileErrors] = useState([]);
+    const [newResources, setNewResources] = useState([]);
+    const [existingResources, setExistingResources] = useState(lesson.resources || []);
+
     const { data, setData, errors, put } = useForm({
         grade_level: lesson.grade_level || '',
         subject: lesson.subject || '',
@@ -37,21 +41,122 @@ export default function LessonsEdit({
         related_game_id: lesson.related_game_id || '',
         status: lesson.status || 'draft',
         publish_date: lesson.publish_date || new Date().toISOString().split('T')[0],
+        resources: [],
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        put(route('teacher.lessons.update', lesson.id), {
+        const formData = new FormData();
+
+        // Append all form data
+        Object.keys(data).forEach((key) => {
+            if (key === 'resources') {
+                // Append new files
+                data.resources.forEach((file) => {
+                    formData.append('resources[]', file);
+                });
+            } else if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
+                formData.append(key, data[key]);
+            }
+        });
+
+        // For Laravel, we need to spoof PUT method
+        formData.append('_method', 'PUT');
+
+        post(route('teacher.lessons.update', lesson.id), {
+            data: formData,
+            forceFormData: true,
             preserveState: true,
             onFinish: () => setIsSubmitting(false),
         });
     };
 
+    // Override post with put
+    const post = (url, options) => {
+        // Since we're using PUT with FormData, we need to use the put method
+        return put(url, options);
+    };
+
+    const handleFileChange = (e) => {
+        const files = Array.from(e.target.files);
+        const errors = [];
+        const validFiles = [];
+
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        const maxFiles = 5;
+        const currentTotal = existingResources.length + data.resources.length;
+
+        if (files.length + currentTotal > maxFiles) {
+            errors.push(`You can only have a maximum of ${maxFiles} files per lesson.`);
+            e.target.value = '';
+            setFileErrors(errors);
+            return;
+        }
+
+        files.forEach((file) => {
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, or PNG files.`);
+                return;
+            }
+
+            if (file.size > maxSize) {
+                errors.push(`"${file.name}" exceeds the 10MB limit.`);
+                return;
+            }
+
+            validFiles.push(file);
+        });
+
+        if (errors.length > 0) {
+            setFileErrors(errors);
+        } else {
+            setFileErrors([]);
+        }
+
+        const newResourcesList = [...data.resources, ...validFiles];
+        setData('resources', newResourcesList);
+        e.target.value = '';
+    };
+
+    const removeNewFile = (index) => {
+        const newResourcesList = [...data.resources];
+        newResourcesList.splice(index, 1);
+        setData('resources', newResourcesList);
+    };
+
+    const removeExistingResource = (index) => {
+        const updated = [...existingResources];
+        updated.splice(index, 1);
+        setExistingResources(updated);
+    };
+
+    const getFileIcon = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (['pdf'].includes(ext)) return '📄';
+        if (['jpg', 'jpeg', 'png'].includes(ext)) return '🖼️';
+        return '📎';
+    };
+
+    const getFileTypeLabel = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (['pdf'].includes(ext)) return 'PDF Module';
+        if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
+        return 'Worksheet';
+    };
+
+    const formatFileSize = (bytes) => {
+        if (!bytes) return 'Unknown';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Lesson</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Lesson</span>}
         >
             <Head title="Edit Lesson" />
 
@@ -242,7 +347,88 @@ export default function LessonsEdit({
                                 </div>
                             </div>
 
-                            {/* ===== Section 4: Related Activities ===== */}
+                            {/* ===== Section 4: Learning Resources ===== */}
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Learning Resources</h3>
+
+                                {/* Existing Resources */}
+                                {existingResources.length > 0 && (
+                                    <div className="mb-4">
+                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Resources:</p>
+                                        <div className="space-y-1">
+                                            {existingResources.map((resource, index) => (
+                                                <div key={resource.id} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{getFileIcon(resource.name)}</span>
+                                                        <span>{resource.name}</span>
+                                                        <span className="text-xs text-gray-400">({getFileTypeLabel(resource.name)})</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeExistingResource(index)}
+                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Total: {existingResources.length} of 5 files
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* New Resources Upload */}
+                                <div>
+                                    <InputLabel htmlFor="resources" value="Add New Resources (Max 5 files, 10MB each)" />
+                                    <input
+                                        id="resources"
+                                        type="file"
+                                        multiple
+                                        onChange={handleFileChange}
+                                        className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                    />
+                                    {fileErrors.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            {fileErrors.map((error, index) => (
+                                                <p key={index} className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {data.resources.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            {data.resources.map((file, index) => (
+                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{getFileIcon(file.name)}</span>
+                                                        <span>{file.name}</span>
+                                                        <span className="text-xs text-gray-400">({getFileTypeLabel(file.name)})</span>
+                                                        <span className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeNewFile(index)}
+                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                New files: {data.resources.length} of {5 - existingResources.length} remaining
+                                            </p>
+                                        </div>
+                                    )}
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Accepted: PDF, JPG, JPEG, PNG (Max 10MB per file, Max 5 files total)
+                                    </p>
+                                    <InputError message={errors.resources} className="mt-2" />
+                                </div>
+                            </div>
+
+                            {/* ===== Section 5: Related Activities ===== */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Related Activities</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -286,7 +472,7 @@ export default function LessonsEdit({
                                 </div>
                             </div>
 
-                            {/* ===== Section 5: Publication Settings ===== */}
+                            {/* ===== Section 6: Publication Settings ===== */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publication Settings</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

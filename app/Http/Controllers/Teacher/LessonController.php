@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\LessonResource;
+use App\Models\Assignment; // ✅ ADDED
+use App\Models\Quiz; // ✅ ADDED
+use App\Models\Game; // ✅ ADDED
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -46,6 +49,7 @@ class LessonController extends Controller
             ->get();
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $statuses = ['draft', 'published', 'archived'];
         $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
@@ -86,7 +90,9 @@ class LessonController extends Controller
         Gate::authorize('create', Lesson::class);
 
         $user = auth()->user();
+
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
@@ -164,8 +170,19 @@ class LessonController extends Controller
 
         // Handle file uploads if any
         if ($request->hasFile('resources')) {
-            foreach ($request->file('resources') as $resource) {
+            $files = $request->file('resources');
+
+            // Limit to 5 files
+            $files = array_slice($files, 0, 5);
+
+            foreach ($files as $resource) {
+                // Validate each file (max 10MB)
+                if ($resource->getSize() > 10 * 1024 * 1024) {
+                    continue; // Skip files larger than 10MB
+                }
+
                 $path = $resource->store('lesson-resources/' . $lesson->id, 'public');
+
                 LessonResource::create([
                     'lesson_id' => $lesson->id,
                     'resource_type' => $this->determineResourceType($resource),
@@ -229,6 +246,7 @@ class LessonController extends Controller
         Gate::authorize('update', $lesson);
 
         $user = auth()->user();
+
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
@@ -307,6 +325,37 @@ class LessonController extends Controller
 
         $lesson->update($validated);
 
+        // Handle new file uploads
+        if ($request->hasFile('resources')) {
+            $files = $request->file('resources');
+            $files = array_slice($files, 0, 5);
+
+            // Check total resources limit (max 5 per lesson)
+            $currentResourceCount = $lesson->resources()->count();
+            $maxNewFiles = 5 - $currentResourceCount;
+
+            if ($maxNewFiles > 0) {
+                $files = array_slice($files, 0, $maxNewFiles);
+
+                foreach ($files as $resource) {
+                    if ($resource->getSize() > 10 * 1024 * 1024) {
+                        continue;
+                    }
+
+                    $path = $resource->store('lesson-resources/' . $lesson->id, 'public');
+
+                    LessonResource::create([
+                        'lesson_id' => $lesson->id,
+                        'resource_type' => $this->determineResourceType($resource),
+                        'file_name' => $resource->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_size' => $resource->getSize(),
+                        'mime_type' => $resource->getMimeType(),
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('teacher.lessons.index')
             ->with('success', 'Lesson updated successfully!');
     }
@@ -358,16 +407,37 @@ class LessonController extends Controller
     }
 
     /**
+     * Download a lesson resource.
+     */
+    public function downloadResource($resourceId)
+    {
+        $resource = LessonResource::findOrFail($resourceId);
+        $lesson = $resource->lesson;
+
+        Gate::authorize('view', $lesson);
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found.');
+        }
+
+        return response()->download($filePath, $resource->file_name);
+    }
+
+    /**
      * Determine resource type based on file.
      */
     private function determineResourceType($file)
     {
         $mimeType = $file->getMimeType();
+
         if (str_contains($mimeType, 'pdf')) {
             return 'pdf_module';
         } elseif (str_contains($mimeType, 'image')) {
             return 'image';
         }
+
         return 'worksheet';
     }
 }

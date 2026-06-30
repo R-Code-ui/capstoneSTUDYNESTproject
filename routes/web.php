@@ -6,7 +6,12 @@ use App\Http\Controllers\Principal\UserManagementController;
 use App\Http\Controllers\Principal\TeacherMonitoringController;
 use App\Http\Controllers\Principal\AnnouncementController;
 use App\Http\Controllers\Principal\ReportController;
-use App\Http\Controllers\Principal\ActivityLogController; // ✅ ADD THIS
+use App\Http\Controllers\Principal\ActivityLogController;
+use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
+use App\Http\Controllers\Teacher\LessonController; // ✅ ADDED FOR LESSON ROUTES
+use App\Http\Controllers\Teacher\AssignmentController; // ✅ ADDED FOR FUTURE USE
+use App\Http\Controllers\Teacher\QuizController; // ✅ ADDED FOR FUTURE USE
+use App\Http\Controllers\Teacher\GameController; // ✅ ADDED FOR FUTURE USE
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -83,39 +88,50 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/{reportId}', [ReportController::class, 'show'])->name('reports.show');
 
         // ===== Activity Logs =====
-        Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index'); // ✅ MODIFIED - now uses controller
+        Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index');
     });
 
     // ===========================================================
     // ===== TEACHER ROUTES =====
     // ===========================================================
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Teacher/Dashboard');
-        })->name('dashboard');
+        // Dashboard
+        Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
 
-        // Lessons
-        // Route::resource('lessons', LessonController::class);
+        // ===== Lessons =====
+        // ✅ UNCOMMENTED - Full CRUD routes
+        Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
+        Route::get('/lessons/create', [LessonController::class, 'create'])->name('lessons.create');
+        Route::post('/lessons', [LessonController::class, 'store'])->name('lessons.store');
+        Route::get('/lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
+        Route::get('/lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('lessons.edit');
+        Route::put('/lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
+        Route::delete('/lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
 
-        // Assignments
+        // ✅ ADDED - Custom Lesson routes
+        Route::post('/lessons/{lesson}/publish', [LessonController::class, 'publish'])->name('lessons.publish');
+        Route::post('/lessons/{lesson}/archive', [LessonController::class, 'archive'])->name('lessons.archive');
+        Route::get('/lessons/download-resource/{resource}', [LessonController::class, 'downloadResource'])->name('lessons.download-resource');
+
+        // ===== Assignments (coming soon) =====
         // Route::resource('assignments', AssignmentController::class);
 
-        // Quizzes
+        // ===== Quizzes (coming soon) =====
         // Route::resource('quizzes', QuizController::class);
 
-        // Games
+        // ===== Games (coming soon) =====
         // Route::resource('games', GameController::class);
 
-        // Announcements
+        // ===== Announcements (coming soon) =====
         // Route::resource('announcements', AnnouncementController::class);
 
-        // Messages
+        // ===== Messages (coming soon) =====
         // Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
 
-        // Progress Tracking
+        // ===== Progress Tracking (coming soon) =====
         // Route::get('/progress', [ProgressTrackingController::class, 'index'])->name('progress.index');
 
-        // Reports
+        // ===== Reports (coming soon) =====
         // Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     });
 
@@ -127,37 +143,26 @@ Route::middleware('auth')->group(function () {
             return Inertia::render('Student/Dashboard');
         })->name('dashboard');
 
-        // Lessons
+        // Lessons (coming soon)
         // Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
 
-        // Assignments
+        // Assignments (coming soon)
         // Route::get('/assignments', [AssignmentController::class, 'index'])->name('assignments.index');
 
-        // Quizzes
+        // Quizzes (coming soon)
         // Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
 
-        // Games
+        // Games (coming soon)
         // Route::get('/games', [GameController::class, 'index'])->name('games.index');
 
-        // Messages
+        // Messages (coming soon)
         // Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
 
-        // Announcements
+        // Announcements (coming soon)
         // Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
 
-        // Progress
+        // Progress (coming soon)
         // Route::get('/progress', [ProgressTrackerController::class, 'index'])->name('progress.index');
-    });
-
-    // ===== Example Protected Routes with Permission Middleware =====
-    Route::prefix('lessons')->middleware(['auth', 'permission:lesson.view'])->group(function () {
-        // Route::get('/', [LessonController::class, 'index'])->name('lessons.index');
-        // Route::get('/create', [LessonController::class, 'create'])->middleware(['permission:lesson.create'])->name('lessons.create');
-        // Route::post('/', [LessonController::class, 'store'])->middleware(['permission:lesson.create'])->name('lessons.store');
-        // Route::get('/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
-        // Route::get('/{lesson}/edit', [LessonController::class, 'edit'])->middleware(['permission:lesson.edit'])->name('lessons.edit');
-        // Route::put('/{lesson}', [LessonController::class, 'update'])->middleware(['permission:lesson.edit'])->name('lessons.update');
-        // Route::delete('/{lesson}', [LessonController::class, 'destroy'])->middleware(['permission:lesson.delete'])->name('lessons.destroy');
     });
 });
 

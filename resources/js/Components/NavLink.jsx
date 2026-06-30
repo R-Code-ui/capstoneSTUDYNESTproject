@@ -10,13 +10,17 @@ export default function NavLink({
         <Link
             {...props}
             className={
-                'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none ' +
+                'flex items-center w-full px-4 py-3 text-sm font-semibold rounded-xl tracking-wide transition-all duration-200 group gap-3 ' +
                 (active
-                    ? 'border-indigo-400 text-gray-900 focus:border-indigo-700'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 focus:border-gray-300 focus:text-gray-700') +
+                    ? 'bg-[#5EC4D2] text-[#22486A] shadow-lg shadow-[#5EC4D2]/10 translate-x-1'
+                    : 'text-[#7DD3E1]/80 hover:bg-[#1A3752] hover:text-white hover:translate-x-0.5') +
                 className
             }
         >
+            {/* Active Visual indicator bullet */}
+            <span className={`h-1.5 w-1.5 rounded-full transition-all duration-200 ${
+                active ? 'bg-[#22486A] scale-125' : 'bg-[#5EC4D2]/40 group-hover:bg-[#5EC4D2]'
+            }`} />
             {children}
         </Link>
     );

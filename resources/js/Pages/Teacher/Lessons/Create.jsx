@@ -21,6 +21,8 @@ export default function LessonsCreate({
     related_games,
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [fileErrors, setFileErrors] = useState([]);
+
     const { data, setData, errors, post } = useForm({
         grade_level: '',
         subject: '',
@@ -47,12 +49,15 @@ export default function LessonsCreate({
         setIsSubmitting(true);
 
         const formData = new FormData();
+
+        // Append all form data
         Object.keys(data).forEach((key) => {
             if (key === 'resources') {
+                // Append each file
                 data.resources.forEach((file) => {
                     formData.append('resources[]', file);
                 });
-            } else if (data[key] !== null && data[key] !== undefined) {
+            } else if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
                 formData.append(key, data[key]);
             }
         });
@@ -67,7 +72,47 @@ export default function LessonsCreate({
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
-        setData('resources', files);
+        const errors = [];
+        const validFiles = [];
+
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        const maxFiles = 5;
+
+        // Check total files limit
+        if (files.length + data.resources.length > maxFiles) {
+            errors.push(`You can only upload a maximum of ${maxFiles} files.`);
+            e.target.value = '';
+            setFileErrors(errors);
+            return;
+        }
+
+        files.forEach((file) => {
+            // Check file type
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, or PNG files.`);
+                return;
+            }
+
+            // Check file size
+            if (file.size > maxSize) {
+                errors.push(`"${file.name}" exceeds the 10MB limit.`);
+                return;
+            }
+
+            validFiles.push(file);
+        });
+
+        if (errors.length > 0) {
+            setFileErrors(errors);
+        } else {
+            setFileErrors([]);
+        }
+
+        // Update resources with valid files
+        const newResources = [...data.resources, ...validFiles];
+        setData('resources', newResources);
+        e.target.value = '';
     };
 
     const removeFile = (index) => {
@@ -76,9 +121,23 @@ export default function LessonsCreate({
         setData('resources', newResources);
     };
 
+    const getFileIcon = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (['pdf'].includes(ext)) return '📄';
+        if (['jpg', 'jpeg', 'png'].includes(ext)) return '🖼️';
+        return '📎';
+    };
+
+    const getFileTypeLabel = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (['pdf'].includes(ext)) return 'PDF Module';
+        if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
+        return 'Worksheet';
+    };
+
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Lesson</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Lesson</span>}
         >
             <Head title="Create Lesson" />
 
@@ -187,6 +246,7 @@ export default function LessonsCreate({
                                             rows={2}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             required
+                                            placeholder="e.g., Infer the meaning of unfamiliar words using context clues."
                                         />
                                         <InputError message={errors.learning_competency} className="mt-2" />
                                     </div>
@@ -199,6 +259,7 @@ export default function LessonsCreate({
                                             rows={2}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             required
+                                            placeholder="e.g., At the end of the lesson, learners should be able to..."
                                         />
                                         <InputError message={errors.learning_objective} className="mt-2" />
                                     </div>
@@ -264,6 +325,7 @@ export default function LessonsCreate({
                                             onChange={(e) => setData('key_takeaways', e.target.value)}
                                             rows={2}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            placeholder="Key takeaways for students..."
                                         />
                                         <InputError message={errors.key_takeaways} className="mt-2" />
                                     </div>
@@ -283,23 +345,40 @@ export default function LessonsCreate({
                                         className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
                                         accept=".pdf,.jpg,.jpeg,.png"
                                     />
+                                    {fileErrors.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            {fileErrors.map((error, index) => (
+                                                <p key={index} className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                                            ))}
+                                        </div>
+                                    )}
                                     {data.resources.length > 0 && (
                                         <div className="mt-2 space-y-1">
                                             {data.resources.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                                                    <span>{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
+                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{getFileIcon(file.name)}</span>
+                                                        <span>{file.name}</span>
+                                                        <span className="text-xs text-gray-400">({getFileTypeLabel(file.name)})</span>
+                                                        <span className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</span>
+                                                    </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeFile(index)}
-                                                        className="text-red-500 hover:text-red-700"
+                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         Remove
                                                     </button>
                                                 </div>
                                             ))}
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Total: {data.resources.length} of 5 files
+                                            </p>
                                         </div>
                                     )}
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Accepted: PDF, JPG, JPEG, PNG (Max 10MB per file)</p>
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Accepted: PDF, JPG, JPEG, PNG (Max 10MB per file, Max 5 files total)
+                                    </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>
                             </div>

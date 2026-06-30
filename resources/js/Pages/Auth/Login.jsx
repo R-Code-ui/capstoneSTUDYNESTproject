@@ -8,7 +8,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        username: '',  // Changed from 'email' to 'username'
+        username: '', // Changed from 'email' to 'username'
         password: '',
         remember: false,
     });
@@ -26,12 +26,12 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in" />
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-5 rounded-xl bg-green-50/60 p-4 text-sm font-medium text-green-600 border border-green-100">
                     {status}
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="space-y-5">
                 <div>
                     <InputLabel htmlFor="username" value="Username / LRN / Teacher ID / Principal ID" />
 
@@ -50,7 +50,7 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.username} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
+                <div>
                     <InputLabel htmlFor="password" value="Password" />
 
                     <TextInput
@@ -61,13 +61,14 @@ export default function Login({ status, canResetPassword }) {
                         className="mt-1 block w-full"
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
+                        placeholder="••••••••"
                     />
 
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 block">
-                    <label className="flex items-center">
+                <div className="flex items-center justify-between pt-1">
+                    <label className="flex items-center cursor-pointer select-none">
                         <Checkbox
                             name="remember"
                             checked={data.remember}
@@ -75,32 +76,41 @@ export default function Login({ status, canResetPassword }) {
                                 setData('remember', e.target.checked)
                             }
                         />
-                        <span className="ms-2 text-sm text-gray-600">
+                        <span className="ms-2 text-sm text-[#434343] font-medium">
                             Remember me
                         </span>
                     </label>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="rounded-md text-sm font-semibold text-[#1C56A6] hover:text-[#22486A] focus:outline-none focus:ring-2 focus:ring-[#5EC4D2] transition duration-150"
                         >
                             Forgot your password?
                         </Link>
                     )}
+                </div>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
+                <div className="pt-2">
+                    <PrimaryButton className="w-full justify-center py-3 text-sm" disabled={processing}>
                         Log in
                     </PrimaryButton>
                 </div>
 
-                {/* Optional: Add a helpful hint for students */}
-                <div className="mt-6 text-center text-sm text-gray-500">
-                    <p>Students: Use your LRN</p>
-                    <p>Teachers: Use your Teacher ID</p>
-                    <p>Principal: Use your Principal ID</p>
+                {/* Styled structural hints section */}
+                <div className="mt-8 pt-6 border-t border-neutral-100 grid grid-cols-3 gap-2 text-center text-[11px] font-bold tracking-wide text-[#434343]/80 uppercase">
+                    <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
+                        <span className="block text-[#1C56A6]">Students</span>
+                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Use LRN</span>
+                    </div>
+                    <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
+                        <span className="block text-[#1C56A6]">Teachers</span>
+                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Teacher ID</span>
+                    </div>
+                    <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
+                        <span className="block text-[#1C56A6]">Principal</span>
+                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Principal ID</span>
+                    </div>
                 </div>
             </form>
         </GuestLayout>
