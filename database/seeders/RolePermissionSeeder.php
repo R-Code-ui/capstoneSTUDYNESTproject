@@ -10,55 +10,49 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Clear permission cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // ========== CREATE PERMISSIONS ==========
-
-        // Lesson Permissions
         Permission::firstOrCreate(['name' => 'lesson.view']);
         Permission::firstOrCreate(['name' => 'lesson.create']);
         Permission::firstOrCreate(['name' => 'lesson.edit']);
         Permission::firstOrCreate(['name' => 'lesson.delete']);
 
-        // Assignment Permissions
         Permission::firstOrCreate(['name' => 'assignment.view']);
         Permission::firstOrCreate(['name' => 'assignment.create']);
         Permission::firstOrCreate(['name' => 'assignment.edit']);
         Permission::firstOrCreate(['name' => 'assignment.delete']);
 
-        // Quiz Permissions
         Permission::firstOrCreate(['name' => 'quiz.view']);
         Permission::firstOrCreate(['name' => 'quiz.create']);
         Permission::firstOrCreate(['name' => 'quiz.edit']);
         Permission::firstOrCreate(['name' => 'quiz.delete']);
 
-        // Announcement Permissions
         Permission::firstOrCreate(['name' => 'announcement.view']);
         Permission::firstOrCreate(['name' => 'announcement.create']);
         Permission::firstOrCreate(['name' => 'announcement.edit']);
         Permission::firstOrCreate(['name' => 'announcement.delete']);
 
-        // Game Permissions
         Permission::firstOrCreate(['name' => 'game.view']);
         Permission::firstOrCreate(['name' => 'game.create']);
         Permission::firstOrCreate(['name' => 'game.edit']);
         Permission::firstOrCreate(['name' => 'game.delete']);
 
-        // Report Permissions
         Permission::firstOrCreate(['name' => 'report.view']);
 
-        // User Management Permissions
         Permission::firstOrCreate(['name' => 'user.manage']);
         Permission::firstOrCreate(['name' => 'teacher.manage']);
         Permission::firstOrCreate(['name' => 'student.manage']);
 
-        // ===== NEW: Activity Log Permission =====
         Permission::firstOrCreate(['name' => 'log.view']);
 
-        // ========== CREATE ROLES & ASSIGN PERMISSIONS ==========
+        Permission::firstOrCreate(['name' => 'message.view']);
+        Permission::firstOrCreate(['name' => 'message.send']);
+        Permission::firstOrCreate(['name' => 'message.delete']);
 
-        // Principal Role
+        Permission::firstOrCreate(['name' => 'progress.view']);   // ✅ new
+
+        // ========== CREATE ROLES & ASSIGN PERMISSIONS ==========
         $principalRole = Role::firstOrCreate(['name' => 'principal']);
         $principalRole->givePermissionTo([
             'lesson.view', 'lesson.create', 'lesson.edit', 'lesson.delete',
@@ -68,10 +62,11 @@ class RolePermissionSeeder extends Seeder
             'game.view', 'game.create', 'game.edit', 'game.delete',
             'report.view',
             'user.manage', 'teacher.manage', 'student.manage',
-            'log.view', // NEW
+            'log.view',
+            'message.view', 'message.send', 'message.delete',
+            'progress.view',
         ]);
 
-        // Teacher Role
         $teacherRole = Role::firstOrCreate(['name' => 'teacher']);
         $teacherRole->givePermissionTo([
             'lesson.view', 'lesson.create', 'lesson.edit', 'lesson.delete',
@@ -80,9 +75,10 @@ class RolePermissionSeeder extends Seeder
             'announcement.view', 'announcement.create', 'announcement.edit', 'announcement.delete',
             'game.view', 'game.create', 'game.edit', 'game.delete',
             'report.view',
+            'message.view', 'message.send', 'message.delete',
+            'progress.view',
         ]);
 
-        // Student Role
         $studentRole = Role::firstOrCreate(['name' => 'student']);
         $studentRole->givePermissionTo([
             'lesson.view',
@@ -90,6 +86,7 @@ class RolePermissionSeeder extends Seeder
             'quiz.view',
             'game.view',
             'announcement.view',
+            'message.view', 'message.send',
         ]);
 
         $this->command->info('✅ Roles and permissions seeded successfully!');

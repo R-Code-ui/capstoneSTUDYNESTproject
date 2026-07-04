@@ -8,6 +8,20 @@ import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 
+// Heroicons
+import {
+    EyeIcon,
+    ArrowDownTrayIcon,
+    UserIcon,
+    BookOpenIcon,
+    ClipboardDocumentListIcon,
+    DocumentTextIcon,
+    PuzzlePieceIcon,
+    ExclamationTriangleIcon,
+    AcademicCapIcon,
+    ChartBarIcon,
+} from '@heroicons/react/24/outline';
+
 export default function ProgressIndex({
     stats,
     student_progress,
@@ -119,7 +133,7 @@ export default function ProgressIndex({
     const actions = (row) => [
         {
             label: 'View Details',
-            icon: '👁️',
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.progress.show', row.student_id)),
         },
@@ -129,8 +143,11 @@ export default function ProgressIndex({
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Progress Tracking</h2>
-                    <PrimaryButton onClick={handleExport}>📥 Export CSV</PrimaryButton>
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Progress Tracking</span>
+                    <PrimaryButton onClick={handleExport}>
+                        <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
+                        Export CSV
+                    </PrimaryButton>
                 </div>
             }
         >
@@ -165,7 +182,12 @@ export default function ProgressIndex({
                     {/* ===== At-Risk Students ===== */}
                     {at_risk_students.length > 0 && (
                         <div className="mt-6">
-                            <Card title="⚠️ Students Requiring Support">
+                            <Card title={
+                                <div className="flex items-center gap-2">
+                                    <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                                    Students Requiring Support
+                                </div>
+                            }>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {at_risk_students.map((student) => (
                                         <div

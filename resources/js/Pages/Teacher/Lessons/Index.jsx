@@ -8,6 +8,16 @@ import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 
+// Heroicons
+import {
+    EyeIcon,
+    PencilSquareIcon,
+    CheckCircleIcon,
+    ArchiveBoxIcon,
+    TrashIcon,
+    PlusIcon,
+} from '@heroicons/react/24/outline';
+
 export default function LessonsIndex({
     lessons,
     assigned_grades,
@@ -101,31 +111,31 @@ export default function LessonsIndex({
     const actions = (row) => [
         {
             label: 'View',
-            icon: '👁️',
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.lessons.show', row.id)),
         },
         {
             label: 'Edit',
-            icon: '✏️',
+            icon: <PencilSquareIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.lessons.edit', row.id)),
         },
         ...(row.status === 'draft' ? [{
             label: 'Publish',
-            icon: '📤',
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => handlePublish(row),
         }] : []),
         ...(row.status !== 'archived' ? [{
             label: 'Archive',
-            icon: '📦',
+            icon: <ArchiveBoxIcon className="w-4 h-4" />,
             color: 'warning',
             onClick: () => handleArchive(row),
         }] : []),
         {
             label: 'Delete',
-            icon: '🗑️',
+            icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
             onClick: () => handleDelete(row),
         },
@@ -133,7 +143,7 @@ export default function LessonsIndex({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Lessons</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Lessons</span>}
         >
             <Head title="Lessons" />
 
@@ -176,7 +186,8 @@ export default function LessonsIndex({
                                     className="w-40"
                                 />
                                 <PrimaryButton onClick={() => router.visit(route('teacher.lessons.create'))}>
-                                    + Create Lesson
+                                    <PlusIcon className="w-4 h-4 mr-1" />
+                                    Create Lesson
                                 </PrimaryButton>
                             </div>
                         </div>

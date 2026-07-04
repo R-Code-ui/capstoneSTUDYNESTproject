@@ -9,6 +9,15 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
+// Heroicons
+import {
+    DocumentIcon,
+    PhotoIcon,
+    PaperClipIcon,
+    XMarkIcon,
+    PlusIcon,
+} from '@heroicons/react/24/outline';
+
 export default function LessonsEdit({
     lesson,
     assigned_grades,
@@ -50,10 +59,8 @@ export default function LessonsEdit({
 
         const formData = new FormData();
 
-        // Append all form data
         Object.keys(data).forEach((key) => {
             if (key === 'resources') {
-                // Append new files
                 data.resources.forEach((file) => {
                     formData.append('resources[]', file);
                 });
@@ -62,7 +69,6 @@ export default function LessonsEdit({
             }
         });
 
-        // For Laravel, we need to spoof PUT method
         formData.append('_method', 'PUT');
 
         post(route('teacher.lessons.update', lesson.id), {
@@ -73,9 +79,7 @@ export default function LessonsEdit({
         });
     };
 
-    // Override post with put
     const post = (url, options) => {
-        // Since we're using PUT with FormData, we need to use the put method
         return put(url, options);
     };
 
@@ -85,7 +89,7 @@ export default function LessonsEdit({
         const validFiles = [];
 
         const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-        const maxSize = 10 * 1024 * 1024; // 10MB
+        const maxSize = 2 * 1024 * 1024; // 2MB
         const maxFiles = 5;
         const currentTotal = existingResources.length + data.resources.length;
 
@@ -103,7 +107,7 @@ export default function LessonsEdit({
             }
 
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 10MB limit.`);
+                errors.push(`"${file.name}" exceeds the 2MB limit.`);
                 return;
             }
 
@@ -135,9 +139,13 @@ export default function LessonsEdit({
 
     const getFileIcon = (fileName) => {
         const ext = fileName.split('.').pop().toLowerCase();
-        if (['pdf'].includes(ext)) return '📄';
-        if (['jpg', 'jpeg', 'png'].includes(ext)) return '🖼️';
-        return '📎';
+        if (['pdf'].includes(ext)) {
+            return <DocumentIcon className="w-5 h-5 text-red-500" />;
+        }
+        if (['jpg', 'jpeg', 'png'].includes(ext)) {
+            return <PhotoIcon className="w-5 h-5 text-green-500" />;
+        }
+        return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
     };
 
     const getFileTypeLabel = (fileName) => {
@@ -359,7 +367,7 @@ export default function LessonsEdit({
                                             {existingResources.map((resource, index) => (
                                                 <div key={resource.id} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                                     <div className="flex items-center gap-2">
-                                                        <span>{getFileIcon(resource.name)}</span>
+                                                        {getFileIcon(resource.name)}
                                                         <span>{resource.name}</span>
                                                         <span className="text-xs text-gray-400">({getFileTypeLabel(resource.name)})</span>
                                                     </div>
@@ -368,7 +376,7 @@ export default function LessonsEdit({
                                                         onClick={() => removeExistingResource(index)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
-                                                        Remove
+                                                        <XMarkIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -381,7 +389,7 @@ export default function LessonsEdit({
 
                                 {/* New Resources Upload */}
                                 <div>
-                                    <InputLabel htmlFor="resources" value="Add New Resources (Max 5 files, 10MB each)" />
+                                    <InputLabel htmlFor="resources" value="Add New Resources (Max 5 files, 2MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
@@ -402,7 +410,7 @@ export default function LessonsEdit({
                                             {data.resources.map((file, index) => (
                                                 <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                                     <div className="flex items-center gap-2">
-                                                        <span>{getFileIcon(file.name)}</span>
+                                                        {getFileIcon(file.name)}
                                                         <span>{file.name}</span>
                                                         <span className="text-xs text-gray-400">({getFileTypeLabel(file.name)})</span>
                                                         <span className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</span>
@@ -412,7 +420,7 @@ export default function LessonsEdit({
                                                         onClick={() => removeNewFile(index)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
-                                                        Remove
+                                                        <XMarkIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -422,7 +430,7 @@ export default function LessonsEdit({
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Accepted: PDF, JPG, JPEG, PNG (Max 10MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, PNG (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>
@@ -441,7 +449,6 @@ export default function LessonsEdit({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                         >
                                             <option value="">None</option>
-                                            {/* Options will be passed from controller */}
                                         </select>
                                         <InputError message={errors.related_assignment_id} className="mt-2" />
                                     </div>

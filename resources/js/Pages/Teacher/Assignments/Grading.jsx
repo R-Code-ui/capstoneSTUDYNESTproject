@@ -11,6 +11,17 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
+// Heroicons
+import {
+    DocumentIcon,
+    ClipboardDocumentListIcon,
+    EyeIcon,
+    ArrowDownTrayIcon,
+    ArrowLeftIcon,
+    CheckCircleIcon,
+    XMarkIcon,
+} from '@heroicons/react/24/outline';
+
 export default function AssignmentGrading({ assignment, submissions, statistics }) {
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [showGradeModal, setShowGradeModal] = useState(false);
@@ -123,10 +134,10 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
     const columns = [
         { key: 'student_name', label: 'Student' },
         { key: 'lrn', label: 'LRN' },
-        { key: 'submission_method', label: 'Method', render: (row) => row.submission_method ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1) : '—' },
+        { key: 'submission_method', label: 'Method', render: (row) => row.submission_method ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1) : '---' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={getStatusBadge(row.status)} /> },
-        { key: 'score', label: 'Score', render: (row) => row.score !== null ? `${row.score}/${assignment.total_points}` : '—' },
-        { key: 'submitted_at', label: 'Submitted', render: (row) => row.submitted_at || '—' },
+        { key: 'score', label: 'Score', render: (row) => row.score !== null ? `${row.score}/${assignment.total_points}` : '---' },
+        { key: 'submitted_at', label: 'Submitted', render: (row) => row.submitted_at || '---' },
     ];
 
     const actions = (row) => {
@@ -136,7 +147,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             if (assignment.submission_methods?.includes('paper')) {
                 actionsList.push({
                     label: 'Mark Paper',
-                    icon: '📄',
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     color: 'warning',
                     onClick: () => handleMarkPaper(row),
                 });
@@ -144,7 +155,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
         } else {
             actionsList.push({
                 label: 'Grade',
-                icon: '📋',
+                icon: <ClipboardDocumentListIcon className="w-4 h-4" />,
                 color: 'success',
                 onClick: () => handleGrade(row),
             });
@@ -153,13 +164,13 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
         if (row.file_path) {
             actionsList.push({
                 label: 'View',
-                icon: '👁️',
+                icon: <EyeIcon className="w-4 h-4" />,
                 color: 'primary',
                 onClick: () => viewFile(row),
             });
             actionsList.push({
                 label: 'Download',
-                icon: '⬇️',
+                icon: <ArrowDownTrayIcon className="w-4 h-4" />,
                 color: 'primary',
                 onClick: () => downloadFile(row),
             });
@@ -172,10 +183,11 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         Grading: {assignment.title}
-                    </h2>
+                    </span>
                     <SecondaryButton onClick={() => router.visit(route('teacher.assignments.show', assignment.id))}>
+                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Assignment
                     </SecondaryButton>
                 </div>
@@ -205,7 +217,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                         </Card>
                         <Card className="text-center">
                             <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                {statistics.average_score ? Math.round(statistics.average_score) : '—'}
+                                {statistics.average_score ? Math.round(statistics.average_score) : '---'}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">Average Score</div>
                         </Card>
@@ -251,7 +263,6 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                         />
                         <InputError message={errors?.score} className="mt-2" />
                     </div>
-
                     <div>
                         <InputLabel htmlFor="feedback" value="Feedback (Optional)" />
                         <textarea
@@ -264,7 +275,6 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                         />
                         <InputError message={errors?.feedback} className="mt-2" />
                     </div>
-
                     <div>
                         <InputLabel htmlFor="status" value="Status" />
                         <select
@@ -302,7 +312,6 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                         Mark this student's paper-based submission as completed.
                     </p>
-
                     <div>
                         <InputLabel htmlFor="paper_score" value={`Score (out of ${assignment.total_points}) (Optional)`} />
                         <TextInput
@@ -316,7 +325,6 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                         />
                         <InputError message={errors?.score} className="mt-2" />
                     </div>
-
                     <div>
                         <InputLabel htmlFor="paper_feedback" value="Feedback (Optional)" />
                         <textarea

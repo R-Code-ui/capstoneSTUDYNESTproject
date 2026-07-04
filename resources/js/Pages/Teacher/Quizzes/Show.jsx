@@ -5,6 +5,14 @@ import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    ArrowLeftIcon,
+    PencilSquareIcon,
+    ChartBarIcon,
+    CheckCircleIcon,
+} from '@heroicons/react/24/outline';
+
 export default function QuizzesShow({ quiz }) {
     const getTypeLabel = (type) => {
         const labels = {
@@ -19,18 +27,27 @@ export default function QuizzesShow({ quiz }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {quiz.quiz_title}
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
                         <Link href={route('teacher.quizzes.results', quiz.id)}>
-                            <SecondaryButton>📊 Results</SecondaryButton>
+                            <SecondaryButton>
+                                <ChartBarIcon className="w-4 h-4 mr-1" />
+                                Results
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.quizzes.edit', quiz.id)}>
-                            <SecondaryButton>Edit</SecondaryButton>
+                            <SecondaryButton>
+                                <PencilSquareIcon className="w-4 h-4 mr-1" />
+                                Edit
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.quizzes.index')}>
-                            <PrimaryButton>Back to List</PrimaryButton>
+                            <PrimaryButton>
+                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                                Back to List
+                            </PrimaryButton>
                         </Link>
                     </div>
                 </div>
@@ -117,7 +134,6 @@ export default function QuizzesShow({ quiz }) {
                                                     <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                                                         Type: {getTypeLabel(question.question_type)}
                                                     </div>
-
                                                     {/* Multiple Choice Options */}
                                                     {question.question_type === 'multiple_choice' && (
                                                         <div className="mt-2 space-y-1 text-sm">
@@ -139,7 +155,6 @@ export default function QuizzesShow({ quiz }) {
                                                             </div>
                                                         </div>
                                                     )}
-
                                                     {/* Identification */}
                                                     {question.question_type === 'identification' && (
                                                         <div className="mt-2 text-sm">
@@ -152,7 +167,6 @@ export default function QuizzesShow({ quiz }) {
                                                             )}
                                                         </div>
                                                     )}
-
                                                     {/* True/False */}
                                                     {question.question_type === 'true_false' && (
                                                         <div className="mt-2 text-sm">

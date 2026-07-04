@@ -17,7 +17,7 @@ class QuizResultsController extends Controller
      */
     public function index(Quiz $quiz)
     {
-        Gate::authorize('view', $quiz);
+        Gate::authorize('quiz.view');
 
         // Get all attempts for this quiz
         $attempts = QuizAttempt::where('quiz_id', $quiz->id)
@@ -88,7 +88,7 @@ class QuizResultsController extends Controller
      */
     public function show(Quiz $quiz, QuizAttempt $attempt)
     {
-        Gate::authorize('view', $quiz);
+        Gate::authorize('quiz.view');
 
         // Ensure the attempt belongs to this quiz
         if ($attempt->quiz_id !== $quiz->id) {
@@ -153,6 +153,7 @@ class QuizResultsController extends Controller
                 'attempt_number' => $attempt->attempt_number,
                 'status' => $attempt->status,
                 'completed_at' => $attempt->completed_at ? $attempt->completed_at->format('Y-m-d H:i') : null,
+                'quiz_id' => $quiz->id,
             ],
             'questions' => $questionResults,
             'quiz_title' => $quiz->quiz_title,
@@ -164,7 +165,7 @@ class QuizResultsController extends Controller
      */
     public function export(Quiz $quiz)
     {
-        Gate::authorize('view', $quiz);
+        Gate::authorize('quiz.view');
 
         $attempts = QuizAttempt::where('quiz_id', $quiz->id)
             ->with('student')

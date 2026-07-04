@@ -8,10 +8,17 @@ use App\Http\Controllers\Principal\AnnouncementController;
 use App\Http\Controllers\Principal\ReportController;
 use App\Http\Controllers\Principal\ActivityLogController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
-use App\Http\Controllers\Teacher\LessonController; // ✅ ADDED FOR LESSON ROUTES
-use App\Http\Controllers\Teacher\AssignmentController; // ✅ ADDED FOR FUTURE USE
-use App\Http\Controllers\Teacher\QuizController; // ✅ ADDED FOR FUTURE USE
-use App\Http\Controllers\Teacher\GameController; // ✅ ADDED FOR FUTURE USE
+use App\Http\Controllers\Teacher\LessonController;
+use App\Http\Controllers\Teacher\AssignmentController;
+use App\Http\Controllers\Teacher\AssignmentGradingController;
+use App\Http\Controllers\Teacher\QuizController;
+use App\Http\Controllers\Teacher\QuizResultsController;
+use App\Http\Controllers\Teacher\GameController;
+use App\Http\Controllers\Teacher\GameResultsController;
+use App\Http\Controllers\Teacher\MessageController;
+use App\Http\Controllers\Teacher\ProgressTrackingController;
+use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementController;
+use App\Http\Controllers\Teacher\ReportController as TeacherReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -54,10 +61,8 @@ Route::middleware('auth')->group(function () {
     // ===========================================================
     Route::middleware(['role:principal'])->prefix('principal')->name('principal.')->group(function () {
 
-        // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // ===== User Management =====
         Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
         Route::post('/users/teacher', [UserManagementController::class, 'storeTeacher'])->name('users.store.teacher');
         Route::post('/users/student', [UserManagementController::class, 'storeStudent'])->name('users.store.student');
@@ -67,11 +72,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/users/archive/{id}', [UserManagementController::class, 'archive'])->name('users.archive');
         Route::post('/users/restore/{id}', [UserManagementController::class, 'restore'])->name('users.restore');
 
-        // ===== Teacher Monitoring =====
         Route::get('/teachers', [TeacherMonitoringController::class, 'index'])->name('teachers.index');
         Route::get('/teachers/{id}', [TeacherMonitoringController::class, 'show'])->name('teachers.show');
 
-        // ===== Announcements =====
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
         Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
@@ -79,15 +82,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/announcements/{id}/archive', [AnnouncementController::class, 'archive'])->name('announcements.archive');
         Route::post('/announcements/{id}/publish', [AnnouncementController::class, 'publish'])->name('announcements.publish');
 
-        // ===== Reports =====
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
         Route::get('/reports/export/pdf/{reportId}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
-
-        // View a specific report
         Route::get('/reports/{reportId}', [ReportController::class, 'show'])->name('reports.show');
 
-        // ===== Activity Logs =====
         Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index');
     });
 
@@ -95,11 +94,11 @@ Route::middleware('auth')->group(function () {
     // ===== TEACHER ROUTES =====
     // ===========================================================
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
+
         // Dashboard
         Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
 
         // ===== Lessons =====
-        // ✅ UNCOMMENTED - Full CRUD routes
         Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
         Route::get('/lessons/create', [LessonController::class, 'create'])->name('lessons.create');
         Route::post('/lessons', [LessonController::class, 'store'])->name('lessons.store');
@@ -107,62 +106,84 @@ Route::middleware('auth')->group(function () {
         Route::get('/lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('lessons.edit');
         Route::put('/lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
         Route::delete('/lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
-
-        // ✅ ADDED - Custom Lesson routes
         Route::post('/lessons/{lesson}/publish', [LessonController::class, 'publish'])->name('lessons.publish');
         Route::post('/lessons/{lesson}/archive', [LessonController::class, 'archive'])->name('lessons.archive');
         Route::get('/lessons/download-resource/{resource}', [LessonController::class, 'downloadResource'])->name('lessons.download-resource');
 
-        // ===== Assignments (coming soon) =====
-        // Route::resource('assignments', AssignmentController::class);
+        // ===== Assignments =====
+        Route::get('/assignments', [AssignmentController::class, 'index'])->name('assignments.index');
+        Route::get('/assignments/create', [AssignmentController::class, 'create'])->name('assignments.create');
+        Route::post('/assignments', [AssignmentController::class, 'store'])->name('assignments.store');
+        Route::get('/assignments/{assignment}', [AssignmentController::class, 'show'])->name('assignments.show');
+        Route::get('/assignments/{assignment}/edit', [AssignmentController::class, 'edit'])->name('assignments.edit');
+        Route::put('/assignments/{assignment}', [AssignmentController::class, 'update'])->name('assignments.update');
+        Route::delete('/assignments/{assignment}', [AssignmentController::class, 'destroy'])->name('assignments.destroy');
+        Route::post('/assignments/{assignment}/publish', [AssignmentController::class, 'publish'])->name('assignments.publish');
+        Route::get('/assignments/download-resource/{resource}', [AssignmentController::class, 'downloadResource'])->name('assignments.download-resource');
 
-        // ===== Quizzes (coming soon) =====
-        // Route::resource('quizzes', QuizController::class);
+        // ===== Assignment Grading =====
+        Route::get('/assignments/{assignment}/grade', [AssignmentGradingController::class, 'index'])->name('assignments.grade');
+        Route::post('/assignments/{assignment}/grade/{submission}', [AssignmentGradingController::class, 'grade'])->name('assignments.grade.store');
+        Route::post('/assignments/{assignment}/mark-paper/{studentId}', [AssignmentGradingController::class, 'markPaper'])->name('assignments.grade.mark-paper');
+        Route::get('/assignments/view-file/{submissionId}', [AssignmentGradingController::class, 'viewFile'])->name('assignments.view-file');
+        Route::get('/assignments/download-file/{submissionId}', [AssignmentGradingController::class, 'downloadFile'])->name('assignments.download-file');
 
-        // ===== Games (coming soon) =====
-        // Route::resource('games', GameController::class);
+        // ===== Quizzes =====
+        Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
+        Route::get('/quizzes/create', [QuizController::class, 'create'])->name('quizzes.create');
+        Route::post('/quizzes', [QuizController::class, 'store'])->name('quizzes.store');
+        Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
+        Route::get('/quizzes/{quiz}/edit', [QuizController::class, 'edit'])->name('quizzes.edit');
+        Route::put('/quizzes/{quiz}', [QuizController::class, 'update'])->name('quizzes.update');
+        Route::delete('/quizzes/{quiz}', [QuizController::class, 'destroy'])->name('quizzes.destroy');
+        Route::post('/quizzes/{quiz}/publish', [QuizController::class, 'publish'])->name('quizzes.publish');
 
-        // ===== Announcements (coming soon) =====
-        // Route::resource('announcements', AnnouncementController::class);
+        // ===== Quiz Results =====
+        Route::get('/quizzes/{quiz}/results', [QuizResultsController::class, 'index'])->name('quizzes.results');
+        Route::get('/quizzes/{quiz}/export', [QuizResultsController::class, 'export'])->name('quizzes.export');
+        Route::get('/quizzes/{quiz}/attempt/{attempt}', [QuizResultsController::class, 'show'])->name('quizzes.attempt-details');
 
-        // ===== Messages (coming soon) =====
-        // Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+        // ===== Games =====
+        Route::get('/games', [GameController::class, 'index'])->name('games.index');
+        Route::get('/games/create', [GameController::class, 'create'])->name('games.create');
+        Route::post('/games', [GameController::class, 'store'])->name('games.store');
+        Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+        Route::get('/games/{game}/edit', [GameController::class, 'edit'])->name('games.edit');
+        Route::put('/games/{game}', [GameController::class, 'update'])->name('games.update');
+        Route::delete('/games/{game}', [GameController::class, 'destroy'])->name('games.destroy');
+        Route::post('/games/{game}/publish', [GameController::class, 'publish'])->name('games.publish');
 
-        // ===== Progress Tracking (coming soon) =====
-        // Route::get('/progress', [ProgressTrackingController::class, 'index'])->name('progress.index');
+        // ===== Game Results =====
+        Route::get('/games/{game}/results', [GameResultsController::class, 'index'])->name('games.results');
+        Route::get('/games/{game}/export', [GameResultsController::class, 'export'])->name('games.export');
 
-        // ===== Reports (coming soon) =====
-        // Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    });
+        // ===== Messages =====
+        Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+        Route::get('/messages/create', [MessageController::class, 'create'])->name('messages.create');
+        Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/{message}', [MessageController::class, 'show'])->name('messages.show');
+        Route::post('/messages/{message}/reply', [MessageController::class, 'reply'])->name('messages.reply');
+        Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
 
-    // ===========================================================
-    // ===== STUDENT ROUTES =====
-    // ===========================================================
-    Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Student/Dashboard');
-        })->name('dashboard');
+        // ===== Progress Tracking =====
+        Route::get('/progress', [ProgressTrackingController::class, 'index'])->name('progress.index');
+        Route::get('/progress/export', [ProgressTrackingController::class, 'export'])->name('progress.export');
+        Route::get('/progress/{studentId}', [ProgressTrackingController::class, 'show'])->name('progress.show');
 
-        // Lessons (coming soon)
-        // Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
+        // ===== Announcements =====
+        Route::get('/announcements', [TeacherAnnouncementController::class, 'index'])->name('announcements.index');
+        Route::get('/announcements/create', [TeacherAnnouncementController::class, 'create'])->name('announcements.create');
+        Route::post('/announcements', [TeacherAnnouncementController::class, 'store'])->name('announcements.store');
+        Route::get('/announcements/{announcement}', [TeacherAnnouncementController::class, 'show'])->name('announcements.show');
+        Route::get('/announcements/{announcement}/edit', [TeacherAnnouncementController::class, 'edit'])->name('announcements.edit');
+        Route::put('/announcements/{announcement}', [TeacherAnnouncementController::class, 'update'])->name('announcements.update');
+        Route::delete('/announcements/{announcement}', [TeacherAnnouncementController::class, 'destroy'])->name('announcements.destroy');
+        Route::post('/announcements/{announcement}/publish', [TeacherAnnouncementController::class, 'publish'])->name('announcements.publish');
+        Route::post('/announcements/{announcement}/archive', [TeacherAnnouncementController::class, 'archive'])->name('announcements.archive');
 
-        // Assignments (coming soon)
-        // Route::get('/assignments', [AssignmentController::class, 'index'])->name('assignments.index');
-
-        // Quizzes (coming soon)
-        // Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
-
-        // Games (coming soon)
-        // Route::get('/games', [GameController::class, 'index'])->name('games.index');
-
-        // Messages (coming soon)
-        // Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-
-        // Announcements (coming soon)
-        // Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
-
-        // Progress (coming soon)
-        // Route::get('/progress', [ProgressTrackerController::class, 'index'])->name('progress.index');
+        // ===== Reports =====
+        Route::get('/reports', [TeacherReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/pdf', [TeacherReportController::class, 'generatePdf'])->name('reports.pdf');
     });
 });
 

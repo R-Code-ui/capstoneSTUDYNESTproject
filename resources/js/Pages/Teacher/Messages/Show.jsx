@@ -9,9 +9,19 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
+// Heroicons
+import {
+    ArrowLeftIcon,
+    ChatBubbleLeftIcon,
+    CheckCircleIcon,
+    UserIcon,
+    CalendarIcon,
+} from '@heroicons/react/24/outline';
+
 export default function MessagesShow({ message }) {
     const [showReplyForm, setShowReplyForm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
     const { data, setData, errors, post } = useForm({
         reply: '',
     });
@@ -33,16 +43,18 @@ export default function MessagesShow({ message }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         Message
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
                         {!message.is_sender && message.status !== 'replied' && (
                             <PrimaryButton onClick={() => setShowReplyForm(!showReplyForm)}>
-                                💬 Reply
+                                <ChatBubbleLeftIcon className="w-4 h-4 mr-1" />
+                                Reply
                             </PrimaryButton>
                         )}
                         <SecondaryButton onClick={() => router.visit(route('teacher.messages.index'))}>
+                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Inbox
                         </SecondaryButton>
                     </div>
@@ -63,14 +75,16 @@ export default function MessagesShow({ message }) {
                                         {message.subject}
                                     </h3>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <UserIcon className="w-4 h-4" />
                                             {message.is_sender ? 'To: ' : 'From: '}
                                             <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 {message.is_sender ? message.to : message.from}
                                             </span>
                                         </span>
                                         <span className="text-sm text-gray-400 dark:text-gray-500">•</span>
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <CalendarIcon className="w-4 h-4" />
                                             {message.created_at}
                                         </span>
                                     </div>
@@ -147,7 +161,10 @@ export default function MessagesShow({ message }) {
                         <div className="mt-6">
                             <Card title="Reply Status">
                                 <div className="text-center py-4">
-                                    <div className="text-green-600 dark:text-green-400 text-lg">✅ You have replied to this message</div>
+                                    <div className="flex items-center justify-center text-green-600 dark:text-green-400 text-lg gap-2">
+                                        <CheckCircleIcon className="w-6 h-6" />
+                                        You have replied to this message
+                                    </div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                         Status: Replied
                                     </p>

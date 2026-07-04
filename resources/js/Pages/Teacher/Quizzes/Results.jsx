@@ -5,6 +5,13 @@ import Table, { StatusBadge } from '@/Components/Table';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    ArrowLeftIcon,
+    EyeIcon,
+    ArrowDownTrayIcon,
+} from '@heroicons/react/24/outline';
+
 export default function QuizResults({ quiz, attempts, statistics, distribution }) {
     const handleExport = () => {
         window.open(route('teacher.quizzes.export', quiz.id), '_blank');
@@ -23,16 +30,16 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
     const columns = [
         { key: 'student_name', label: 'Student' },
         { key: 'lrn', label: 'LRN' },
-        { key: 'score', label: 'Score', render: (row) => row.score !== null ? `${row.score}/${row.total_questions}` : '—' },
+        { key: 'score', label: 'Score', render: (row) => row.score !== null ? `${row.score}/${row.total_questions}` : '---' },
         { key: 'attempt_number', label: 'Attempt' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={getStatusBadge(row.status)} /> },
-        { key: 'completed_at', label: 'Completed', render: (row) => row.completed_at || '—' },
+        { key: 'completed_at', label: 'Completed', render: (row) => row.completed_at || '---' },
     ];
 
     const actions = (row) => [
         {
             label: 'View Details',
-            icon: '👁️',
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => {
                 if (row.attempt_id) {
@@ -55,12 +62,16 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         Results: {quiz.title}
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
-                        <PrimaryButton onClick={handleExport}>📥 Export CSV</PrimaryButton>
+                        <PrimaryButton onClick={handleExport}>
+                            <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
+                            Export CSV
+                        </PrimaryButton>
                         <SecondaryButton onClick={() => router.visit(route('teacher.quizzes.show', quiz.id))}>
+                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Quiz
                         </SecondaryButton>
                     </div>

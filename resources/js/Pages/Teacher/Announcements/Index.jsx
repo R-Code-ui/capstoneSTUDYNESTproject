@@ -8,6 +8,17 @@ import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 
+// Heroicons
+import {
+    EyeIcon,
+    PencilSquareIcon,
+    CheckCircleIcon,
+    ArchiveBoxIcon,
+    TrashIcon,
+    PlusIcon,
+    ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
+
 export default function AnnouncementsIndex({
     announcements,
     assigned_grades,
@@ -93,15 +104,19 @@ export default function AnnouncementsIndex({
         { key: 'title', label: 'Title' },
         { key: 'category', label: 'Category' },
         { key: 'target_audience', label: 'Audience', render: (row) => row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) },
-        { key: 'priority', label: 'Priority', render: (row) => (
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                row.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                row.priority === 'important' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-            }`}>
-                {row.priority?.charAt(0).toUpperCase() + row.priority?.slice(1)}
-            </span>
-        )},
+        {
+            key: 'priority',
+            label: 'Priority',
+            render: (row) => (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    row.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                    row.priority === 'important' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                }`}>
+                    {row.priority?.charAt(0).toUpperCase() + row.priority?.slice(1)}
+                </span>
+            )
+        },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
         { key: 'view_count', label: 'Views' },
         { key: 'created_at', label: 'Date Posted' },
@@ -110,31 +125,31 @@ export default function AnnouncementsIndex({
     const actions = (row) => [
         {
             label: 'View',
-            icon: '👁️',
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.announcements.show', row.id)),
         },
         {
             label: 'Edit',
-            icon: '✏️',
+            icon: <PencilSquareIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.announcements.edit', row.id)),
         },
         ...(row.status === 'draft' ? [{
             label: 'Publish',
-            icon: '📤',
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => handlePublish(row),
         }] : []),
         ...(row.status !== 'archived' ? [{
             label: 'Archive',
-            icon: '📦',
+            icon: <ArchiveBoxIcon className="w-4 h-4" />,
             color: 'warning',
             onClick: () => handleArchive(row),
         }] : []),
         {
             label: 'Delete',
-            icon: '🗑️',
+            icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
             onClick: () => handleDelete(row),
         },
@@ -142,7 +157,15 @@ export default function AnnouncementsIndex({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Announcements</h2>}
+            header={
+                <div className="flex items-center justify-between">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Announcements</span>
+                    <PrimaryButton onClick={() => router.visit(route('teacher.announcements.create'))}>
+                        <PlusIcon className="w-4 h-4 mr-1" />
+                        Create Announcement
+                    </PrimaryButton>
+                </div>
+            }
         >
             <Head title="Announcements" />
 
@@ -184,9 +207,6 @@ export default function AnnouncementsIndex({
                                     size="md"
                                     className="w-36"
                                 />
-                                <PrimaryButton onClick={() => router.visit(route('teacher.announcements.create'))}>
-                                    + Create Announcement
-                                </PrimaryButton>
                             </div>
                         </div>
 

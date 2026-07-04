@@ -29,6 +29,15 @@ class AssignmentGradingController extends Controller
             ->where('grade_level', $assignment->grade_level)
             ->get();
 
+        // ✅ FIX: submission_methods is already cast to array by the model
+        // No need for json_decode()
+        $submissionMethods = $assignment->submission_methods;
+
+        // If it's a string (legacy data), decode it
+        if (is_string($submissionMethods)) {
+            $submissionMethods = json_decode($submissionMethods, true);
+        }
+
         // Merge to show all students (including those who haven't submitted)
         $allStudents = $students->map(function ($student) use ($submissions) {
             $submission = $submissions->firstWhere('student_id', $student->id);
@@ -57,7 +66,7 @@ class AssignmentGradingController extends Controller
                 'subject' => $assignment->subject,
                 'total_points' => $assignment->total_points,
                 'due_date' => $assignment->due_date,
-                'submission_methods' => json_decode($assignment->submission_methods, true),
+                'submission_methods' => $submissionMethods, // ✅ FIXED
             ],
             'submissions' => $allStudents,
             'statistics' => [

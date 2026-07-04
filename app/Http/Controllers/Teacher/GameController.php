@@ -55,7 +55,7 @@ class GameController extends Controller
                     'grade_level' => $game->grade_level,
                     'game_type' => $game->game_type,
                     'max_attempts' => $game->max_attempts,
-                    'due_date' => $game->due_date,
+                    'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                     'status' => $game->status,
                     'participants' => $completedCount . '/' . $resultsCount,
                     'created_at' => $game->created_at->format('Y-m-d'),
@@ -81,11 +81,11 @@ class GameController extends Controller
         Gate::authorize('create', Game::class);
 
         $user = auth()->user();
+
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $statuses = ['draft', 'published'];
         $gameTypes = ['literacy', 'numeracy'];
 
-        // Define available games by grade level
         $gamesByGrade = [
             'Grade 4' => [
                 'literacy' => ['Word Identification', 'Vocabulary Matching', 'Reading Practice'],
@@ -126,11 +126,13 @@ class GameController extends Controller
             'status' => 'required|in:draft,published',
         ]);
 
+        // Convert game_data to JSON string before saving
+        $validated['game_data'] = json_encode($validated['game_data']);
+
         $game = Game::create([
             'teacher_id' => auth()->id(),
-            'game_data' => json_encode($validated['game_data']),
             'max_attempts' => $validated['max_attempts'] ?? 1,
-            'publish_date' => $validated['status'] === 'published' ? now()->format('Y-m-d') : now()->format('Y-m-d'),
+            'publish_date' => now()->format('Y-m-d'),
             ...$validated,
         ]);
 
@@ -145,17 +147,24 @@ class GameController extends Controller
     {
         Gate::authorize('view', $game);
 
+        // game_data is already cast to array by the model
+        $gameData = $game->game_data;
+        if (is_string($gameData)) {
+            $gameData = json_decode($gameData, true);
+        }
+
         return Inertia::render('Teacher/Games/Show', [
             'game' => [
                 'id' => $game->id,
                 'grade_level' => $game->grade_level,
                 'game_title' => $game->game_title,
                 'game_type' => $game->game_type,
-                'game_data' => json_decode($game->game_data, true),
+                'game_data' => $gameData,
                 'max_attempts' => $game->max_attempts,
-                'due_date' => $game->due_date,
+                'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                 'status' => $game->status,
-                'publish_date' => $game->publish_date,
+                // ✅ FIX: Format publish_date to Y-m-d
+                'publish_date' => $game->publish_date ? $game->publish_date->format('Y-m-d') : null,
                 'created_at' => $game->created_at->format('Y-m-d H:i'),
                 'results' => $game->results()->with('student')->get()->map(function ($result) {
                     return [
@@ -179,6 +188,7 @@ class GameController extends Controller
         Gate::authorize('update', $game);
 
         $user = auth()->user();
+
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $statuses = ['draft', 'published'];
         $gameTypes = ['literacy', 'numeracy'];
@@ -198,15 +208,22 @@ class GameController extends Controller
             ],
         ];
 
+        // game_data is already cast to array by the model
+        $gameData = $game->game_data;
+        if (is_string($gameData)) {
+            $gameData = json_decode($gameData, true);
+        }
+
         return Inertia::render('Teacher/Games/Edit', [
             'game' => [
                 'id' => $game->id,
                 'grade_level' => $game->grade_level,
                 'game_title' => $game->game_title,
                 'game_type' => $game->game_type,
-                'game_data' => json_decode($game->game_data, true),
+                'game_data' => $gameData,
                 'max_attempts' => $game->max_attempts,
-                'due_date' => $game->due_date,
+                // ✅ FIX: Format due_date to Y-m-d for edit form
+                'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                 'status' => $game->status,
             ],
             'assigned_grades' => $assignedGrades,
@@ -233,8 +250,10 @@ class GameController extends Controller
             'status' => 'required|in:draft,published',
         ]);
 
+        // Convert game_data to JSON string before saving
+        $validated['game_data'] = json_encode($validated['game_data']);
+
         $game->update([
-            'game_data' => json_encode($validated['game_data']),
             'max_attempts' => $validated['max_attempts'] ?? 1,
             ...$validated,
         ]);

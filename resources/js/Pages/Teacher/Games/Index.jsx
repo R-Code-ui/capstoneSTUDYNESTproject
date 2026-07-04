@@ -8,6 +8,16 @@ import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 
+// Heroicons
+import {
+    EyeIcon,
+    PencilSquareIcon,
+    ChartBarIcon,
+    CheckCircleIcon,
+    TrashIcon,
+    PlusIcon,
+} from '@heroicons/react/24/outline';
+
 export default function GamesIndex({
     games,
     assigned_grades,
@@ -86,7 +96,7 @@ export default function GamesIndex({
         { key: 'grade_level', label: 'Grade' },
         { key: 'game_type', label: 'Type', render: (row) => row.game_type?.charAt(0).toUpperCase() + row.game_type?.slice(1) },
         { key: 'max_attempts', label: 'Attempts' },
-        { key: 'due_date', label: 'Due Date', render: (row) => row.due_date || '—' },
+        { key: 'due_date', label: 'Due Date', render: (row) => row.due_date || '---' },
         { key: 'participants', label: 'Participants' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     ];
@@ -94,31 +104,31 @@ export default function GamesIndex({
     const actions = (row) => [
         {
             label: 'View',
-            icon: '👁️',
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.games.show', row.id)),
         },
         {
             label: 'Edit',
-            icon: '✏️',
+            icon: <PencilSquareIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.games.edit', row.id)),
         },
         {
             label: 'Results',
-            icon: '📊',
+            icon: <ChartBarIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => router.visit(route('teacher.games.results', row.id)),
         },
         ...(row.status === 'draft' ? [{
             label: 'Publish',
-            icon: '📤',
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => handlePublish(row),
         }] : []),
         {
             label: 'Delete',
-            icon: '🗑️',
+            icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
             onClick: () => handleDelete(row),
         },
@@ -126,7 +136,7 @@ export default function GamesIndex({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Games</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Games</span>}
         >
             <Head title="Games" />
 
@@ -169,7 +179,8 @@ export default function GamesIndex({
                                     className="w-40"
                                 />
                                 <PrimaryButton onClick={() => router.visit(route('teacher.games.create'))}>
-                                    + Assign Game
+                                    <PlusIcon className="w-4 h-4 mr-1" />
+                                    Assign Game
                                 </PrimaryButton>
                             </div>
                         </div>

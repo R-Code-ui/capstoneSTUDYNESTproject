@@ -5,6 +5,18 @@ import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    ArrowLeftIcon,
+    PencilSquareIcon,
+    UserIcon,
+    CalendarIcon,
+    EyeIcon,
+    TagIcon,
+    CheckCircleIcon,
+    ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
+
 export default function AnnouncementsShow({ announcement }) {
     const getPriorityBadge = (priority) => {
         const classes = {
@@ -19,15 +31,21 @@ export default function AnnouncementsShow({ announcement }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {announcement.title}
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
                         <Link href={route('teacher.announcements.edit', announcement.id)}>
-                            <SecondaryButton>Edit</SecondaryButton>
+                            <SecondaryButton>
+                                <PencilSquareIcon className="w-4 h-4 mr-1" />
+                                Edit
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.announcements.index')}>
-                            <PrimaryButton>Back to List</PrimaryButton>
+                            <PrimaryButton>
+                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                                Back to List
+                            </PrimaryButton>
                         </Link>
                     </div>
                 </div>
@@ -47,11 +65,13 @@ export default function AnnouncementsShow({ announcement }) {
                                         {announcement.title}
                                     </h3>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <UserIcon className="w-4 h-4" />
                                             Posted by {announcement.posted_by}
                                         </span>
                                         <span className="text-sm text-gray-400 dark:text-gray-500">•</span>
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <CalendarIcon className="w-4 h-4" />
                                             {announcement.created_at}
                                         </span>
                                     </div>
@@ -81,7 +101,10 @@ export default function AnnouncementsShow({ announcement }) {
                                     <div className="font-medium text-gray-900 dark:text-white">{announcement.publish_date}</div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Views</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <EyeIcon className="w-4 h-4" />
+                                        Views
+                                    </div>
                                     <div className="font-medium text-gray-900 dark:text-white">{announcement.view_count}</div>
                                 </div>
                                 {announcement.expiration_date && (

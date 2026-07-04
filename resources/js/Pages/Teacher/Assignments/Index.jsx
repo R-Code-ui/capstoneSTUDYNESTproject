@@ -8,6 +8,16 @@ import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 
+// Heroicons
+import {
+    EyeIcon,
+    PencilSquareIcon,
+    ClipboardDocumentListIcon,
+    CheckCircleIcon,
+    TrashIcon,
+    PlusIcon,
+} from '@heroicons/react/24/outline';
+
 export default function AssignmentsIndex({
     assignments,
     assigned_grades,
@@ -95,31 +105,31 @@ export default function AssignmentsIndex({
     const actions = (row) => [
         {
             label: 'View',
-            icon: '👁️',
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.assignments.show', row.id)),
         },
         {
             label: 'Edit',
-            icon: '✏️',
+            icon: <PencilSquareIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.assignments.edit', row.id)),
         },
         {
             label: 'Grade',
-            icon: '📋',
+            icon: <ClipboardDocumentListIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => router.visit(route('teacher.assignments.grade', row.id)),
         },
         ...(row.status === 'draft' ? [{
             label: 'Publish',
-            icon: '📤',
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => handlePublish(row),
         }] : []),
         {
             label: 'Delete',
-            icon: '🗑️',
+            icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
             onClick: () => handleDelete(row),
         },
@@ -127,7 +137,7 @@ export default function AssignmentsIndex({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Assignments</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Assignments</span>}
         >
             <Head title="Assignments" />
 
@@ -170,7 +180,8 @@ export default function AssignmentsIndex({
                                     className="w-40"
                                 />
                                 <PrimaryButton onClick={() => router.visit(route('teacher.assignments.create'))}>
-                                    + Create Assignment
+                                    <PlusIcon className="w-4 h-4 mr-1" />
+                                    Create Assignment
                                 </PrimaryButton>
                             </div>
                         </div>

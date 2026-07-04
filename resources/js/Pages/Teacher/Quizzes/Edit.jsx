@@ -8,6 +8,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function QuizzesEdit({
     quiz,
@@ -23,7 +24,7 @@ export default function QuizzesEdit({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [questions, setQuestions] = useState(quiz.questions || []);
 
-    const { data, setData, errors, post } = useForm({
+    const { data, setData, errors, put } = useForm({
         grade_level: quiz.grade_level || '',
         subject: quiz.subject || '',
         school_year: quiz.school_year || '',
@@ -42,25 +43,54 @@ export default function QuizzesEdit({
         questions: questions,
     });
 
+    // Keep form data in sync with questions state
     useEffect(() => {
         setData('questions', questions);
         setData('total_questions', questions.length);
     }, [questions]);
 
+    const handleQuizTypeChange = (e) => {
+        const newType = e.target.value;
+        setData('quiz_type', newType);
+
+        const updatedQuestions = questions.map((q) => ({
+            ...q,
+            question_type: newType,
+            choice_a: '',
+            choice_b: '',
+            choice_c: '',
+            choice_d: '',
+            correct_answer: '',
+            alternative_answers: [],
+        }));
+        setQuestions(updatedQuestions);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        const formData = {
-            ...data,
-            questions: questions,
-            total_questions: questions.length,
-        };
+        const hasEmptyQuestion = questions.some(q => !q.question_text.trim());
+        if (hasEmptyQuestion) {
+            alert('Please fill in all question text fields.');
+            setIsSubmitting(false);
+            return;
+        }
 
-        post(route('teacher.quizzes.update', quiz.id), {
-            data: formData,
+        const hasNoCorrectAnswer = questions.some(q => !q.correct_answer);
+        if (hasNoCorrectAnswer) {
+            alert('Please select a correct answer for all questions.');
+            setIsSubmitting(false);
+            return;
+        }
+
+        setData('questions', questions);
+        setData('total_questions', questions.length);
+
+        put(route('teacher.quizzes.update', quiz.id), {
             preserveState: true,
-            onFinish: () => setIsSubmitting(false),
+            onSuccess: () => setIsSubmitting(false),
+            onError: () => setIsSubmitting(false),
         });
     };
 
@@ -106,6 +136,11 @@ export default function QuizzesEdit({
         setQuestions(newQuestions);
     };
 
+    const getQuestionError = (questionIndex, field) => {
+        const key = `questions.${questionIndex}.${field}`;
+        return errors[key];
+    };
+
     const getQuestionTypeFields = (question, index) => {
         switch (question.question_type) {
             case 'multiple_choice':
@@ -119,6 +154,7 @@ export default function QuizzesEdit({
                                 className="mt-1 block w-full"
                                 placeholder="Option A"
                             />
+                            <InputError message={getQuestionError(index, 'choice_a')} className="mt-1" />
                         </div>
                         <div>
                             <InputLabel value="Choice B" />
@@ -128,6 +164,7 @@ export default function QuizzesEdit({
                                 className="mt-1 block w-full"
                                 placeholder="Option B"
                             />
+                            <InputError message={getQuestionError(index, 'choice_b')} className="mt-1" />
                         </div>
                         <div>
                             <InputLabel value="Choice C" />
@@ -137,6 +174,7 @@ export default function QuizzesEdit({
                                 className="mt-1 block w-full"
                                 placeholder="Option C"
                             />
+                            <InputError message={getQuestionError(index, 'choice_c')} className="mt-1" />
                         </div>
                         <div>
                             <InputLabel value="Choice D" />
@@ -146,6 +184,7 @@ export default function QuizzesEdit({
                                 className="mt-1 block w-full"
                                 placeholder="Option D"
                             />
+                            <InputError message={getQuestionError(index, 'choice_d')} className="mt-1" />
                         </div>
                         <div className="col-span-2">
                             <InputLabel value="Correct Answer" />
@@ -160,6 +199,7 @@ export default function QuizzesEdit({
                                 <option value="C">C</option>
                                 <option value="D">D</option>
                             </select>
+                            <InputError message={getQuestionError(index, 'correct_answer')} className="mt-1" />
                         </div>
                     </div>
                 );
@@ -174,6 +214,7 @@ export default function QuizzesEdit({
                                 className="mt-1 block w-full"
                                 placeholder="e.g., Mars"
                             />
+                            <InputError message={getQuestionError(index, 'correct_answer')} className="mt-1" />
                         </div>
                         <div className="col-span-2">
                             <InputLabel value="Alternative Answers (comma separated, optional)" />
@@ -183,6 +224,7 @@ export default function QuizzesEdit({
                                 className="mt-1 block w-full"
                                 placeholder="e.g., mars, MARS, Planet Mars"
                             />
+                            <InputError message={getQuestionError(index, 'alternative_answers')} className="mt-1" />
                         </div>
                     </div>
                 );
@@ -199,6 +241,7 @@ export default function QuizzesEdit({
                             <option value="True">True</option>
                             <option value="False">False</option>
                         </select>
+                        <InputError message={getQuestionError(index, 'correct_answer')} className="mt-1" />
                     </div>
                 );
             default:
@@ -208,7 +251,7 @@ export default function QuizzesEdit({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Quiz</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Quiz</span>}
         >
             <Head title="Edit Quiz" />
 
@@ -218,8 +261,25 @@ export default function QuizzesEdit({
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* ===== Section 1: Academic Information ===== */}
+                            {/* ===== Basic Information ===== */}
                             <div>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h3>
+                                <div>
+                                    <InputLabel htmlFor="quiz_title" value="Quiz Title" required />
+                                    <TextInput
+                                        id="quiz_title"
+                                        value={data.quiz_title}
+                                        onChange={(e) => setData('quiz_title', e.target.value)}
+                                        className="mt-1 block w-full"
+                                        placeholder="Enter quiz title"
+                                        required
+                                    />
+                                    <InputError message={errors.quiz_title} className="mt-2" />
+                                </div>
+                            </div>
+
+                            {/* Academic Information */}
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Academic Information</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -319,7 +379,7 @@ export default function QuizzesEdit({
                                 </div>
                             </div>
 
-                            {/* ===== Section 2: Quiz Settings ===== */}
+                            {/* Quiz Settings */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quiz Settings</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -328,12 +388,14 @@ export default function QuizzesEdit({
                                         <select
                                             id="quiz_type"
                                             value={data.quiz_type}
-                                            onChange={(e) => setData('quiz_type', e.target.value)}
+                                            onChange={handleQuizTypeChange}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             required
                                         >
                                             {quiz_types.map((type) => (
-                                                <option key={type} value={type}>{type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                                <option key={type} value={type}>
+                                                    {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                </option>
                                             ))}
                                         </select>
                                         <InputError message={errors.quiz_type} className="mt-2" />
@@ -391,17 +453,20 @@ export default function QuizzesEdit({
                                 </div>
                             </div>
 
-                            {/* ===== Section 3: Questions ===== */}
+                            {/* Questions */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Questions</h3>
                                     <PrimaryButton type="button" onClick={addQuestion}>
-                                        + Add Question
+                                        <PlusIcon className="w-4 h-4 mr-1" />
+                                        Add Question
                                     </PrimaryButton>
                                 </div>
 
+                                <InputError message={errors.questions} className="mb-2" />
+
                                 {questions.map((question, index) => (
-                                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+                                    <div key={index} className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-4 border border-gray-200 dark:border-gray-600">
                                         <div className="flex items-center justify-between mb-3">
                                             <h4 className="font-medium text-gray-900 dark:text-white">
                                                 Question {index + 1}
@@ -409,21 +474,22 @@ export default function QuizzesEdit({
                                             <button
                                                 type="button"
                                                 onClick={() => removeQuestion(index)}
-                                                className="text-red-500 hover:text-red-700"
+                                                className="text-red-500 hover:text-red-700 flex items-center gap-1"
                                             >
+                                                <TrashIcon className="w-4 h-4" />
                                                 Remove
                                             </button>
                                         </div>
 
                                         <div>
-                                            <InputLabel value="Question Text" />
+                                            <InputLabel value="Question Text" required />
                                             <TextInput
                                                 value={question.question_text}
                                                 onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
                                                 className="mt-1 block w-full"
                                                 placeholder="Enter your question..."
-                                                required
                                             />
+                                            <InputError message={getQuestionError(index, 'question_text')} className="mt-1" />
                                         </div>
 
                                         <div className="mt-3">
@@ -439,19 +505,20 @@ export default function QuizzesEdit({
                                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             >
                                                 {quiz_types.map((type) => (
-                                                    <option key={type} value={type}>{type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                                    <option key={type} value={type}>
+                                                        {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                    </option>
                                                 ))}
                                             </select>
+                                            <InputError message={getQuestionError(index, 'question_type')} className="mt-1" />
                                         </div>
 
                                         {getQuestionTypeFields(question, index)}
                                     </div>
                                 ))}
-
-                                <InputError message={errors.questions} className="mt-2" />
                             </div>
 
-                            {/* ===== Section 4: Publication Settings ===== */}
+                            {/* Publication Settings */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publication Settings</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -465,7 +532,9 @@ export default function QuizzesEdit({
                                             required
                                         >
                                             {statuses.map((status) => (
-                                                <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                                                <option key={status} value={status}>
+                                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                                </option>
                                             ))}
                                         </select>
                                         <InputError message={errors.status} className="mt-2" />
@@ -485,7 +554,7 @@ export default function QuizzesEdit({
                                 </div>
                             </div>
 
-                            {/* ===== Actions ===== */}
+                            {/* Actions */}
                             <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                                 <SecondaryButton type="button" onClick={() => router.visit(route('teacher.quizzes.index'))}>
                                     Cancel

@@ -22,6 +22,8 @@ class ProgressTrackingController extends Controller
      */
     public function index(Request $request)
     {
+        Gate::authorize('progress.view');
+
         $user = auth()->user();
 
         $gradeFilter = $request->input('grade_level');
@@ -188,6 +190,8 @@ class ProgressTrackingController extends Controller
      */
     public function show($studentId)
     {
+        Gate::authorize('progress.view');
+
         $user = auth()->user();
 
         $student = User::role('student')->findOrFail($studentId);
@@ -315,6 +319,8 @@ class ProgressTrackingController extends Controller
      */
     public function export(Request $request)
     {
+        Gate::authorize('progress.view');
+
         $user = auth()->user();
 
         $students = User::role('student')

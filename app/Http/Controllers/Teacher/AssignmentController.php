@@ -45,6 +45,7 @@ class AssignmentController extends Controller
             ->get();
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+
         $statuses = ['draft', 'published', 'archived'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
@@ -60,7 +61,8 @@ class AssignmentController extends Controller
                     'subject' => $assignment->subject,
                     'grade_level' => $assignment->grade_level,
                     'type' => $assignment->assignment_type,
-                    'due_date' => $assignment->due_date,
+                    // ✅ FIX: Format due_date properly
+                    'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                     'total_points' => $assignment->total_points,
                     'status' => $assignment->status,
                     'submissions' => $submittedCount . '/' . $submissionsCount,
@@ -88,6 +90,7 @@ class AssignmentController extends Controller
         Gate::authorize('create', Assignment::class);
 
         $user = auth()->user();
+
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
@@ -99,13 +102,19 @@ class AssignmentController extends Controller
         }, range(1, 12));
         $submissionMethods = ['digital', 'photo', 'paper'];
 
-        // Get related lessons
-        $lessons = Lesson::where('teacher_id', $user->id)->get()->map(function ($lesson) {
-            return [
-                'id' => $lesson->id,
-                'title' => $lesson->lesson_title,
-            ];
-        });
+        // Get related lessons with BOW fields
+        $lessons = Lesson::where('teacher_id', $user->id)
+            ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
+            ->get()
+            ->map(function ($lesson) {
+                return [
+                    'id' => $lesson->id,
+                    'title' => $lesson->title,
+                    'bow_code' => $lesson->bow_code,
+                    'learning_competency' => $lesson->learning_competency,
+                    'learning_objective' => $lesson->learning_objective,
+                ];
+            });
 
         return Inertia::render('Teacher/Assignments/Create', [
             'assigned_grades' => $assignedGrades,
@@ -148,9 +157,11 @@ class AssignmentController extends Controller
             'publish_date' => 'required|date',
         ]);
 
+        // Convert submission_methods to JSON string before saving
+        $validated['submission_methods'] = json_encode($validated['submission_methods']);
+
         $assignment = Assignment::create([
             'teacher_id' => auth()->id(),
-            'submission_methods' => json_encode($validated['submission_methods']),
             ...$validated,
         ]);
 
@@ -158,6 +169,7 @@ class AssignmentController extends Controller
         if ($request->hasFile('resources')) {
             foreach ($request->file('resources') as $resource) {
                 $path = $resource->store('assignment-resources/' . $assignment->id, 'public');
+
                 AssignmentResource::create([
                     'assignment_id' => $assignment->id,
                     'resource_type' => $this->determineResourceType($resource),
@@ -182,6 +194,11 @@ class AssignmentController extends Controller
 
         $assignment->load('resources');
 
+        $submissionMethods = $assignment->submission_methods;
+        if (is_string($submissionMethods)) {
+            $submissionMethods = json_decode($submissionMethods, true);
+        }
+
         return Inertia::render('Teacher/Assignments/Show', [
             'assignment' => [
                 'id' => $assignment->id,
@@ -193,11 +210,12 @@ class AssignmentController extends Controller
                 'total_points' => $assignment->total_points,
                 'estimated_time' => $assignment->estimated_time,
                 'allow_late_submission' => $assignment->allow_late_submission,
-                'due_date' => $assignment->due_date,
+                // ✅ FIX: Format dates properly
+                'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                 'due_time' => $assignment->due_time,
-                'submission_methods' => json_decode($assignment->submission_methods, true),
+                'submission_methods' => $submissionMethods,
                 'status' => $assignment->status,
-                'publish_date' => $assignment->publish_date,
+                'publish_date' => $assignment->publish_date ? $assignment->publish_date->format('Y-m-d') : '—',
                 'created_at' => $assignment->created_at->format('Y-m-d H:i'),
                 'resources' => $assignment->resources->map(function ($resource) {
                     return [
@@ -219,6 +237,7 @@ class AssignmentController extends Controller
         Gate::authorize('update', $assignment);
 
         $user = auth()->user();
+
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
@@ -230,14 +249,26 @@ class AssignmentController extends Controller
         }, range(1, 12));
         $submissionMethods = ['digital', 'photo', 'paper'];
 
-        $lessons = Lesson::where('teacher_id', $user->id)->get()->map(function ($lesson) {
-            return [
-                'id' => $lesson->id,
-                'title' => $lesson->lesson_title,
-            ];
-        });
+        // Get related lessons with BOW fields
+        $lessons = Lesson::where('teacher_id', $user->id)
+            ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
+            ->get()
+            ->map(function ($lesson) {
+                return [
+                    'id' => $lesson->id,
+                    'title' => $lesson->title,
+                    'bow_code' => $lesson->bow_code,
+                    'learning_competency' => $lesson->learning_competency,
+                    'learning_objective' => $lesson->learning_objective,
+                ];
+            });
 
         $assignment->load('resources');
+
+        $submissionMethodsValue = $assignment->submission_methods;
+        if (is_string($submissionMethodsValue)) {
+            $submissionMethodsValue = json_decode($submissionMethodsValue, true);
+        }
 
         return Inertia::render('Teacher/Assignments/Edit', [
             'assignment' => [
@@ -254,11 +285,12 @@ class AssignmentController extends Controller
                 'total_points' => $assignment->total_points,
                 'estimated_time' => $assignment->estimated_time,
                 'allow_late_submission' => $assignment->allow_late_submission,
-                'due_date' => $assignment->due_date,
+                // ✅ FIX: Format dates properly
+                'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                 'due_time' => $assignment->due_time,
-                'submission_methods' => json_decode($assignment->submission_methods, true),
+                'submission_methods' => $submissionMethodsValue,
                 'status' => $assignment->status,
-                'publish_date' => $assignment->publish_date,
+                'publish_date' => $assignment->publish_date ? $assignment->publish_date->format('Y-m-d') : '—',
                 'resources' => $assignment->resources->map(function ($resource) {
                     return [
                         'id' => $resource->id,
@@ -308,10 +340,25 @@ class AssignmentController extends Controller
             'publish_date' => 'required|date',
         ]);
 
-        $assignment->update([
-            'submission_methods' => json_encode($validated['submission_methods']),
-            ...$validated,
-        ]);
+        $validated['submission_methods'] = json_encode($validated['submission_methods']);
+
+        $assignment->update($validated);
+
+        // Handle new file uploads
+        if ($request->hasFile('resources')) {
+            foreach ($request->file('resources') as $resource) {
+                $path = $resource->store('assignment-resources/' . $assignment->id, 'public');
+
+                AssignmentResource::create([
+                    'assignment_id' => $assignment->id,
+                    'resource_type' => $this->determineResourceType($resource),
+                    'file_name' => $resource->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_size' => $resource->getSize(),
+                    'mime_type' => $resource->getMimeType(),
+                ]);
+            }
+        }
 
         return redirect()->route('teacher.assignments.index')
             ->with('success', 'Assignment updated successfully!');
@@ -324,7 +371,6 @@ class AssignmentController extends Controller
     {
         Gate::authorize('delete', $assignment);
 
-        // Delete associated resources
         foreach ($assignment->resources as $resource) {
             Storage::disk('public')->delete($resource->file_path);
             $resource->delete();
@@ -352,16 +398,37 @@ class AssignmentController extends Controller
     }
 
     /**
+     * Download an assignment resource.
+     */
+    public function downloadResource($resourceId)
+    {
+        $resource = AssignmentResource::findOrFail($resourceId);
+        $assignment = $resource->assignment;
+
+        Gate::authorize('view', $assignment);
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found.');
+        }
+
+        return response()->download($filePath, $resource->file_name);
+    }
+
+    /**
      * Determine resource type based on file.
      */
     private function determineResourceType($file)
     {
         $mimeType = $file->getMimeType();
+
         if (str_contains($mimeType, 'pdf')) {
             return 'pdf_module';
         } elseif (str_contains($mimeType, 'image')) {
             return 'image';
         }
+
         return 'worksheet';
     }
 }

@@ -51,7 +51,7 @@ export default function AnnouncementsEdit({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Announcement</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Announcement</span>}
         >
             <Head title="Edit Announcement" />
 
@@ -64,7 +64,6 @@ export default function AnnouncementsEdit({
                             {/* ===== Section 1: Announcement Information ===== */}
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Announcement Information</h3>
-
                                 <div>
                                     <InputLabel htmlFor="title" value="Announcement Title" required />
                                     <TextInput
@@ -76,7 +75,6 @@ export default function AnnouncementsEdit({
                                     />
                                     <InputError message={errors.title} className="mt-2" />
                                 </div>
-
                                 <div className="mt-4">
                                     <InputLabel htmlFor="category" value="Category" required />
                                     <select
@@ -93,7 +91,6 @@ export default function AnnouncementsEdit({
                                     </select>
                                     <InputError message={errors.category} className="mt-2" />
                                 </div>
-
                                 <div className="mt-4">
                                     <InputLabel htmlFor="content" value="Announcement Content" required />
                                     <textarea

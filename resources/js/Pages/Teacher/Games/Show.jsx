@@ -6,6 +6,13 @@ import Table from '@/Components/Table';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    ArrowLeftIcon,
+    PencilSquareIcon,
+    ChartBarIcon,
+} from '@heroicons/react/24/outline';
+
 export default function GamesShow({ game }) {
     const getStatusBadge = (status) => {
         const statusMap = {
@@ -18,28 +25,37 @@ export default function GamesShow({ game }) {
 
     const resultsColumns = [
         { key: 'student_name', label: 'Student' },
-        { key: 'score', label: 'Score', render: (row) => row.score !== null ? row.score : '—' },
+        { key: 'score', label: 'Score', render: (row) => row.score !== null ? row.score : '---' },
         { key: 'attempt_number', label: 'Attempt' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={getStatusBadge(row.status)} /> },
-        { key: 'completed_at', label: 'Completed', render: (row) => row.completed_at || '—' },
+        { key: 'completed_at', label: 'Completed', render: (row) => row.completed_at || '---' },
     ];
 
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {game.game_title}
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
                         <Link href={route('teacher.games.results', game.id)}>
-                            <SecondaryButton>📊 Results</SecondaryButton>
+                            <SecondaryButton>
+                                <ChartBarIcon className="w-4 h-4 mr-1" />
+                                Results
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.games.edit', game.id)}>
-                            <SecondaryButton>Edit</SecondaryButton>
+                            <SecondaryButton>
+                                <PencilSquareIcon className="w-4 h-4 mr-1" />
+                                Edit
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.games.index')}>
-                            <PrimaryButton>Back to List</PrimaryButton>
+                            <PrimaryButton>
+                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                                Back to List
+                            </PrimaryButton>
                         </Link>
                     </div>
                 </div>

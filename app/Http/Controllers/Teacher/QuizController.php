@@ -17,7 +17,7 @@ class QuizController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('viewAny', Quiz::class);
+        Gate::authorize('quiz.view');
 
         $user = auth()->user();
 
@@ -83,7 +83,7 @@ class QuizController extends Controller
      */
     public function create()
     {
-        Gate::authorize('create', Quiz::class);
+        Gate::authorize('quiz.create');
 
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
@@ -120,7 +120,7 @@ class QuizController extends Controller
      */
     public function store(Request $request)
     {
-        Gate::authorize('create', Quiz::class);
+        Gate::authorize('quiz.create');
 
         $validated = $request->validate([
             'grade_level' => 'required|string',
@@ -182,7 +182,7 @@ class QuizController extends Controller
      */
     public function show(Quiz $quiz)
     {
-        Gate::authorize('view', $quiz);
+        Gate::authorize('quiz.view');
 
         $quiz->load('questions');
 
@@ -202,7 +202,8 @@ class QuizController extends Controller
                 'attempts_allowed' => $quiz->attempts_allowed,
                 'shuffle_questions' => $quiz->shuffle_questions,
                 'status' => $quiz->status,
-                'publish_date' => $quiz->publish_date,
+                // ✅ Clean date formatting
+                'publish_date' => $quiz->publish_date ? $quiz->publish_date->format('Y-m-d') : '',
                 'created_at' => $quiz->created_at->format('Y-m-d H:i'),
                 'questions' => $quiz->questions->map(function ($question) {
                     return [
@@ -227,7 +228,7 @@ class QuizController extends Controller
      */
     public function edit(Quiz $quiz)
     {
-        Gate::authorize('update', $quiz);
+        Gate::authorize('quiz.edit');
 
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
@@ -266,7 +267,8 @@ class QuizController extends Controller
                 'attempts_allowed' => $quiz->attempts_allowed,
                 'shuffle_questions' => $quiz->shuffle_questions,
                 'status' => $quiz->status,
-                'publish_date' => $quiz->publish_date,
+                // ✅ Clean date formatting
+                'publish_date' => $quiz->publish_date ? $quiz->publish_date->format('Y-m-d') : '',
                 'questions' => $quiz->questions->map(function ($question) {
                     return [
                         'id' => $question->id,
@@ -298,7 +300,7 @@ class QuizController extends Controller
      */
     public function update(Request $request, Quiz $quiz)
     {
-        Gate::authorize('update', $quiz);
+        Gate::authorize('quiz.edit');
 
         $validated = $request->validate([
             'grade_level' => 'required|string',
@@ -363,7 +365,7 @@ class QuizController extends Controller
      */
     public function destroy(Quiz $quiz)
     {
-        Gate::authorize('delete', $quiz);
+        Gate::authorize('quiz.delete');
 
         $quiz->questions()->delete();
         $quiz->attempts()->delete();
@@ -378,7 +380,7 @@ class QuizController extends Controller
      */
     public function publish(Quiz $quiz)
     {
-        Gate::authorize('update', $quiz);
+        Gate::authorize('quiz.edit');
 
         $quiz->update([
             'status' => 'published',

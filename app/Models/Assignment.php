@@ -9,11 +9,6 @@ class Assignment extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'teacher_id',
         'grade_level',
@@ -36,48 +31,30 @@ class Assignment extends Model
         'publish_date',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'submission_methods' => 'array',
-            'allow_late_submission' => 'boolean',
-            'due_date' => 'date',
-            'publish_date' => 'date',
-        ];
-    }
+    // ✅ THIS IS IMPORTANT – tells Laravel to cast submission_methods to array automatically
+    protected $casts = [
+        'allow_late_submission' => 'boolean',
+        'submission_methods' => 'array', // ← This automatically decodes JSON to array
+        'due_date' => 'date',
+        'publish_date' => 'date',
+    ];
 
-    /**
-     * Get the teacher who created this assignment.
-     */
+    // Relationships
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    /**
-     * Get the lesson this assignment is related to.
-     */
     public function lesson()
     {
         return $this->belongsTo(Lesson::class, 'related_lesson_id');
     }
 
-    /**
-     * Get the resources for this assignment.
-     */
     public function resources()
     {
         return $this->hasMany(AssignmentResource::class);
     }
 
-    /**
-     * Get the submissions for this assignment.
-     */
     public function submissions()
     {
         return $this->hasMany(AssignmentSubmission::class);

@@ -4,6 +4,18 @@ import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    BookOpenIcon,
+    ClipboardDocumentListIcon,
+    DocumentTextIcon,
+    PuzzlePieceIcon,
+    ChartBarIcon,
+    ArrowLeftIcon,
+    UserIcon,
+    AcademicCapIcon,
+} from '@heroicons/react/24/outline';
+
 export default function ProgressShow({ student, progress }) {
     const getStatusBadge = (percentage) => {
         if (percentage >= 80) return 'excellent';
@@ -21,10 +33,11 @@ export default function ProgressShow({ student, progress }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         Student Progress: {student.name}
-                    </h2>
+                    </span>
                     <SecondaryButton onClick={() => router.visit(route('teacher.progress.index'))}>
+                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Progress List
                     </SecondaryButton>
                 </div>
@@ -39,7 +52,10 @@ export default function ProgressShow({ student, progress }) {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">Student Name</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{student.name}</div>
+                                <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                    <UserIcon className="w-4 h-4 text-gray-400" />
+                                    {student.name}
+                                </div>
                             </div>
                             <div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">LRN</div>
@@ -89,7 +105,12 @@ export default function ProgressShow({ student, progress }) {
                     {/* ===== Progress Breakdown ===== */}
                     <div className="mt-6 grid gap-6 md:grid-cols-2">
                         {/* Lessons */}
-                        <Card title="📚 Lessons">
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                                Lessons
+                            </div>
+                        }>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600 dark:text-gray-400">Completed</span>
@@ -110,7 +131,12 @@ export default function ProgressShow({ student, progress }) {
                         </Card>
 
                         {/* Assignments */}
-                        <Card title="📝 Assignments">
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <ClipboardDocumentListIcon className="w-5 h-5 text-green-500" />
+                                Assignments
+                            </div>
+                        }>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600 dark:text-gray-400">Submitted</span>
@@ -131,7 +157,12 @@ export default function ProgressShow({ student, progress }) {
                         </Card>
 
                         {/* Quizzes */}
-                        <Card title="📊 Quizzes">
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <DocumentTextIcon className="w-5 h-5 text-purple-500" />
+                                Quizzes
+                            </div>
+                        }>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600 dark:text-gray-400">Completed</span>
@@ -155,7 +186,12 @@ export default function ProgressShow({ student, progress }) {
                         </Card>
 
                         {/* Games */}
-                        <Card title="🎮 Games">
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <PuzzlePieceIcon className="w-5 h-5 text-orange-500" />
+                                Games
+                            </div>
+                        }>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600 dark:text-gray-400">Completed</span>
@@ -176,7 +212,12 @@ export default function ProgressShow({ student, progress }) {
                     {/* ===== Quiz Performance Detail ===== */}
                     {progress.quizzes.performance && progress.quizzes.performance.length > 0 && (
                         <div className="mt-6">
-                            <Card title="📊 Quiz Performance Details">
+                            <Card title={
+                                <div className="flex items-center gap-2">
+                                    <ChartBarIcon className="w-5 h-5 text-purple-500" />
+                                    Quiz Performance Details
+                                </div>
+                            }>
                                 <div className="space-y-3">
                                     {progress.quizzes.performance.map((quiz, index) => (
                                         <div
@@ -213,7 +254,12 @@ export default function ProgressShow({ student, progress }) {
                     {/* ===== Game Performance Detail ===== */}
                     {progress.games.performance && progress.games.performance.length > 0 && (
                         <div className="mt-6">
-                            <Card title="🎮 Game Performance Details">
+                            <Card title={
+                                <div className="flex items-center gap-2">
+                                    <PuzzlePieceIcon className="w-5 h-5 text-orange-500" />
+                                    Game Performance Details
+                                </div>
+                            }>
                                 <div className="space-y-3">
                                     {progress.games.performance.map((game, index) => (
                                         <div
@@ -235,7 +281,7 @@ export default function ProgressShow({ student, progress }) {
                                                     game.score >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
                                                     'text-red-600 dark:text-red-400'
                                                 }`}>
-                                                    {game.score !== null ? game.score : '—'}
+                                                    {game.score !== null ? game.score : '---'}
                                                 </div>
                                             </div>
                                         </div>

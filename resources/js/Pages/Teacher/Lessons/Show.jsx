@@ -5,14 +5,31 @@ import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    DocumentIcon,
+    PhotoIcon,
+    PaperClipIcon,
+    ArrowLeftIcon,
+    PencilSquareIcon,
+    ArrowDownTrayIcon,
+    DocumentTextIcon,
+    ChartBarIcon,
+    PuzzlePieceIcon,
+} from '@heroicons/react/24/outline';
+
 export default function LessonsShow({ lesson }) {
     const getResourceIcon = (type) => {
-        const icons = {
-            pdf_module: '📄',
-            worksheet: '📝',
-            image: '🖼️',
-        };
-        return icons[type] || '📎';
+        switch (type) {
+            case 'pdf_module':
+                return <DocumentIcon className="w-6 h-6 text-red-500" />;
+            case 'image':
+                return <PhotoIcon className="w-6 h-6 text-green-500" />;
+            case 'worksheet':
+                return <DocumentTextIcon className="w-6 h-6 text-blue-500" />;
+            default:
+                return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
+        }
     };
 
     const getResourceLabel = (type) => {
@@ -35,15 +52,21 @@ export default function LessonsShow({ lesson }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {lesson.lesson_title}
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
                         <Link href={route('teacher.lessons.edit', lesson.id)}>
-                            <SecondaryButton>Edit</SecondaryButton>
+                            <SecondaryButton>
+                                <PencilSquareIcon className="w-4 h-4 mr-1" />
+                                Edit
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.lessons.index')}>
-                            <PrimaryButton>Back to List</PrimaryButton>
+                            <PrimaryButton>
+                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                                Back to List
+                            </PrimaryButton>
                         </Link>
                     </div>
                 </div>
@@ -151,7 +174,7 @@ export default function LessonsShow({ lesson }) {
                                             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <span className="text-2xl">{getResourceIcon(resource.type)}</span>
+                                                {getResourceIcon(resource.type)}
                                                 <div>
                                                     <div className="font-medium text-gray-900 dark:text-white">
                                                         {resource.name}
@@ -164,8 +187,9 @@ export default function LessonsShow({ lesson }) {
                                             <div className="flex gap-2">
                                                 <a
                                                     href={route('teacher.lessons.download-resource', resource.id)}
-                                                    className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                    className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                                                 >
+                                                    <ArrowDownTrayIcon className="w-4 h-4" />
                                                     Download
                                                 </a>
                                             </div>
@@ -184,25 +208,28 @@ export default function LessonsShow({ lesson }) {
                                     {lesson.related_assignment_id && (
                                         <Link
                                             href={route('teacher.assignments.show', lesson.related_assignment_id)}
-                                            className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors"
+                                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors"
                                         >
-                                            📝 Open Assignment
+                                            <DocumentTextIcon className="w-4 h-4" />
+                                            Open Assignment
                                         </Link>
                                     )}
                                     {lesson.related_quiz_id && (
                                         <Link
                                             href={route('teacher.quizzes.show', lesson.related_quiz_id)}
-                                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
                                         >
-                                            📊 Take Quiz
+                                            <ChartBarIcon className="w-4 h-4" />
+                                            Take Quiz
                                         </Link>
                                     )}
                                     {lesson.related_game_id && (
                                         <Link
                                             href={route('teacher.games.show', lesson.related_game_id)}
-                                            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+                                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
                                         >
-                                            🎮 Play Game
+                                            <PuzzlePieceIcon className="w-4 h-4" />
+                                            Play Game
                                         </Link>
                                     )}
                                 </div>

@@ -5,14 +5,29 @@ import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    DocumentIcon,
+    PhotoIcon,
+    PaperClipIcon,
+    ArrowLeftIcon,
+    PencilSquareIcon,
+    ClipboardDocumentListIcon,
+    ArrowDownTrayIcon,
+} from '@heroicons/react/24/outline';
+
 export default function AssignmentsShow({ assignment }) {
     const getResourceIcon = (type) => {
-        const icons = {
-            pdf_module: '📄',
-            worksheet: '📝',
-            image: '🖼️',
-        };
-        return icons[type] || '📎';
+        switch (type) {
+            case 'pdf_module':
+                return <DocumentIcon className="w-6 h-6 text-red-500" />;
+            case 'image':
+                return <PhotoIcon className="w-6 h-6 text-green-500" />;
+            case 'worksheet':
+                return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
+            default:
+                return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
+        }
     };
 
     const getResourceLabel = (type) => {
@@ -24,34 +39,31 @@ export default function AssignmentsShow({ assignment }) {
         return labels[type] || type;
     };
 
-    const getStatusColor = (status) => {
-        const colors = {
-            not_submitted: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-            submitted: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-            late_submission: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-            reviewed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-            graded: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-            returned_for_revision: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-        };
-        return colors[status] || colors.not_submitted;
-    };
-
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {assignment.assignment_title}
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
                         <Link href={route('teacher.assignments.grade', assignment.id)}>
-                            <SecondaryButton>📋 Grade</SecondaryButton>
+                            <SecondaryButton>
+                                <ClipboardDocumentListIcon className="w-4 h-4 mr-1" />
+                                Grade
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.assignments.edit', assignment.id)}>
-                            <SecondaryButton>Edit</SecondaryButton>
+                            <SecondaryButton>
+                                <PencilSquareIcon className="w-4 h-4 mr-1" />
+                                Edit
+                            </SecondaryButton>
                         </Link>
                         <Link href={route('teacher.assignments.index')}>
-                            <PrimaryButton>Back to List</PrimaryButton>
+                            <PrimaryButton>
+                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                                Back to List
+                            </PrimaryButton>
                         </Link>
                     </div>
                 </div>
@@ -154,7 +166,7 @@ export default function AssignmentsShow({ assignment }) {
                                             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <span className="text-2xl">{getResourceIcon(resource.type)}</span>
+                                                {getResourceIcon(resource.type)}
                                                 <div>
                                                     <div className="font-medium text-gray-900 dark:text-white">
                                                         {resource.name}
@@ -167,8 +179,9 @@ export default function AssignmentsShow({ assignment }) {
                                             <div className="flex gap-2">
                                                 <a
                                                     href={route('teacher.assignments.download-resource', resource.id)}
-                                                    className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                    className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                                                 >
+                                                    <ArrowDownTrayIcon className="w-4 h-4" />
                                                     Download
                                                 </a>
                                             </div>

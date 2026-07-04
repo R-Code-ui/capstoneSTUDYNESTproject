@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
@@ -8,6 +8,15 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+
+// Heroicons
+import {
+    DocumentIcon,
+    PhotoIcon,
+    PaperClipIcon,
+    XMarkIcon,
+    PlusIcon,
+} from '@heroicons/react/24/outline';
 
 export default function AssignmentsCreate({
     assigned_grades,
@@ -21,6 +30,8 @@ export default function AssignmentsCreate({
     related_lessons,
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [fileErrors, setFileErrors] = useState([]);
+
     const { data, setData, errors, post } = useForm({
         grade_level: '',
         subject: '',
@@ -40,13 +51,39 @@ export default function AssignmentsCreate({
         status: 'draft',
         publish_date: new Date().toISOString().split('T')[0],
         resources: [],
+        // ✅ BOW fields (will be auto-filled)
+        bow_code: '',
+        learning_competency: '',
+        learning_objective: '',
     });
+
+    // ✅ AUTO-FILL BOW FIELDS WHEN RELATED LESSON CHANGES
+    const handleLessonChange = (e) => {
+        const lessonId = e.target.value;
+        setData('related_lesson_id', lessonId);
+
+        if (lessonId) {
+            const selectedLesson = related_lessons.find(
+                lesson => lesson.id === parseInt(lessonId)
+            );
+            if (selectedLesson) {
+                setData('bow_code', selectedLesson.bow_code || '');
+                setData('learning_competency', selectedLesson.learning_competency || '');
+                setData('learning_objective', selectedLesson.learning_objective || '');
+            }
+        } else {
+            setData('bow_code', '');
+            setData('learning_competency', '');
+            setData('learning_objective', '');
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         const formData = new FormData();
+
         Object.keys(data).forEach((key) => {
             if (key === 'resources') {
                 data.resources.forEach((file) => {
@@ -73,7 +110,43 @@ export default function AssignmentsCreate({
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
-        setData('resources', files);
+        const errors = [];
+        const validFiles = [];
+
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        const maxFiles = 5;
+
+        if (files.length + data.resources.length > maxFiles) {
+            errors.push(`You can only upload a maximum of ${maxFiles} files.`);
+            e.target.value = '';
+            setFileErrors(errors);
+            return;
+        }
+
+        files.forEach((file) => {
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, DOCX, JPG, JPEG, or PNG files.`);
+                return;
+            }
+
+            if (file.size > maxSize) {
+                errors.push(`"${file.name}" exceeds the 2MB limit.`);
+                return;
+            }
+
+            validFiles.push(file);
+        });
+
+        if (errors.length > 0) {
+            setFileErrors(errors);
+        } else {
+            setFileErrors([]);
+        }
+
+        const newResources = [...data.resources, ...validFiles];
+        setData('resources', newResources);
+        e.target.value = '';
     };
 
     const removeFile = (index) => {
@@ -91,9 +164,28 @@ export default function AssignmentsCreate({
         }
     };
 
+    const getFileIcon = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (['pdf'].includes(ext)) {
+            return <DocumentIcon className="w-5 h-5 text-red-500" />;
+        }
+        if (['jpg', 'jpeg', 'png'].includes(ext)) {
+            return <PhotoIcon className="w-5 h-5 text-green-500" />;
+        }
+        return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
+    };
+
+    const getFileTypeLabel = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (['pdf'].includes(ext)) return 'PDF Module';
+        if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
+        if (['docx'].includes(ext)) return 'Word Document';
+        return 'Worksheet';
+    };
+
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Assignment</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Assignment</span>}
         >
             <Head title="Create Assignment" />
 
@@ -191,7 +283,7 @@ export default function AssignmentsCreate({
                                         <select
                                             id="related_lesson_id"
                                             value={data.related_lesson_id}
-                                            onChange={(e) => setData('related_lesson_id', e.target.value)}
+                                            onChange={handleLessonChange}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                         >
                                             <option value="">None</option>
@@ -204,7 +296,52 @@ export default function AssignmentsCreate({
                                 </div>
                             </div>
 
-                            {/* ===== Section 2: Assignment Details ===== */}
+                            {/* ===== Section 2: BOW Reference (Auto-filled) ===== */}
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">BOW Reference</h3>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <InputLabel htmlFor="bow_code" value="BOW Code" />
+                                        <TextInput
+                                            id="bow_code"
+                                            value={data.bow_code}
+                                            onChange={(e) => setData('bow_code', e.target.value)}
+                                            className="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
+                                            readOnly
+                                            placeholder="Auto-filled from lesson"
+                                        />
+                                        <InputError message={errors.bow_code} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="learning_competency" value="Learning Competency" />
+                                        <textarea
+                                            id="learning_competency"
+                                            value={data.learning_competency}
+                                            onChange={(e) => setData('learning_competency', e.target.value)}
+                                            rows={2}
+                                            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                            readOnly
+                                            placeholder="Auto-filled from lesson"
+                                        />
+                                        <InputError message={errors.learning_competency} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="learning_objective" value="Learning Objective" />
+                                        <textarea
+                                            id="learning_objective"
+                                            value={data.learning_objective}
+                                            onChange={(e) => setData('learning_objective', e.target.value)}
+                                            rows={2}
+                                            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                            readOnly
+                                            placeholder="Auto-filled from lesson"
+                                        />
+                                        <InputError message={errors.learning_objective} className="mt-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ===== Section 3: Assignment Details ===== */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Assignment Details</h3>
                                 <div className="grid grid-cols-1 gap-4">
@@ -230,7 +367,9 @@ export default function AssignmentsCreate({
                                         >
                                             <option value="">Select Type</option>
                                             {assignment_types.map((type) => (
-                                                <option key={type} value={type}>{type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                                <option key={type} value={type}>
+                                                    {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                </option>
                                             ))}
                                         </select>
                                         <InputError message={errors.assignment_type} className="mt-2" />
@@ -316,7 +455,7 @@ export default function AssignmentsCreate({
                                 </div>
                             </div>
 
-                            {/* ===== Section 3: Submission Settings ===== */}
+                            {/* ===== Section 4: Submission Settings ===== */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Submission Settings</h3>
                                 <div>
@@ -340,11 +479,11 @@ export default function AssignmentsCreate({
                                 </div>
                             </div>
 
-                            {/* ===== Section 4: Learning Resources ===== */}
+                            {/* ===== Section 5: Learning Resources ===== */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Learning Resources</h3>
                                 <div>
-                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 5 files, 10MB each)" />
+                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 5 files, 2MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
@@ -353,28 +492,45 @@ export default function AssignmentsCreate({
                                         className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
                                         accept=".pdf,.docx,.jpg,.jpeg,.png"
                                     />
-                                    {data.resources.length > 0 && (
+                                    {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
-                                            {data.resources.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                                                    <span>{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeFile(index)}
-                                                        className="text-red-500 hover:text-red-700"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
+                                            {fileErrors.map((error, index) => (
+                                                <p key={index} className="text-sm text-red-600 dark:text-red-400">{error}</p>
                                             ))}
                                         </div>
                                     )}
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Accepted: PDF, DOCX, JPG, JPEG, PNG (Max 10MB per file)</p>
+                                    {data.resources.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            {data.resources.map((file, index) => (
+                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        {getFileIcon(file.name)}
+                                                        <span>{file.name}</span>
+                                                        <span className="text-xs text-gray-400">({getFileTypeLabel(file.name)})</span>
+                                                        <span className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeFile(index)}
+                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        <XMarkIcon className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Total: {data.resources.length} of 5 files
+                                            </p>
+                                        </div>
+                                    )}
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Accepted: PDF, DOCX, JPG, JPEG, PNG (Max 2MB per file, Max 5 files total)
+                                    </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>
                             </div>
 
-                            {/* ===== Section 5: Publication Settings ===== */}
+                            {/* ===== Section 6: Publication Settings ===== */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publication Settings</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

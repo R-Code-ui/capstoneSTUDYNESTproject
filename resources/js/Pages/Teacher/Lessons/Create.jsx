@@ -9,6 +9,14 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
+// Heroicons
+import {
+    DocumentIcon,
+    PhotoIcon,
+    PaperClipIcon,
+    XMarkIcon,
+} from '@heroicons/react/24/outline';
+
 export default function LessonsCreate({
     assigned_grades,
     subjects,
@@ -50,10 +58,8 @@ export default function LessonsCreate({
 
         const formData = new FormData();
 
-        // Append all form data
         Object.keys(data).forEach((key) => {
             if (key === 'resources') {
-                // Append each file
                 data.resources.forEach((file) => {
                     formData.append('resources[]', file);
                 });
@@ -76,10 +82,9 @@ export default function LessonsCreate({
         const validFiles = [];
 
         const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-        const maxSize = 10 * 1024 * 1024; // 10MB
+        const maxSize = 2 * 1024 * 1024; // 2MB
         const maxFiles = 5;
 
-        // Check total files limit
         if (files.length + data.resources.length > maxFiles) {
             errors.push(`You can only upload a maximum of ${maxFiles} files.`);
             e.target.value = '';
@@ -88,15 +93,13 @@ export default function LessonsCreate({
         }
 
         files.forEach((file) => {
-            // Check file type
             if (!allowedTypes.includes(file.type)) {
                 errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, or PNG files.`);
                 return;
             }
 
-            // Check file size
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 10MB limit.`);
+                errors.push(`"${file.name}" exceeds the 2MB limit.`);
                 return;
             }
 
@@ -109,7 +112,6 @@ export default function LessonsCreate({
             setFileErrors([]);
         }
 
-        // Update resources with valid files
         const newResources = [...data.resources, ...validFiles];
         setData('resources', newResources);
         e.target.value = '';
@@ -123,9 +125,13 @@ export default function LessonsCreate({
 
     const getFileIcon = (fileName) => {
         const ext = fileName.split('.').pop().toLowerCase();
-        if (['pdf'].includes(ext)) return '📄';
-        if (['jpg', 'jpeg', 'png'].includes(ext)) return '🖼️';
-        return '📎';
+        if (['pdf'].includes(ext)) {
+            return <DocumentIcon className="w-5 h-5 text-red-500" />;
+        }
+        if (['jpg', 'jpeg', 'png'].includes(ext)) {
+            return <PhotoIcon className="w-5 h-5 text-green-500" />;
+        }
+        return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
     };
 
     const getFileTypeLabel = (fileName) => {
@@ -336,7 +342,7 @@ export default function LessonsCreate({
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Learning Resources</h3>
                                 <div>
-                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 5 files, 10MB each)" />
+                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 5 files, 2MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
@@ -357,7 +363,7 @@ export default function LessonsCreate({
                                             {data.resources.map((file, index) => (
                                                 <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                                     <div className="flex items-center gap-2">
-                                                        <span>{getFileIcon(file.name)}</span>
+                                                        {getFileIcon(file.name)}
                                                         <span>{file.name}</span>
                                                         <span className="text-xs text-gray-400">({getFileTypeLabel(file.name)})</span>
                                                         <span className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</span>
@@ -367,7 +373,7 @@ export default function LessonsCreate({
                                                         onClick={() => removeFile(index)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
-                                                        Remove
+                                                        <XMarkIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -377,7 +383,7 @@ export default function LessonsCreate({
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Accepted: PDF, JPG, JPEG, PNG (Max 10MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, PNG (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>

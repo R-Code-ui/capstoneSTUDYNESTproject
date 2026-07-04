@@ -14,6 +14,7 @@ use App\Models\GameResult;
 use App\Models\ReportExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
 
 class ReportController extends Controller
@@ -26,73 +27,49 @@ class ReportController extends Controller
         Gate::authorize('report.view');
 
         $user = auth()->user();
-
-        $gradeFilter = $request->input('grade_level');
-        $subjectFilter = $request->input('subject');
-        $trimesterFilter = $request->input('trimester');
-
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
         $gradeLevels = ['Grade 4', 'Grade 5', 'Grade 6'];
-
-        // Report history
-        $reportHistory = ReportExport::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(function ($report) {
-                return [
-                    'id' => $report->id,
-                    'report_type' => $report->report_type,
-                    'grade_level' => $report->grade_level,
-                    'generated_at' => $report->generated_at->format('Y-m-d H:i'),
-                    'file_name' => $report->file_name,
-                ];
-            });
 
         return Inertia::render('Teacher/Reports/Index', [
             'assigned_grades' => $assignedGrades,
             'subjects' => $subjects,
             'trimesters' => $trimesters,
             'grade_levels' => $gradeLevels,
-            'report_history' => $reportHistory,
             'filters' => [
-                'grade_level' => $gradeFilter,
-                'subject' => $subjectFilter,
-                'trimester' => $trimesterFilter,
+                'grade_level' => $request->input('grade_level'),
+                'subject' => $request->input('subject'),
+                'trimester' => $request->input('trimester'),
             ],
         ]);
     }
 
     /**
-     * Generate a report.
+     * Generate a PDF report and download it.
      */
-    public function generate(Request $request)
+    public function generatePdf(Request $request)
     {
         Gate::authorize('report.view');
 
+        $reportType = $request->input('report_type');
+        $gradeLevel = $request->input('grade_level');
+        $subject = $request->input('subject');
+        $trimester = $request->input('trimester');
+
+        // Basic validation
+        if (!in_array($reportType, ['assignment_completion','quiz_performance','student_progress','lesson_completion','game_participation'])) {
+            return redirect()->back()->with('error', 'Invalid report type.');
+        }
+
         $user = auth()->user();
 
-        $validated = $request->validate([
-            'report_type' => 'required|in:assignment_completion,quiz_performance,student_progress,lesson_completion,game_participation',
-            'grade_level' => 'nullable|string',
-            'subject' => 'nullable|string',
-            'trimester' => 'nullable|string',
-            'export_format' => 'nullable|in:excel,csv',
-        ]);
-
-        $reportType = $validated['report_type'];
-        $gradeLevel = $validated['grade_level'] ?? null;
-        $subject = $validated['subject'] ?? null;
-        $trimester = $validated['trimester'] ?? null;
-
-        // Get students based on filters
+        // Get students according to filters
         $students = User::role('student')
             ->when($gradeLevel, function ($query, $grade) {
                 return $query->where('grade_level', $grade);
             })
-            ->when($gradeLevel === null, function ($query) use ($user) {
+            ->when(!$gradeLevel, function ($query) use ($user) {
                 return $query->whereIn('grade_level', $user->gradeAssignments()->pluck('grade_level')->toArray());
             })
             ->get();
@@ -121,12 +98,10 @@ class ReportController extends Controller
                 $reportTitle = 'Game Participation Report';
                 $reportData = $this->generateGameParticipationReport($user, $students);
                 break;
-            default:
-                return redirect()->back()->with('error', 'Invalid report type.');
         }
 
-        // Save report export record
-        $reportExport = ReportExport::create([
+        // Save export record
+        ReportExport::create([
             'user_id' => $user->id,
             'report_type' => $reportTitle,
             'grade_level' => $gradeLevel,
@@ -134,16 +109,23 @@ class ReportController extends Controller
             'trimester' => $trimester,
             'generated_at' => now(),
             'file_path' => null,
-            'file_name' => $reportTitle . '_' . now()->format('Y-m-d') . '.json',
+            'file_name' => $reportTitle . '_' . now()->format('Y-m-d') . '.pdf',
         ]);
 
-        return Inertia::render('Teacher/Reports/Results', [
-            'report_title' => $reportTitle,
-            'report_data' => $reportData,
-            'report_id' => $reportExport->id,
-            'export_format' => $validated['export_format'] ?? null,
-            'filters' => $validated,
+        // Load PDF view
+        $pdf = Pdf::loadView('pdf.teacher-report', [
+            'reportTitle' => $reportTitle,
+            'data' => $reportData['data'] ?? [],
+            'summary' => $reportData['summary'] ?? [],
+            'filters' => [
+                'grade_level' => $gradeLevel,
+                'subject' => $subject,
+                'trimester' => $trimester,
+            ],
+            'generatedAt' => now()->format('Y-m-d H:i'),
         ]);
+
+        return $pdf->download($reportTitle . '_' . now()->format('Y-m-d') . '.pdf');
     }
 
     /**
@@ -181,7 +163,7 @@ class ReportController extends Controller
         });
 
         return [
-            'data' => $data,
+            'data' => $data->toArray(),
             'summary' => [
                 'total_assignments' => $assignments->count(),
                 'average_completion_rate' => $data->avg('completion_rate') ?? 0,
@@ -231,7 +213,7 @@ class ReportController extends Controller
         });
 
         return [
-            'data' => $data,
+            'data' => $data->toArray(),
             'summary' => [
                 'total_quizzes' => $quizzes->count(),
                 'average_score' => $data->avg('average_score') ?? 0,
@@ -278,12 +260,12 @@ class ReportController extends Controller
                 'assignments' => $submittedAssignments . '/' . $totalAssignments,
                 'quiz_average' => $avgQuizScore . '%',
                 'games' => $completedGames . '/' . $totalGames,
-                'overall_progress' => $overallProgress . '%',
+                'overall_progress' => $overallProgress,   // ✅ No "%" string
             ];
         });
 
         return [
-            'data' => $data,
+            'data' => $data->toArray(),
             'summary' => [
                 'total_students' => $students->count(),
                 'average_progress' => $data->avg('overall_progress') ?? 0,
@@ -312,7 +294,8 @@ class ReportController extends Controller
             $completed = 0;
 
             foreach ($gradeStudents as $student) {
-                if ($student->lessons()->where('lesson_id', $lesson->id)->exists()) {
+                // ✅ Use collection contains() method which checks the pivot
+                if ($student->lessons->contains($lesson->id)) {
                     $completed++;
                 }
             }
@@ -329,7 +312,7 @@ class ReportController extends Controller
         });
 
         return [
-            'data' => $data,
+            'data' => $data->toArray(),
             'summary' => [
                 'total_lessons' => $lessons->count(),
                 'average_completion_rate' => $data->avg('completion_rate') ?? 0,
@@ -374,7 +357,7 @@ class ReportController extends Controller
         });
 
         return [
-            'data' => $data,
+            'data' => $data->toArray(),
             'summary' => [
                 'total_games' => $games->count(),
                 'average_participation_rate' => $data->avg('participation_rate') ?? 0,

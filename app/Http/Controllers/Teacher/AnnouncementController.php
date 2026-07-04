@@ -57,8 +57,9 @@ class AnnouncementController extends Controller
                     'priority' => $announcement->priority,
                     'is_pinned' => $announcement->is_pinned,
                     'status' => $announcement->status,
-                    'publish_date' => $announcement->publish_date,
-                    'expiration_date' => $announcement->expiration_date,
+                    // ✅ Format dates for clean display
+                    'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : '',
+                    'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : '',
                     'view_count' => $announcement->view_count,
                     'created_at' => $announcement->created_at->diffForHumans(),
                 ];
@@ -142,6 +143,8 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('announcement.view', $announcement);
 
+        $announcement->load('user');  // ✅ eager load user for posted_by
+
         return Inertia::render('Teacher/Announcements/Show', [
             'announcement' => [
                 'id' => $announcement->id,
@@ -152,8 +155,9 @@ class AnnouncementController extends Controller
                 'priority' => $announcement->priority,
                 'is_pinned' => $announcement->is_pinned,
                 'status' => $announcement->status,
-                'publish_date' => $announcement->publish_date,
-                'expiration_date' => $announcement->expiration_date,
+                // ✅ Format dates to Y-m-d (no trailing time)
+                'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : '',
+                'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : '',
                 'view_count' => $announcement->view_count,
                 'created_at' => $announcement->created_at->format('Y-m-d H:i'),
                 'posted_by' => $announcement->user->name,
@@ -184,8 +188,9 @@ class AnnouncementController extends Controller
                 'priority' => $announcement->priority,
                 'is_pinned' => $announcement->is_pinned,
                 'status' => $announcement->status,
-                'publish_date' => $announcement->publish_date,
-                'expiration_date' => $announcement->expiration_date,
+                // ✅ Format dates to Y-m-d so they work in date inputs
+                'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : '',
+                'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : '',
             ],
             'assigned_grades' => $assignedGrades,
             'categories' => $categories,
