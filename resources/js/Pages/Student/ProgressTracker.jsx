@@ -1,6 +1,21 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
+import {
+    BookOpenIcon,
+    ClipboardDocumentListIcon,
+    ChartBarIcon,
+    RocketLaunchIcon,
+    ListBulletIcon,
+    CheckCircleIcon,
+    SparklesIcon,
+    StarIcon,
+    ArrowTrendingUpIcon,
+    HeartIcon,
+    ArrowRightIcon,
+    AcademicCapIcon,
+    ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 
 export default function ProgressTracker({
     grade_level,
@@ -29,12 +44,12 @@ export default function ProgressTracker({
 
     const getActivityIcon = (type) => {
         const icons = {
-            lesson: '📚',
-            assignment: '📝',
-            quiz: '📊',
-            game: '🎮',
+            lesson: <BookOpenIcon className="w-6 h-6 text-blue-500" />,
+            assignment: <ClipboardDocumentListIcon className="w-6 h-6 text-purple-500" />,
+            quiz: <ChartBarIcon className="w-6 h-6 text-green-500" />,
+            game: <RocketLaunchIcon className="w-6 h-6 text-orange-500" />,
         };
-        return icons[type] || '📌';
+        return icons[type] || <ListBulletIcon className="w-6 h-6 text-gray-500" />;
     };
 
     const getActivityRoute = (type, id) => {
@@ -60,6 +75,26 @@ export default function ProgressTracker({
         (gameProgress * 0.1)
     );
 
+    const getOverallIcon = () => {
+        if (overallProgress >= 80) {
+            return <StarIcon className="w-12 h-12 text-yellow-400" />;
+        } else if (overallProgress >= 60) {
+            return <ArrowTrendingUpIcon className="w-12 h-12 text-blue-400" />;
+        } else {
+            return <HeartIcon className="w-12 h-12 text-red-400" />;
+        }
+    };
+
+    const getActivityTypeLabel = (type) => {
+        const labels = {
+            lesson: 'Lesson',
+            assignment: 'Assignment',
+            quiz: 'Quiz',
+            game: 'Game',
+        };
+        return labels[type] || type;
+    };
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Progress</h2>}
@@ -71,7 +106,8 @@ export default function ProgressTracker({
                     {/* ===== Grade Level ===== */}
                     <div className="mb-6">
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">📚 Grade:</span>
+                            <AcademicCapIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Grade:</span>
                             <span className="font-semibold text-blue-700 dark:text-blue-300">{grade_level}</span>
                         </div>
                     </div>
@@ -85,15 +121,20 @@ export default function ProgressTracker({
                                         <div className="text-sm text-blue-100">Overall Progress</div>
                                         <div className="text-4xl font-bold">{overallProgress}%</div>
                                         <div className="mt-1 text-sm text-blue-100">
-                                            Status: <span className={`font-semibold ${overallProgress >= 80 ? 'text-green-300' : overallProgress >= 60 ? 'text-yellow-300' : 'text-red-300'}`}>
+                                            Status: <span className={`font-semibold ${
+                                                overallProgress >= 80 ? 'text-green-300' :
+                                                overallProgress >= 60 ? 'text-yellow-300' :
+                                                'text-red-300'
+                                            }`}>
                                                 {getStatusLabel(overallProgress)}
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="text-6xl">
-                                        {overallProgress >= 80 ? '🌟' : overallProgress >= 60 ? '📈' : '💪'}
+                                    <div>
+                                        {getOverallIcon()}
                                     </div>
                                 </div>
+
                                 <div className="mt-4 w-full bg-white/20 rounded-full h-3">
                                     <div
                                         className={`h-3 rounded-full transition-all duration-500 ${
@@ -104,6 +145,7 @@ export default function ProgressTracker({
                                         style={{ width: `${overallProgress}%` }}
                                     />
                                 </div>
+
                                 <div className="mt-2 flex justify-between text-xs text-blue-100">
                                     <span>Participation Rate: {participation_rate}%</span>
                                     <span>{pending_count} pending activities</span>
@@ -117,7 +159,9 @@ export default function ProgressTracker({
                         {/* Lessons */}
                         <Card>
                             <div className="flex items-center gap-4">
-                                <div className="text-4xl">📚</div>
+                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                    <BookOpenIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                </div>
                                 <div className="flex-1">
                                     <div className="text-sm text-gray-500 dark:text-gray-400">Lessons</div>
                                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -143,7 +187,9 @@ export default function ProgressTracker({
                         {/* Assignments */}
                         <Card>
                             <div className="flex items-center gap-4">
-                                <div className="text-4xl">📝</div>
+                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                                    <ClipboardDocumentListIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                                </div>
                                 <div className="flex-1">
                                     <div className="text-sm text-gray-500 dark:text-gray-400">Assignments</div>
                                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -169,7 +215,9 @@ export default function ProgressTracker({
                         {/* Quizzes */}
                         <Card>
                             <div className="flex items-center gap-4">
-                                <div className="text-4xl">📊</div>
+                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30">
+                                    <ChartBarIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                                </div>
                                 <div className="flex-1">
                                     <div className="text-sm text-gray-500 dark:text-gray-400">Quizzes</div>
                                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -198,7 +246,9 @@ export default function ProgressTracker({
                         {/* Games */}
                         <Card>
                             <div className="flex items-center gap-4">
-                                <div className="text-4xl">🎮</div>
+                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                                    <RocketLaunchIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                                </div>
                                 <div className="flex-1">
                                     <div className="text-sm text-gray-500 dark:text-gray-400">Games</div>
                                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -224,10 +274,24 @@ export default function ProgressTracker({
 
                     {/* ===== Pending Activities ===== */}
                     <div className="mt-6">
-                        <Card title="📋 Pending Activities">
+                        <Card
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <ListBulletIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                                    <span>Pending Activities</span>
+                                    {pending_count > 0 && (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                            {pending_count}
+                                        </span>
+                                    )}
+                                </div>
+                            }
+                        >
                             {pending_activities.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <div className="text-6xl mb-4">🎉</div>
+                                    <div className="flex justify-center mb-4">
+                                        <CheckCircleIcon className="w-16 h-16 text-green-500" />
+                                    </div>
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                                         All caught up!
                                     </h3>
@@ -245,14 +309,16 @@ export default function ProgressTracker({
                                         >
                                             <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                                                 <div className="flex items-center gap-4">
-                                                    <span className="text-2xl">{getActivityIcon(activity.type)}</span>
+                                                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-600 shadow-sm">
+                                                        {getActivityIcon(activity.type)}
+                                                    </div>
                                                     <div>
                                                         <div className="font-medium text-gray-900 dark:text-white">
                                                             {activity.title}
                                                         </div>
                                                         <div className="text-sm text-gray-500 dark:text-gray-400">
                                                             {activity.subject ? `${activity.subject} • ` : ''}
-                                                            {activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}
+                                                            {getActivityTypeLabel(activity.type)}
                                                             {activity.due_date && ` • Due: ${activity.due_date}`}
                                                         </div>
                                                     </div>
@@ -265,7 +331,7 @@ export default function ProgressTracker({
                                                     }`}>
                                                         {activity.status}
                                                     </span>
-                                                    <span className="text-gray-400">→</span>
+                                                    <ArrowRightIcon className="w-4 h-4 text-gray-400" />
                                                 </div>
                                             </div>
                                         </Link>

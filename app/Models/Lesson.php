@@ -36,6 +36,18 @@ class Lesson extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'publish_date' => 'date',
+        ];
+    }
+
+    /**
      * Get the teacher who created this lesson.
      */
     public function teacher()
@@ -89,5 +101,16 @@ class Lesson extends Model
     public function quizzes()
     {
         return $this->hasMany(Quiz::class, 'related_lesson_id');
+    }
+
+    /**
+     * ✅ Get the students who completed this lesson.
+     * This uses the lesson_user pivot table.
+     */
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'lesson_user', 'lesson_id', 'user_id')
+            ->withTimestamps()
+            ->withPivot('completed_at');
     }
 }

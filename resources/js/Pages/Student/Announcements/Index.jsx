@@ -5,6 +5,17 @@ import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import {
+    MegaphoneIcon,
+    MapPinIcon,
+    StarIcon,
+    ExclamationTriangleIcon,
+    AcademicCapIcon,
+    UserIcon,
+    ArrowRightIcon,
+    ChevronRightIcon,
+    BuildingOfficeIcon,
+} from '@heroicons/react/24/outline';
 
 export default function AnnouncementsIndex({ announcements, categories, filters }) {
     const [search, setSearch] = useState(filters?.search || '');
@@ -50,17 +61,31 @@ export default function AnnouncementsIndex({ announcements, categories, filters 
 
     const getPriorityIcon = (priority) => {
         const icons = {
-            normal: '📌',
-            important: '⭐',
-            urgent: '🚨',
+            normal: <MapPinIcon className="w-3.5 h-3.5" />,
+            important: <StarIcon className="w-3.5 h-3.5" />,
+            urgent: <ExclamationTriangleIcon className="w-3.5 h-3.5" />,
         };
-        return icons[priority] || '📌';
+        return icons[priority] || icons.normal;
+    };
+
+    const getPriorityLabel = (priority) => {
+        return priority.charAt(0).toUpperCase() + priority.slice(1);
     };
 
     const getRoleBadge = (role) => {
         return role === 'principal'
             ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
             : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+    };
+
+    const getRoleLabel = (role) => {
+        return role === 'principal' ? 'Principal' : 'Teacher';
+    };
+
+    const getRoleIcon = (role) => {
+        return role === 'principal'
+            ? <BuildingOfficeIcon className="w-3.5 h-3.5" />
+            : <UserIcon className="w-3.5 h-3.5" />;
     };
 
     return (
@@ -101,7 +126,9 @@ export default function AnnouncementsIndex({ announcements, categories, filters 
                         <div className="mt-6">
                             {announcements.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <div className="text-6xl mb-4">📢</div>
+                                    <div className="flex justify-center mb-4">
+                                        <MegaphoneIcon className="w-16 h-16 text-gray-400 dark:text-gray-600" />
+                                    </div>
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                                         No announcements
                                     </h3>
@@ -125,14 +152,18 @@ export default function AnnouncementsIndex({ announcements, categories, filters 
                                             }`}>
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-lg">📌</span>
-                                                            <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">PINNED</span>
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityBadge(announcement.priority)}`}>
-                                                                {getPriorityIcon(announcement.priority)} {announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1)}
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+                                                                <MapPinIcon className="w-3.5 h-3.5" />
+                                                                PINNED
                                                             </span>
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadge(announcement.role)}`}>
-                                                                {announcement.role === 'principal' ? '🏫 Principal' : '👨‍🏫 Teacher'}
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityBadge(announcement.priority)}`}>
+                                                                {getPriorityIcon(announcement.priority)}
+                                                                {getPriorityLabel(announcement.priority)}
+                                                            </span>
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadge(announcement.role)}`}>
+                                                                {getRoleIcon(announcement.role)}
+                                                                {getRoleLabel(announcement.role)}
                                                             </span>
                                                             {!announcement.is_read && (
                                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
@@ -154,7 +185,7 @@ export default function AnnouncementsIndex({ announcements, categories, filters 
                                                             <span>{announcement.created_at}</span>
                                                         </div>
                                                     </div>
-                                                    <span className="ml-4 text-gray-400">→</span>
+                                                    <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-4 flex-shrink-0" />
                                                 </div>
                                             </div>
                                         </Link>
@@ -175,11 +206,13 @@ export default function AnnouncementsIndex({ announcements, categories, filters 
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
                                                         <div className="flex flex-wrap items-center gap-2">
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityBadge(announcement.priority)}`}>
-                                                                {getPriorityIcon(announcement.priority)} {announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1)}
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityBadge(announcement.priority)}`}>
+                                                                {getPriorityIcon(announcement.priority)}
+                                                                {getPriorityLabel(announcement.priority)}
                                                             </span>
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadge(announcement.role)}`}>
-                                                                {announcement.role === 'principal' ? '🏫 Principal' : '👨‍🏫 Teacher'}
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadge(announcement.role)}`}>
+                                                                {getRoleIcon(announcement.role)}
+                                                                {getRoleLabel(announcement.role)}
                                                             </span>
                                                             {!announcement.is_read && (
                                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
@@ -201,7 +234,7 @@ export default function AnnouncementsIndex({ announcements, categories, filters 
                                                             <span>{announcement.created_at}</span>
                                                         </div>
                                                     </div>
-                                                    <span className="ml-4 text-gray-400">→</span>
+                                                    <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-4 flex-shrink-0" />
                                                 </div>
                                             </div>
                                         </Link>

@@ -31,7 +31,10 @@ class ProgressTrackerController extends Controller
             ->where('status', 'published')
             ->count();
 
-        $completedLessons = $user->lessons()->where('status', 'published')->count();
+        // ✅ FIX: Use completedLessons() relationship instead of lessons()
+        $completedLessons = $user->completedLessons()
+            ->where('status', 'published')
+            ->count();
 
         // Assignments
         $totalAssignments = Assignment::where('grade_level', $gradeLevel)
@@ -74,7 +77,7 @@ class ProgressTrackerController extends Controller
             $pendingLessons = Lesson::where('grade_level', $gradeLevel)
                 ->where('status', 'published')
                 ->whereDoesntHave('students', function ($query) use ($user) {
-                    $query->where('student_id', $user->id);
+                    $query->where('user_id', $user->id);
                 })
                 ->limit(3)
                 ->get()
@@ -84,7 +87,7 @@ class ProgressTrackerController extends Controller
                         'id' => $lesson->id,
                         'title' => $lesson->lesson_title,
                         'subject' => $lesson->subject,
-                        'due_date' => $lesson->publish_date,
+                        'due_date' => $lesson->publish_date ? $lesson->publish_date->format('M d, Y') : null,
                         'status' => 'Not Started',
                     ];
                 });
@@ -107,7 +110,7 @@ class ProgressTrackerController extends Controller
                     'id' => $assignment->id,
                     'title' => $assignment->assignment_title,
                     'subject' => $assignment->subject,
-                    'due_date' => $assignment->due_date,
+                    'due_date' => $assignment->due_date ? $assignment->due_date->format('M d, Y') : null,
                     'status' => 'Not Submitted',
                 ];
             });
@@ -149,7 +152,7 @@ class ProgressTrackerController extends Controller
                     'id' => $game->id,
                     'title' => $game->game_title,
                     'subject' => null,
-                    'due_date' => $game->due_date,
+                    'due_date' => $game->due_date ? $game->due_date->format('M d, Y') : null,
                     'status' => 'Not Started',
                 ];
             });

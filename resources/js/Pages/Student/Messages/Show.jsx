@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, useForm, router, Link } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
@@ -8,6 +8,14 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import {
+    ArrowLeftIcon,
+    ChatBubbleLeftIcon,
+    CheckCircleIcon,
+    UserIcon,
+    CalendarIcon,
+    DocumentTextIcon,
+} from '@heroicons/react/24/outline';
 
 export default function MessagesShow({ message }) {
     const [showReplyForm, setShowReplyForm] = useState(false);
@@ -19,7 +27,6 @@ export default function MessagesShow({ message }) {
     const handleReplySubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-
         post(route('student.messages.reply', message.id), {
             preserveState: true,
             onFinish: () => {
@@ -41,10 +48,12 @@ export default function MessagesShow({ message }) {
                     <div className="flex gap-2">
                         {canReply && (
                             <PrimaryButton onClick={() => setShowReplyForm(!showReplyForm)}>
-                                💬 Reply
+                                <ChatBubbleLeftIcon className="w-4 h-4 mr-1" />
+                                Reply
                             </PrimaryButton>
                         )}
                         <SecondaryButton onClick={() => router.visit(route('student.messages.index'))}>
+                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Inbox
                         </SecondaryButton>
                     </div>
@@ -65,14 +74,16 @@ export default function MessagesShow({ message }) {
                                         {message.subject}
                                     </h3>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <UserIcon className="w-4 h-4" />
                                             {message.is_sender ? 'To: ' : 'From: '}
                                             <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 {message.is_sender ? message.to : message.from}
                                             </span>
                                         </span>
                                         <span className="text-sm text-gray-400 dark:text-gray-500">•</span>
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <CalendarIcon className="w-4 h-4" />
                                             {message.created_at}
                                         </span>
                                     </div>
@@ -149,7 +160,10 @@ export default function MessagesShow({ message }) {
                         <div className="mt-6">
                             <Card className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                                 <div className="text-center py-4">
-                                    <div className="text-green-600 dark:text-green-400 text-lg">✅ You have replied to this message</div>
+                                    <div className="flex items-center justify-center text-green-600 dark:text-green-400 text-lg gap-2">
+                                        <CheckCircleIcon className="w-6 h-6" />
+                                        You have replied to this message
+                                    </div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                         Status: Replied
                                     </p>

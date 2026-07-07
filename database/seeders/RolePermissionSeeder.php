@@ -50,7 +50,7 @@ class RolePermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'message.send']);
         Permission::firstOrCreate(['name' => 'message.delete']);
 
-        Permission::firstOrCreate(['name' => 'progress.view']);   // ✅ new
+        Permission::firstOrCreate(['name' => 'progress.view']);
 
         // ========== CREATE ROLES & ASSIGN PERMISSIONS ==========
         $principalRole = Role::firstOrCreate(['name' => 'principal']);
@@ -86,7 +86,8 @@ class RolePermissionSeeder extends Seeder
             'quiz.view',
             'game.view',
             'announcement.view',
-            'message.view', 'message.send',
+            'message.view',
+            'message.send',
         ]);
 
         $this->command->info('✅ Roles and permissions seeded successfully!');

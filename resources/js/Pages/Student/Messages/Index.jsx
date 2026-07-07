@@ -7,6 +7,12 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
+import {
+    EyeIcon,
+    ChatBubbleLeftIcon,
+    PencilSquareIcon,
+    InboxIcon,
+} from '@heroicons/react/24/outline';
 
 export default function MessagesIndex({
     messages,
@@ -26,7 +32,6 @@ export default function MessagesIndex({
     };
 
     const handleFilterChange = (type, value) => {
-        const updates = {};
         if (type === 'category') setCategoryFilter(value);
         if (type === 'status') setStatusFilter(value);
 
@@ -52,18 +57,28 @@ export default function MessagesIndex({
 
     const categoryOptions = [
         { value: '', label: 'All Categories' },
-        ...categories.map((cat) => ({ value: cat, label: cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) })),
+        ...categories.map((cat) => ({
+            value: cat,
+            label: cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        })),
     ];
 
     const statusOptions = [
         { value: '', label: 'All Status' },
-        ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
+        ...statuses.map((status) => ({
+            value: status,
+            label: status.charAt(0).toUpperCase() + status.slice(1),
+        })),
     ];
 
     const columns = [
         { key: 'from', label: 'From' },
         { key: 'subject', label: 'Subject' },
-        { key: 'category', label: 'Category', render: (row) => row.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) },
+        {
+            key: 'category',
+            label: 'Category',
+            render: (row) => row.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
         { key: 'created_at', label: 'Date' },
     ];
@@ -71,13 +86,13 @@ export default function MessagesIndex({
     const actions = (row) => [
         {
             label: 'View',
-            icon: '👁️',
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('student.messages.show', row.id)),
         },
         ...(row.status !== 'replied' ? [{
             label: 'Reply',
-            icon: '💬',
+            icon: <ChatBubbleLeftIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => router.visit(route('student.messages.show', row.id)),
         }] : []),
@@ -89,7 +104,10 @@ export default function MessagesIndex({
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Messages</h2>
                     <Link href={route('student.messages.create')}>
-                        <PrimaryButton>✏️ Ask Teacher</PrimaryButton>
+                        <PrimaryButton>
+                            <PencilSquareIcon className="w-4 h-4 mr-1" />
+                            Ask Teacher
+                        </PrimaryButton>
                     </Link>
                 </div>
             }
@@ -102,6 +120,7 @@ export default function MessagesIndex({
                         {/* ===== Header with Unread Count ===== */}
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
+                                <InboxIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                                 <span className="text-lg font-medium text-gray-900 dark:text-white">Inbox</span>
                                 {unread_count > 0 && (
                                     <span className="inline-flex items-center justify-center px-2.5 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full">

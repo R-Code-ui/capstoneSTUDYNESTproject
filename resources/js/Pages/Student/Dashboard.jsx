@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
@@ -26,22 +26,6 @@ export default function StudentDashboard({
     progress_summary,
     unread_messages,
 }) {
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'submitted':
-            case 'graded':
-            case 'completed':
-                return 'text-green-600 dark:text-green-400';
-            case 'pending':
-            case 'started':
-                return 'text-yellow-600 dark:text-yellow-400';
-            case 'not_submitted':
-            case 'assigned':
-            default:
-                return 'text-gray-500 dark:text-gray-400';
-        }
-    };
-
     const getStatusBadge = (status) => {
         switch (status) {
             case 'submitted':
@@ -58,12 +42,6 @@ export default function StudentDashboard({
         }
     };
 
-    // Helper to show "coming soon" alert for links that don't have routes yet
-    const comingSoon = (e) => {
-        e.preventDefault();
-        alert('This feature will be available soon!');
-    };
-
     return (
         <AuthenticatedLayout
             header={
@@ -72,12 +50,15 @@ export default function StudentDashboard({
                         Student Dashboard
                     </span>
                     {unread_messages > 0 && (
-                        <a href="#" onClick={comingSoon} className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">
+                        <Link
+                            href={route('student.messages.index')}
+                            className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800"
+                        >
                             <EnvelopeIcon className="w-5 h-5" />
                             <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full">
                                 {unread_messages}
                             </span>
-                        </a>
+                        </Link>
                     )}
                 </div>
             }
@@ -101,22 +82,21 @@ export default function StudentDashboard({
                             <span className="text-sm text-gray-300">Quick Links:</span>
                             <div className="flex gap-1">
                                 {[
-                                    { icon: BookOpenIcon, color: 'blue', label: 'Lessons' },
-                                    { icon: ClipboardDocumentListIcon, color: 'green', label: 'Assignments' },
-                                    { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes' },
-                                    { icon: PuzzlePieceIcon, color: 'orange', label: 'Games' },
-                                    { icon: MegaphoneIcon, color: 'red', label: 'Announcements' },
-                                    { icon: ChartBarIcon, color: 'indigo', label: 'Progress' },
+                                    { icon: BookOpenIcon, color: 'blue', label: 'Lessons', route: 'student.lessons.index' },
+                                    { icon: ClipboardDocumentListIcon, color: 'green', label: 'Assignments', route: 'student.assignments.index' },
+                                    { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes', route: 'student.quizzes.index' },
+                                    { icon: PuzzlePieceIcon, color: 'orange', label: 'Games', route: 'student.games.index' },
+                                    { icon: MegaphoneIcon, color: 'red', label: 'Announcements', route: 'student.announcements.index' },
+                                    { icon: ChartBarIcon, color: 'indigo', label: 'Progress', route: 'student.progress.index' },
                                 ].map((item, idx) => (
-                                    <a
+                                    <Link
                                         key={idx}
-                                        href="#"
-                                        onClick={comingSoon}
+                                        href={route(item.route)}
                                         className={`p-1.5 bg-${item.color}-500/20 rounded-lg hover:bg-${item.color}-500/30 transition-colors`}
                                         title={item.label}
                                     >
                                         <item.icon className={`w-5 h-5 text-${item.color}-400`} />
-                                    </a>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
@@ -157,9 +137,12 @@ export default function StudentDashboard({
                                     </div>
                                 ))}
                                 <div className="text-center">
-                                    <a href="#" onClick={comingSoon} className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                    <Link
+                                        href={route('student.announcements.index')}
+                                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                    >
                                         View All Announcements →
-                                    </a>
+                                    </Link>
                                 </div>
                             </div>
                         ) : (
@@ -197,20 +180,22 @@ export default function StudentDashboard({
                                                 <span className="text-xs text-gray-400 dark:text-gray-500">
                                                     {lesson.date}
                                                 </span>
-                                                <a
-                                                    href="#"
-                                                    onClick={comingSoon}
+                                                <Link
+                                                    href={route('student.lessons.show', lesson.id)}
                                                     className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                                 >
                                                     View →
-                                                </a>
+                                                </Link>
                                             </div>
                                         </div>
                                     ))}
                                     <div className="text-center">
-                                        <a href="#" onClick={comingSoon} className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href={route('student.lessons.index')}
+                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             View All Lessons →
-                                        </a>
+                                        </Link>
                                     </div>
                                 </div>
                             ) : (
@@ -251,20 +236,22 @@ export default function StudentDashboard({
                                             </div>
                                             <div className="flex flex-col items-end shrink-0">
                                                 {getStatusBadge(assignment.status)}
-                                                <a
-                                                    href="#"
-                                                    onClick={comingSoon}
+                                                <Link
+                                                    href={route('student.assignments.show', assignment.id)}
                                                     className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                                 >
                                                     View →
-                                                </a>
+                                                </Link>
                                             </div>
                                         </div>
                                     ))}
                                     <div className="text-center">
-                                        <a href="#" onClick={comingSoon} className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href={route('student.assignments.index')}
+                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             View All Assignments →
-                                        </a>
+                                        </Link>
                                     </div>
                                 </div>
                             ) : (
@@ -300,23 +287,36 @@ export default function StudentDashboard({
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end shrink-0">
-                                                <span className={`text-sm font-medium ${getStatusColor(quiz.status)}`}>
-                                                    {quiz.status === 'completed' ? `${quiz.score}%` : quiz.status}
-                                                </span>
-                                                <a
-                                                    href="#"
-                                                    onClick={comingSoon}
-                                                    className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                >
-                                                    {quiz.status === 'completed' ? 'View Results →' : 'Start Quiz →'}
-                                                </a>
+                                                {quiz.status === 'completed' ? (
+                                                    <>
+                                                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                                            {quiz.score}%
+                                                        </span>
+                                                        <Link
+                                                            href={route('student.quizzes.show', quiz.id)}
+                                                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        >
+                                                            View Results →
+                                                        </Link>
+                                                    </>
+                                                ) : (
+                                                    <Link
+                                                        href={route('student.quizzes.show', quiz.id)}
+                                                        className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                                                    >
+                                                        Start Quiz →
+                                                    </Link>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
                                     <div className="text-center">
-                                        <a href="#" onClick={comingSoon} className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href={route('student.quizzes.index')}
+                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             View All Quizzes →
-                                        </a>
+                                        </Link>
                                     </div>
                                 </div>
                             ) : (
@@ -350,26 +350,35 @@ export default function StudentDashboard({
                                             </div>
                                             <div className="flex flex-col items-end shrink-0">
                                                 {game.status === 'completed' ? (
-                                                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                                                        {game.score}%
-                                                    </span>
+                                                    <>
+                                                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                                            {game.score}%
+                                                        </span>
+                                                        <Link
+                                                            href={route('student.games.show', game.id)}
+                                                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        >
+                                                            Play Again →
+                                                        </Link>
+                                                    </>
                                                 ) : (
-                                                    getStatusBadge(game.status)
+                                                    <Link
+                                                        href={route('student.games.show', game.id)}
+                                                        className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                                                    >
+                                                        Play Game →
+                                                    </Link>
                                                 )}
-                                                <a
-                                                    href="#"
-                                                    onClick={comingSoon}
-                                                    className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                >
-                                                    {game.status === 'completed' ? 'Play Again →' : 'Play Game →'}
-                                                </a>
                                             </div>
                                         </div>
                                     ))}
                                     <div className="text-center">
-                                        <a href="#" onClick={comingSoon} className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href={route('student.games.index')}
+                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             View All Games →
-                                        </a>
+                                        </Link>
                                     </div>
                                 </div>
                             ) : (
@@ -417,29 +426,28 @@ export default function StudentDashboard({
                         </Card>
                     </div>
 
-                    {/* ===== Quick Access Buttons (non‑functional) ===== */}
+                    {/* ===== Quick Access Buttons (now functional) ===== */}
                     <div className="mt-6">
                         <Card title={<div className="flex items-center gap-2">Quick Access</div>}>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                                 {[
-                                    { icon: BookOpenIcon, color: 'blue', label: 'Lessons' },
-                                    { icon: ClipboardDocumentListIcon, color: 'green', label: 'Assignments' },
-                                    { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes' },
-                                    { icon: PuzzlePieceIcon, color: 'orange', label: 'Games' },
-                                    { icon: MegaphoneIcon, color: 'red', label: 'Announcements' },
-                                    { icon: ChartBarIcon, color: 'indigo', label: 'Progress' },
+                                    { icon: BookOpenIcon, color: 'blue', label: 'Lessons', route: 'student.lessons.index' },
+                                    { icon: ClipboardDocumentListIcon, color: 'green', label: 'Assignments', route: 'student.assignments.index' },
+                                    { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes', route: 'student.quizzes.index' },
+                                    { icon: PuzzlePieceIcon, color: 'orange', label: 'Games', route: 'student.games.index' },
+                                    { icon: MegaphoneIcon, color: 'red', label: 'Announcements', route: 'student.announcements.index' },
+                                    { icon: ChartBarIcon, color: 'indigo', label: 'Progress', route: 'student.progress.index' },
                                 ].map((item, idx) => (
-                                    <a
+                                    <Link
                                         key={idx}
-                                        href="#"
-                                        onClick={comingSoon}
+                                        href={route(item.route)}
                                         className={`flex flex-col items-center justify-center p-4 bg-${item.color}-50 dark:bg-${item.color}-900/30 rounded-xl hover:bg-${item.color}-100 dark:hover:bg-${item.color}-900/50 transition-all duration-200 hover:scale-105 hover:shadow-md`}
                                     >
                                         <item.icon className={`w-8 h-8 text-${item.color}-600 dark:text-${item.color}-400`} />
                                         <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center mt-2">
                                             {item.label}
                                         </span>
-                                    </a>
+                                    </Link>
                                 ))}
                             </div>
                         </Card>
