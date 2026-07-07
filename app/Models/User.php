@@ -134,6 +134,16 @@ class User extends Authenticatable
     }
 
     /**
+     * ✅ NEW: Lessons completed by student (Many-to-Many relationship)
+     */
+    public function completedLessons()
+    {
+        return $this->belongsToMany(Lesson::class, 'lesson_user', 'user_id', 'lesson_id')
+            ->withTimestamps()
+            ->withPivot('completed_at');
+    }
+
+    /**
      * Assignments created by teacher
      */
     public function assignments()

@@ -12,7 +12,7 @@ use Inertia\Inertia;
 class LessonController extends Controller
 {
     /**
-     * Display a listing of lessons.
+     * Display a listing of lessons for the student's grade.
      */
     public function index(Request $request)
     {
@@ -64,15 +64,13 @@ class LessonController extends Controller
     {
         $user = auth()->user();
 
-        // Ensure student can only view their grade level
-        if ($lesson->grade_level !== $user->grade_level) {
-            abort(403);
-        }
+        // Ensure the student can only view lessons for their grade level
+        Gate::authorize('view', $lesson);
 
         $lesson->load(['resources', 'teacher']);
 
-        // Determine if lesson is completed
-        $isCompleted = $user->lessons()->where('lesson_id', $lesson->id)->exists();
+        // Determine if lesson is completed (using the many‑to‑many relationship)
+        $isCompleted = $user->completedLessons()->where('lesson_id', $lesson->id)->exists();
 
         return Inertia::render('Student/Lessons/Show', [
             'lesson' => [
@@ -117,13 +115,12 @@ class LessonController extends Controller
     {
         $user = auth()->user();
 
-        if ($lesson->grade_level !== $user->grade_level) {
-            abort(403);
-        }
+        Gate::authorize('view', $lesson);
 
-        $user->lessons()->attach($lesson->id, [
+        // Attach the lesson to the student's completed lessons (many‑to‑many)
+        $user->completedLessons()->syncWithoutDetaching([$lesson->id => [
             'completed_at' => now(),
-        ]);
+        ]]);
 
         return redirect()->back()->with('success', 'Lesson marked as completed!');
     }
@@ -137,13 +134,14 @@ class LessonController extends Controller
         $lesson = $resource->lesson;
 
         $user = auth()->user();
-        if ($lesson->grade_level !== $user->grade_level) {
-            abort(403);
+        Gate::authorize('view', $lesson);
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found.');
         }
 
-        return response()->download(
-            storage_path('app/public/' . $resource->file_path),
-            $resource->file_name
-        );
+        return response()->download($filePath, $resource->file_name);
     }
 }

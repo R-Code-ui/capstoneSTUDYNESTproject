@@ -68,8 +68,22 @@ export default function AuthenticatedLayout({ header, children }) {
             if (reports) links.push({ href: reports, label: 'Reports' });
         } else if (userRole === 'student') {
             const dashboard = safeRoute('student.dashboard');
+            const lessons = safeRoute('student.lessons.index');
+            const assignments = safeRoute('student.assignments.index');
+            const quizzes = safeRoute('student.quizzes.index');
+            const games = safeRoute('student.games.index');
+            const announcements = safeRoute('student.announcements.index');
+            const messages = safeRoute('student.messages.index');
+            const progress = safeRoute('student.progress.index');
+
             if (dashboard) links.push({ href: dashboard, label: 'Dashboard' });
-            // Add other student routes when they exist
+            if (lessons) links.push({ href: lessons, label: 'Lessons' });
+            if (assignments) links.push({ href: assignments, label: 'Assignments' });
+            if (quizzes) links.push({ href: quizzes, label: 'Quizzes' });
+            if (games) links.push({ href: games, label: 'Games' });
+            if (announcements) links.push({ href: announcements, label: 'Announcements' });
+            if (messages) links.push({ href: messages, label: 'Messages' });
+            if (progress) links.push({ href: progress, label: 'Progress' });
         }
 
         return links;

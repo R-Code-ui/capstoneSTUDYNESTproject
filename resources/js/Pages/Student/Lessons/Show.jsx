@@ -6,16 +6,37 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
+// Heroicons
+import {
+    ArrowLeftIcon,
+    BookOpenIcon,
+    UserIcon,
+    CalendarIcon,
+    DocumentIcon,
+    PhotoIcon,
+    PaperClipIcon,
+    CheckCircleIcon,
+    ClipboardDocumentListIcon,
+    ChartBarIcon,
+    PuzzlePieceIcon,
+    LinkIcon,
+    ArrowDownTrayIcon,
+} from '@heroicons/react/24/outline';
+
 export default function LessonsShow({ lesson, related_activities }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const getResourceIcon = (type) => {
-        const icons = {
-            pdf_module: '📄',
-            worksheet: '📝',
-            image: '🖼️',
-        };
-        return icons[type] || '📎';
+        switch (type) {
+            case 'pdf_module':
+                return <DocumentIcon className="w-6 h-6 text-red-500" />;
+            case 'image':
+                return <PhotoIcon className="w-6 h-6 text-green-500" />;
+            case 'worksheet':
+                return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
+            default:
+                return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
+        }
     };
 
     const getResourceLabel = (type) => {
@@ -41,20 +62,28 @@ export default function LessonsShow({ lesson, related_activities }) {
         window.open(route('student.lessons.download-resource', resourceId), '_blank');
     };
 
+    // Placeholder for unimplemented routes
+    const comingSoon = (e) => {
+        e.preventDefault();
+        alert('This activity will be available soon!');
+    };
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {lesson.title}
-                    </h2>
+                    </span>
                     <div className="flex gap-2">
                         {!lesson.is_completed && (
                             <PrimaryButton onClick={handleMarkComplete} disabled={isLoading}>
-                                {isLoading ? 'Marking...' : '✅ Mark as Completed'}
+                                <CheckCircleIcon className="w-4 h-4 mr-1" />
+                                {isLoading ? 'Marking...' : 'Mark as Completed'}
                             </PrimaryButton>
                         )}
                         <SecondaryButton onClick={() => router.visit(route('student.lessons.index'))}>
+                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Lessons
                         </SecondaryButton>
                     </div>
@@ -63,8 +92,8 @@ export default function LessonsShow({ lesson, related_activities }) {
         >
             <Head title={lesson.title} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-4xl">
                     {/* Loading Spinner */}
                     {isLoading && <LoadingSpinner overlay size="lg" />}
 
@@ -77,19 +106,23 @@ export default function LessonsShow({ lesson, related_activities }) {
                                 </span>
                                 {lesson.is_completed && (
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                                        ✅ Completed
+                                        <CheckCircleIcon className="w-3 h-3 mr-1" />
+                                        Completed
                                     </span>
                                 )}
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    👨‍🏫 {lesson.teacher}
+                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                    <UserIcon className="w-4 h-4" />
+                                    {lesson.teacher}
                                 </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    📅 {lesson.publish_date}
+                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                    <CalendarIcon className="w-4 h-4" />
+                                    {lesson.publish_date}
                                 </span>
                             </div>
 
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <BookOpenIcon className="w-6 h-6 text-blue-500" />
                                     {lesson.title}
                                 </h3>
                             </div>
@@ -105,7 +138,12 @@ export default function LessonsShow({ lesson, related_activities }) {
 
                     {/* ===== Lesson Content ===== */}
                     <div className="mt-6">
-                        <Card title="📖 Lesson Content">
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                                Lesson Content
+                            </div>
+                        }>
                             <div className="prose prose-blue dark:prose-invert max-w-none">
                                 <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
                             </div>
@@ -115,7 +153,12 @@ export default function LessonsShow({ lesson, related_activities }) {
                     {/* ===== Learning Resources ===== */}
                     {lesson.resources && lesson.resources.length > 0 && (
                         <div className="mt-6">
-                            <Card title="📎 Learning Resources">
+                            <Card title={
+                                <div className="flex items-center gap-2">
+                                    <PaperClipIcon className="w-5 h-5 text-gray-500" />
+                                    Learning Resources
+                                </div>
+                            }>
                                 <div className="space-y-3">
                                     {lesson.resources.map((resource) => (
                                         <div
@@ -123,7 +166,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                                             className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                         >
                                             <div className="flex items-center gap-4">
-                                                <span className="text-3xl">{getResourceIcon(resource.type)}</span>
+                                                {getResourceIcon(resource.type)}
                                                 <div>
                                                     <div className="font-medium text-gray-900 dark:text-white">
                                                         {resource.name}
@@ -135,8 +178,9 @@ export default function LessonsShow({ lesson, related_activities }) {
                                             </div>
                                             <button
                                                 onClick={() => handleDownload(resource.id, resource.name)}
-                                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                                             >
+                                                <ArrowDownTrayIcon className="w-4 h-4" />
                                                 Download
                                             </button>
                                         </div>
@@ -146,34 +190,47 @@ export default function LessonsShow({ lesson, related_activities }) {
                         </div>
                     )}
 
-                    {/* ===== Related Activities ===== */}
+                    {/* ===== Related Activities (non‑functional links until implemented) ===== */}
                     {(related_activities.assignment || related_activities.quiz || related_activities.game) && (
                         <div className="mt-6">
-                            <Card title="🔗 Related Activities">
+                            <Card title={
+                                <div className="flex items-center gap-2">
+                                    <LinkIcon className="w-5 h-5 text-gray-500" />
+                                    Related Activities
+                                </div>
+                            }>
                                 <div className="flex flex-wrap gap-3">
                                     {related_activities.assignment && (
-                                        <Link
-                                            href={route('student.assignments.show', related_activities.assignment.id)}
-                                            className="px-4 py-2.5 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors flex items-center gap-2"
+                                        <a
+                                            href="#"
+                                            onClick={comingSoon}
+                                            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors"
                                         >
-                                            📝 Open Assignment: {related_activities.assignment.title}
-                                        </Link>
+                                            <ClipboardDocumentListIcon className="w-4 h-4" />
+                                            Open Assignment: {related_activities.assignment.title}
+                                        </a>
                                     )}
+
                                     {related_activities.quiz && (
-                                        <Link
-                                            href={route('student.quizzes.show', related_activities.quiz.id)}
-                                            className="px-4 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
+                                        <a
+                                            href="#"
+                                            onClick={comingSoon}
+                                            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
                                         >
-                                            📊 Take Quiz: {related_activities.quiz.title}
-                                        </Link>
+                                            <ChartBarIcon className="w-4 h-4" />
+                                            Take Quiz: {related_activities.quiz.title}
+                                        </a>
                                     )}
+
                                     {related_activities.game && (
-                                        <Link
-                                            href={route('student.games.show', related_activities.game.id)}
-                                            className="px-4 py-2.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                                        <a
+                                            href="#"
+                                            onClick={comingSoon}
+                                            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
                                         >
-                                            🎮 Play Game: {related_activities.game.title}
-                                        </Link>
+                                            <PuzzlePieceIcon className="w-4 h-4" />
+                                            Play Game: {related_activities.game.title}
+                                        </a>
                                     )}
                                 </div>
                             </Card>
@@ -185,7 +242,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                         <div className="mt-6">
                             <Card className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                                 <div className="flex items-center gap-3 text-green-700 dark:text-green-300">
-                                    <span className="text-2xl">✅</span>
+                                    <CheckCircleIcon className="w-6 h-6" />
                                     <div>
                                         <div className="font-semibold">Lesson Completed!</div>
                                         <div className="text-sm text-green-600 dark:text-green-400">
@@ -199,7 +256,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                         <div className="mt-6">
                             <Card className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
                                 <div className="flex items-center gap-3 text-yellow-700 dark:text-yellow-300">
-                                    <span className="text-2xl">📌</span>
+                                    <BookOpenIcon className="w-6 h-6" />
                                     <div>
                                         <div className="font-semibold">Not Yet Completed</div>
                                         <div className="text-sm text-yellow-600 dark:text-yellow-400">

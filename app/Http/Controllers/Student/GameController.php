@@ -108,7 +108,10 @@ class GameController extends Controller
             }
         }
 
-        $gameData = json_decode($game->game_data, true);
+        // ✅ FIX: Handle game_data whether it's a string or already an array
+        $gameData = is_string($game->game_data)
+            ? json_decode($game->game_data, true)
+            : $game->game_data;
 
         return Inertia::render('Student/Games/Show', [
             'game' => [
@@ -129,7 +132,7 @@ class GameController extends Controller
     }
 
     /**
-     * Start a game.
+     * Start a game (now a GET request).
      */
     public function play(Game $game)
     {
@@ -156,7 +159,7 @@ class GameController extends Controller
             ->first();
 
         if ($existingResult) {
-            return redirect()->route('student.games.play', $existingResult->id);
+            return redirect()->route('student.games.play.show', $existingResult->id);
         }
 
         $attemptNumber = $completedAttempts + 1;
@@ -170,7 +173,7 @@ class GameController extends Controller
             'started_at' => now(),
         ]);
 
-        return redirect()->route('student.games.play', $result->id);
+        return redirect()->route('student.games.play.show', $result->id);
     }
 
     /**
@@ -185,7 +188,11 @@ class GameController extends Controller
         }
 
         $game = $result->game;
-        $gameData = json_decode($game->game_data, true);
+
+        // ✅ FIX: Handle game_data whether it's a string or already an array
+        $gameData = is_string($game->game_data)
+            ? json_decode($game->game_data, true)
+            : $game->game_data;
 
         return Inertia::render('Student/Games/Play', [
             'result' => [

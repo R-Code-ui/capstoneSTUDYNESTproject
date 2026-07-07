@@ -5,16 +5,58 @@ import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import {
+    BookOpenIcon,
+    CalculatorIcon,
+    StarIcon,
+    CheckCircleIcon,
+    HeartIcon,
+    ArrowPathIcon,
+} from '@heroicons/react/24/outline';
 
 export default function GamesResults({ result, game, can_play_again }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const getTypeIcon = (type) => {
-        return type === 'literacy' ? '📖' : '🧮';
+        return type === 'literacy' ? (
+            <BookOpenIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+        ) : (
+            <CalculatorIcon className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+        );
     };
 
     const getTypeLabel = (type) => {
         return type === 'literacy' ? 'Literacy' : 'Numeracy';
+    };
+
+    const getResultIcon = () => {
+        if (result.score >= 80) {
+            return <StarIcon className="w-16 h-16 text-yellow-500" />;
+        } else if (result.score >= 60) {
+            return <CheckCircleIcon className="w-16 h-16 text-green-500" />;
+        } else {
+            return <HeartIcon className="w-16 h-16 text-red-500" />;
+        }
+    };
+
+    const getResultMessage = () => {
+        if (result.score >= 80) {
+            return 'Excellent!';
+        } else if (result.score >= 60) {
+            return 'Good Job!';
+        } else {
+            return 'Keep Practicing!';
+        }
+    };
+
+    const getResultBadgeClass = () => {
+        if (result.score >= 80) {
+            return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        } else if (result.score >= 60) {
+            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+        } else {
+            return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        }
     };
 
     const handlePlayAgain = () => {
@@ -48,19 +90,22 @@ export default function GamesResults({ result, game, can_play_again }) {
                     <Card className="text-center">
                         <div className="py-8">
                             <div className="flex items-center justify-center gap-3 mb-4">
-                                <span className="text-4xl">{getTypeIcon(game.game_type)}</span>
+                                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30">
+                                    {getTypeIcon(game.game_type)}
+                                </span>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                                     {getTypeLabel(game.game_type)}
                                 </span>
                             </div>
 
-                            <div className="text-6xl mb-4">
-                                {result.score >= 80 ? '🌟' : result.score >= 60 ? '👍' : '💪'}
+                            <div className="flex justify-center mb-4">
+                                {getResultIcon()}
                             </div>
 
                             <div className="text-5xl font-bold text-gray-900 dark:text-white">
                                 {result.score}
                             </div>
+
                             <div className="text-lg text-gray-500 dark:text-gray-400 mt-1">
                                 points
                             </div>
@@ -69,16 +114,8 @@ export default function GamesResults({ result, game, can_play_again }) {
                                 Attempt {result.attempt_number} • Completed {result.completed_at}
                             </div>
 
-                            <div className={`mt-4 inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${
-                                result.score >= 80
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                    : result.score >= 60
-                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                            }`}>
-                                {result.score >= 80 ? '🌟 Excellent!' :
-                                 result.score >= 60 ? '👍 Good Job!' :
-                                 '💪 Keep Practicing!'}
+                            <div className={`mt-4 inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${getResultBadgeClass()}`}>
+                                {getResultMessage()}
                             </div>
                         </div>
                     </Card>
@@ -90,7 +127,8 @@ export default function GamesResults({ result, game, can_play_again }) {
                         </SecondaryButton>
                         {can_play_again && (
                             <PrimaryButton onClick={handlePlayAgain} disabled={isLoading}>
-                                {isLoading ? 'Loading...' : '🔄 Play Again'}
+                                <ArrowPathIcon className="w-4 h-4 mr-1" />
+                                {isLoading ? 'Loading...' : 'Play Again'}
                             </PrimaryButton>
                         )}
                     </div>

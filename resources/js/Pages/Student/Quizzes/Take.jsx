@@ -6,6 +6,14 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
+// Heroicons
+import {
+    ClockIcon,
+    CheckCircleIcon,
+    XCircleIcon,
+    ArrowLeftIcon,
+} from '@heroicons/react/24/outline';
+
 export default function QuizzesTake({ attempt, quiz, questions }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -29,7 +37,6 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     // Timer logic
     useEffect(() => {
         if (attempt.time_limit) {
-            // Check if there's a stored start time
             const storedStart = sessionStorage.getItem(`quiz_${attempt.id}_start`);
             let startTime;
 
@@ -41,14 +48,14 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
             }
 
             const endTime = new Date(startTime.getTime() + attempt.time_limit * 60000);
+
             const updateTimer = () => {
                 const now = new Date();
                 const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
 
                 if (remaining <= 0) {
-                    setTimeRemaining(0);
+                    setTimeRemaining('0:00');
                     setTimeUp(true);
-                    // Auto-submit when time is up
                     handleSubmit(true);
                     return;
                 }
@@ -92,8 +99,6 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         }
 
         setIsSubmitting(true);
-
-        // Clear session storage
         sessionStorage.removeItem(`quiz_${attempt.id}_start`);
 
         router.post(route('student.quizzes.submit', attempt.id), {
@@ -108,7 +113,6 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
     const isFirstQuestion = currentQuestionIndex === 0;
 
-    // Count answered questions
     const answeredCount = Object.keys(answers).filter((key) => {
         const answer = answers[key];
         return answer !== null && answer !== undefined && answer !== '';
@@ -195,13 +199,16 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {quiz.title}
-                    </h2>
+                    </span>
                     <div className="flex items-center gap-4">
                         {timeRemaining !== null && (
-                            <div className={`text-lg font-bold ${timeRemaining === '0:00' ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                                ⏱️ {timeRemaining}
+                            <div className={`text-lg font-bold flex items-center gap-1 ${
+                                timeRemaining === '0:00' ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'
+                            }`}>
+                                <ClockIcon className="w-5 h-5" />
+                                {timeRemaining}
                             </div>
                         )}
                         <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -213,14 +220,15 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         >
             <Head title={`Taking: ${quiz.title}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-3xl">
                     {isSubmitting && <LoadingSpinner overlay size="lg" text="Submitting your quiz..." />}
 
                     {timeUp && (
-                        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2">
+                            <ClockIcon className="w-5 h-5 text-red-500" />
                             <p className="text-red-600 dark:text-red-400 font-medium">
-                                ⏰ Time's up! Your quiz is being submitted automatically.
+                                Time's up! Your quiz is being submitted automatically.
                             </p>
                         </div>
                     )}
@@ -287,7 +295,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                             key={q.id}
                                             onClick={() => setCurrentQuestionIndex(index)}
                                             className={`
-                                                py-2 rounded-md text-sm font-medium transition-colors
+                                                py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1
                                                 ${isCurrent ? 'ring-2 ring-blue-500' : ''}
                                                 ${isAnswered
                                                     ? 'bg-green-500 text-white hover:bg-green-600'
@@ -296,13 +304,20 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                             `}
                                         >
                                             {index + 1}
+                                            {isAnswered && <CheckCircleIcon className="w-3 h-3" />}
                                         </button>
                                     );
                                 })}
                             </div>
                             <div className="mt-3 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                <span>🟢 Answered</span>
-                                <span>⚪ Not Answered</span>
+                                <span className="flex items-center gap-1">
+                                    <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                                    Answered
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <XCircleIcon className="w-4 h-4 text-gray-400" />
+                                    Not Answered
+                                </span>
                             </div>
                         </Card>
                     </div>

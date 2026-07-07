@@ -5,6 +5,11 @@ import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import {
+    StarIcon,
+    CheckCircleIcon,
+    HeartIcon,
+} from '@heroicons/react/24/outline';
 
 export default function GamesPlay({ result, game }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -16,7 +21,6 @@ export default function GamesPlay({ result, game }) {
     const questions = game.questions || [];
     const totalQuestions = questions.length;
 
-    // Initialize answers
     const handleAnswer = (questionIndex, answer) => {
         setAnswers((prev) => ({
             ...prev,
@@ -41,7 +45,6 @@ export default function GamesPlay({ result, game }) {
             return;
         }
 
-        // Calculate score
         let correctCount = 0;
         questions.forEach((question, index) => {
             const userAnswer = answers[index];
@@ -75,7 +78,6 @@ export default function GamesPlay({ result, game }) {
 
     const handleSubmitResult = () => {
         setIsSubmitting(true);
-
         router.post(route('student.games.submit-result', result.id), {
             score: score,
         }, {
@@ -88,7 +90,6 @@ export default function GamesPlay({ result, game }) {
     const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
     const isFirstQuestion = currentQuestionIndex === 0;
 
-    // Count answered questions
     const answeredCount = Object.keys(answers).filter((key) => {
         const answer = answers[key];
         return answer !== null && answer !== undefined && answer !== '';
@@ -97,6 +98,36 @@ export default function GamesPlay({ result, game }) {
     // Render result screen
     if (showResult) {
         const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+
+        const getResultIcon = () => {
+            if (percentage >= 80) {
+                return <StarIcon className="w-16 h-16 text-yellow-500" />;
+            } else if (percentage >= 60) {
+                return <CheckCircleIcon className="w-16 h-16 text-green-500" />;
+            } else {
+                return <HeartIcon className="w-16 h-16 text-red-500" />;
+            }
+        };
+
+        const getResultMessage = () => {
+            if (percentage >= 80) {
+                return 'Excellent!';
+            } else if (percentage >= 60) {
+                return 'Good Job!';
+            } else {
+                return 'Keep Practicing!';
+            }
+        };
+
+        const getResultBadgeClass = () => {
+            if (percentage >= 80) {
+                return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+            } else if (percentage >= 60) {
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+            } else {
+                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+            }
+        };
 
         return (
             <AuthenticatedLayout
@@ -119,25 +150,20 @@ export default function GamesPlay({ result, game }) {
 
                         <Card className="text-center">
                             <div className="py-8">
-                                <div className="text-6xl mb-4">
-                                    {percentage >= 80 ? '🌟' : percentage >= 60 ? '👍' : '💪'}
+                                <div className="flex justify-center mb-4">
+                                    {getResultIcon()}
                                 </div>
+
                                 <div className="text-5xl font-bold text-gray-900 dark:text-white">
                                     {percentage}%
                                 </div>
+
                                 <div className="text-2xl font-semibold mt-2">
                                     {score} / {totalQuestions}
                                 </div>
-                                <div className={`mt-4 inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${
-                                    percentage >= 80
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                        : percentage >= 60
-                                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                }`}>
-                                    {percentage >= 80 ? '🌟 Excellent!' :
-                                     percentage >= 60 ? '👍 Good Job!' :
-                                     '💪 Keep Practicing!'}
+
+                                <div className={`mt-4 inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${getResultBadgeClass()}`}>
+                                    {getResultMessage()}
                                 </div>
                             </div>
 
@@ -327,8 +353,14 @@ export default function GamesPlay({ result, game }) {
                                     })}
                                 </div>
                                 <div className="mt-3 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                    <span>🟢 Answered</span>
-                                    <span>⚪ Not Answered</span>
+                                    <span className="flex items-center gap-2">
+                                        <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+                                        Answered
+                                    </span>
+                                    <span className="flex items-center gap-2">
+                                        <span className="inline-block w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                        Not Answered
+                                    </span>
                                 </div>
                             </Card>
                         </div>

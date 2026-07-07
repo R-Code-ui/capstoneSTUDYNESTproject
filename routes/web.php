@@ -19,6 +19,11 @@ use App\Http\Controllers\Teacher\MessageController;
 use App\Http\Controllers\Teacher\ProgressTrackingController;
 use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementController;
 use App\Http\Controllers\Teacher\ReportController as TeacherReportController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\LessonController as StudentLessonController;
+use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
+use App\Http\Controllers\Student\QuizController as StudentQuizController;
+use App\Http\Controllers\Student\GameController as StudentGameController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -184,6 +189,50 @@ Route::middleware('auth')->group(function () {
         // ===== Reports =====
         Route::get('/reports', [TeacherReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [TeacherReportController::class, 'generatePdf'])->name('reports.pdf');
+    });
+
+    // ===========================================================
+    // ===== STUDENT ROUTES =====
+    // ===========================================================
+    Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
+        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+
+        // ===== Lessons =====
+        Route::get('/lessons', [StudentLessonController::class, 'index'])->name('lessons.index');
+        Route::get('/lessons/{lesson}', [StudentLessonController::class, 'show'])->name('lessons.show');
+        Route::post('/lessons/{lesson}/complete', [StudentLessonController::class, 'complete'])->name('lessons.complete');
+        Route::get('/lessons/download-resource/{id}', [StudentLessonController::class, 'downloadResource'])->name('lessons.download-resource');
+
+        // ===== Assignments =====
+        Route::get('/assignments', [StudentAssignmentController::class, 'index'])->name('assignments.index');
+        Route::get('/assignments/{assignment}', [StudentAssignmentController::class, 'show'])->name('assignments.show');
+        Route::post('/assignments/{assignment}/submit', [StudentAssignmentController::class, 'submit'])->name('assignments.submit');
+        Route::get('/assignments/download-resource/{id}', [StudentAssignmentController::class, 'downloadResource'])->name('assignments.download-resource');
+
+        // ===== Quizzes =====
+        Route::get('/quizzes', [StudentQuizController::class, 'index'])->name('quizzes.index');
+        Route::get('/quizzes/{quiz}', [StudentQuizController::class, 'show'])->name('quizzes.show');
+        Route::post('/quizzes/{quiz}/start', [StudentQuizController::class, 'start'])->name('quizzes.start');
+        Route::get('/quizzes/take/{attempt}', [StudentQuizController::class, 'take'])->name('quizzes.take');
+        Route::post('/quizzes/submit/{attempt}', [StudentQuizController::class, 'submit'])->name('quizzes.submit');
+        Route::get('/quizzes/results/{attempt}', [StudentQuizController::class, 'results'])->name('quizzes.results');
+
+        // ===== Games =====
+        Route::get('/games', [StudentGameController::class, 'index'])->name('games.index');
+        Route::get('/games/{game}', [StudentGameController::class, 'show'])->name('games.show');
+        Route::get('/games/{game}/play', [StudentGameController::class, 'play'])->name('games.play');   // ✅ now GET
+        Route::get('/games/play/{result}', [StudentGameController::class, 'showPlay'])->name('games.play.show');
+        Route::post('/games/submit/{result}', [StudentGameController::class, 'submitResult'])->name('games.submit-result');
+        Route::get('/games/results/{result}', [StudentGameController::class, 'results'])->name('games.results');
+
+        // ===== Messages (coming soon) =====
+        // Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+
+        // ===== Announcements (coming soon) =====
+        // Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+
+        // ===== Progress (coming soon) =====
+        // Route::get('/progress', [ProgressTrackerController::class, 'index'])->name('progress.index');
     });
 });
 

@@ -1,11 +1,21 @@
 import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import { Link } from '@inertiajs/react';
+
+// Heroicons
+import {
+    ChartBarIcon,
+    UserIcon,
+    ClockIcon,
+    DocumentTextIcon,
+    MagnifyingGlassIcon,
+    CheckCircleIcon,
+    XCircleIcon,
+} from '@heroicons/react/24/outline';
 
 export default function QuizzesIndex({ quizzes, subjects, filters }) {
     const [search, setSearch] = useState(filters?.search || '');
@@ -84,12 +94,12 @@ export default function QuizzesIndex({ quizzes, subjects, filters }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Quizzes</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Quizzes</span>}
         >
             <Head title="My Quizzes" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl">
                     <Card>
                         {/* Filters */}
                         <div className="flex flex-col sm:flex-row gap-4">
@@ -132,7 +142,7 @@ export default function QuizzesIndex({ quizzes, subjects, filters }) {
                         <div className="mt-6">
                             {quizzes.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <div className="text-6xl mb-4">📊</div>
+                                    <ChartBarIcon className="w-20 h-20 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                                         No quizzes available
                                     </h3>
@@ -172,13 +182,14 @@ export default function QuizzesIndex({ quizzes, subjects, filters }) {
                                                         <span className="ml-1 font-medium text-gray-900 dark:text-white">{quiz.questions}</span>
                                                     </div>
                                                     {quiz.time_limit && (
-                                                        <div>
-                                                            <span className="text-gray-500 dark:text-gray-400">Time Limit:</span>
-                                                            <span className="ml-1 font-medium text-gray-900 dark:text-white">{quiz.time_limit} min</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <ClockIcon className="w-3 h-3 text-gray-400" />
+                                                            <span className="text-gray-500 dark:text-gray-400">Time:</span>
+                                                            <span className="font-medium text-gray-900 dark:text-white">{quiz.time_limit} min</span>
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <span className="text-gray-500 dark:text-gray-400">Passing Score:</span>
+                                                        <span className="text-gray-500 dark:text-gray-400">Passing:</span>
                                                         <span className="ml-1 font-medium text-gray-900 dark:text-white">{quiz.passing_score || 75}%</span>
                                                     </div>
                                                     <div>
@@ -189,7 +200,8 @@ export default function QuizzesIndex({ quizzes, subjects, filters }) {
 
                                                 {quiz.status === 'completed' && (
                                                     <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                                        <span className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                                                            <CheckCircleIcon className="w-4 h-4" />
                                                             Score: {quiz.score}/{quiz.questions}
                                                         </span>
                                                     </div>
@@ -198,11 +210,24 @@ export default function QuizzesIndex({ quizzes, subjects, filters }) {
                                                 <div className="mt-4">
                                                     <Link
                                                         href={route('student.quizzes.show', quiz.id)}
-                                                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full justify-center"
+                                                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full"
                                                     >
-                                                        {quiz.status === 'completed' ? 'View Results' :
-                                                         quiz.status === 'started' ? 'Continue' :
-                                                         'Start Quiz'}
+                                                        {quiz.status === 'completed' ? (
+                                                            <>
+                                                                <ChartBarIcon className="w-4 h-4 mr-1" />
+                                                                View Results
+                                                            </>
+                                                        ) : quiz.status === 'started' ? (
+                                                            <>
+                                                                <ClockIcon className="w-4 h-4 mr-1" />
+                                                                Continue
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <DocumentTextIcon className="w-4 h-4 mr-1" />
+                                                                Start Quiz
+                                                            </>
+                                                        )}
                                                     </Link>
                                                 </div>
                                             </div>

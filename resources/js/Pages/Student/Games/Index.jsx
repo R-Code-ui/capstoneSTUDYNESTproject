@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import { Link } from '@inertiajs/react';
+import {
+    BookOpenIcon,
+    CalculatorIcon,
+    RocketLaunchIcon,
+} from '@heroicons/react/24/outline';
 
 export default function GamesIndex({ games, filters }) {
     const [search, setSearch] = useState(filters?.search || '');
@@ -74,7 +79,11 @@ export default function GamesIndex({ games, filters }) {
     };
 
     const getTypeIcon = (type) => {
-        return type === 'literacy' ? '📖' : '🧮';
+        return type === 'literacy' ? (
+            <BookOpenIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        ) : (
+            <CalculatorIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+        );
     };
 
     const getTypeLabel = (type) => {
@@ -131,7 +140,9 @@ export default function GamesIndex({ games, filters }) {
                         <div className="mt-6">
                             {games.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <div className="text-6xl mb-4">🎮</div>
+                                    <div className="flex justify-center mb-4">
+                                        <RocketLaunchIcon className="w-16 h-16 text-gray-400 dark:text-gray-600" />
+                                    </div>
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                                         No games assigned
                                     </h3>
@@ -149,7 +160,9 @@ export default function GamesIndex({ games, filters }) {
                                             <div className="p-6">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-2xl">{getTypeIcon(game.game_type)}</span>
+                                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30">
+                                                            {getTypeIcon(game.game_type)}
+                                                        </span>
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                                                             {getTypeLabel(game.game_type)}
                                                         </span>

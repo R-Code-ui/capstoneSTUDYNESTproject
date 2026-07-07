@@ -5,9 +5,17 @@ import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    CheckCircleIcon,
+    XCircleIcon,
+    ChartBarIcon,
+    ArrowLeftIcon,
+    DocumentTextIcon,
+} from '@heroicons/react/24/outline';
+
 export default function QuizzesResults({ attempt, quiz, questions }) {
     const [showAnswers, setShowAnswers] = useState(false);
-
     const passed = attempt.passed;
     const percentage = attempt.percentage;
 
@@ -15,10 +23,11 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         Quiz Results: {quiz.title}
-                    </h2>
+                    </span>
                     <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
+                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Quizzes
                     </SecondaryButton>
                 </div>
@@ -26,13 +35,17 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
         >
             <Head title={`Results: ${quiz.title}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
+            <div className="py-4">
+                <div className="mx-auto max-w-3xl">
                     {/* ===== Score Card ===== */}
                     <Card className={`text-center ${passed ? 'border-green-500' : 'border-red-500'} border-t-4`}>
                         <div className="py-4">
                             <div className="text-6xl mb-4">
-                                {passed ? '🎉' : '😅'}
+                                {passed ? (
+                                    <CheckCircleIcon className="w-20 h-20 mx-auto text-green-500" />
+                                ) : (
+                                    <XCircleIcon className="w-20 h-20 mx-auto text-red-500" />
+                                )}
                             </div>
                             <div className="text-5xl font-bold text-gray-900 dark:text-white">
                                 {attempt.percentage}%
@@ -45,7 +58,11 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                     : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                             }`}>
-                                {passed ? '✅ Passed' : '❌ Failed'}
+                                {passed ? (
+                                    <><CheckCircleIcon className="w-5 h-5 mr-1" /> Passed</>
+                                ) : (
+                                    <><XCircleIcon className="w-5 h-5 mr-1" /> Failed</>
+                                )}
                             </div>
                             <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                                 Attempt {attempt.attempt_number} • Completed {attempt.completed_at}
@@ -59,11 +76,17 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                     {/* ===== Statistics ===== */}
                     <div className="mt-6 grid grid-cols-2 gap-4">
                         <Card className="text-center">
-                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{attempt.score}</div>
+                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 flex items-center justify-center gap-1">
+                                <CheckCircleIcon className="w-5 h-5" />
+                                {attempt.score}
+                            </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">Correct Answers</div>
                         </Card>
                         <Card className="text-center">
-                            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{attempt.total - attempt.score}</div>
+                            <div className="text-2xl font-bold text-red-600 dark:text-red-400 flex items-center justify-center gap-1">
+                                <XCircleIcon className="w-5 h-5" />
+                                {attempt.total - attempt.score}
+                            </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">Incorrect Answers</div>
                         </Card>
                     </div>
@@ -71,6 +94,7 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                     {/* ===== Toggle Answers Button ===== */}
                     <div className="mt-6 flex justify-center">
                         <PrimaryButton onClick={() => setShowAnswers(!showAnswers)}>
+                            <DocumentTextIcon className="w-4 h-4 mr-1" />
                             {showAnswers ? 'Hide Answers' : 'Show Answers'}
                         </PrimaryButton>
                     </div>
@@ -111,8 +135,12 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex-shrink-0 text-2xl">
-                                            {question.is_correct ? '✅' : '❌'}
+                                        <div className="flex-shrink-0">
+                                            {question.is_correct ? (
+                                                <CheckCircleIcon className="w-6 h-6 text-green-500" />
+                                            ) : (
+                                                <XCircleIcon className="w-6 h-6 text-red-500" />
+                                            )}
                                         </div>
                                     </div>
                                 </Card>
@@ -127,6 +155,7 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                         </SecondaryButton>
                         {attempt.attempt_number < quiz.attempts_allowed && !passed && (
                             <PrimaryButton onClick={() => router.post(route('student.quizzes.start', quiz.id))}>
+                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                 Retry Quiz
                             </PrimaryButton>
                         )}
