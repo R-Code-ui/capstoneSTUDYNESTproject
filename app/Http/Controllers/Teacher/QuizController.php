@@ -9,6 +9,7 @@ use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class QuizController extends Controller
 {
@@ -157,6 +158,15 @@ class QuizController extends Controller
             ...$validated,
         ]);
 
+        // ✅ Log quiz creation
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'create',
+            'activity_description'=> 'Created quiz "' . $quiz->quiz_title . '"',
+            'related_module'      => 'Quiz Module',
+        ]);
+
         // Create questions
         foreach ($validated['questions'] as $index => $questionData) {
             QuizQuestion::create([
@@ -202,7 +212,6 @@ class QuizController extends Controller
                 'attempts_allowed' => $quiz->attempts_allowed,
                 'shuffle_questions' => $quiz->shuffle_questions,
                 'status' => $quiz->status,
-                // ✅ Clean date formatting
                 'publish_date' => $quiz->publish_date ? $quiz->publish_date->format('Y-m-d') : '',
                 'created_at' => $quiz->created_at->format('Y-m-d H:i'),
                 'questions' => $quiz->questions->map(function ($question) {
@@ -267,7 +276,6 @@ class QuizController extends Controller
                 'attempts_allowed' => $quiz->attempts_allowed,
                 'shuffle_questions' => $quiz->shuffle_questions,
                 'status' => $quiz->status,
-                // ✅ Clean date formatting
                 'publish_date' => $quiz->publish_date ? $quiz->publish_date->format('Y-m-d') : '',
                 'questions' => $quiz->questions->map(function ($question) {
                     return [
@@ -337,6 +345,15 @@ class QuizController extends Controller
             ...$validated,
         ]);
 
+        // ✅ Log quiz update
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'update',
+            'activity_description'=> 'Updated quiz "' . $quiz->quiz_title . '"',
+            'related_module'      => 'Quiz Module',
+        ]);
+
         // Delete existing questions
         $quiz->questions()->delete();
 
@@ -367,6 +384,15 @@ class QuizController extends Controller
     {
         Gate::authorize('quiz.delete');
 
+        // ✅ Log quiz deletion
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'delete',
+            'activity_description'=> 'Deleted quiz "' . $quiz->quiz_title . '"',
+            'related_module'      => 'Quiz Module',
+        ]);
+
         $quiz->questions()->delete();
         $quiz->attempts()->delete();
         $quiz->delete();
@@ -385,6 +411,15 @@ class QuizController extends Controller
         $quiz->update([
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
+        ]);
+
+        // ✅ Log publish
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'publish',
+            'activity_description'=> 'Published quiz "' . $quiz->quiz_title . '"',
+            'related_module'      => 'Quiz Module',
         ]);
 
         return redirect()->back()->with('success', 'Quiz published successfully!');

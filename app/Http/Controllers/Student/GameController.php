@@ -8,6 +8,7 @@ use App\Models\GameResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class GameController extends Controller
 {
@@ -108,7 +109,7 @@ class GameController extends Controller
             }
         }
 
-        // ✅ FIX: Handle game_data whether it's a string or already an array
+        // Handle game_data whether it's a string or already an array
         $gameData = is_string($game->game_data)
             ? json_decode($game->game_data, true)
             : $game->game_data;
@@ -173,6 +174,15 @@ class GameController extends Controller
             'started_at' => now(),
         ]);
 
+        // ✅ Log game start
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'play',
+            'activity_description'=> 'Started game "' . $game->game_title . '" (Attempt ' . $attemptNumber . ')',
+            'related_module'      => 'Game Module',
+        ]);
+
         return redirect()->route('student.games.play.show', $result->id);
     }
 
@@ -189,7 +199,7 @@ class GameController extends Controller
 
         $game = $result->game;
 
-        // ✅ FIX: Handle game_data whether it's a string or already an array
+        // Handle game_data whether it's a string or already an array
         $gameData = is_string($game->game_data)
             ? json_decode($game->game_data, true)
             : $game->game_data;
@@ -232,6 +242,15 @@ class GameController extends Controller
             'score' => $validated['score'],
             'status' => 'completed',
             'completed_at' => now(),
+        ]);
+
+        // ✅ Log game completion
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'play',
+            'activity_description'=> 'Completed game "' . $result->game->game_title . '" with score ' . $validated['score'],
+            'related_module'      => 'Game Module',
         ]);
 
         return redirect()->route('student.games.results', $result->id);

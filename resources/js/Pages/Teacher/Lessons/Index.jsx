@@ -29,7 +29,7 @@ export default function LessonsIndex({
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
-    const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
+    const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');      // ✅ ADDED BACK
     const [trimesterFilter, setTrimesterFilter] = useState(filters?.trimester || '');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -39,14 +39,13 @@ export default function LessonsIndex({
     };
 
     const handleFilterChange = (type, value) => {
-        const updates = {};
         if (type === 'status') setStatusFilter(value);
-        if (type === 'grade') setGradeFilter(value);
+        if (type === 'grade') setGradeFilter(value);                                   // ✅ ADDED BACK
         if (type === 'trimester') setTrimesterFilter(value);
 
         applyFilters({
             ...(type === 'status' ? { status: value } : {}),
-            ...(type === 'grade' ? { grade_level: value } : {}),
+            ...(type === 'grade' ? { grade_level: value } : {}),                      // ✅ ADDED BACK
             ...(type === 'trimester' ? { trimester: value } : {}),
         });
     };
@@ -57,7 +56,7 @@ export default function LessonsIndex({
             data: {
                 search,
                 status: statusFilter,
-                grade_level: gradeFilter,
+                grade_level: gradeFilter,                                             // ✅ ADDED BACK
                 trimester: trimesterFilter,
                 ...additional,
             },
@@ -89,7 +88,7 @@ export default function LessonsIndex({
         ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
-    const gradeOptions = [
+    const gradeOptions = [                                                           // ✅ ADDED BACK
         { value: '', label: 'All Grades' },
         ...assigned_grades.map((grade) => ({ value: grade, label: grade })),
     ];
@@ -162,12 +161,12 @@ export default function LessonsIndex({
                             </div>
                             <div className="flex flex-wrap gap-3">
                                 <FilterDropdown
-                                    options={gradeOptions}
-                                    value={gradeFilter}
-                                    onChange={(val) => handleFilterChange('grade', val)}
-                                    placeholder="Grade"
-                                    size="md"
-                                    className="w-36"
+                                    options={gradeOptions}                                           // ✅ ADDED BACK
+                                    value={gradeFilter}                                              // ✅ ADDED BACK
+                                    onChange={(val) => handleFilterChange('grade', val)}            // ✅ ADDED BACK
+                                    placeholder="Grade"                                              // ✅ ADDED BACK
+                                    size="md"                                                       // ✅ ADDED BACK
+                                    className="w-36"                                                // ✅ ADDED BACK
                                 />
                                 <FilterDropdown
                                     options={statusOptions}

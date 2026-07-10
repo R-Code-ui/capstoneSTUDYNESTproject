@@ -18,12 +18,13 @@ export default function UserManagement({ teachers, students, grade_levels, filte
     const [activeTab, setActiveTab] = useState('teacher');
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
+    const [genderFilter, setGenderFilter] = useState(filters?.gender || ''); // ✅ ADDED
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [password, setPassword] = useState(''); // ✅ NEW state for password input
+    const [password, setPassword] = useState('');
 
     const { errors } = usePage().props;
 
@@ -32,18 +33,29 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         setSearch(value);
         setIsLoading(true);
         router.visit(route('principal.users.index'), {
-            data: { search: value, grade_level: gradeFilter, role: activeTab },
+            data: { search: value, grade_level: gradeFilter, role: activeTab, gender: genderFilter },
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
     };
 
-    // Handle filter change
-    const handleFilterChange = (value) => {
+    // Handle grade filter change
+    const handleGradeFilterChange = (value) => {
         setGradeFilter(value);
         setIsLoading(true);
         router.visit(route('principal.users.index'), {
-            data: { search, grade_level: value, role: activeTab },
+            data: { search, grade_level: value, role: activeTab, gender: genderFilter },
+            preserveState: true,
+            onFinish: () => setIsLoading(false),
+        });
+    };
+
+    // ✅ ADDED: Handle gender filter change
+    const handleGenderFilterChange = (value) => {
+        setGenderFilter(value);
+        setIsLoading(true);
+        router.visit(route('principal.users.index'), {
+            data: { search, grade_level: gradeFilter, role: activeTab, gender: value },
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
@@ -54,7 +66,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         setActiveTab(tab);
         setIsLoading(true);
         router.visit(route('principal.users.index'), {
-            data: { search, grade_level: gradeFilter, role: tab },
+            data: { search, grade_level: gradeFilter, role: tab, gender: genderFilter },
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
@@ -81,6 +93,13 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         ...grade_levels.map((grade) => ({ value: grade, label: grade })),
     ];
 
+    // ✅ ADDED: Gender filter options
+    const genderOptions = [
+        { value: '', label: 'All Genders' },
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
+    ];
+
     // Teacher table columns
     const teacherColumns = [
         { key: 'name', label: 'Name' },
@@ -90,10 +109,16 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         { key: 'created_at', label: 'Date Created' },
     ];
 
+    // ✅ ADDED: 'gender' column to student table
     const studentColumns = [
         { key: 'name', label: 'Name' },
         { key: 'lrn', label: 'LRN' },
         { key: 'grade_level', label: 'Grade Level' },
+        {
+            key: 'gender',
+            label: 'Gender',
+            render: (row) => row.gender ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1) : '—'
+        },
         { key: 'is_active', label: 'Status', render: (row) => <StatusBadge status={row.is_active ? 'active' : 'inactive'} /> },
         { key: 'created_at', label: 'Date Created' },
     ];
@@ -165,7 +190,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                             : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                     }`}
                                 >
-                                    Teachers ({teachers.length})
+                                    Teachers
                                 </button>
                                 <button
                                     onClick={() => handleTabChange('student')}
@@ -175,7 +200,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                             : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                     }`}
                                 >
-                                    Students ({students.length})
+                                    Students
                                 </button>
                             </nav>
                         </div>
@@ -190,15 +215,26 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                     size="md"
                                 />
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex flex-wrap gap-3">
                                 <FilterDropdown
                                     options={gradeOptions}
                                     value={gradeFilter}
-                                    onChange={handleFilterChange}
+                                    onChange={handleGradeFilterChange}
                                     placeholder="Grade Level"
                                     size="md"
-                                    className="w-48"
+                                    className="w-36"
                                 />
+                                {/* ✅ ADDED: Gender Filter Dropdown */}
+                                {activeTab === 'student' && (
+                                    <FilterDropdown
+                                        options={genderOptions}
+                                        value={genderFilter}
+                                        onChange={handleGenderFilterChange}
+                                        placeholder="Gender"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                )}
                                 <PrimaryButton onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}>
                                     + Add {activeTab === 'teacher' ? 'Teacher' : 'Student'}
                                 </PrimaryButton>
@@ -237,13 +273,13 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
 
-                        // ===== FIX: Handle grade_levels as array for teachers =====
+                        // Handle grade_levels as array for teachers
                         if (activeTab === 'teacher') {
                             const gradeLevels = formData.getAll('grade_levels[]');
                             data.grade_levels = gradeLevels.length ? gradeLevels : [];
                         }
 
-                        // ===== FIX: Close modal on success =====
+                        // Close modal on success
                         const handleSuccess = () => {
                             setShowCreateModal(false);
                             setShowEditModal(false);
@@ -345,6 +381,33 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                     ))}
                                 </select>
                                 <InputError message={errors?.grade_level} className="mt-2" />
+                            </div>
+                            {/* ✅ ADDED: Gender Radio Buttons */}
+                            <div>
+                                <InputLabel value="Gender" required />
+                                <div className="mt-2 flex gap-6">
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="gender"
+                                            value="male"
+                                            defaultChecked={selectedUser?.gender === 'male'}
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                        />
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">Male</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="gender"
+                                            value="female"
+                                            defaultChecked={selectedUser?.gender === 'female'}
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                        />
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">Female</span>
+                                    </label>
+                                </div>
+                                <InputError message={errors?.gender} className="mt-2" />
                             </div>
                         </>
                     )}

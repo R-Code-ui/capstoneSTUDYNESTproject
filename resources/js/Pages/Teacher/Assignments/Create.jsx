@@ -51,13 +51,13 @@ export default function AssignmentsCreate({
         status: 'draft',
         publish_date: new Date().toISOString().split('T')[0],
         resources: [],
-        // ✅ BOW fields (will be auto-filled)
+        // BOW fields (will be auto-filled)
         bow_code: '',
         learning_competency: '',
         learning_objective: '',
     });
 
-    // ✅ AUTO-FILL BOW FIELDS WHEN RELATED LESSON CHANGES
+    // AUTO-FILL BOW FIELDS WHEN RELATED LESSON CHANGES
     const handleLessonChange = (e) => {
         const lessonId = e.target.value;
         setData('related_lesson_id', lessonId);

@@ -7,6 +7,7 @@ use App\Models\Game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class GameController extends Controller
 {
@@ -136,6 +137,15 @@ class GameController extends Controller
             ...$validated,
         ]);
 
+        // ✅ Log game creation
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'create',
+            'activity_description'=> 'Created game assignment "' . $game->game_title . '"',
+            'related_module'      => 'Game Module',
+        ]);
+
         return redirect()->route('teacher.games.index')
             ->with('success', 'Game assigned successfully!');
     }
@@ -163,7 +173,6 @@ class GameController extends Controller
                 'max_attempts' => $game->max_attempts,
                 'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                 'status' => $game->status,
-                // ✅ FIX: Format publish_date to Y-m-d
                 'publish_date' => $game->publish_date ? $game->publish_date->format('Y-m-d') : null,
                 'created_at' => $game->created_at->format('Y-m-d H:i'),
                 'results' => $game->results()->with('student')->get()->map(function ($result) {
@@ -222,7 +231,6 @@ class GameController extends Controller
                 'game_type' => $game->game_type,
                 'game_data' => $gameData,
                 'max_attempts' => $game->max_attempts,
-                // ✅ FIX: Format due_date to Y-m-d for edit form
                 'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                 'status' => $game->status,
             ],
@@ -258,6 +266,15 @@ class GameController extends Controller
             ...$validated,
         ]);
 
+        // ✅ Log game update
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'update',
+            'activity_description'=> 'Updated game assignment "' . $game->game_title . '"',
+            'related_module'      => 'Game Module',
+        ]);
+
         return redirect()->route('teacher.games.index')
             ->with('success', 'Game updated successfully!');
     }
@@ -268,6 +285,15 @@ class GameController extends Controller
     public function destroy(Game $game)
     {
         Gate::authorize('delete', $game);
+
+        // ✅ Log game deletion
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'delete',
+            'activity_description'=> 'Deleted game assignment "' . $game->game_title . '"',
+            'related_module'      => 'Game Module',
+        ]);
 
         $game->results()->delete();
         $game->delete();
@@ -286,6 +312,15 @@ class GameController extends Controller
         $game->update([
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
+        ]);
+
+        // ✅ Log game publish
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'publish',
+            'activity_description'=> 'Published game assignment "' . $game->game_title . '"',
+            'related_module'      => 'Game Module',
         ]);
 
         return redirect()->back()->with('success', 'Game published successfully!');

@@ -52,7 +52,7 @@ class StoreLessonRequest extends FormRequest
 
             // ===== Resources =====
             'resources' => 'nullable|array|max:5',
-            'resources.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB
+            'resources.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240', // ✅ Added doc,docx
         ];
     }
 
@@ -82,7 +82,7 @@ class StoreLessonRequest extends FormRequest
             'publish_date.required' => 'Publish date is required.',
             'publish_date.date' => 'Please enter a valid date.',
             'resources.max' => 'You can only upload a maximum of 5 resources.',
-            'resources.*.mimes' => 'Only PDF, JPG, JPEG, and PNG files are allowed.',
+            'resources.*.mimes' => 'Only PDF, JPG, JPEG, PNG, DOC, and DOCX files are allowed.',
             'resources.*.max' => 'Each file must not exceed 10MB.',
         ];
     }

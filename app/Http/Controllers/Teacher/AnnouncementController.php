@@ -7,11 +7,13 @@ use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class AnnouncementController extends Controller
 {
     /**
      * Display a listing of announcements.
+     * ✅ INCLUDES PRINCIPAL ANNOUNCEMENTS + TEACHER'S OWN ANNOUNCEMENTS
      */
     public function index(Request $request)
     {
@@ -23,9 +25,19 @@ class AnnouncementController extends Controller
         $categoryFilter = $request->input('category');
         $statusFilter = $request->input('status');
         $gradeFilter = $request->input('grade_level');
+        $authorFilter = $request->input('author'); // ✅ ADDED
 
-        $announcements = Announcement::where('user_id', $user->id)
-            ->where('user_role', 'teacher')
+        // ✅ FIX: Get teacher's own announcements + principal's school-wide announcements
+        $announcements = Announcement::where(function ($query) use ($user) {
+                // Teacher's own announcements
+                $query->where('user_id', $user->id)
+                      ->where('user_role', 'teacher');
+            })
+            ->orWhere(function ($query) {
+                // Principal's announcements (visible to all teachers)
+                $query->where('user_role', 'principal')
+                      ->where('target_audience', 'all_users');
+            })
             ->when($search, function ($query, $search) {
                 return $query->where('title', 'like', "%{$search}%")
                     ->orWhere('content', 'like', "%{$search}%");
@@ -37,7 +49,18 @@ class AnnouncementController extends Controller
                 return $query->where('status', $status);
             })
             ->when($gradeFilter, function ($query, $grade) {
-                return $query->where('target_audience', $grade);
+                return $query->where('target_audience', $grade)
+                    ->orWhere('target_audience', 'all_users');
+            })
+            ->when($authorFilter, function ($query, $author) use ($user) {
+                if ($author === 'me') {
+                    return $query->where('user_id', $user->id)
+                        ->where('user_role', 'teacher');
+                } elseif ($author === 'principal') {
+                    return $query->where('user_role', 'principal')
+                        ->where('target_audience', 'all_users');
+                }
+                return $query;
             })
             ->orderBy('created_at', 'desc')
             ->get();
@@ -57,11 +80,13 @@ class AnnouncementController extends Controller
                     'priority' => $announcement->priority,
                     'is_pinned' => $announcement->is_pinned,
                     'status' => $announcement->status,
-                    // ✅ Format dates for clean display
                     'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : '',
                     'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : '',
                     'view_count' => $announcement->view_count,
                     'created_at' => $announcement->created_at->diffForHumans(),
+                    'posted_by' => $announcement->user_role === 'principal' ? 'Principal' : 'Teacher', // ✅ ADDED
+                    'posted_by_name' => $announcement->user->name ?? 'Unknown',
+                    'is_principal' => $announcement->user_role === 'principal', // ✅ ADDED
                 ];
             }),
             'assigned_grades' => $assignedGrades,
@@ -73,6 +98,7 @@ class AnnouncementController extends Controller
                 'category' => $categoryFilter,
                 'status' => $statusFilter,
                 'grade_level' => $gradeFilter,
+                'author' => $authorFilter, // ✅ ADDED
             ],
         ]);
     }
@@ -117,7 +143,7 @@ class AnnouncementController extends Controller
             'expiration_date' => 'nullable|date|after:publish_date',
         ]);
 
-        Announcement::create([
+        $announcement = Announcement::create([
             'user_id' => auth()->id(),
             'user_role' => 'teacher',
             'title' => $validated['title'],
@@ -132,6 +158,15 @@ class AnnouncementController extends Controller
             'view_count' => 0,
         ]);
 
+        // Log announcement creation
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'create',
+            'activity_description'=> 'Created announcement "' . $announcement->title . '"',
+            'related_module'      => 'Announcement Module',
+        ]);
+
         return redirect()->route('teacher.announcements.index')
             ->with('success', 'Announcement created successfully!');
     }
@@ -143,7 +178,7 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('announcement.view', $announcement);
 
-        $announcement->load('user');  // ✅ eager load user for posted_by
+        $announcement->load('user');
 
         return Inertia::render('Teacher/Announcements/Show', [
             'announcement' => [
@@ -155,12 +190,13 @@ class AnnouncementController extends Controller
                 'priority' => $announcement->priority,
                 'is_pinned' => $announcement->is_pinned,
                 'status' => $announcement->status,
-                // ✅ Format dates to Y-m-d (no trailing time)
                 'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : '',
                 'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : '',
                 'view_count' => $announcement->view_count,
                 'created_at' => $announcement->created_at->format('Y-m-d H:i'),
-                'posted_by' => $announcement->user->name,
+                'posted_by' => $announcement->user_role === 'principal' ? 'Principal' : 'Teacher',
+                'posted_by_name' => $announcement->user->name,
+                'is_principal' => $announcement->user_role === 'principal',
             ],
         ]);
     }
@@ -188,7 +224,6 @@ class AnnouncementController extends Controller
                 'priority' => $announcement->priority,
                 'is_pinned' => $announcement->is_pinned,
                 'status' => $announcement->status,
-                // ✅ Format dates to Y-m-d so they work in date inputs
                 'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : '',
                 'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : '',
             ],
@@ -220,6 +255,15 @@ class AnnouncementController extends Controller
 
         $announcement->update($validated);
 
+        // Log announcement update
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'update',
+            'activity_description'=> 'Updated announcement "' . $announcement->title . '"',
+            'related_module'      => 'Announcement Module',
+        ]);
+
         return redirect()->route('teacher.announcements.index')
             ->with('success', 'Announcement updated successfully!');
     }
@@ -230,6 +274,15 @@ class AnnouncementController extends Controller
     public function destroy(Announcement $announcement)
     {
         Gate::authorize('announcement.delete', $announcement);
+
+        // Log announcement deletion
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'delete',
+            'activity_description'=> 'Deleted announcement "' . $announcement->title . '"',
+            'related_module'      => 'Announcement Module',
+        ]);
 
         $announcement->delete();
 
@@ -249,6 +302,15 @@ class AnnouncementController extends Controller
             'publish_date' => now()->format('Y-m-d'),
         ]);
 
+        // Log publish
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'publish',
+            'activity_description'=> 'Published announcement "' . $announcement->title . '"',
+            'related_module'      => 'Announcement Module',
+        ]);
+
         return redirect()->back()->with('success', 'Announcement published successfully!');
     }
 
@@ -260,6 +322,15 @@ class AnnouncementController extends Controller
         Gate::authorize('announcement.edit', $announcement);
 
         $announcement->update(['status' => 'archived']);
+
+        // Log archive
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'archive',
+            'activity_description'=> 'Archived announcement "' . $announcement->title . '"',
+            'related_module'      => 'Announcement Module',
+        ]);
 
         return redirect()->back()->with('success', 'Announcement archived successfully!');
     }

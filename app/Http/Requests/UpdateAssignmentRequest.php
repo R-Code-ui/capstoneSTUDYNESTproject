@@ -53,6 +53,9 @@ class UpdateAssignmentRequest extends FormRequest
             // ===== Resources =====
             'resources' => 'nullable|array|max:5',
             'resources.*' => 'file|mimes:pdf,docx,jpg,jpeg,png|max:2048', // 2MB
+
+            // ✅ FIX: Add deleted_resource_ids validation
+            'deleted_resource_ids' => 'nullable|string',
         ];
     }
 

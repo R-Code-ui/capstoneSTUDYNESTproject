@@ -17,6 +17,8 @@ import {
     TrashIcon,
     PlusIcon,
     ExclamationTriangleIcon,
+    UserIcon,
+    BuildingOfficeIcon, // ✅ ADDED
 } from '@heroicons/react/24/outline';
 
 export default function AnnouncementsIndex({
@@ -31,6 +33,7 @@ export default function AnnouncementsIndex({
     const [categoryFilter, setCategoryFilter] = useState(filters?.category || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
+    const [authorFilter, setAuthorFilter] = useState(filters?.author || ''); // ✅ ADDED
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSearch = (value) => {
@@ -39,15 +42,16 @@ export default function AnnouncementsIndex({
     };
 
     const handleFilterChange = (type, value) => {
-        const updates = {};
         if (type === 'category') setCategoryFilter(value);
         if (type === 'status') setStatusFilter(value);
         if (type === 'grade') setGradeFilter(value);
+        if (type === 'author') setAuthorFilter(value); // ✅ ADDED
 
         applyFilters({
             ...(type === 'category' ? { category: value } : {}),
             ...(type === 'status' ? { status: value } : {}),
             ...(type === 'grade' ? { grade_level: value } : {}),
+            ...(type === 'author' ? { author: value } : {}),
         });
     };
 
@@ -59,6 +63,7 @@ export default function AnnouncementsIndex({
                 category: categoryFilter,
                 status: statusFilter,
                 grade_level: gradeFilter,
+                author: authorFilter,
                 ...additional,
             },
             preserveState: true,
@@ -100,10 +105,35 @@ export default function AnnouncementsIndex({
         { value: 'all_assigned_students', label: 'All Assigned Students' },
     ];
 
+    const authorOptions = [ // ✅ ADDED
+        { value: '', label: 'All Authors' },
+        { value: 'me', label: 'My Announcements' },
+        { value: 'principal', label: 'Principal' },
+    ];
+
     const columns = [
         { key: 'title', label: 'Title' },
         { key: 'category', label: 'Category' },
         { key: 'target_audience', label: 'Audience', render: (row) => row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) },
+        {
+            key: 'posted_by', // ✅ ADDED
+            label: 'Posted By',
+            render: (row) => (
+                <div className="flex items-center gap-1.5">
+                    {row.is_principal ? (
+                        <>
+                            <BuildingOfficeIcon className="w-4 h-4 text-blue-500" />
+                            <span className="text-blue-600 font-medium dark:text-blue-400">Principal</span>
+                        </>
+                    ) : (
+                        <>
+                            <UserIcon className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-600 dark:text-gray-300">Teacher</span>
+                        </>
+                    )}
+                </div>
+            )
+        },
         {
             key: 'priority',
             label: 'Priority',
@@ -206,6 +236,14 @@ export default function AnnouncementsIndex({
                                     placeholder="Status"
                                     size="md"
                                     className="w-36"
+                                />
+                                <FilterDropdown // ✅ ADDED
+                                    options={authorOptions}
+                                    value={authorFilter}
+                                    onChange={(val) => handleFilterChange('author', val)}
+                                    placeholder="Author"
+                                    size="md"
+                                    className="w-40"
                                 />
                             </div>
                         </div>

@@ -16,7 +16,8 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('viewAny', ActivityLog::class);
+        // ✅ Use the Spatie permission instead of a missing policy
+        Gate::authorize('log.view');
 
         $activityType = $request->input('activity_type');
         $gradeLevel = $request->input('grade_level');

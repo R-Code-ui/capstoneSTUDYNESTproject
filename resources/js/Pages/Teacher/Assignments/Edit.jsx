@@ -33,6 +33,7 @@ export default function AssignmentsEdit({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileErrors, setFileErrors] = useState([]);
     const [existingResources, setExistingResources] = useState(assignment.resources || []);
+    const [deletedResourceIds, setDeletedResourceIds] = useState([]);
 
     const { data, setData, errors, put } = useForm({
         grade_level: assignment.grade_level || '',
@@ -53,13 +54,15 @@ export default function AssignmentsEdit({
         status: assignment.status || 'draft',
         publish_date: assignment.publish_date || new Date().toISOString().split('T')[0],
         resources: [],
-        // ✅ BOW fields (will be auto-filled)
+        // ✅ FIX: Add deleted_resource_ids as string field
+        deleted_resource_ids: '',
+        // BOW fields (will be auto-filled)
         bow_code: assignment.bow_code || '',
         learning_competency: assignment.learning_competency || '',
         learning_objective: assignment.learning_objective || '',
     });
 
-    // ✅ AUTO-FILL BOW FIELDS WHEN RELATED LESSON CHANGES
+    // AUTO-FILL BOW FIELDS WHEN RELATED LESSON CHANGES
     const handleLessonChange = (e) => {
         const lessonId = e.target.value;
         setData('related_lesson_id', lessonId);
@@ -98,6 +101,9 @@ export default function AssignmentsEdit({
         e.preventDefault();
         setIsSubmitting(true);
 
+        // ✅ FIX: Set deleted_resource_ids as comma-separated string
+        setData('deleted_resource_ids', deletedResourceIds.join(','));
+
         const formData = new FormData();
 
         Object.keys(data).forEach((key) => {
@@ -118,16 +124,12 @@ export default function AssignmentsEdit({
 
         formData.append('_method', 'PUT');
 
-        post(route('teacher.assignments.update', assignment.id), {
+        put(route('teacher.assignments.update', assignment.id), {
             data: formData,
             forceFormData: true,
             preserveState: true,
             onFinish: () => setIsSubmitting(false),
         });
-    };
-
-    const post = (url, options) => {
-        return put(url, options);
     };
 
     const toggleSubmissionMethod = (method) => {
@@ -187,10 +189,10 @@ export default function AssignmentsEdit({
         setData('resources', newResourcesList);
     };
 
-    const removeExistingResource = (index) => {
-        const updated = [...existingResources];
-        updated.splice(index, 1);
-        setExistingResources(updated);
+    // ✅ FIX: Track deleted resource by ID
+    const removeExistingResource = (resourceId) => {
+        setDeletedResourceIds((prev) => [...prev, resourceId]);
+        setExistingResources((prev) => prev.filter(r => r.id !== resourceId));
     };
 
     const getFileIcon = (fileName) => {
@@ -210,6 +212,13 @@ export default function AssignmentsEdit({
         if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
         if (['docx'].includes(ext)) return 'Word Document';
         return 'Worksheet';
+    };
+
+    const formatFileSize = (bytes) => {
+        if (!bytes) return 'Unknown';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
     return (
@@ -517,16 +526,17 @@ export default function AssignmentsEdit({
                                     <div className="mb-4">
                                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Resources:</p>
                                         <div className="space-y-1">
-                                            {existingResources.map((resource, index) => (
+                                            {existingResources.map((resource) => (
                                                 <div key={resource.id} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                                     <div className="flex items-center gap-2">
                                                         {getFileIcon(resource.name)}
                                                         <span>{resource.name}</span>
                                                         <span className="text-xs text-gray-400">({getFileTypeLabel(resource.name)})</span>
+                                                        <span className="text-xs text-gray-400">({formatFileSize(resource.size)})</span>
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeExistingResource(index)}
+                                                        onClick={() => removeExistingResource(resource.id)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class MessageController extends Controller
 {
@@ -122,13 +123,22 @@ class MessageController extends Controller
         $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->toArray();
         $receiver = User::role('student')->whereIn('grade_level', $assignedGrades)->findOrFail($validated['receiver_id']);
 
-        Message::create([
+        $message = Message::create([
             'sender_id' => $teacher->id,
             'receiver_id' => $receiver->id,
             'subject' => $validated['subject'],
             'category' => $validated['category'],
             'message' => $validated['message'],
             'status' => 'unread',
+        ]);
+
+        // ✅ Log message sent
+        ActivityLog::create([
+            'user_id'             => $teacher->id,
+            'user_role'           => 'teacher',
+            'activity_type'       => 'send',
+            'activity_description'=> 'Sent message to ' . $receiver->name . ' ("' . $message->subject . '")',
+            'related_module'      => 'Message Module',
         ]);
 
         return redirect()->route('teacher.messages.index')
@@ -195,6 +205,15 @@ class MessageController extends Controller
         ]);
 
         $message->update(['status' => 'replied']);
+
+        // ✅ Log reply
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'send',
+            'activity_description'=> 'Replied to message from ' . $message->sender->name . ' ("' . $message->subject . '")',
+            'related_module'      => 'Message Module',
+        ]);
 
         return redirect()->route('teacher.messages.show', $reply->id)
             ->with('success', 'Reply sent successfully!');

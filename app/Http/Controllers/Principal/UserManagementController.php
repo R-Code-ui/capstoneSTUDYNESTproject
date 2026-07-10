@@ -24,6 +24,7 @@ class UserManagementController extends Controller
         $search = $request->input('search');
         $roleFilter = $request->input('role');
         $gradeFilter = $request->input('grade_level');
+        $genderFilter = $request->input('gender'); // ✅ ADDED
 
         $users = User::query()
             ->when($search, function ($query, $search) {
@@ -36,6 +37,9 @@ class UserManagementController extends Controller
             })
             ->when($gradeFilter, function ($query, $grade) {
                 return $query->where('grade_level', $grade);
+            })
+            ->when($genderFilter, function ($query, $gender) { // ✅ ADDED
+                return $query->where('gender', $gender);
             })
             ->orderBy('created_at', 'desc')
             ->get();
@@ -75,6 +79,7 @@ class UserManagementController extends Controller
                     'name' => $student->name,
                     'lrn' => $student->lrn,
                     'grade_level' => $student->grade_level,
+                    'gender' => $student->gender, // ✅ ADDED
                     'is_active' => $student->is_active,
                     'created_at' => $student->created_at->format('Y-m-d'),
                 ];
@@ -84,6 +89,7 @@ class UserManagementController extends Controller
                 'search' => $search,
                 'role' => $roleFilter,
                 'grade_level' => $gradeFilter,
+                'gender' => $genderFilter, // ✅ ADDED
             ],
         ]);
     }
@@ -135,6 +141,7 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'lrn' => 'required|string|unique:users,lrn',
             'grade_level' => 'required|in:Grade 4,Grade 5,Grade 6',
+            'gender' => 'required|in:male,female', // ✅ ADDED
             'email' => 'nullable|email|unique:users,email',
         ]);
 
@@ -142,6 +149,7 @@ class UserManagementController extends Controller
             'name' => $validated['name'],
             'lrn' => $validated['lrn'],
             'grade_level' => $validated['grade_level'],
+            'gender' => $validated['gender'], // ✅ ADDED
             'email' => $validated['email'] ?? $validated['lrn'] . '@studynest.local',
             'password' => Hash::make('Student123'), // Temporary password
             'is_active' => true,
@@ -200,6 +208,7 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'lrn' => ['required', 'string', Rule::unique('users', 'lrn')->ignore($user->id)],
             'grade_level' => 'required|in:Grade 4,Grade 5,Grade 6',
+            'gender' => 'required|in:male,female', // ✅ ADDED
             'is_active' => 'boolean',
         ]);
 
@@ -207,6 +216,7 @@ class UserManagementController extends Controller
             'name' => $validated['name'],
             'lrn' => $validated['lrn'],
             'grade_level' => $validated['grade_level'],
+            'gender' => $validated['gender'], // ✅ ADDED
             'is_active' => $validated['is_active'] ?? $user->is_active,
         ]);
 

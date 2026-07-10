@@ -17,6 +17,8 @@ import {
     InboxIcon,
     ClockIcon,
     ExclamationTriangleIcon,
+    MegaphoneIcon, // ✅ ADDED
+    BuildingOfficeIcon, // ✅ ADDED
 } from '@heroicons/react/24/outline';
 
 // ============================================================
@@ -52,6 +54,7 @@ export default function TeacherDashboard({
         latest: null,
     },
     assigned_grades = [],
+    recent_announcements = [], // ✅ ADDED
 }) {
     // Activity type icons mapping
     const getActivityIcon = (type) => {
@@ -74,7 +77,6 @@ export default function TeacherDashboard({
 
     return (
         <AuthenticatedLayout
-            // ✅ FIXED: Changed h2 to span to avoid invalid DOM nesting
             header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Teacher Dashboard</span>}
         >
             <Head title="Teacher Dashboard" />
@@ -293,7 +295,57 @@ export default function TeacherDashboard({
                         </Card>
                     </div>
 
-                    {/* ===== Section 5: Recent Messages ===== */}
+                    {/* ===== Section 5: Recent Announcements (FROM PRINCIPAL) ===== */}
+                    <div className="mt-6">
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <MegaphoneIcon className="w-5 h-5 text-blue-500" />
+                                Recent Announcements
+                            </div>
+                        }>
+                            {recent_announcements && recent_announcements.length > 0 ? (
+                                <div className="space-y-3">
+                                    {recent_announcements.map((announcement) => (
+                                        <div
+                                            key={announcement.id}
+                                            className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        >
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                <div>
+                                                    <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                                        <BuildingOfficeIcon className="w-4 h-4 text-blue-500" />
+                                                        {announcement.title}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                                                        {announcement.content}
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end shrink-0">
+                                                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                                                        {announcement.posted_by}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                                                        {announcement.date}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="text-center">
+                                        <Link href={route('teacher.announcements.index')} className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                            View All Announcements →
+                                        </Link>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                                    No recent announcements.
+                                </p>
+                            )}
+                        </Card>
+                    </div>
+
+                    {/* ===== Section 6: Recent Messages ===== */}
                     <div className="mt-6">
                         <Card title="Recent Messages">
                             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -334,7 +386,7 @@ export default function TeacherDashboard({
                         </Card>
                     </div>
 
-                    {/* ===== Section 6: Quick Actions ===== */}
+                    {/* ===== Section 7: Quick Actions ===== */}
                     <div className="mt-6">
                         <Card title="Quick Actions">
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

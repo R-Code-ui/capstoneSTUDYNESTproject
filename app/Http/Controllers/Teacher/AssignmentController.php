@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class AssignmentController extends Controller
 {
@@ -61,7 +62,6 @@ class AssignmentController extends Controller
                     'subject' => $assignment->subject,
                     'grade_level' => $assignment->grade_level,
                     'type' => $assignment->assignment_type,
-                    // ✅ FIX: Format due_date properly
                     'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                     'total_points' => $assignment->total_points,
                     'status' => $assignment->status,
@@ -96,13 +96,12 @@ class AssignmentController extends Controller
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'published'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
         $submissionMethods = ['digital', 'photo', 'paper'];
 
-        // Get related lessons with BOW fields
         $lessons = Lesson::where('teacher_id', $user->id)
             ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
             ->get()
@@ -136,15 +135,16 @@ class AssignmentController extends Controller
     {
         Gate::authorize('create', Assignment::class);
 
+        // ✅ FIX: Use specific validation rules
         $validated = $request->validate([
-            'grade_level' => 'required|string',
-            'subject' => 'required|string',
-            'school_year' => 'required|string',
-            'trimester' => 'required|string',
-            'week_number' => 'required|string',
+            'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
+            'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
+            'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
+            'trimester' => 'required|string|in:1st Trimester,2nd Trimester,3rd Trimester',
+            'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'assignment_title' => 'required|string|max:255',
-            'assignment_type' => 'required|string',
+            'assignment_type' => 'required|string|in:homework,worksheet,performance_task,project,reflection_activity,practice_exercise,reading_assignment',
             'instructions' => 'required|string',
             'total_points' => 'required|integer|min:1',
             'estimated_time' => 'nullable|integer',
@@ -153,11 +153,11 @@ class AssignmentController extends Controller
             'due_time' => 'required',
             'submission_methods' => 'required|array',
             'submission_methods.*' => 'in:digital,photo,paper',
-            'status' => 'required|in:draft,published,archived',
+            // ✅ FIX: Remove 'archived' from new assignment status
+            'status' => 'required|in:draft,published',
             'publish_date' => 'required|date',
         ]);
 
-        // Convert submission_methods to JSON string before saving
         $validated['submission_methods'] = json_encode($validated['submission_methods']);
 
         $assignment = Assignment::create([
@@ -165,9 +165,30 @@ class AssignmentController extends Controller
             ...$validated,
         ]);
 
-        // Handle file uploads if any
+        // ✅ Log assignment creation AFTER success
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'create',
+            'activity_description'=> 'Created assignment "' . $assignment->assignment_title . '"',
+            'related_module'      => 'Assignment Module',
+        ]);
+
+        // ✅ FIX: Validate max files and show error
         if ($request->hasFile('resources')) {
-            foreach ($request->file('resources') as $resource) {
+            $files = $request->file('resources');
+
+            if (count($files) > 5) {
+                return redirect()->back()
+                    ->withErrors(['resources' => 'You can only upload a maximum of 5 files.'])
+                    ->withInput();
+            }
+
+            foreach ($files as $resource) {
+                if ($resource->getSize() > 10 * 1024 * 1024) {
+                    continue;
+                }
+
                 $path = $resource->store('assignment-resources/' . $assignment->id, 'public');
 
                 AssignmentResource::create([
@@ -210,7 +231,6 @@ class AssignmentController extends Controller
                 'total_points' => $assignment->total_points,
                 'estimated_time' => $assignment->estimated_time,
                 'allow_late_submission' => $assignment->allow_late_submission,
-                // ✅ FIX: Format dates properly
                 'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                 'due_time' => $assignment->due_time,
                 'submission_methods' => $submissionMethods,
@@ -249,7 +269,6 @@ class AssignmentController extends Controller
         }, range(1, 12));
         $submissionMethods = ['digital', 'photo', 'paper'];
 
-        // Get related lessons with BOW fields
         $lessons = Lesson::where('teacher_id', $user->id)
             ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
             ->get()
@@ -285,7 +304,6 @@ class AssignmentController extends Controller
                 'total_points' => $assignment->total_points,
                 'estimated_time' => $assignment->estimated_time,
                 'allow_late_submission' => $assignment->allow_late_submission,
-                // ✅ FIX: Format dates properly
                 'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                 'due_time' => $assignment->due_time,
                 'submission_methods' => $submissionMethodsValue,
@@ -319,15 +337,16 @@ class AssignmentController extends Controller
     {
         Gate::authorize('update', $assignment);
 
+        // ✅ FIX: Add deleted_resource_ids validation as string
         $validated = $request->validate([
-            'grade_level' => 'required|string',
-            'subject' => 'required|string',
-            'school_year' => 'required|string',
-            'trimester' => 'required|string',
-            'week_number' => 'required|string',
+            'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
+            'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
+            'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
+            'trimester' => 'required|string|in:1st Trimester,2nd Trimester,3rd Trimester',
+            'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'assignment_title' => 'required|string|max:255',
-            'assignment_type' => 'required|string',
+            'assignment_type' => 'required|string|in:homework,worksheet,performance_task,project,reflection_activity,practice_exercise,reading_assignment',
             'instructions' => 'required|string',
             'total_points' => 'required|integer|min:1',
             'estimated_time' => 'nullable|integer',
@@ -338,15 +357,61 @@ class AssignmentController extends Controller
             'submission_methods.*' => 'in:digital,photo,paper',
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
+            // ✅ FIX: Add deleted_resource_ids as string
+            'deleted_resource_ids' => 'nullable|string',
         ]);
 
+        // Handle submission_methods JSON
         $validated['submission_methods'] = json_encode($validated['submission_methods']);
 
         $assignment->update($validated);
 
-        // Handle new file uploads
+        // ✅ FIX: Handle deleted resources from comma-separated string
+        if (!empty($validated['deleted_resource_ids'])) {
+            $deletedIds = explode(',', $validated['deleted_resource_ids']);
+            $deletedIds = array_filter($deletedIds);
+
+            if (!empty($deletedIds)) {
+                $resourcesToDelete = AssignmentResource::whereIn('id', $deletedIds)
+                    ->where('assignment_id', $assignment->id)
+                    ->get();
+
+                foreach ($resourcesToDelete as $resource) {
+                    if (Storage::disk('public')->exists($resource->file_path)) {
+                        Storage::disk('public')->delete($resource->file_path);
+                    }
+                    $resource->delete();
+                }
+            }
+        }
+
+        // ✅ Log assignment update AFTER successful deletion
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'update',
+            'activity_description'=> 'Updated assignment "' . $assignment->assignment_title . '"',
+            'related_module'      => 'Assignment Module',
+        ]);
+
+        // ✅ FIX: Validate max files and show error
         if ($request->hasFile('resources')) {
-            foreach ($request->file('resources') as $resource) {
+            $files = $request->file('resources');
+
+            $currentResourceCount = $assignment->resources()->count();
+            $maxNewFiles = 5 - $currentResourceCount;
+
+            if (count($files) > $maxNewFiles) {
+                return redirect()->back()
+                    ->withErrors(['resources' => 'You can only upload a maximum of ' . $maxNewFiles . ' more files.'])
+                    ->withInput();
+            }
+
+            foreach ($files as $resource) {
+                if ($resource->getSize() > 10 * 1024 * 1024) {
+                    continue;
+                }
+
                 $path = $resource->store('assignment-resources/' . $assignment->id, 'public');
 
                 AssignmentResource::create([
@@ -371,12 +436,24 @@ class AssignmentController extends Controller
     {
         Gate::authorize('delete', $assignment);
 
+        // ✅ FIX: Delete resources first, then log after success
         foreach ($assignment->resources as $resource) {
-            Storage::disk('public')->delete($resource->file_path);
+            if (Storage::disk('public')->exists($resource->file_path)) {
+                Storage::disk('public')->delete($resource->file_path);
+            }
             $resource->delete();
         }
 
         $assignment->delete();
+
+        // ✅ Log AFTER successful deletion
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'delete',
+            'activity_description'=> 'Deleted assignment "' . $assignment->assignment_title . '"',
+            'related_module'      => 'Assignment Module',
+        ]);
 
         return redirect()->route('teacher.assignments.index')
             ->with('success', 'Assignment deleted successfully!');
@@ -394,7 +471,39 @@ class AssignmentController extends Controller
             'publish_date' => now()->format('Y-m-d'),
         ]);
 
-        return redirect()->back()->with('success', 'Assignment published successfully!');
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'publish',
+            'activity_description'=> 'Published assignment "' . $assignment->assignment_title . '"',
+            'related_module'      => 'Assignment Module',
+        ]);
+
+        // ✅ FIX: Consistent redirect
+        return redirect()->route('teacher.assignments.index')
+            ->with('success', 'Assignment published successfully!');
+    }
+
+    /**
+     * Archive an assignment.
+     */
+    public function archive(Assignment $assignment)
+    {
+        Gate::authorize('update', $assignment);
+
+        $assignment->update(['status' => 'archived']);
+
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'teacher',
+            'activity_type'       => 'archive',
+            'activity_description'=> 'Archived assignment "' . $assignment->assignment_title . '"',
+            'related_module'      => 'Assignment Module',
+        ]);
+
+        // ✅ FIX: Consistent redirect
+        return redirect()->route('teacher.assignments.index')
+            ->with('success', 'Assignment archived successfully!');
     }
 
     /**
@@ -403,7 +512,12 @@ class AssignmentController extends Controller
     public function downloadResource($resourceId)
     {
         $resource = AssignmentResource::findOrFail($resourceId);
+
+        // ✅ FIX: Check if assignment exists before authorizing
         $assignment = $resource->assignment;
+        if (!$assignment) {
+            abort(404, 'Resource not associated with any assignment.');
+        }
 
         Gate::authorize('view', $assignment);
 
@@ -418,8 +532,10 @@ class AssignmentController extends Controller
 
     /**
      * Determine resource type based on file.
+     *
+     * ✅ FIX: Added type hint and return type
      */
-    private function determineResourceType($file)
+    private function determineResourceType(\Illuminate\Http\UploadedFile $file): string
     {
         $mimeType = $file->getMimeType();
 

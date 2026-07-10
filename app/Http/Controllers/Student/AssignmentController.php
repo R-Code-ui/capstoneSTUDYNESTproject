@@ -9,6 +9,7 @@ use App\Models\AssignmentSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class AssignmentController extends Controller
 {
@@ -195,6 +196,15 @@ class AssignmentController extends Controller
         } else {
             $submission = AssignmentSubmission::create($submissionData);
         }
+
+        // ✅ Log assignment submission
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'submit',
+            'activity_description'=> 'Submitted assignment "' . $assignment->assignment_title . '"',
+            'related_module'      => 'Assignment Module',
+        ]);
 
         return redirect()->back()->with('success', 'Assignment submitted successfully!');
     }

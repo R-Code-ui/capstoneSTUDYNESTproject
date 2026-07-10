@@ -25,6 +25,15 @@ class ActivityLog extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'created_at' => 'datetime',   // ✅ Fix: treat created_at as a Carbon instance
+    ];
+
+    /**
      * Indicates if the model should be timestamped.
      *
      * @var bool

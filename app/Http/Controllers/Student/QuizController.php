@@ -9,6 +9,7 @@ use App\Models\QuizQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Models\ActivityLog;
 
 class QuizController extends Controller
 {
@@ -176,6 +177,15 @@ class QuizController extends Controller
             'status' => 'started',
         ]);
 
+        // ✅ Log quiz start
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'attempt',
+            'activity_description'=> 'Started quiz "' . $quiz->quiz_title . '" (Attempt ' . $attemptNumber . ')',
+            'related_module'      => 'Quiz Module',
+        ]);
+
         return redirect()->route('student.quizzes.take', $attempt->id);
     }
 
@@ -285,6 +295,15 @@ class QuizController extends Controller
             'total_questions' => $totalQuestions,
             'completed_at' => now(),
             'status' => 'completed',
+        ]);
+
+        // ✅ Log quiz completion
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'attempt',
+            'activity_description'=> 'Completed quiz "' . $quiz->quiz_title . '" with score ' . $score . '/' . $totalQuestions,
+            'related_module'      => 'Quiz Module',
         ]);
 
         return redirect()->route('student.quizzes.results', $attempt->id);

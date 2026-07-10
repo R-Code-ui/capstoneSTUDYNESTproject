@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\ActivityLog;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -33,10 +34,18 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect based on user role
         $user = Auth::user();
 
-        // Check if user has roles via Spatie
+        // ✅ Log login
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => $user->roles->first()->name ?? 'unknown',
+            'activity_type'       => 'login',
+            'activity_description'=> ucfirst($user->roles->first()->name ?? 'User') . ' logged in.',
+            'related_module'      => null,
+        ]);
+
+        // Redirect based on user role
         if ($user->hasRole('principal')) {
             return redirect()->intended(route('principal.dashboard'));
         } elseif ($user->hasRole('teacher')) {
@@ -45,7 +54,6 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('student.dashboard'));
         }
 
-        // Fallback redirect
         return redirect()->intended(route('dashboard'));
     }
 

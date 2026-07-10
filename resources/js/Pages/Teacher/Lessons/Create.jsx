@@ -81,7 +81,15 @@ export default function LessonsCreate({
         const errors = [];
         const validFiles = [];
 
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+        // ✅ Allowed MIME types (including Word)
+        const allowedTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/jpg',
+            'application/msword',                                                          // .doc
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',      // .docx
+        ];
         const maxSize = 2 * 1024 * 1024; // 2MB
         const maxFiles = 5;
 
@@ -94,7 +102,7 @@ export default function LessonsCreate({
 
         files.forEach((file) => {
             if (!allowedTypes.includes(file.type)) {
-                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, or PNG files.`);
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, or DOCX files.`);
                 return;
             }
 
@@ -131,6 +139,9 @@ export default function LessonsCreate({
         if (['jpg', 'jpeg', 'png'].includes(ext)) {
             return <PhotoIcon className="w-5 h-5 text-green-500" />;
         }
+        if (['doc', 'docx'].includes(ext)) {
+            return <DocumentIcon className="w-5 h-5 text-blue-500" />;
+        }
         return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
     };
 
@@ -138,6 +149,7 @@ export default function LessonsCreate({
         const ext = fileName.split('.').pop().toLowerCase();
         if (['pdf'].includes(ext)) return 'PDF Module';
         if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
+        if (['doc', 'docx'].includes(ext)) return 'Worksheet';
         return 'Worksheet';
     };
 
@@ -349,7 +361,7 @@ export default function LessonsCreate({
                                         multiple
                                         onChange={handleFileChange}
                                         className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
-                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
@@ -383,7 +395,7 @@ export default function LessonsCreate({
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Accepted: PDF, JPG, JPEG, PNG (Max 2MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>

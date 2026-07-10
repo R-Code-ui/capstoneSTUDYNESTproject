@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'grade_level',
+        'gender',           // ✅ ADDED
         'lrn',
         'teacher_id',
         'principal_id',

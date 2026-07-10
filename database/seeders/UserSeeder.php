@@ -23,6 +23,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('Principal123'),
                 'is_active' => true,
                 'grade_level' => null,
+                'gender' => null, // ✅ ADDED
             ]
         );
         $principal->assignRole('principal');
@@ -38,6 +39,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('Teacher123'),
                 'is_active' => true,
                 'grade_level' => null,
+                'gender' => null, // ✅ ADDED
             ]
         );
         $teacher1->assignRole('teacher');
@@ -51,13 +53,14 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('Teacher123'),
                 'is_active' => true,
                 'grade_level' => null,
+                'gender' => null, // ✅ ADDED
             ]
         );
         $teacher2->assignRole('teacher');
 
         // ========== CREATE STUDENTS ==========
 
-        // Student 1 - Grade 4
+        // Student 1 - Grade 4 - Male
         $student1 = User::firstOrCreate(
             ['lrn' => '118784260018'],
             [
@@ -66,11 +69,12 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('Student123'),
                 'is_active' => true,
                 'grade_level' => 'Grade 4',
+                'gender' => 'male', // ✅ ADDED
             ]
         );
         $student1->assignRole('student');
 
-        // Student 2 - Grade 5
+        // Student 2 - Grade 5 - Female
         $student2 = User::firstOrCreate(
             ['lrn' => '118784260019'],
             [
@@ -79,11 +83,12 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('Student123'),
                 'is_active' => true,
                 'grade_level' => 'Grade 5',
+                'gender' => 'female', // ✅ ADDED
             ]
         );
         $student2->assignRole('student');
 
-        // Student 3 - Grade 6
+        // Student 3 - Grade 6 - Male
         $student3 = User::firstOrCreate(
             ['lrn' => '118784260020'],
             [
@@ -92,6 +97,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('Student123'),
                 'is_active' => true,
                 'grade_level' => 'Grade 6',
+                'gender' => 'male', // ✅ ADDED
             ]
         );
         $student3->assignRole('student');
@@ -117,6 +123,6 @@ class UserSeeder extends Seeder
         $this->command->info('✅ Users seeded successfully!');
         $this->command->info('📋 Principal: PRN-001 / Principal123');
         $this->command->info('📋 Teachers: TCH-001, TCH-002 / Teacher123');
-        $this->command->info('📋 Students: 118784260018, 118784260019, 118784260020 / Student123');
+        $this->command->info('📋 Students: 118784260018 (Male), 118784260019 (Female), 118784260020 (Male) / Student123');
     }
 }

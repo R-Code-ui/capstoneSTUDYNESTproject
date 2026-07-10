@@ -9,6 +9,7 @@ use App\Models\Assignment;
 use App\Models\Quiz;
 use App\Models\Game;
 use App\Models\Message;
+use App\Models\Announcement; // ✅ ADD THIS
 use App\Models\AssignmentSubmission;
 use App\Models\QuizAttempt;
 use Illuminate\Http\Request;
@@ -214,6 +215,23 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
+        // ===== ✅ Section 7: Recent Announcements (FROM PRINCIPAL) =====
+        $recentAnnouncements = Announcement::where('user_role', 'principal')
+            ->where('status', 'published')
+            ->where('target_audience', 'all_users')
+            ->orderBy('created_at', 'desc')
+            ->limit(3)
+            ->get()
+            ->map(function ($announcement) {
+                return [
+                    'id' => $announcement->id,
+                    'title' => $announcement->title,
+                    'content' => substr($announcement->content, 0, 100) . (strlen($announcement->content) > 100 ? '...' : ''),
+                    'posted_by' => 'Principal',
+                    'date' => $announcement->created_at->diffForHumans(),
+                ];
+            });
+
         return Inertia::render('Teacher/Dashboard', [
             'assigned_grades' => $assignedGrades,
             'stats' => [
@@ -240,6 +258,7 @@ class DashboardController extends Controller
                     'date' => $latestMessage->created_at->diffForHumans(),
                 ] : null,
             ],
+            'recent_announcements' => $recentAnnouncements, // ✅ ADDED
         ]);
     }
 }
