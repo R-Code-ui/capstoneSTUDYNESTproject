@@ -5,6 +5,7 @@ import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import Pagination from '@/Components/Pagination'; // ✅ ADDED
 import {
     MegaphoneIcon,
     MapPinIcon,
@@ -17,7 +18,12 @@ import {
     BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 
-export default function AnnouncementsIndex({ announcements, categories, filters }) {
+export default function AnnouncementsIndex({
+    announcements,
+    categories,
+    filters,
+    pagination, // ✅ ADDED
+}) {
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters?.category || '');
     const [isLoading, setIsLoading] = useState(false);
@@ -241,6 +247,11 @@ export default function AnnouncementsIndex({ announcements, categories, filters 
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* ✅ Pagination */}
+                        <div className="mt-6">
+                            <Pagination pagination={pagination} />
                         </div>
                     </Card>
                 </div>

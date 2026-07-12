@@ -33,10 +33,10 @@ class ReportController extends Controller
 
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $gradeLevels = ['All Grades', 'Grade 4', 'Grade 5', 'Grade 6'];
-        $teachers = User::role('teacher')->select('id', 'name', 'teacher_id')->get();
-        $trimesters = ['All Trimesters', '1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $teachers = User::role('teacher')->select('id', 'name', 'teacher_id')
+            ->paginate(10);
+        $trimesters = ['All Terms', '1st Term', '2nd Term', '3rd Term']; // ✅ CHANGED
 
-        // Pull any report result that was flashed from the generate method
         $reportTitle = session('report_title');
         $reportData = session('report_data');
         $reportId = session('report_id');
@@ -63,6 +63,7 @@ class ReportController extends Controller
             'report_data' => $reportData,
             'report_id' => $reportId,
             'show_results' => $showResults,
+            'pagination' => $teachers->toArray(),
         ]);
     }
 
@@ -79,7 +80,6 @@ class ReportController extends Controller
             'grade_level' => 'nullable|string',
             'teacher_id'   => 'nullable|exists:users,id',
             'trimester'    => 'nullable|string',
-            // Date fields removed entirely
         ]);
 
         $reportType  = $validated['report_type'];
@@ -88,7 +88,6 @@ class ReportController extends Controller
         $trimester  = $validated['trimester'] ?? null;
         $schoolYear = $validated['school_year'] ?? 'SY 2026-2027';
 
-        // Generate the appropriate report data
         $reportData = [];
         $reportTitle = '';
 
@@ -109,7 +108,6 @@ class ReportController extends Controller
                 return redirect()->back()->with('error', 'Invalid report type.');
         }
 
-        // Save the export record
         $reportExport = ReportExport::create([
             'user_id' => auth()->id(),
             'report_type' => $reportTitle,
@@ -121,10 +119,8 @@ class ReportController extends Controller
             'file_name' => $reportTitle . '_' . now()->format('Y-m-d'),
         ]);
 
-        // Store the full report data for later PDF export
         session(['report_data_' . $reportExport->id => $reportData]);
 
-        // Redirect to index with the result flashed in the session
         return redirect()->route('principal.reports.index')->with([
             'success' => 'Report generated successfully!',
             'report_title' => $reportTitle,

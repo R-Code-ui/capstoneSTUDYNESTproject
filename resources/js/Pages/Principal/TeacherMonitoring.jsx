@@ -7,7 +7,13 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
-export default function TeacherMonitoring({ teachers, grade_levels, status_options, filters }) {
+export default function TeacherMonitoring({
+    teachers,
+    grade_levels,
+    status_options,
+    filters,
+    pagination, // ✅ ADDED
+}) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -133,6 +139,7 @@ export default function TeacherMonitoring({ teachers, grade_levels, status_optio
                                 emptyMessage="No teachers found."
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ ADDED
                             />
                         </div>
                     </Card>

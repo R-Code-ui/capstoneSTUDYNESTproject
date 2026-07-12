@@ -24,6 +24,7 @@ export default function GamesIndex({
     statuses,
     game_types,
     filters,
+    pagination, // ✅ ADDED
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -197,6 +198,7 @@ export default function GamesIndex({
                                 emptyMessage="No games assigned. Assign your first game!"
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ ADDED
                             />
                         </div>
                     </Card>

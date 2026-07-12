@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('grade_level'); // Grade 4, Grade 5, Grade 6
             $table->string('subject');
             $table->string('school_year');
-            $table->string('trimester');
+            $table->string('trimester'); // 1st Term, 2nd Term, 3rd Term
             $table->string('week_number');
             $table->foreignId('related_lesson_id')->nullable()->constrained('lessons')->onDelete('set null');
 

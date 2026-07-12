@@ -14,11 +14,18 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PasswordInput from '@/Components/PasswordInput';
 
-export default function UserManagement({ teachers, students, grade_levels, filters }) {
+export default function UserManagement({
+    teachers,
+    students,
+    grade_levels,
+    filters,
+    teachers_pagination, // ✅ ADDED
+    students_pagination, // ✅ ADDED
+}) {
     const [activeTab, setActiveTab] = useState('teacher');
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
-    const [genderFilter, setGenderFilter] = useState(filters?.gender || ''); // ✅ ADDED
+    const [genderFilter, setGenderFilter] = useState(filters?.gender || '');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
@@ -50,7 +57,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         });
     };
 
-    // ✅ ADDED: Handle gender filter change
+    // Handle gender filter change
     const handleGenderFilterChange = (value) => {
         setGenderFilter(value);
         setIsLoading(true);
@@ -93,7 +100,6 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         ...grade_levels.map((grade) => ({ value: grade, label: grade })),
     ];
 
-    // ✅ ADDED: Gender filter options
     const genderOptions = [
         { value: '', label: 'All Genders' },
         { value: 'male', label: 'Male' },
@@ -109,7 +115,6 @@ export default function UserManagement({ teachers, students, grade_levels, filte
         { key: 'created_at', label: 'Date Created' },
     ];
 
-    // ✅ ADDED: 'gender' column to student table
     const studentColumns = [
         { key: 'name', label: 'Name' },
         { key: 'lrn', label: 'LRN' },
@@ -169,6 +174,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
     const currentData = activeTab === 'teacher' ? teachers : students;
     const currentColumns = activeTab === 'teacher' ? teacherColumns : studentColumns;
     const currentActions = activeTab === 'teacher' ? teacherActions : studentActions;
+    const currentPagination = activeTab === 'teacher' ? teachers_pagination : students_pagination; // ✅ ADDED
 
     return (
         <AuthenticatedLayout
@@ -224,7 +230,6 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                     size="md"
                                     className="w-36"
                                 />
-                                {/* ✅ ADDED: Gender Filter Dropdown */}
                                 {activeTab === 'student' && (
                                     <FilterDropdown
                                         options={genderOptions}
@@ -253,6 +258,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                 emptyMessage={`No ${activeTab}s found.`}
                                 hoverable
                                 striped
+                                pagination={currentPagination} // ✅ ADDED
                             />
                         </div>
                     </Card>
@@ -382,7 +388,6 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                                 </select>
                                 <InputError message={errors?.grade_level} className="mt-2" />
                             </div>
-                            {/* ✅ ADDED: Gender Radio Buttons */}
                             <div>
                                 <InputLabel value="Gender" required />
                                 <div className="mt-2 flex gap-6">
@@ -445,7 +450,7 @@ export default function UserManagement({ teachers, students, grade_levels, filte
                             onSuccess: () => {
                                 setShowResetModal(false);
                                 setSelectedUser(null);
-                                setPassword(''); // Clear password after success
+                                setPassword('');
                             }
                         });
                     }}

@@ -161,7 +161,7 @@ class ProgressTrackingController extends Controller
         // Grade levels for filter
         $gradeLevels = ['Grade 4', 'Grade 5', 'Grade 6'];
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term']; // ✅ CHANGED
 
         return Inertia::render('Teacher/ProgressTracking/Index', [
             'stats' => [

@@ -19,7 +19,7 @@ class ProgressTrackerController extends Controller
     /**
      * Display the progress tracker.
      */
-    public function index()
+    public function index(Request $request) // ✅ Added Request parameter for pagination
     {
         $user = auth()->user();
         $gradeLevel = $user->grade_level;
@@ -79,7 +79,6 @@ class ProgressTrackerController extends Controller
                 ->whereDoesntHave('students', function ($query) use ($user) {
                     $query->where('user_id', $user->id);
                 })
-                ->limit(3)
                 ->get()
                 ->map(function ($lesson) {
                     return [
@@ -102,7 +101,6 @@ class ProgressTrackerController extends Controller
                 $query->where('student_id', $user->id)
                     ->whereIn('status', ['submitted', 'reviewed', 'graded']);
             })
-            ->limit(3)
             ->get()
             ->map(function ($assignment) {
                 return [
@@ -123,7 +121,6 @@ class ProgressTrackerController extends Controller
             ->whereDoesntHave('attempts', function ($query) use ($user) {
                 $query->where('student_id', $user->id)->where('status', 'completed');
             })
-            ->limit(3)
             ->get()
             ->map(function ($quiz) {
                 return [
@@ -144,7 +141,6 @@ class ProgressTrackerController extends Controller
             ->whereDoesntHave('results', function ($query) use ($user) {
                 $query->where('student_id', $user->id)->where('status', 'completed');
             })
-            ->limit(3)
             ->get()
             ->map(function ($game) {
                 return [
@@ -163,6 +159,12 @@ class ProgressTrackerController extends Controller
         $pendingActivities = $pendingActivities->sortBy(function ($activity) {
             return $activity['due_date'] ?? now()->addDays(30);
         })->values();
+
+        // ✅ PAGINATION: Paginate the pending activities
+        $page = $request->input('page', 1);
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+        $paginatedPending = $pendingActivities->slice($offset, $perPage)->values();
 
         // ===== Participation Rate =====
         $participationRate = 0;
@@ -218,9 +220,15 @@ class ProgressTrackerController extends Controller
                     'percentage' => $totalGames > 0 ? round(($completedGames / $totalGames) * 100) : 0,
                 ],
             ],
-            'pending_activities' => $pendingActivities,
+            'pending_activities' => $paginatedPending, // ✅ PAGINATED DATA
             'participation_rate' => $participationRate,
             'pending_count' => $pendingActivities->count(),
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $pendingActivities->count(),
+                'last_page' => ceil($pendingActivities->count() / $perPage),
+            ], // ✅ PAGINATION DATA
         ]);
     }
 }

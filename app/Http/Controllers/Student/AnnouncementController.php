@@ -36,7 +36,7 @@ class AnnouncementController extends Controller
                 return $query->where('category', $category);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         // Get read status for each announcement
         $readAnnouncementIds = AnnouncementView::where('student_id', $user->id)
@@ -67,6 +67,7 @@ class AnnouncementController extends Controller
                 'search' => $search,
                 'category' => $categoryFilter,
             ],
+            'pagination' => $announcements->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 

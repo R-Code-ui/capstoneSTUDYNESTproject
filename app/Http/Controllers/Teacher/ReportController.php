@@ -29,7 +29,7 @@ class ReportController extends Controller
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term']; // ✅ CHANGED
         $gradeLevels = ['Grade 4', 'Grade 5', 'Grade 6'];
 
         return Inertia::render('Teacher/Reports/Index', [
@@ -260,7 +260,7 @@ class ReportController extends Controller
                 'assignments' => $submittedAssignments . '/' . $totalAssignments,
                 'quiz_average' => $avgQuizScore . '%',
                 'games' => $completedGames . '/' . $totalGames,
-                'overall_progress' => $overallProgress,   // ✅ No "%" string
+                'overall_progress' => $overallProgress,
             ];
         });
 
@@ -294,7 +294,6 @@ class ReportController extends Controller
             $completed = 0;
 
             foreach ($gradeStudents as $student) {
-                // ✅ Use collection contains() method which checks the pivot
                 if ($student->lessons->contains($lesson->id)) {
                     $completed++;
                 }

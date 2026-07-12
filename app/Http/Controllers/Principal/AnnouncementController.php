@@ -34,7 +34,7 @@ class AnnouncementController extends Controller
                 return $query->where('status', $status);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         $categories = ['Reminder', 'Event Announcement', 'Class Suspension', 'Emergency Notice', 'Academic Notice', 'School Activity'];
         $statuses = ['draft', 'published', 'archived'];
@@ -46,12 +46,11 @@ class AnnouncementController extends Controller
                     'id' => $announcement->id,
                     'title' => $announcement->title,
                     'category' => $announcement->category,
-                    'content' => $announcement->content, // ✅ ADDED: content field
+                    'content' => $announcement->content,
                     'audience' => $announcement->target_audience,
                     'status' => $announcement->status,
                     'priority' => $announcement->priority,
                     'is_pinned' => $announcement->is_pinned,
-                    // ✅ Keep dates formatted for inputs
                     'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : null,
                     'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : null,
                     'view_count' => $announcement->view_count,
@@ -67,6 +66,7 @@ class AnnouncementController extends Controller
                 'category' => $categoryFilter,
                 'status' => $statusFilter,
             ],
+            'pagination' => $announcements->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 

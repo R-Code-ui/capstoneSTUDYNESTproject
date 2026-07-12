@@ -25,6 +25,7 @@ export default function AssignmentsIndex({
     assignment_types,
     trimesters,
     filters,
+    pagination, // ✅ ADDED
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -198,6 +199,7 @@ export default function AssignmentsIndex({
                                 emptyMessage="No assignments found. Create your first assignment!"
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ ADDED
                             />
                         </div>
                     </Card>

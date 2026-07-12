@@ -33,7 +33,7 @@ class LessonController extends Controller
                 return $query->where('subject', $subject);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
 
@@ -54,6 +54,7 @@ class LessonController extends Controller
                 'search' => $search,
                 'subject' => $subjectFilter,
             ],
+            'pagination' => $lessons->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 

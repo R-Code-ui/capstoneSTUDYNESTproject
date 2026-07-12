@@ -35,10 +35,10 @@ class AssignmentController extends Controller
                 return $query->where('subject', $subject);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         // Get submission status for each assignment
-        $assignments = $assignments->map(function ($assignment) use ($user) {
+        $assignmentsData = $assignments->map(function ($assignment) use ($user) {
             $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
                 ->where('student_id', $user->id)
                 ->first();
@@ -58,12 +58,13 @@ class AssignmentController extends Controller
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
 
         return Inertia::render('Student/Assignments/Index', [
-            'assignments' => $assignments,
+            'assignments' => $assignmentsData,
             'subjects' => $subjects,
             'filters' => [
                 'search' => $search,
                 'subject' => $subjectFilter,
             ],
+            'pagination' => $assignments->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 

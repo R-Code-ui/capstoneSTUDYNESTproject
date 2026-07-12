@@ -38,13 +38,12 @@ class TeacherMonitoringController extends Controller
                     $q->where('grade_level', $grade);
                 });
             })
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         $teacherData = $teachers->map(function ($teacher) {
             $lastActivity = $teacher->last_login_at;
             $isActive = $teacher->is_active;
 
-            // Determine status
             $status = 'Inactive';
             if (!$isActive) {
                 $status = 'Inactive';
@@ -61,7 +60,6 @@ class TeacherMonitoringController extends Controller
             $quizzesCount = $teacher->quizzes()->count();
             $announcementsCount = $teacher->announcements()->count();
 
-            // Get recent activities
             $recentActivities = collect([]);
 
             $recentLessons = $teacher->lessons()->orderBy('created_at', 'desc')->limit(3)->get()->map(function ($lesson) {
@@ -91,7 +89,6 @@ class TeacherMonitoringController extends Controller
             $recentActivities = $recentLessons->concat($recentAssignments)->concat($recentQuizzes)
                 ->sortByDesc('date')->take(5)->values();
 
-            // Classroom engagement stats
             $students = User::role('student')->where('grade_level', $teacher->gradeAssignments->pluck('grade_level')->toArray())->get();
             $totalStudents = $students->count();
 
@@ -101,7 +98,6 @@ class TeacherMonitoringController extends Controller
             $gameParticipationRate = 0;
 
             if ($totalStudents > 0) {
-                // Lesson completion
                 $completedLessons = 0;
                 foreach ($students as $student) {
                     $completedLessons += $student->lessons()->where('status', 'published')->count();
@@ -109,18 +105,15 @@ class TeacherMonitoringController extends Controller
                 $totalLessons = $teacher->lessons()->where('status', 'published')->count();
                 $lessonCompletionRate = $totalLessons > 0 ? round(($completedLessons / ($totalLessons * $totalStudents)) * 100) : 0;
 
-                // Assignment completion
                 $submittedAssignments = AssignmentSubmission::whereIn('student_id', $students->pluck('id'))->where('status', 'submitted')->count();
                 $totalAssignments = $teacher->assignments()->where('status', 'published')->count();
                 $assignmentCompletionRate = $totalAssignments > 0 ? round(($submittedAssignments / ($totalAssignments * $totalStudents)) * 100) : 0;
 
-                // Quiz participation
                 $quizAttempts = QuizAttempt::whereIn('student_id', $students->pluck('id'))->where('status', 'completed')->count();
                 $totalQuizzes = $teacher->quizzes()->where('status', 'published')->count();
                 $quizParticipationRate = $totalQuizzes > 0 ? round(($quizAttempts / ($totalQuizzes * $totalStudents)) * 100) : 0;
 
-                // Game participation (simplified)
-                $gameParticipationRate = rand(70, 95); // Placeholder until game tracking is implemented
+                $gameParticipationRate = rand(70, 95);
             }
 
             return [
@@ -146,7 +139,6 @@ class TeacherMonitoringController extends Controller
             ];
         });
 
-        // Apply status filter after calculation
         if ($statusFilter) {
             $teacherData = $teacherData->filter(function ($teacher) use ($statusFilter) {
                 return $teacher['status'] === $statusFilter;
@@ -165,6 +157,7 @@ class TeacherMonitoringController extends Controller
                 'grade_level' => $gradeFilter,
                 'status' => $statusFilter,
             ],
+            'pagination' => $teachers->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 
@@ -177,7 +170,6 @@ class TeacherMonitoringController extends Controller
 
         $teacher = User::role('teacher')->with('gradeAssignments')->findOrFail($id);
 
-        // ===== CALCULATE STATUS (Same logic as index method) =====
         $lastActivity = $teacher->last_login_at;
         $isActive = $teacher->is_active;
 
@@ -192,16 +184,13 @@ class TeacherMonitoringController extends Controller
             $status = 'Inactive';
         }
 
-        // Get all lessons, assignments, quizzes by this teacher
         $lessons = $teacher->lessons()->orderBy('created_at', 'desc')->get();
         $assignments = $teacher->assignments()->orderBy('created_at', 'desc')->get();
         $quizzes = $teacher->quizzes()->orderBy('created_at', 'desc')->get();
 
-        // Get students for this teacher's grades
         $gradeLevels = $teacher->gradeAssignments->pluck('grade_level')->toArray();
         $students = User::role('student')->whereIn('grade_level', $gradeLevels)->get();
 
-        // Calculate engagement stats
         $totalStudents = $students->count();
         $lessonCompletionRate = 0;
         $assignmentCompletionRate = 0;
@@ -233,7 +222,7 @@ class TeacherMonitoringController extends Controller
                 'name' => $teacher->name,
                 'teacher_id' => $teacher->teacher_id,
                 'grades' => $gradeLevels,
-                'status' => $status, // ✅ ADDED: Calculated status
+                'status' => $status,
                 'is_active' => $isActive,
                 'last_login' => $teacher->last_login_at ? $teacher->last_login_at->format('Y-m-d H:i') : 'Never',
                 'total_lessons' => $lessons->count(),

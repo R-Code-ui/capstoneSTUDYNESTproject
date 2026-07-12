@@ -7,12 +7,14 @@ use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class MessageController extends Controller
 {
     /**
-     * Display a listing of the student's inbox messages.
+     * Display all conversations (grouped by teacher) for the logged-in student.
+     * Same pattern as the Teacher panel's Message module.
      */
     public function index(Request $request)
     {
@@ -20,52 +22,61 @@ class MessageController extends Controller
 
         $user = auth()->user();
         $search = $request->input('search');
-        $categoryFilter = $request->input('category');
-        $statusFilter = $request->input('status');
 
-        $messages = Message::where('receiver_id', $user->id)
-            ->with('sender:id,name')
-            ->when($search, function ($query, $search) {
-                $query->where('subject', 'like', "%{$search}%")
-                      ->orWhere('message', 'like', "%{$search}%")
-                      ->orWhereHas('sender', fn($q) => $q->where('name', 'like', "%{$search}%"));
+        $messages = Message::where(function ($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->orWhere('receiver_id', $user->id);
             })
-            ->when($categoryFilter, fn($q, $c) => $q->where('category', $c))
-            ->when($statusFilter, fn($q, $s) => $q->where('status', $s))
+            ->with(['sender:id,name,lrn,grade_level', 'receiver:id,name,lrn,grade_level'])
             ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get()
-            ->map(fn($msg) => [
-                'id' => $msg->id,
-                'from' => $msg->sender->name,
-                'subject' => $msg->subject,
-                'category' => $msg->category,
-                'status' => $msg->status,
-                'created_at' => $msg->created_at->format('M d, Y H:i'),
-            ]);
+            ->get();
 
-        $unreadCount = Message::where('receiver_id', $user->id)
-            ->where('status', 'unread')
-            ->count();
+        $conversations = $messages
+            ->groupBy(function ($msg) use ($user) {
+                return $msg->sender_id === $user->id ? $msg->receiver_id : $msg->sender_id;
+            })
+            ->map(function ($thread, $teacherId) use ($user) {
+                $latest = $thread->first(); // already sorted desc, so first = latest
+                $otherUser = $latest->sender_id === $user->id ? $latest->receiver : $latest->sender;
 
-        $categories = ['lesson', 'assignment', 'quiz', 'educational_game', 'general_academic_concern'];
-        $statuses = ['unread', 'read', 'replied'];
+                $unreadCount = $thread
+                    ->where('receiver_id', $user->id)
+                    ->where('status', 'unread')
+                    ->count();
+
+                return [
+                    'teacher_id'         => $teacherId,
+                    'name'               => $otherUser->name ?? 'Unknown Teacher',
+                    'last_message'       => Str::limit($latest->message, 70),
+                    'last_message_time'  => $latest->created_at->diffForHumans(),
+                    'last_message_at'    => $latest->created_at,
+                    'last_message_id'    => $latest->id,
+                    'category'           => $latest->category,
+                    'unread_count'       => $unreadCount,
+                    'is_last_from_me'    => $latest->sender_id === $user->id,
+                ];
+            })
+            ->when($search, function ($collection) use ($search) {
+                return $collection->filter(function ($conv) use ($search) {
+                    return stripos($conv['name'], $search) !== false;
+                });
+            })
+            ->sortByDesc('last_message_at')
+            ->values();
+
+        $totalUnread = $conversations->sum('unread_count');
 
         return Inertia::render('Student/Messages/Index', [
-            'messages' => $messages,
-            'unread_count' => $unreadCount,
-            'categories' => $categories,
-            'statuses' => $statuses,
-            'filters' => [
+            'conversations' => $conversations,
+            'unread_count'  => $totalUnread,
+            'filters'       => [
                 'search' => $search,
-                'category' => $categoryFilter,
-                'status' => $statusFilter,
             ],
         ]);
     }
 
     /**
-     * Show the form for composing a new message (Ask Teacher).
+     * Show the form for composing a new message ("Ask Teacher").
      */
     public function create()
     {
@@ -74,7 +85,6 @@ class MessageController extends Controller
         $student = auth()->user();
         $studentGrade = $student->grade_level;
 
-        // Get teachers assigned to this student's grade level
         $teachers = User::role('teacher')
             ->whereHas('gradeAssignments', function ($query) use ($studentGrade) {
                 $query->where('grade_level', $studentGrade);
@@ -83,15 +93,12 @@ class MessageController extends Controller
             ->orderBy('name')
             ->get()
             ->map(fn($t) => [
-                'id' => $t->id,
+                'id'   => $t->id,
                 'name' => $t->name,
             ]);
 
-        $categories = ['lesson', 'assignment', 'quiz', 'educational_game', 'general_academic_concern'];
-
         return Inertia::render('Student/Messages/Compose', [
             'teachers' => $teachers,
-            'categories' => $categories,
         ]);
     }
 
@@ -107,9 +114,9 @@ class MessageController extends Controller
 
         $validated = $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'subject' => 'required|string|max:255',
-            'category' => 'required|in:lesson,assignment,quiz,educational_game,general_academic_concern',
-            'message' => 'required|string',
+            'subject'     => 'nullable|string|max:255',
+            'category'    => 'required|in:lesson,assignment,quiz,educational_game,general_academic_concern',
+            'message'     => 'required|string',
         ]);
 
         // Ensure receiver is a teacher assigned to this student's grade
@@ -120,21 +127,24 @@ class MessageController extends Controller
             })
             ->firstOrFail();
 
-        Message::create([
-            'sender_id' => $student->id,
+        $message = Message::create([
+            'sender_id'   => $student->id,
             'receiver_id' => $teacher->id,
-            'subject' => $validated['subject'],
-            'category' => $validated['category'],
-            'message' => $validated['message'],
-            'status' => 'unread',
+            'subject'     => $validated['subject'] ?: ucfirst(str_replace('_', ' ', $validated['category'])),
+            'category'    => $validated['category'],
+            'message'     => $validated['message'],
+            'status'      => 'unread',
         ]);
 
-        return redirect()->route('student.messages.index')
+        return redirect()->route('student.messages.show', $message->id)
             ->with('success', 'Your question has been sent to the teacher!');
     }
 
     /**
-     * Display the specified message.
+     * View the full conversation thread with a teacher.
+     * The route still binds a single Message ($message) — we only use it
+     * to identify which teacher this conversation is with, then load the
+     * whole thread, same pattern as the Teacher panel.
      */
     public function show(Message $message)
     {
@@ -142,35 +152,48 @@ class MessageController extends Controller
 
         $user = auth()->user();
 
-        // Student can only view messages where they are the receiver
-        if ($message->receiver_id !== $user->id) {
+        if ($message->receiver_id !== $user->id && $message->sender_id !== $user->id) {
             abort(403);
         }
 
-        // Mark as read if unread
-        if ($message->status === 'unread') {
-            $message->update(['status' => 'read']);
-        }
+        $teacherId = $message->sender_id === $user->id ? $message->receiver_id : $message->sender_id;
+        $teacher = User::select('id', 'name')->findOrFail($teacherId);
 
-        $message->load('sender:id,name');
+        $thread = Message::where(function ($q) use ($user, $teacherId) {
+                $q->where('sender_id', $user->id)->where('receiver_id', $teacherId);
+            })
+            ->orWhere(function ($q) use ($user, $teacherId) {
+                $q->where('sender_id', $teacherId)->where('receiver_id', $user->id);
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // Mark everything the student received in this thread as read
+        Message::where('sender_id', $teacherId)
+            ->where('receiver_id', $user->id)
+            ->where('status', 'unread')
+            ->update(['status' => 'read']);
 
         return Inertia::render('Student/Messages/Show', [
-            'message' => [
-                'id' => $message->id,
-                'from' => $message->sender->name,
-                'from_id' => $message->sender_id,
-                'subject' => $message->subject,
-                'category' => $message->category,
-                'message' => $message->message,
-                'status' => $message->status,
-                'created_at' => $message->created_at->format('M d, Y H:i'),
-                'is_sender' => $message->sender_id === $user->id,
+            'teacher' => [
+                'id'   => $teacher->id,
+                'name' => $teacher->name,
             ],
+            'messages' => $thread->map(fn($msg) => [
+                'id'         => $msg->id,
+                'message'    => $msg->message,
+                'category'   => $msg->category,
+                'status'     => $msg->status,
+                'is_mine'    => $msg->sender_id === $user->id,
+                'created_at' => $msg->created_at->format('M d, Y g:i A'),
+            ]),
         ]);
     }
 
     /**
      * Reply to a message.
+     * Left untouched — kept for backward compatibility / other callers.
+     * The conversation view sends follow-ups through store() instead.
      */
     public function reply(Request $request, Message $message)
     {
@@ -178,7 +201,6 @@ class MessageController extends Controller
 
         $user = auth()->user();
 
-        // Student can only reply to messages they received
         if ($message->receiver_id !== $user->id) {
             abort(403);
         }
@@ -187,20 +209,37 @@ class MessageController extends Controller
             'reply' => 'required|string',
         ]);
 
-        // Create reply (student -> teacher)
         $reply = Message::create([
-            'sender_id' => $user->id,
+            'sender_id'   => $user->id,
             'receiver_id' => $message->sender_id,
-            'subject' => 'Re: ' . $message->subject,
-            'category' => $message->category,
-            'message' => $validated['reply'],
-            'status' => 'unread',
+            'subject'     => 'Re: ' . $message->subject,
+            'category'    => $message->category,
+            'message'     => $validated['reply'],
+            'status'      => 'unread',
         ]);
 
-        // Mark original message as replied
         $message->update(['status' => 'replied']);
 
         return redirect()->route('student.messages.show', $reply->id)
             ->with('success', 'Your reply has been sent!');
+    }
+
+    /**
+     * Delete a message (only if the student is sender or receiver).
+     * Mirrors the Teacher panel's destroy() method exactly.
+     */
+    public function destroy(Message $message)
+    {
+        Gate::authorize('message.delete');
+
+        $user = auth()->user();
+        if ($message->sender_id !== $user->id && $message->receiver_id !== $user->id) {
+            abort(403);
+        }
+
+        $message->delete();
+
+        return redirect()->route('student.messages.index')
+            ->with('success', 'Message deleted successfully.');
     }
 }

@@ -10,14 +10,21 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import {
     UserIcon,
-    DocumentTextIcon,
-    TagIcon,
     PaperAirplaneIcon,
     ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 
-export default function MessagesCompose({ teachers, categories }) {
+const CATEGORY_OPTIONS = [
+    { value: 'lesson', label: 'Lesson', emoji: '📘' },
+    { value: 'assignment', label: 'Assignment', emoji: '📝' },
+    { value: 'quiz', label: 'Quiz', emoji: '🧠' },
+    { value: 'educational_game', label: 'Game', emoji: '🎮' },
+    { value: 'general_academic_concern', label: 'Concern', emoji: '💬' },
+];
+
+export default function MessagesCompose({ teachers }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+
     const { data, setData, errors, post } = useForm({
         receiver_id: '',
         subject: '',
@@ -28,6 +35,7 @@ export default function MessagesCompose({ teachers, categories }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+
         post(route('student.messages.store'), {
             preserveState: true,
             onFinish: () => setIsSubmitting(false),
@@ -39,17 +47,9 @@ export default function MessagesCompose({ teachers, categories }) {
         ...teachers.map((teacher) => ({ value: teacher.id, label: teacher.name })),
     ];
 
-    const categoryOptions = [
-        { value: '', label: 'Select Category' },
-        ...categories.map((cat) => ({
-            value: cat,
-            label: cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        })),
-    ];
-
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Ask Teacher</h2>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Ask Teacher</span>}
         >
             <Head title="Ask Teacher" />
 
@@ -79,41 +79,40 @@ export default function MessagesCompose({ teachers, categories }) {
                                 <InputError message={errors.receiver_id} className="mt-2" />
                             </div>
 
-                            {/* ===== Subject ===== */}
+                            {/* ===== Category (pill buttons) ===== */}
                             <div>
-                                <InputLabel htmlFor="subject" value="Subject" required />
-                                <div className="relative">
-                                    <DocumentTextIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <TextInput
-                                        id="subject"
-                                        value={data.subject}
-                                        onChange={(e) => setData('subject', e.target.value)}
-                                        className="mt-1 block w-full pl-10"
-                                        required
-                                        placeholder="What is your question about?"
-                                    />
-                                </div>
-                                <InputError message={errors.subject} className="mt-2" />
-                            </div>
-
-                            {/* ===== Category ===== */}
-                            <div>
-                                <InputLabel htmlFor="category" value="Category" required />
-                                <div className="relative">
-                                    <TagIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <select
-                                        id="category"
-                                        value={data.category}
-                                        onChange={(e) => setData('category', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 pl-10"
-                                        required
-                                    >
-                                        {categoryOptions.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
+                                <InputLabel value="What is this about?" required />
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {CATEGORY_OPTIONS.map((cat) => (
+                                        <button
+                                            key={cat.value}
+                                            type="button"
+                                            onClick={() => setData('category', cat.value)}
+                                            className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition ${
+                                                data.category === cat.value
+                                                    ? 'bg-blue-600 text-white border-blue-600'
+                                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                                            }`}
+                                        >
+                                            <span>{cat.emoji}</span>
+                                            {cat.label}
+                                        </button>
+                                    ))}
                                 </div>
                                 <InputError message={errors.category} className="mt-2" />
+                            </div>
+
+                            {/* ===== Subject (optional) ===== */}
+                            <div>
+                                <InputLabel htmlFor="subject" value="Subject (optional)" />
+                                <TextInput
+                                    id="subject"
+                                    value={data.subject}
+                                    onChange={(e) => setData('subject', e.target.value)}
+                                    className="mt-1 block w-full"
+                                    placeholder="What is your question about?"
+                                />
+                                <InputError message={errors.subject} className="mt-2" />
                             </div>
 
                             {/* ===== Message ===== */}
@@ -137,7 +136,10 @@ export default function MessagesCompose({ teachers, categories }) {
                                     <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                     Cancel
                                 </SecondaryButton>
-                                <PrimaryButton type="submit" disabled={isSubmitting}>
+                                <PrimaryButton
+                                    type="submit"
+                                    disabled={isSubmitting || !data.receiver_id || !data.category || !data.message}
+                                >
                                     <PaperAirplaneIcon className="w-4 h-4 mr-1" />
                                     {isSubmitting ? 'Sending...' : 'Send Question'}
                                 </PrimaryButton>

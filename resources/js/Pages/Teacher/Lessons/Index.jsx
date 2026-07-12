@@ -26,10 +26,11 @@ export default function LessonsIndex({
     trimesters,
     school_years,
     filters,
+    pagination, // ✅ NEW: Pagination data from controller
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
-    const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');      // ✅ ADDED BACK
+    const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [trimesterFilter, setTrimesterFilter] = useState(filters?.trimester || '');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -40,12 +41,12 @@ export default function LessonsIndex({
 
     const handleFilterChange = (type, value) => {
         if (type === 'status') setStatusFilter(value);
-        if (type === 'grade') setGradeFilter(value);                                   // ✅ ADDED BACK
+        if (type === 'grade') setGradeFilter(value);
         if (type === 'trimester') setTrimesterFilter(value);
 
         applyFilters({
             ...(type === 'status' ? { status: value } : {}),
-            ...(type === 'grade' ? { grade_level: value } : {}),                      // ✅ ADDED BACK
+            ...(type === 'grade' ? { grade_level: value } : {}),
             ...(type === 'trimester' ? { trimester: value } : {}),
         });
     };
@@ -56,7 +57,7 @@ export default function LessonsIndex({
             data: {
                 search,
                 status: statusFilter,
-                grade_level: gradeFilter,                                             // ✅ ADDED BACK
+                grade_level: gradeFilter,
                 trimester: trimesterFilter,
                 ...additional,
             },
@@ -88,13 +89,13 @@ export default function LessonsIndex({
         ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
-    const gradeOptions = [                                                           // ✅ ADDED BACK
+    const gradeOptions = [
         { value: '', label: 'All Grades' },
         ...assigned_grades.map((grade) => ({ value: grade, label: grade })),
     ];
 
     const trimesterOptions = [
-        { value: '', label: 'All Trimesters' },
+        { value: '', label: 'All Terms' }, // ✅ CHANGED: "All Trimesters" → "All Terms"
         ...trimesters.map((t) => ({ value: t, label: t })),
     ];
 
@@ -102,7 +103,7 @@ export default function LessonsIndex({
         { key: 'title', label: 'Title' },
         { key: 'subject', label: 'Subject' },
         { key: 'grade_level', label: 'Grade' },
-        { key: 'trimester', label: 'Trimester' },
+        { key: 'trimester', label: 'Term' }, // ✅ CHANGED: "Trimester" → "Term"
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
         { key: 'created_at', label: 'Date Created' },
     ];
@@ -145,7 +146,6 @@ export default function LessonsIndex({
             header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Lessons</span>}
         >
             <Head title="Lessons" />
-
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <Card>
@@ -161,12 +161,12 @@ export default function LessonsIndex({
                             </div>
                             <div className="flex flex-wrap gap-3">
                                 <FilterDropdown
-                                    options={gradeOptions}                                           // ✅ ADDED BACK
-                                    value={gradeFilter}                                              // ✅ ADDED BACK
-                                    onChange={(val) => handleFilterChange('grade', val)}            // ✅ ADDED BACK
-                                    placeholder="Grade"                                              // ✅ ADDED BACK
-                                    size="md"                                                       // ✅ ADDED BACK
-                                    className="w-36"                                                // ✅ ADDED BACK
+                                    options={gradeOptions}
+                                    value={gradeFilter}
+                                    onChange={(val) => handleFilterChange('grade', val)}
+                                    placeholder="Grade"
+                                    size="md"
+                                    className="w-36"
                                 />
                                 <FilterDropdown
                                     options={statusOptions}
@@ -180,7 +180,7 @@ export default function LessonsIndex({
                                     options={trimesterOptions}
                                     value={trimesterFilter}
                                     onChange={(val) => handleFilterChange('trimester', val)}
-                                    placeholder="Trimester"
+                                    placeholder="Term" // ✅ CHANGED: "Trimester" → "Term"
                                     size="md"
                                     className="w-40"
                                 />
@@ -203,6 +203,7 @@ export default function LessonsIndex({
                                 emptyMessage="No lessons found. Create your first lesson!"
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ NEW: Pass pagination data
                             />
                         </div>
                     </Card>

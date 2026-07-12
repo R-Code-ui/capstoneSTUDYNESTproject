@@ -1,176 +1,153 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
-import StatusBadge from '@/Components/StatusBadge';
-import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import LoadingSpinner from '@/Components/LoadingSpinner';
+import ChatBubble from '@/Components/ChatBubble';
 import {
     ArrowLeftIcon,
-    ChatBubbleLeftIcon,
-    CheckCircleIcon,
-    UserIcon,
-    CalendarIcon,
-    DocumentTextIcon,
+    PaperAirplaneIcon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
 
-export default function MessagesShow({ message }) {
-    const [showReplyForm, setShowReplyForm] = useState(false);
+const CATEGORIES = [
+    { value: 'lesson', label: 'Lesson' },
+    { value: 'assignment', label: 'Assignment' },
+    { value: 'quiz', label: 'Quiz' },
+    { value: 'educational_game', label: 'Game' },
+    { value: 'general_academic_concern', label: 'Concern' },
+];
+
+export default function MessagesShow({ teacher, messages }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { data, setData, errors, post } = useForm({
-        reply: '',
+    const bottomRef = useRef(null);
+
+    const lastCategory = messages.length > 0
+        ? messages[messages.length - 1].category
+        : 'general_academic_concern';
+
+    const { data, setData, errors, post, reset } = useForm({
+        receiver_id: teacher.id,
+        subject: '',
+        category: lastCategory,
+        message: '',
     });
 
-    const handleReplySubmit = (e) => {
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages.length]);
+
+    const handleSend = (e) => {
         e.preventDefault();
+        if (!data.message.trim()) return;
+
         setIsSubmitting(true);
-        post(route('student.messages.reply', message.id), {
-            preserveState: true,
-            onFinish: () => {
-                setIsSubmitting(false);
-                setShowReplyForm(false);
-            },
+        post(route('student.messages.store'), {
+            preserveScroll: true,
+            onSuccess: () => reset('message'),
+            onFinish: () => setIsSubmitting(false),
         });
     };
 
-    const canReply = !message.is_sender && message.status !== 'replied';
+    const handleDeleteMessage = (messageId) => {
+        if (confirm('Delete this message?')) {
+            router.delete(route('student.messages.destroy', messageId), {
+                preserveScroll: true,
+            });
+        }
+    };
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Message
-                    </h2>
-                    <div className="flex gap-2">
-                        {canReply && (
-                            <PrimaryButton onClick={() => setShowReplyForm(!showReplyForm)}>
-                                <ChatBubbleLeftIcon className="w-4 h-4 mr-1" />
-                                Reply
-                            </PrimaryButton>
-                        )}
-                        <SecondaryButton onClick={() => router.visit(route('student.messages.index'))}>
-                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                            Back to Inbox
-                        </SecondaryButton>
+                <div className="flex items-center gap-3">
+                    <SecondaryButton onClick={() => router.visit(route('student.messages.index'))}>
+                        <ArrowLeftIcon className="w-4 h-4" />
+                    </SecondaryButton>
+                    <div>
+                        <div className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                            {teacher.name}
+                        </div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500">
+                            Teacher
+                        </div>
                     </div>
                 </div>
             }
         >
-            <Head title="Message" />
+            <Head title={`Conversation with ${teacher.name}`} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                    {/* ===== Message Details ===== */}
                     <Card>
-                        <div className="space-y-6">
-                            {/* Header */}
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                        {message.subject}
-                                    </h3>
-                                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                            <UserIcon className="w-4 h-4" />
-                                            {message.is_sender ? 'To: ' : 'From: '}
-                                            <span className="font-medium text-gray-700 dark:text-gray-300">
-                                                {message.is_sender ? message.to : message.from}
-                                            </span>
-                                        </span>
-                                        <span className="text-sm text-gray-400 dark:text-gray-500">•</span>
-                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                            <CalendarIcon className="w-4 h-4" />
-                                            {message.created_at}
-                                        </span>
+                        {/* ===== Thread ===== */}
+                        <div className="overflow-y-auto px-1 py-2 max-h-[55vh] min-h-[300px]">
+                            {messages.length === 0 ? (
+                                <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-10">
+                                    No messages yet. Ask your question below 👋
+                                </p>
+                            ) : (
+                                messages.map((msg) => (
+                                    <div key={msg.id} className="group relative">
+                                        <ChatBubble message={msg} />
+                                        {msg.is_mine && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteMessage(msg.id)}
+                                                className="hidden group-hover:flex absolute -right-1 top-0 text-gray-300 hover:text-red-500"
+                                                title="Delete message"
+                                            >
+                                                <TrashIcon className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
                                     </div>
-                                </div>
-                                <StatusBadge status={message.status} />
-                            </div>
-
-                            {/* Meta Info */}
-                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Category</div>
-                                    <div className="font-medium text-gray-900 dark:text-white">
-                                        {message.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Status</div>
-                                    <div className="font-medium text-gray-900 dark:text-white">
-                                        {message.status?.charAt(0).toUpperCase() + message.status?.slice(1)}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Message Content */}
-                            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                                        {message.message}
-                                    </div>
-                                </div>
-                            </div>
+                                ))
+                            )}
+                            <div ref={bottomRef} />
                         </div>
+
+                        {/* ===== Composer ===== */}
+                        <form onSubmit={handleSend} className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2 space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                                {CATEGORIES.map((cat) => (
+                                    <button
+                                        key={cat.value}
+                                        type="button"
+                                        onClick={() => setData('category', cat.value)}
+                                        className={`text-xs px-3 py-1 rounded-full border transition ${
+                                            data.category === cat.value
+                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:border-blue-400'
+                                        }`}
+                                    >
+                                        {cat.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex items-end gap-2">
+                                <textarea
+                                    value={data.message}
+                                    onChange={(e) => setData('message', e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend(e);
+                                        }
+                                    }}
+                                    rows={2}
+                                    placeholder="Type your question..."
+                                    className="flex-1 resize-none rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 text-sm"
+                                />
+                                <PrimaryButton type="submit" disabled={isSubmitting || !data.message.trim()}>
+                                    <PaperAirplaneIcon className="w-4 h-4" />
+                                </PrimaryButton>
+                            </div>
+                            <InputError message={errors.message || errors.receiver_id || errors.category} />
+                        </form>
                     </Card>
-
-                    {/* ===== Reply Form ===== */}
-                    {showReplyForm && canReply && (
-                        <div className="mt-6">
-                            <Card title="Reply to Teacher">
-                                {isSubmitting && <LoadingSpinner overlay size="lg" />}
-
-                                <form onSubmit={handleReplySubmit} className="space-y-4">
-                                    <div>
-                                        <InputLabel htmlFor="reply" value="Your Reply" required />
-                                        <textarea
-                                            id="reply"
-                                            value={data.reply}
-                                            onChange={(e) => setData('reply', e.target.value)}
-                                            rows={4}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                                            required
-                                            placeholder="Type your reply here..."
-                                        />
-                                        <InputError message={errors.reply} className="mt-2" />
-                                    </div>
-
-                                    <div className="flex justify-end gap-3">
-                                        <SecondaryButton
-                                            type="button"
-                                            onClick={() => setShowReplyForm(false)}
-                                        >
-                                            Cancel
-                                        </SecondaryButton>
-                                        <PrimaryButton type="submit" disabled={isSubmitting}>
-                                            {isSubmitting ? 'Sending...' : 'Send Reply'}
-                                        </PrimaryButton>
-                                    </div>
-                                </form>
-                            </Card>
-                        </div>
-                    )}
-
-                    {/* ===== Reply Status ===== */}
-                    {!showReplyForm && !message.is_sender && message.status === 'replied' && (
-                        <div className="mt-6">
-                            <Card className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                                <div className="text-center py-4">
-                                    <div className="flex items-center justify-center text-green-600 dark:text-green-400 text-lg gap-2">
-                                        <CheckCircleIcon className="w-6 h-6" />
-                                        You have replied to this message
-                                    </div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        Status: Replied
-                                    </p>
-                                </div>
-                            </Card>
-                        </div>
-                    )}
                 </div>
             </div>
         </AuthenticatedLayout>

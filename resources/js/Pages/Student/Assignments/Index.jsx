@@ -6,6 +6,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import StatusBadge from '@/Components/StatusBadge';
+import Pagination from '@/Components/Pagination'; // ✅ ADDED
 
 // Heroicons
 import {
@@ -18,7 +19,12 @@ import {
     ClockIcon,
 } from '@heroicons/react/24/outline';
 
-export default function AssignmentsIndex({ assignments, subjects, filters }) {
+export default function AssignmentsIndex({
+    assignments,
+    subjects,
+    filters,
+    pagination, // ✅ ADDED
+}) {
     const [search, setSearch] = useState(filters?.search || '');
     const [subjectFilter, setSubjectFilter] = useState(filters?.subject || '');
     const [isLoading, setIsLoading] = useState(false);
@@ -171,6 +177,11 @@ export default function AssignmentsIndex({ assignments, subjects, filters }) {
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* ✅ Pagination */}
+                        <div className="mt-6">
+                            <Pagination pagination={pagination} />
                         </div>
                     </Card>
                 </div>

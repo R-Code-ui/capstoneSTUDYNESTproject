@@ -49,7 +49,7 @@ class GameController extends Controller
                 return $query;
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         return Inertia::render('Student/Games/Index', [
             'games' => $games->map(function ($game) use ($user) {
@@ -73,6 +73,7 @@ class GameController extends Controller
                 'game_type' => $gameTypeFilter,
                 'status' => $statusFilter,
             ],
+            'pagination' => $games->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 

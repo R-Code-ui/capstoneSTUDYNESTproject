@@ -6,13 +6,18 @@ import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import Pagination from '@/Components/Pagination'; // ✅ ADDED
 import {
     BookOpenIcon,
     CalculatorIcon,
     RocketLaunchIcon,
 } from '@heroicons/react/24/outline';
 
-export default function GamesIndex({ games, filters }) {
+export default function GamesIndex({
+    games,
+    filters,
+    pagination, // ✅ ADDED
+}) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gameTypeFilter, setGameTypeFilter] = useState(filters?.game_type || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -212,6 +217,11 @@ export default function GamesIndex({ games, filters }) {
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* ✅ Pagination */}
+                        <div className="mt-6">
+                            <Pagination pagination={pagination} />
                         </div>
                     </Card>
                 </div>

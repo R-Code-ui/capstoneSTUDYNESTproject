@@ -42,12 +42,12 @@ class QuizController extends Controller
                 return $query->where('quiz_type', $type);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ FIXED: Changed ->get() to ->paginate(10)
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $statuses = ['draft', 'published', 'archived'];
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
 
         return Inertia::render('Teacher/Quizzes/Index', [
             'quizzes' => $quizzes->map(function ($quiz) {
@@ -76,6 +76,7 @@ class QuizController extends Controller
                 'grade_level' => $gradeFilter,
                 'quiz_type' => $typeFilter,
             ],
+            'pagination' => $quizzes->toArray(), // ✅ FIXED: Added pagination data
         ]);
     }
 
@@ -90,7 +91,7 @@ class QuizController extends Controller
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
@@ -158,7 +159,6 @@ class QuizController extends Controller
             ...$validated,
         ]);
 
-        // ✅ Log quiz creation
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -167,7 +167,6 @@ class QuizController extends Controller
             'related_module'      => 'Quiz Module',
         ]);
 
-        // Create questions
         foreach ($validated['questions'] as $index => $questionData) {
             QuizQuestion::create([
                 'quiz_id' => $quiz->id,
@@ -243,7 +242,7 @@ class QuizController extends Controller
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
@@ -345,7 +344,6 @@ class QuizController extends Controller
             ...$validated,
         ]);
 
-        // ✅ Log quiz update
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -354,10 +352,8 @@ class QuizController extends Controller
             'related_module'      => 'Quiz Module',
         ]);
 
-        // Delete existing questions
         $quiz->questions()->delete();
 
-        // Create new questions
         foreach ($validated['questions'] as $index => $questionData) {
             QuizQuestion::create([
                 'quiz_id' => $quiz->id,
@@ -384,7 +380,6 @@ class QuizController extends Controller
     {
         Gate::authorize('quiz.delete');
 
-        // ✅ Log quiz deletion
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -413,7 +408,6 @@ class QuizController extends Controller
             'publish_date' => now()->format('Y-m-d'),
         ]);
 
-        // ✅ Log publish
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',

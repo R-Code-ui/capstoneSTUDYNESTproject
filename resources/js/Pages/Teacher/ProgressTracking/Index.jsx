@@ -30,6 +30,7 @@ export default function ProgressIndex({
     subjects,
     trimesters,
     filters,
+    pagination, // ✅ ADDED
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
@@ -85,7 +86,7 @@ export default function ProgressIndex({
     ];
 
     const trimesterOptions = [
-        { value: '', label: 'All Trimesters' },
+        { value: '', label: 'All Terms' }, // ✅ CHANGED: "All Trimesters" → "All Terms"
         ...trimesters.map((t) => ({ value: t, label: t })),
     ];
 
@@ -247,7 +248,7 @@ export default function ProgressIndex({
                                         options={trimesterOptions}
                                         value={trimesterFilter}
                                         onChange={(val) => handleFilterChange('trimester', val)}
-                                        placeholder="Trimester"
+                                        placeholder="Term" // ✅ CHANGED: "Trimester" → "Term"
                                         size="md"
                                         className="w-40"
                                     />
@@ -266,6 +267,7 @@ export default function ProgressIndex({
                                     emptyMessage="No students found."
                                     hoverable
                                     striped
+                                    pagination={pagination} // ✅ ADDED
                                 />
                             </div>
                         </Card>

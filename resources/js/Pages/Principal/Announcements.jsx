@@ -12,7 +12,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import { formatDate } from '@/Utils/dateHelpers'; // ✅ Import date helper
+import { formatDate } from '@/Utils/dateHelpers';
 
 export default function PrincipalAnnouncements({
     announcements = [],
@@ -20,6 +20,7 @@ export default function PrincipalAnnouncements({
     statuses = [],
     audience_options = [],
     filters = {},
+    pagination, // ✅ ADDED
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters?.category || '');
@@ -74,7 +75,6 @@ export default function PrincipalAnnouncements({
         }
     };
 
-    // ✅ SAFE: Use fallback empty arrays if props are undefined
     const categoryOptions = [
         { value: '', label: 'All Categories' },
         ...(categories || []).map((cat) => ({ value: cat, label: cat })),
@@ -90,7 +90,7 @@ export default function PrincipalAnnouncements({
         label: aud.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     }));
 
-    // ===== SVG ICONS =====
+    // SVG ICONS
     const ViewIcon = () => (
         <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -225,6 +225,7 @@ export default function PrincipalAnnouncements({
                                 emptyMessage="No announcements found."
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ ADDED
                             />
                         </div>
                     </Card>
@@ -439,7 +440,6 @@ export default function PrincipalAnnouncements({
                                 <div>Posted: {selectedAnnouncement.created_at}</div>
                                 <div>Views: {selectedAnnouncement.view_count}</div>
                                 {selectedAnnouncement.expiration_date && (
-                                    // ✅ FIX: Format expiration date using the helper
                                     <div>Expires: {formatDate(selectedAnnouncement.expiration_date)}</div>
                                 )}
                             </div>

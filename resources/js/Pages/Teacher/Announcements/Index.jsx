@@ -18,7 +18,7 @@ import {
     PlusIcon,
     ExclamationTriangleIcon,
     UserIcon,
-    BuildingOfficeIcon, // ✅ ADDED
+    BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AnnouncementsIndex({
@@ -28,12 +28,13 @@ export default function AnnouncementsIndex({
     statuses,
     priorities,
     filters,
+    pagination, // ✅ ADDED
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters?.category || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
-    const [authorFilter, setAuthorFilter] = useState(filters?.author || ''); // ✅ ADDED
+    const [authorFilter, setAuthorFilter] = useState(filters?.author || '');
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSearch = (value) => {
@@ -45,7 +46,7 @@ export default function AnnouncementsIndex({
         if (type === 'category') setCategoryFilter(value);
         if (type === 'status') setStatusFilter(value);
         if (type === 'grade') setGradeFilter(value);
-        if (type === 'author') setAuthorFilter(value); // ✅ ADDED
+        if (type === 'author') setAuthorFilter(value);
 
         applyFilters({
             ...(type === 'category' ? { category: value } : {}),
@@ -105,7 +106,7 @@ export default function AnnouncementsIndex({
         { value: 'all_assigned_students', label: 'All Assigned Students' },
     ];
 
-    const authorOptions = [ // ✅ ADDED
+    const authorOptions = [
         { value: '', label: 'All Authors' },
         { value: 'me', label: 'My Announcements' },
         { value: 'principal', label: 'Principal' },
@@ -116,7 +117,7 @@ export default function AnnouncementsIndex({
         { key: 'category', label: 'Category' },
         { key: 'target_audience', label: 'Audience', render: (row) => row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) },
         {
-            key: 'posted_by', // ✅ ADDED
+            key: 'posted_by',
             label: 'Posted By',
             render: (row) => (
                 <div className="flex items-center gap-1.5">
@@ -237,7 +238,7 @@ export default function AnnouncementsIndex({
                                     size="md"
                                     className="w-36"
                                 />
-                                <FilterDropdown // ✅ ADDED
+                                <FilterDropdown
                                     options={authorOptions}
                                     value={authorFilter}
                                     onChange={(val) => handleFilterChange('author', val)}
@@ -260,6 +261,7 @@ export default function AnnouncementsIndex({
                                 emptyMessage="No announcements found. Create your first announcement!"
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ ADDED
                             />
                         </div>
                     </Card>

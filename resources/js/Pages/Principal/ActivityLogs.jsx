@@ -7,9 +7,16 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Modal from '@/Components/Modal';
-import { EyeIcon, XMarkIcon } from '@heroicons/react/24/outline'; // ✅ ADD THIS
+import { EyeIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
-export default function ActivityLogs({ logs, summary, activity_types, grade_levels, filters }) {
+export default function ActivityLogs({
+    logs,
+    summary,
+    activity_types,
+    grade_levels,
+    filters,
+    pagination, // ✅ ADDED
+}) {
     const [search, setSearch] = useState(filters?.search || '');
     const [activityTypeFilter, setActivityTypeFilter] = useState(filters?.activity_type || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
@@ -81,7 +88,7 @@ export default function ActivityLogs({ logs, summary, activity_types, grade_leve
     const actions = (row) => [
         {
             label: 'View Details',
-            icon: <EyeIcon className="w-4 h-4" />, // ✅ REPLACED EMOJI WITH HEROICON
+            icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => viewLogDetail(row)
         },
@@ -179,6 +186,7 @@ export default function ActivityLogs({ logs, summary, activity_types, grade_leve
                                 emptyMessage="No activity logs found."
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ ADDED
                             />
                         </Card>
                     </div>
@@ -228,7 +236,7 @@ export default function ActivityLogs({ logs, summary, activity_types, grade_leve
                                 onClick={() => { setShowLogDetail(false); setSelectedLog(null); }}
                                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                             >
-                                <XMarkIcon className="w-5 h-5" /> {/* ✅ REPLACED "Close" text with icon */}
+                                <XMarkIcon className="w-5 h-5" />
                             </button>
                         </div>
                     </div>

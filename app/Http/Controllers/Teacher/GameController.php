@@ -39,7 +39,7 @@ class GameController extends Controller
                 return $query->where('game_type', $type);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $statuses = ['draft', 'published', 'archived'];
@@ -71,6 +71,7 @@ class GameController extends Controller
                 'grade_level' => $gradeFilter,
                 'game_type' => $typeFilter,
             ],
+            'pagination' => $games->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 

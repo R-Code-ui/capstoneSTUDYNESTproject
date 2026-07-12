@@ -43,13 +43,13 @@ class AssignmentController extends Controller
                 return $query->where('assignment_type', $type);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ FIXED: Changed ->get() to ->paginate(10)
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
 
         $statuses = ['draft', 'published', 'archived'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
 
         return Inertia::render('Teacher/Assignments/Index', [
             'assignments' => $assignments->map(function ($assignment) {
@@ -79,6 +79,7 @@ class AssignmentController extends Controller
                 'grade_level' => $gradeFilter,
                 'assignment_type' => $typeFilter,
             ],
+            'pagination' => $assignments->toArray(), // ✅ FIXED: Added pagination data
         ]);
     }
 
@@ -94,7 +95,7 @@ class AssignmentController extends Controller
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $statuses = ['draft', 'published'];
         $weeks = array_map(function ($i) {
@@ -135,12 +136,11 @@ class AssignmentController extends Controller
     {
         Gate::authorize('create', Assignment::class);
 
-        // ✅ FIX: Use specific validation rules
         $validated = $request->validate([
             'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
             'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
-            'trimester' => 'required|string|in:1st Trimester,2nd Trimester,3rd Trimester',
+            'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'assignment_title' => 'required|string|max:255',
@@ -153,7 +153,6 @@ class AssignmentController extends Controller
             'due_time' => 'required',
             'submission_methods' => 'required|array',
             'submission_methods.*' => 'in:digital,photo,paper',
-            // ✅ FIX: Remove 'archived' from new assignment status
             'status' => 'required|in:draft,published',
             'publish_date' => 'required|date',
         ]);
@@ -165,7 +164,6 @@ class AssignmentController extends Controller
             ...$validated,
         ]);
 
-        // ✅ Log assignment creation AFTER success
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -174,7 +172,6 @@ class AssignmentController extends Controller
             'related_module'      => 'Assignment Module',
         ]);
 
-        // ✅ FIX: Validate max files and show error
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
@@ -261,7 +258,7 @@ class AssignmentController extends Controller
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
@@ -337,12 +334,11 @@ class AssignmentController extends Controller
     {
         Gate::authorize('update', $assignment);
 
-        // ✅ FIX: Add deleted_resource_ids validation as string
         $validated = $request->validate([
             'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
             'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
-            'trimester' => 'required|string|in:1st Trimester,2nd Trimester,3rd Trimester',
+            'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'assignment_title' => 'required|string|max:255',
@@ -357,16 +353,13 @@ class AssignmentController extends Controller
             'submission_methods.*' => 'in:digital,photo,paper',
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
-            // ✅ FIX: Add deleted_resource_ids as string
             'deleted_resource_ids' => 'nullable|string',
         ]);
 
-        // Handle submission_methods JSON
         $validated['submission_methods'] = json_encode($validated['submission_methods']);
 
         $assignment->update($validated);
 
-        // ✅ FIX: Handle deleted resources from comma-separated string
         if (!empty($validated['deleted_resource_ids'])) {
             $deletedIds = explode(',', $validated['deleted_resource_ids']);
             $deletedIds = array_filter($deletedIds);
@@ -385,7 +378,6 @@ class AssignmentController extends Controller
             }
         }
 
-        // ✅ Log assignment update AFTER successful deletion
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -394,7 +386,6 @@ class AssignmentController extends Controller
             'related_module'      => 'Assignment Module',
         ]);
 
-        // ✅ FIX: Validate max files and show error
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
@@ -436,7 +427,6 @@ class AssignmentController extends Controller
     {
         Gate::authorize('delete', $assignment);
 
-        // ✅ FIX: Delete resources first, then log after success
         foreach ($assignment->resources as $resource) {
             if (Storage::disk('public')->exists($resource->file_path)) {
                 Storage::disk('public')->delete($resource->file_path);
@@ -446,7 +436,6 @@ class AssignmentController extends Controller
 
         $assignment->delete();
 
-        // ✅ Log AFTER successful deletion
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -479,7 +468,6 @@ class AssignmentController extends Controller
             'related_module'      => 'Assignment Module',
         ]);
 
-        // ✅ FIX: Consistent redirect
         return redirect()->route('teacher.assignments.index')
             ->with('success', 'Assignment published successfully!');
     }
@@ -501,7 +489,6 @@ class AssignmentController extends Controller
             'related_module'      => 'Assignment Module',
         ]);
 
-        // ✅ FIX: Consistent redirect
         return redirect()->route('teacher.assignments.index')
             ->with('success', 'Assignment archived successfully!');
     }
@@ -513,7 +500,6 @@ class AssignmentController extends Controller
     {
         $resource = AssignmentResource::findOrFail($resourceId);
 
-        // ✅ FIX: Check if assignment exists before authorizing
         $assignment = $resource->assignment;
         if (!$assignment) {
             abort(404, 'Resource not associated with any assignment.');
@@ -532,8 +518,6 @@ class AssignmentController extends Controller
 
     /**
      * Determine resource type based on file.
-     *
-     * ✅ FIX: Added type hint and return type
      */
     private function determineResourceType(\Illuminate\Http\UploadedFile $file): string
     {

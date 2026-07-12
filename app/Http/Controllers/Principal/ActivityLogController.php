@@ -16,7 +16,6 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request)
     {
-        // ✅ Use the Spatie permission instead of a missing policy
         Gate::authorize('log.view');
 
         $activityType = $request->input('activity_type');
@@ -60,8 +59,7 @@ class ActivityLogController extends Controller
                     });
             })
             ->orderBy('created_at', 'desc')
-            ->limit(100)
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED (replaced limit(100))
 
         // Activity Summary
         $today = now()->startOfDay();
@@ -109,6 +107,7 @@ class ActivityLogController extends Controller
                 'date_to' => $dateTo,
                 'search' => $search,
             ],
+            'pagination' => $logs->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 }

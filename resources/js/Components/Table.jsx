@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
+import Pagination from './Pagination';
 
 export default function Table({
     headers = [],
@@ -18,6 +19,7 @@ export default function Table({
     bordered = false,
     compact = false,
     renderCell,
+    pagination = null, // ✅ NEW: Pagination data from controller
 }) {
     const [sortBy, setSortBy] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
@@ -239,6 +241,11 @@ export default function Table({
                     )}
                 </tbody>
             </table>
+
+            {/* ✅ NEW: Pagination Controls */}
+            {pagination && (
+                <Pagination pagination={pagination} />
+            )}
         </div>
     );
 }

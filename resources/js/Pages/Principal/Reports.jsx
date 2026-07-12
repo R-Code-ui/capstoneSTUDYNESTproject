@@ -17,6 +17,7 @@ export default function PrincipalReports({
     report_data = null,
     report_id = null,
     show_results = false,
+    pagination, // ✅ ADDED (for teachers list if needed)
 }) {
     const [selectedReport, setSelectedReport] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +28,6 @@ export default function PrincipalReports({
         grade_level: filters?.grade_level || '',
         teacher_id: filters?.teacher_id || '',
         trimester: filters?.trimester || '',
-        // date_from and date_to removed
     });
 
     const { flash } = usePage().props;
@@ -37,7 +37,7 @@ export default function PrincipalReports({
     const resultData = hasReportData ? (report_data.data || []) : [];
     const resultSummary = hasReportData ? (report_data.summary || null) : null;
 
-    // ===== SVG ICONS =====
+    // SVG ICONS
     const ReportIcons = {
         teacher_activity: () => (
             <svg className="w-10 h-10 mb-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,8 +79,8 @@ export default function PrincipalReports({
     ];
 
     const trimesterOptions = [
-        { value: '', label: 'All Trimesters' },
-        ...(trimesters || []).filter(t => t !== 'All Trimesters').map((t) => ({ value: t, label: t })),
+        { value: '', label: 'All Terms' }, // ✅ CHANGED: "All Trimesters" → "All Terms"
+        ...(trimesters || []).filter(t => t !== 'All Trimesters' && t !== 'All Terms').map((t) => ({ value: t, label: t })),
     ];
 
     const schoolYearOptions = (school_years || []).map((year) => ({ value: year, label: year }));
@@ -109,7 +109,6 @@ export default function PrincipalReports({
             grade_level: '',
             teacher_id: '',
             trimester: '',
-            // no date fields to reset
         });
         router.visit(route('principal.reports.index'), { preserveState: true });
     };
@@ -254,8 +253,8 @@ export default function PrincipalReports({
                                     options={trimesterOptions}
                                     value={formData.trimester}
                                     onChange={(val) => setFormData({ ...formData, trimester: val })}
-                                    placeholder="Trimester"
-                                    label="Trimester"
+                                    placeholder="Term" // ✅ CHANGED: "Trimester" → "Term"
+                                    label="Term" // ✅ CHANGED: "Trimester" → "Term"
                                     size="md"
                                 />
                             </div>

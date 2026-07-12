@@ -88,6 +88,7 @@ class RolePermissionSeeder extends Seeder
             'announcement.view',
             'message.view',
             'message.send',
+            'message.delete', // ✅ added so students can delete their own messages
         ]);
 
         $this->command->info('✅ Roles and permissions seeded successfully!');

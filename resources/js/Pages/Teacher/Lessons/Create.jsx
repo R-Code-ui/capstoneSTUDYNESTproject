@@ -30,7 +30,6 @@ export default function LessonsCreate({
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileErrors, setFileErrors] = useState([]);
-
     const { data, setData, errors, post } = useForm({
         grade_level: '',
         subject: '',
@@ -57,7 +56,6 @@ export default function LessonsCreate({
         setIsSubmitting(true);
 
         const formData = new FormData();
-
         Object.keys(data).forEach((key) => {
             if (key === 'resources') {
                 data.resources.forEach((file) => {
@@ -81,16 +79,16 @@ export default function LessonsCreate({
         const errors = [];
         const validFiles = [];
 
-        // ✅ Allowed MIME types (including Word)
         const allowedTypes = [
             'application/pdf',
             'image/jpeg',
             'image/png',
             'image/jpg',
-            'application/msword',                                                          // .doc
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',      // .docx
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ];
-        const maxSize = 2 * 1024 * 1024; // 2MB
+
+        const maxSize = 2 * 1024 * 1024;
         const maxFiles = 5;
 
         if (files.length + data.resources.length > maxFiles) {
@@ -105,12 +103,10 @@ export default function LessonsCreate({
                 errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, or DOCX files.`);
                 return;
             }
-
             if (file.size > maxSize) {
                 errors.push(`"${file.name}" exceeds the 2MB limit.`);
                 return;
             }
-
             validFiles.push(file);
         });
 
@@ -158,13 +154,12 @@ export default function LessonsCreate({
             header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Lesson</span>}
         >
             <Head title="Create Lesson" />
-
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                     <Card>
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
-
                         <form onSubmit={handleSubmit} className="space-y-6">
+
                             {/* ===== Section 1: Curriculum Information ===== */}
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Curriculum Information</h3>
@@ -217,7 +212,7 @@ export default function LessonsCreate({
                                         <InputError message={errors.school_year} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="trimester" value="Trimester" required />
+                                        <InputLabel htmlFor="trimester" value="Term" required /> {/* ✅ CHANGED: "Trimester" → "Term" */}
                                         <select
                                             id="trimester"
                                             value={data.trimester}
@@ -225,7 +220,7 @@ export default function LessonsCreate({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             required
                                         >
-                                            <option value="">Select Trimester</option>
+                                            <option value="">Select Term</option> {/* ✅ CHANGED: "Select Trimester" → "Select Term" */}
                                             {trimesters.map((trimester) => (
                                                 <option key={trimester} value={trimester}>{trimester}</option>
                                             ))}
@@ -496,6 +491,7 @@ export default function LessonsCreate({
                                     {isSubmitting ? 'Creating...' : 'Create Lesson'}
                                 </PrimaryButton>
                             </div>
+
                         </form>
                     </Card>
                 </div>

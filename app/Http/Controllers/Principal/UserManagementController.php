@@ -24,41 +24,43 @@ class UserManagementController extends Controller
         $search = $request->input('search');
         $roleFilter = $request->input('role');
         $gradeFilter = $request->input('grade_level');
-        $genderFilter = $request->input('gender'); // ✅ ADDED
+        $genderFilter = $request->input('gender');
 
-        $users = User::query()
+        // ===== TEACHERS QUERY WITH PAGINATION =====
+        $teachersQuery = User::role('teacher')
             ->when($search, function ($query, $search) {
                 return $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('lrn', 'like', "%{$search}%")
                     ->orWhere('teacher_id', 'like', "%{$search}%");
             })
-            ->when($roleFilter, function ($query, $role) {
-                return $query->role($role);
+            ->when($gradeFilter, function ($query, $grade) {
+                return $query->whereHas('gradeAssignments', function ($q) use ($grade) {
+                    $q->where('grade_level', $grade);
+                });
+            })
+            ->orderBy('created_at', 'desc');
+
+        $teachers = $teachersQuery->paginate(10);
+
+        // Load grade assignments for each teacher
+        $teachers->each(function ($teacher) {
+            $teacher->load('gradeAssignments');
+        });
+
+        // ===== STUDENTS QUERY WITH PAGINATION =====
+        $studentsQuery = User::role('student')
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('lrn', 'like', "%{$search}%");
             })
             ->when($gradeFilter, function ($query, $grade) {
                 return $query->where('grade_level', $grade);
             })
-            ->when($genderFilter, function ($query, $gender) { // ✅ ADDED
+            ->when($genderFilter, function ($query, $gender) {
                 return $query->where('gender', $gender);
             })
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->orderBy('created_at', 'desc');
 
-        // Load roles and grade assignments for each user
-        $users->each(function ($user) {
-            $user->load('roles');
-            if ($user->hasRole('teacher')) {
-                $user->load('gradeAssignments');
-            }
-        });
-
-        $teachers = $users->filter(function ($user) {
-            return $user->hasRole('teacher');
-        })->values();
-
-        $students = $users->filter(function ($user) {
-            return $user->hasRole('student');
-        })->values();
+        $students = $studentsQuery->paginate(10);
 
         $gradeLevels = ['Grade 4', 'Grade 5', 'Grade 6'];
 
@@ -79,7 +81,7 @@ class UserManagementController extends Controller
                     'name' => $student->name,
                     'lrn' => $student->lrn,
                     'grade_level' => $student->grade_level,
-                    'gender' => $student->gender, // ✅ ADDED
+                    'gender' => $student->gender,
                     'is_active' => $student->is_active,
                     'created_at' => $student->created_at->format('Y-m-d'),
                 ];
@@ -89,8 +91,11 @@ class UserManagementController extends Controller
                 'search' => $search,
                 'role' => $roleFilter,
                 'grade_level' => $gradeFilter,
-                'gender' => $genderFilter, // ✅ ADDED
+                'gender' => $genderFilter,
             ],
+            // ✅ CORRECT: Send separate pagination data for each tab
+            'teachers_pagination' => $teachers->toArray(),
+            'students_pagination' => $students->toArray(),
         ]);
     }
 
@@ -113,13 +118,12 @@ class UserManagementController extends Controller
             'name' => $validated['name'],
             'teacher_id' => $validated['teacher_id'],
             'email' => $validated['email'] ?? $validated['teacher_id'] . '@studynest.local',
-            'password' => Hash::make('Teacher123'), // Temporary password
+            'password' => Hash::make('Teacher123'),
             'is_active' => true,
         ]);
 
         $user->assignRole('teacher');
 
-        // Assign grade levels
         foreach ($validated['grade_levels'] as $grade) {
             TeacherGradeAssignment::create([
                 'teacher_id' => $user->id,
@@ -141,7 +145,7 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'lrn' => 'required|string|unique:users,lrn',
             'grade_level' => 'required|in:Grade 4,Grade 5,Grade 6',
-            'gender' => 'required|in:male,female', // ✅ ADDED
+            'gender' => 'required|in:male,female',
             'email' => 'nullable|email|unique:users,email',
         ]);
 
@@ -149,9 +153,9 @@ class UserManagementController extends Controller
             'name' => $validated['name'],
             'lrn' => $validated['lrn'],
             'grade_level' => $validated['grade_level'],
-            'gender' => $validated['gender'], // ✅ ADDED
+            'gender' => $validated['gender'],
             'email' => $validated['email'] ?? $validated['lrn'] . '@studynest.local',
-            'password' => Hash::make('Student123'), // Temporary password
+            'password' => Hash::make('Student123'),
             'is_active' => true,
         ]);
 
@@ -183,7 +187,6 @@ class UserManagementController extends Controller
             'is_active' => $validated['is_active'] ?? $user->is_active,
         ]);
 
-        // Update grade assignments
         TeacherGradeAssignment::where('teacher_id', $user->id)->delete();
         foreach ($validated['grade_levels'] as $grade) {
             TeacherGradeAssignment::create([
@@ -208,7 +211,7 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'lrn' => ['required', 'string', Rule::unique('users', 'lrn')->ignore($user->id)],
             'grade_level' => 'required|in:Grade 4,Grade 5,Grade 6',
-            'gender' => 'required|in:male,female', // ✅ ADDED
+            'gender' => 'required|in:male,female',
             'is_active' => 'boolean',
         ]);
 
@@ -216,7 +219,7 @@ class UserManagementController extends Controller
             'name' => $validated['name'],
             'lrn' => $validated['lrn'],
             'grade_level' => $validated['grade_level'],
-            'gender' => $validated['gender'], // ✅ ADDED
+            'gender' => $validated['gender'],
             'is_active' => $validated['is_active'] ?? $user->is_active,
         ]);
 

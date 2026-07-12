@@ -25,6 +25,7 @@ export default function QuizzesIndex({
     quiz_types,
     trimesters,
     filters,
+    pagination, // ✅ ADDED
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -198,6 +199,7 @@ export default function QuizzesIndex({
                                 emptyMessage="No quizzes found. Create your first quiz!"
                                 hoverable
                                 striped
+                                pagination={pagination} // ✅ ADDED
                             />
                         </div>
                     </Card>

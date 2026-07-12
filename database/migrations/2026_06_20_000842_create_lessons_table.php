@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('grade_level'); // Grade 4, Grade 5, Grade 6
             $table->string('subject'); // English, Filipino, Mathematics, etc.
             $table->string('school_year'); // SY 2026-2027
-            $table->string('trimester'); // 1st, 2nd, 3rd
+            $table->string('trimester'); // 1st Term, 2nd Term, 3rd Term
             $table->string('week_number'); // Week 1-12
             $table->text('learning_competency');
             $table->text('learning_objective');

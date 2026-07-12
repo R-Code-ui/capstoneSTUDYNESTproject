@@ -237,6 +237,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/messages', [StudentMessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/{message}', [StudentMessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{message}/reply', [StudentMessageController::class, 'reply'])->name('messages.reply');
+        Route::delete('/messages/{message}', [StudentMessageController::class, 'destroy'])->name('messages.destroy');
 
         // ===== Announcements =====
         Route::get('/announcements', [StudentAnnouncementController::class, 'index'])->name('announcements.index');

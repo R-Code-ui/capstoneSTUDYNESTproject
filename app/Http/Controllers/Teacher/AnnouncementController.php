@@ -63,7 +63,7 @@ class AnnouncementController extends Controller
                 return $query;
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $categories = ['General Announcement', 'Reminder', 'Quiz Schedule', 'Assignment Notice', 'Classroom Activity', 'Project Notice', 'Suspension Announcement'];
@@ -100,6 +100,7 @@ class AnnouncementController extends Controller
                 'grade_level' => $gradeFilter,
                 'author' => $authorFilter, // ✅ ADDED
             ],
+            'pagination' => $announcements->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 

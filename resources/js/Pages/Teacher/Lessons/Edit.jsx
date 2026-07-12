@@ -51,7 +51,6 @@ export default function LessonsEdit({
         status: lesson.status || 'draft',
         publish_date: lesson.publish_date || new Date().toISOString().split('T')[0],
         resources: [],
-        // ✅ NEW: Track deleted resource IDs as a comma-separated string
         deleted_resource_ids: '',
     });
 
@@ -59,11 +58,9 @@ export default function LessonsEdit({
         e.preventDefault();
         setIsSubmitting(true);
 
-        // ✅ Set deleted_resource_ids as a comma-separated string in the form data
         setData('deleted_resource_ids', deletedResourceIds.join(','));
 
         const formData = new FormData();
-
         Object.keys(data).forEach((key) => {
             if (key === 'resources') {
                 data.resources.forEach((file) => {
@@ -115,12 +112,10 @@ export default function LessonsEdit({
                 errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, or DOCX files.`);
                 return;
             }
-
             if (file.size > maxSize) {
                 errors.push(`"${file.name}" exceeds the 2MB limit.`);
                 return;
             }
-
             validFiles.push(file);
         });
 
@@ -164,7 +159,7 @@ export default function LessonsEdit({
         const ext = fileName.split('.').pop().toLowerCase();
         if (['pdf'].includes(ext)) return 'PDF Module';
         if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
-        if ('doc' === ext || 'docx' === ext) return 'Worksheet';
+        if (['doc', 'docx'].includes(ext)) return 'Worksheet';
         return 'Worksheet';
     };
 
@@ -180,12 +175,10 @@ export default function LessonsEdit({
             header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Lesson</span>}
         >
             <Head title="Edit Lesson" />
-
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                     <Card>
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
-
                         <form onSubmit={handleSubmit} className="space-y-6">
 
                             {/* ===== Section 1: Curriculum Information ===== */}
@@ -208,7 +201,6 @@ export default function LessonsEdit({
                                         </select>
                                         <InputError message={errors.grade_level} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="subject" value="Subject" required />
                                         <select
@@ -225,7 +217,6 @@ export default function LessonsEdit({
                                         </select>
                                         <InputError message={errors.subject} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="school_year" value="School Year" required />
                                         <select
@@ -241,9 +232,8 @@ export default function LessonsEdit({
                                         </select>
                                         <InputError message={errors.school_year} className="mt-2" />
                                     </div>
-
                                     <div>
-                                        <InputLabel htmlFor="trimester" value="Trimester" required />
+                                        <InputLabel htmlFor="trimester" value="Term" required /> {/* ✅ CHANGED: "Trimester" → "Term" */}
                                         <select
                                             id="trimester"
                                             value={data.trimester}
@@ -251,14 +241,13 @@ export default function LessonsEdit({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             required
                                         >
-                                            <option value="">Select Trimester</option>
+                                            <option value="">Select Term</option> {/* ✅ CHANGED: "Select Trimester" → "Select Term" */}
                                             {trimesters.map((trimester) => (
                                                 <option key={trimester} value={trimester}>{trimester}</option>
                                             ))}
                                         </select>
                                         <InputError message={errors.trimester} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="week_number" value="Week Number" required />
                                         <select
@@ -294,7 +283,6 @@ export default function LessonsEdit({
                                         />
                                         <InputError message={errors.learning_competency} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="learning_objective" value="Learning Objective" required />
                                         <textarea
@@ -307,7 +295,6 @@ export default function LessonsEdit({
                                         />
                                         <InputError message={errors.learning_objective} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="bow_code" value="BOW Code (Optional)" />
                                         <TextInput
@@ -337,7 +324,6 @@ export default function LessonsEdit({
                                         />
                                         <InputError message={errors.lesson_title} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="lesson_description" value="Lesson Description" required />
                                         <textarea
@@ -350,7 +336,6 @@ export default function LessonsEdit({
                                         />
                                         <InputError message={errors.lesson_description} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="lesson_content" value="Lesson Content" required />
                                         <textarea
@@ -363,7 +348,6 @@ export default function LessonsEdit({
                                         />
                                         <InputError message={errors.lesson_content} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="key_takeaways" value="Key Takeaways (Optional)" />
                                         <textarea
@@ -422,7 +406,6 @@ export default function LessonsEdit({
                                         className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
                                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                     />
-
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
                                             {fileErrors.map((error, index) => (
@@ -430,7 +413,6 @@ export default function LessonsEdit({
                                             ))}
                                         </div>
                                     )}
-
                                     {data.resources.length > 0 && (
                                         <div className="mt-2 space-y-1">
                                             {data.resources.map((file, index) => (
@@ -455,7 +437,6 @@ export default function LessonsEdit({
                                             </p>
                                         </div>
                                     )}
-
                                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                         Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX (Max 2MB per file, Max 5 files total)
                                     </p>
@@ -479,7 +460,6 @@ export default function LessonsEdit({
                                         </select>
                                         <InputError message={errors.related_assignment_id} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="related_quiz_id" value="Related Quiz (Optional)" />
                                         <select
@@ -492,7 +472,6 @@ export default function LessonsEdit({
                                         </select>
                                         <InputError message={errors.related_quiz_id} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="related_game_id" value="Related Game (Optional)" />
                                         <select
@@ -527,7 +506,6 @@ export default function LessonsEdit({
                                         </select>
                                         <InputError message={errors.status} className="mt-2" />
                                     </div>
-
                                     <div>
                                         <InputLabel htmlFor="publish_date" value="Publish Date" required />
                                         <TextInput

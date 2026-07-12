@@ -49,7 +49,7 @@ class QuizController extends Controller
                 return $query;
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ PAGINATION ADDED
 
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
 
@@ -79,6 +79,7 @@ class QuizController extends Controller
                 'subject' => $subjectFilter,
                 'status' => $statusFilter,
             ],
+            'pagination' => $quizzes->toArray(), // ✅ PAGINATION DATA
         ]);
     }
 
@@ -269,14 +270,14 @@ class QuizController extends Controller
                     $isCorrect = strtolower($userAnswer) === strtolower($question->correct_answer);
                 } elseif ($question->question_type === 'identification') {
                     $correct = strtolower(trim($question->correct_answer));
-                    $user = strtolower(trim($userAnswer));
-                    $isCorrect = $user === $correct;
+                    $userAnswer = strtolower(trim($userAnswer));
+                    $isCorrect = $userAnswer === $correct;
 
                     // Check alternative answers
                     if (!$isCorrect && $question->alternative_answers) {
                         $alternatives = json_decode($question->alternative_answers, true);
                         if (is_array($alternatives)) {
-                            $isCorrect = in_array($user, array_map('strtolower', array_map('trim', $alternatives)));
+                            $isCorrect = in_array($userAnswer, array_map('strtolower', array_map('trim', $alternatives)));
                         }
                     }
                 } else {
@@ -340,13 +341,13 @@ class QuizController extends Controller
                     $isCorrect = strtolower($userAnswer) === strtolower($question->correct_answer);
                 } elseif ($question->question_type === 'identification') {
                     $correct = strtolower(trim($question->correct_answer));
-                    $user = strtolower(trim($userAnswer));
-                    $isCorrect = $user === $correct;
+                    $userAnswer = strtolower(trim($userAnswer));
+                    $isCorrect = $userAnswer === $correct;
 
                     if (!$isCorrect && $question->alternative_answers) {
                         $alternatives = json_decode($question->alternative_answers, true);
                         if (is_array($alternatives)) {
-                            $isCorrect = in_array($user, array_map('strtolower', array_map('trim', $alternatives)));
+                            $isCorrect = in_array($userAnswer, array_map('strtolower', array_map('trim', $alternatives)));
                         }
                     }
                 } else {

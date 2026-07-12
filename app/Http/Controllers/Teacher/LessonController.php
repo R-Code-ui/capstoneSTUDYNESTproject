@@ -46,12 +46,12 @@ class LessonController extends Controller
                 return $query->where('trimester', $trimester);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ FIXED: Changed ->get() to ->paginate(10)
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $statuses = ['draft', 'published', 'archived'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
 
         return Inertia::render('Teacher/Lessons/Index', [
@@ -78,6 +78,7 @@ class LessonController extends Controller
                 'grade_level' => $gradeFilter,
                 'trimester' => $trimesterFilter,
             ],
+            'pagination' => $lessons->toArray(), // ✅ FIXED: Added pagination data
         ]);
     }
 
@@ -91,7 +92,7 @@ class LessonController extends Controller
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $statuses = ['draft', 'published'];
         $weeks = array_map(function ($i) {
@@ -140,12 +141,11 @@ class LessonController extends Controller
     {
         Gate::authorize('create', Lesson::class);
 
-        // ✅ FIX: Use specific validation rules (Issue 1)
         $validated = $request->validate([
             'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
             'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
-            'trimester' => 'required|string|in:1st Trimester,2nd Trimester,3rd Trimester',
+            'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'learning_competency' => 'required|string',
             'learning_objective' => 'required|string',
@@ -157,7 +157,6 @@ class LessonController extends Controller
             'related_assignment_id' => 'nullable|exists:assignments,id',
             'related_quiz_id' => 'nullable|exists:quizzes,id',
             'related_game_id' => 'nullable|exists:games,id',
-            // ✅ FIX: Remove 'archived' from new lesson status (Issue 2)
             'status' => 'required|in:draft,published',
             'publish_date' => 'required|date',
         ]);
@@ -167,7 +166,6 @@ class LessonController extends Controller
             ...$validated,
         ]);
 
-        // ✅ FIX: Log AFTER successful creation
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -176,7 +174,6 @@ class LessonController extends Controller
             'related_module'      => 'Lesson Module',
         ]);
 
-        // ✅ FIX: Validate max files and show error (Issue 3)
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
@@ -257,7 +254,7 @@ class LessonController extends Controller
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
-        $trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester'];
+        $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
@@ -312,12 +309,11 @@ class LessonController extends Controller
     {
         Gate::authorize('update', $lesson);
 
-        // ✅ FIX: Use specific validation rules (Issue 1)
         $validated = $request->validate([
             'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
             'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
-            'trimester' => 'required|string|in:1st Trimester,2nd Trimester,3rd Trimester',
+            'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'learning_competency' => 'required|string',
             'learning_objective' => 'required|string',
@@ -336,7 +332,6 @@ class LessonController extends Controller
 
         $lesson->update($validated);
 
-        // ✅ Handle deleted resources from comma-separated string
         if (!empty($validated['deleted_resource_ids'])) {
             $deletedIds = explode(',', $validated['deleted_resource_ids']);
             $deletedIds = array_filter($deletedIds);
@@ -355,7 +350,6 @@ class LessonController extends Controller
             }
         }
 
-        // ✅ Log AFTER successful deletion
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -364,7 +358,6 @@ class LessonController extends Controller
             'related_module'      => 'Lesson Module',
         ]);
 
-        // ✅ FIX: Validate max files and show error (Issue 3)
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
@@ -405,8 +398,6 @@ class LessonController extends Controller
     {
         Gate::authorize('delete', $lesson);
 
-        // ✅ FIX: Log AFTER successful deletion (Issue 6)
-        // First, perform the deletion
         foreach ($lesson->resources as $resource) {
             if (Storage::disk('public')->exists($resource->file_path)) {
                 Storage::disk('public')->delete($resource->file_path);
@@ -416,7 +407,6 @@ class LessonController extends Controller
 
         $lesson->delete();
 
-        // ✅ Log AFTER successful deletion
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -441,7 +431,6 @@ class LessonController extends Controller
             'publish_date' => now()->format('Y-m-d'),
         ]);
 
-        // Log publish
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -450,7 +439,6 @@ class LessonController extends Controller
             'related_module'      => 'Lesson Module',
         ]);
 
-        // ✅ FIX: Consistent redirect (Issue 7)
         return redirect()->route('teacher.lessons.index')
             ->with('success', 'Lesson published successfully!');
     }
@@ -464,7 +452,6 @@ class LessonController extends Controller
 
         $lesson->update(['status' => 'archived']);
 
-        // Log archive
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -473,7 +460,6 @@ class LessonController extends Controller
             'related_module'      => 'Lesson Module',
         ]);
 
-        // ✅ FIX: Consistent redirect (Issue 7)
         return redirect()->route('teacher.lessons.index')
             ->with('success', 'Lesson archived successfully!');
     }
@@ -485,7 +471,6 @@ class LessonController extends Controller
     {
         $resource = LessonResource::findOrFail($resourceId);
 
-        // ✅ FIX: Check if lesson exists before authorizing (Issue 8)
         $lesson = $resource->lesson;
         if (!$lesson) {
             abort(404, 'Resource not associated with any lesson.');
@@ -504,8 +489,6 @@ class LessonController extends Controller
 
     /**
      * Determine resource type based on file.
-     *
-     * ✅ FIX: Added type hint and return type (Issue 5)
      */
     private function determineResourceType(\Illuminate\Http\UploadedFile $file): string
     {

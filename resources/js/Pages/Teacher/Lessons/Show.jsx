@@ -73,9 +73,9 @@ export default function LessonsShow({ lesson }) {
             }
         >
             <Head title={lesson.lesson_title} />
-
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+
                     {/* ===== Basic Information ===== */}
                     <Card>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -100,7 +100,7 @@ export default function LessonsShow({ lesson }) {
                                 <div className="font-medium text-gray-900 dark:text-white">{lesson.school_year}</div>
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Trimester</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">Term</div> {/* ✅ CHANGED: "Trimester" → "Term" */}
                                 <div className="font-medium text-gray-900 dark:text-white">{lesson.trimester}</div>
                             </div>
                             <div>
@@ -236,6 +236,7 @@ export default function LessonsShow({ lesson }) {
                             </Card>
                         </div>
                     )}
+
                 </div>
             </div>
         </AuthenticatedLayout>

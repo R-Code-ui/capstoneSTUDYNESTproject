@@ -5,6 +5,7 @@ import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import Pagination from '@/Components/Pagination'; // ✅ ADDED
 
 // Heroicons
 import {
@@ -17,7 +18,12 @@ import {
     XCircleIcon,
 } from '@heroicons/react/24/outline';
 
-export default function QuizzesIndex({ quizzes, subjects, filters }) {
+export default function QuizzesIndex({
+    quizzes,
+    subjects,
+    filters,
+    pagination, // ✅ ADDED
+}) {
     const [search, setSearch] = useState(filters?.search || '');
     const [subjectFilter, setSubjectFilter] = useState(filters?.subject || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -235,6 +241,11 @@ export default function QuizzesIndex({ quizzes, subjects, filters }) {
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* ✅ Pagination */}
+                        <div className="mt-6">
+                            <Pagination pagination={pagination} />
                         </div>
                     </Card>
                 </div>
