@@ -36,7 +36,7 @@ export default function QuizzesEdit({
         total_questions: quiz.total_questions || 1,
         time_limit: quiz.time_limit || '',
         passing_score: quiz.passing_score || '',
-        attempts_allowed: quiz.attempts_allowed || 1,
+        // attempts_allowed removed – always 1 on server
         shuffle_questions: quiz.shuffle_questions || false,
         status: quiz.status || 'draft',
         publish_date: quiz.publish_date || new Date().toISOString().split('T')[0],
@@ -99,7 +99,7 @@ export default function QuizzesEdit({
             ...questions,
             {
                 question_text: '',
-                question_type: data.quiz_type || 'multiple_choice',
+                question_type: data.quiz_type,   // inherit current quiz type
                 choice_a: '',
                 choice_b: '',
                 choice_c: '',
@@ -425,18 +425,7 @@ export default function QuizzesEdit({
                                         />
                                         <InputError message={errors.passing_score} className="mt-2" />
                                     </div>
-                                    <div>
-                                        <InputLabel htmlFor="attempts_allowed" value="Attempts Allowed" />
-                                        <TextInput
-                                            id="attempts_allowed"
-                                            type="number"
-                                            value={data.attempts_allowed}
-                                            onChange={(e) => setData('attempts_allowed', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            min="1"
-                                        />
-                                        <InputError message={errors.attempts_allowed} className="mt-2" />
-                                    </div>
+                                    {/* Attempts Allowed removed – always 1 */}
                                     <div>
                                         <InputLabel htmlFor="shuffle_questions" value="Shuffle Questions" />
                                         <select
@@ -492,27 +481,7 @@ export default function QuizzesEdit({
                                             <InputError message={getQuestionError(index, 'question_text')} className="mt-1" />
                                         </div>
 
-                                        <div className="mt-3">
-                                            <InputLabel value="Question Type" />
-                                            <select
-                                                value={question.question_type}
-                                                onChange={(e) => {
-                                                    const newQuestions = [...questions];
-                                                    newQuestions[index].question_type = e.target.value;
-                                                    newQuestions[index].correct_answer = '';
-                                                    setQuestions(newQuestions);
-                                                }}
-                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                                            >
-                                                {quiz_types.map((type) => (
-                                                    <option key={type} value={type}>
-                                                        {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <InputError message={getQuestionError(index, 'question_type')} className="mt-1" />
-                                        </div>
-
+                                        {/* Per‑question type dropdown REMOVED – type fixed to quiz type */}
                                         {getQuestionTypeFields(question, index)}
                                     </div>
                                 ))}

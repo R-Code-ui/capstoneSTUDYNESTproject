@@ -49,7 +49,7 @@ class QuizController extends Controller
                 return $query;
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // ✅ PAGINATION ADDED
+            ->paginate(10);
 
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
 
@@ -71,6 +71,8 @@ class QuizController extends Controller
                     'status' => $attempt ? $attempt->status : 'not_started',
                     'score' => $attempt && $attempt->status === 'completed' ? $attempt->score : null,
                     'attempt_number' => $attempt ? $attempt->attempt_number : 0,
+                    // ✅ New: pass the latest completed attempt ID
+                    'latest_attempt_id' => ($attempt && $attempt->status === 'completed') ? $attempt->id : null,
                 ];
             }),
             'subjects' => $subjects,
@@ -79,7 +81,7 @@ class QuizController extends Controller
                 'subject' => $subjectFilter,
                 'status' => $statusFilter,
             ],
-            'pagination' => $quizzes->toArray(), // ✅ PAGINATION DATA
+            'pagination' => $quizzes->toArray(),
         ]);
     }
 
@@ -146,7 +148,6 @@ class QuizController extends Controller
             abort(403);
         }
 
-        // Check if user has reached max attempts
         $completedAttempts = QuizAttempt::where('quiz_id', $quiz->id)
             ->where('student_id', $user->id)
             ->where('status', 'completed')
@@ -156,7 +157,6 @@ class QuizController extends Controller
             return redirect()->back()->with('error', 'You have reached the maximum number of attempts.');
         }
 
-        // Check for existing started attempt
         $existingAttempt = QuizAttempt::where('quiz_id', $quiz->id)
             ->where('student_id', $user->id)
             ->where('status', 'started')
@@ -178,7 +178,6 @@ class QuizController extends Controller
             'status' => 'started',
         ]);
 
-        // ✅ Log quiz start
         ActivityLog::create([
             'user_id'             => $user->id,
             'user_role'           => 'student',
@@ -203,7 +202,6 @@ class QuizController extends Controller
 
         $quiz = $attempt->quiz;
         $questions = $quiz->questions()->orderBy('question_number')->get();
-
         $answers = json_decode($attempt->answers, true) ?? [];
 
         return Inertia::render('Student/Quizzes/Take', [
@@ -273,7 +271,6 @@ class QuizController extends Controller
                     $userAnswer = strtolower(trim($userAnswer));
                     $isCorrect = $userAnswer === $correct;
 
-                    // Check alternative answers
                     if (!$isCorrect && $question->alternative_answers) {
                         $alternatives = json_decode($question->alternative_answers, true);
                         if (is_array($alternatives)) {
@@ -298,7 +295,6 @@ class QuizController extends Controller
             'status' => 'completed',
         ]);
 
-        // ✅ Log quiz completion
         ActivityLog::create([
             'user_id'             => $user->id,
             'user_role'           => 'student',

@@ -1,19 +1,30 @@
 import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import gameDefinitions from '@/GameEngines/gameDefinitions';
 import {
     BookOpenIcon,
     CalculatorIcon,
     UserIcon,
     CalendarIcon,
+    ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
-export default function GamesShow({ game, can_play, attempts_remaining, current_result }) {
+export default function GamesShow({
+    game,
+    can_play,
+    attempts_remaining,
+    current_result,
+    latest_completed_attempt_id,
+}) {
     const [isLoading, setIsLoading] = useState(false);
+
+    const definition = gameDefinitions[game.title];
+    const friendlyDescription = definition?.description || game.instructions;
 
     const getTypeIcon = (type) => {
         return type === 'literacy' ? (
@@ -30,11 +41,11 @@ export default function GamesShow({ game, can_play, attempts_remaining, current_
     const handleStart = () => {
         setIsLoading(true);
         if (current_result) {
-            // Go directly to the in‑progress game
             router.visit(route('student.games.play.show', current_result.id));
         } else {
-            // Start a new attempt – simple GET navigation (no POST needed)
-            router.visit(route('student.games.play', game.id));
+            router.post(route('student.games.play', game.id), {}, {
+                onFinish: () => setIsLoading(false),
+            });
         }
     };
 
@@ -45,9 +56,19 @@ export default function GamesShow({ game, can_play, attempts_remaining, current_
                     <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {game.title}
                     </h2>
-                    <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
-                        Back to Games
-                    </SecondaryButton>
+                    <div className="flex gap-2">
+                        {latest_completed_attempt_id && (
+                            <Link href={route('student.games.results', latest_completed_attempt_id)}>
+                                <PrimaryButton>
+                                    <ChartBarIcon className="w-4 h-4 mr-1" />
+                                    View Results
+                                </PrimaryButton>
+                            </Link>
+                        )}
+                        <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
+                            Back to Games
+                        </SecondaryButton>
+                    </div>
                 </div>
             }
         >
@@ -57,7 +78,6 @@ export default function GamesShow({ game, can_play, attempts_remaining, current_
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
                     {isLoading && <LoadingSpinner overlay size="lg" />}
 
-                    {/* ===== Game Information ===== */}
                     <Card>
                         <div className="space-y-6">
                             <div className="flex flex-wrap items-center gap-3">
@@ -97,11 +117,19 @@ export default function GamesShow({ game, can_play, attempts_remaining, current_
                             </div>
 
                             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Instructions</h4>
+                                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">How to Play</h4>
                                 <p className="text-gray-600 dark:text-gray-300">
-                                    {game.instructions}
+                                    {friendlyDescription}
                                 </p>
                             </div>
+
+                            {definition?.comingSoon && (
+                                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                    <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                                        This game is still being finished. Check back soon!
+                                    </p>
+                                </div>
+                            )}
 
                             {!can_play && (
                                 <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">

@@ -12,6 +12,29 @@ use App\Models\ActivityLog;
 class GameController extends Controller
 {
     /**
+     * Fixed catalog of interactive games per grade/type.
+     * IMPORTANT: these exact strings must match the keys in
+     * resources/js/GameEngines/gameDefinitions.js character-for-character.
+     */
+    private function gamesByGrade(): array
+    {
+        return [
+            'Grade 4' => [
+                'literacy' => ['Word Builder', 'Sentence Scramble'],
+                'numeracy' => ['Balloon Pop Math', 'Sorting Baskets'],
+            ],
+            'Grade 5' => [
+                'literacy' => ['Match the Meaning', 'Story Fill-In'],
+                'numeracy' => ['Fraction Pizza', 'Number Line Runner'],
+            ],
+            'Grade 6' => [
+                'literacy' => ['Clue Detective', 'Word Web Builder'],
+                'numeracy' => ['Balance Scale', 'Graph Builder'],
+            ],
+        ];
+    }
+
+    /**
      * Display a listing of games.
      */
     public function index(Request $request)
@@ -39,7 +62,7 @@ class GameController extends Controller
                 return $query->where('game_type', $type);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // ✅ PAGINATION ADDED
+            ->paginate(10);
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $statuses = ['draft', 'published', 'archived'];
@@ -71,7 +94,7 @@ class GameController extends Controller
                 'grade_level' => $gradeFilter,
                 'game_type' => $typeFilter,
             ],
-            'pagination' => $games->toArray(), // ✅ PAGINATION DATA
+            'pagination' => $games->toArray(),
         ]);
     }
 
@@ -88,26 +111,11 @@ class GameController extends Controller
         $statuses = ['draft', 'published'];
         $gameTypes = ['literacy', 'numeracy'];
 
-        $gamesByGrade = [
-            'Grade 4' => [
-                'literacy' => ['Word Identification', 'Vocabulary Matching', 'Reading Practice'],
-                'numeracy' => ['Basic Arithmetic', 'Number Matching', 'Addition and Subtraction Challenge'],
-            ],
-            'Grade 5' => [
-                'literacy' => ['Reading Comprehension', 'Vocabulary Matching', 'Sentence Completion'],
-                'numeracy' => ['Timed Math Challenge', 'Fraction Practice', 'Multiplication Challenge'],
-            ],
-            'Grade 6' => [
-                'literacy' => ['Reading Comprehension', 'Advanced Vocabulary', 'Context Clue Challenge'],
-                'numeracy' => ['Problem Solving Activity', 'Fraction and Decimal Challenge', 'Mathematical Reasoning Activity'],
-            ],
-        ];
-
         return Inertia::render('Teacher/Games/Create', [
             'assigned_grades' => $assignedGrades,
             'statuses' => $statuses,
             'game_types' => $gameTypes,
-            'games_by_grade' => $gamesByGrade,
+            'games_by_grade' => $this->gamesByGrade(),
         ]);
     }
 
@@ -128,7 +136,6 @@ class GameController extends Controller
             'status' => 'required|in:draft,published',
         ]);
 
-        // Convert game_data to JSON string before saving
         $validated['game_data'] = json_encode($validated['game_data']);
 
         $game = Game::create([
@@ -138,7 +145,6 @@ class GameController extends Controller
             ...$validated,
         ]);
 
-        // ✅ Log game creation
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -158,7 +164,6 @@ class GameController extends Controller
     {
         Gate::authorize('view', $game);
 
-        // game_data is already cast to array by the model
         $gameData = $game->game_data;
         if (is_string($gameData)) {
             $gameData = json_decode($gameData, true);
@@ -203,22 +208,6 @@ class GameController extends Controller
         $statuses = ['draft', 'published'];
         $gameTypes = ['literacy', 'numeracy'];
 
-        $gamesByGrade = [
-            'Grade 4' => [
-                'literacy' => ['Word Identification', 'Vocabulary Matching', 'Reading Practice'],
-                'numeracy' => ['Basic Arithmetic', 'Number Matching', 'Addition and Subtraction Challenge'],
-            ],
-            'Grade 5' => [
-                'literacy' => ['Reading Comprehension', 'Vocabulary Matching', 'Sentence Completion'],
-                'numeracy' => ['Timed Math Challenge', 'Fraction Practice', 'Multiplication Challenge'],
-            ],
-            'Grade 6' => [
-                'literacy' => ['Reading Comprehension', 'Advanced Vocabulary', 'Context Clue Challenge'],
-                'numeracy' => ['Problem Solving Activity', 'Fraction and Decimal Challenge', 'Mathematical Reasoning Activity'],
-            ],
-        ];
-
-        // game_data is already cast to array by the model
         $gameData = $game->game_data;
         if (is_string($gameData)) {
             $gameData = json_decode($gameData, true);
@@ -238,7 +227,7 @@ class GameController extends Controller
             'assigned_grades' => $assignedGrades,
             'statuses' => $statuses,
             'game_types' => $gameTypes,
-            'games_by_grade' => $gamesByGrade,
+            'games_by_grade' => $this->gamesByGrade(),
         ]);
     }
 
@@ -259,7 +248,6 @@ class GameController extends Controller
             'status' => 'required|in:draft,published',
         ]);
 
-        // Convert game_data to JSON string before saving
         $validated['game_data'] = json_encode($validated['game_data']);
 
         $game->update([
@@ -267,7 +255,6 @@ class GameController extends Controller
             ...$validated,
         ]);
 
-        // ✅ Log game update
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -287,7 +274,6 @@ class GameController extends Controller
     {
         Gate::authorize('delete', $game);
 
-        // ✅ Log game deletion
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -315,7 +301,6 @@ class GameController extends Controller
             'publish_date' => now()->format('Y-m-d'),
         ]);
 
-        // ✅ Log game publish
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',

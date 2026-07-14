@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import Pagination from '@/Components/Pagination'; // ✅ ADDED
+import Pagination from '@/Components/Pagination';
 import {
     BookOpenIcon,
     CalculatorIcon,
@@ -16,7 +15,7 @@ import {
 export default function GamesIndex({
     games,
     filters,
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gameTypeFilter, setGameTypeFilter] = useState(filters?.game_type || '');
@@ -202,15 +201,46 @@ export default function GamesIndex({
                                                     </div>
                                                 )}
 
-                                                <div className="mt-4">
-                                                    <Link
-                                                        href={route('student.games.show', game.id)}
-                                                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full justify-center"
-                                                    >
-                                                        {game.status === 'completed' ? 'View Results' :
-                                                         game.status === 'started' ? 'Continue' :
-                                                         'Play Game'}
-                                                    </Link>
+                                                <div className="mt-4 space-y-2">
+                                                    {/* Completed: show View Results + optionally Play Again */}
+                                                    {game.status === 'completed' && (
+                                                        <>
+                                                            <Link
+                                                                href={route('student.games.results', game.latest_completed_attempt_id)}
+                                                                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full"
+                                                            >
+                                                                View Results
+                                                            </Link>
+                                                            {game.attempts_remaining > 0 && (
+                                                                <Link
+                                                                    href={route('student.games.show', game.id)}
+                                                                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors w-full"
+                                                                >
+                                                                    Play Again
+                                                                </Link>
+                                                            )}
+                                                        </>
+                                                    )}
+
+                                                    {/* In Progress: continue */}
+                                                    {game.status === 'started' && (
+                                                        <Link
+                                                            href={route('student.games.show', game.id)}
+                                                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full"
+                                                        >
+                                                            Continue
+                                                        </Link>
+                                                    )}
+
+                                                    {/* Not Started: play */}
+                                                    {game.status === 'assigned' && (
+                                                        <Link
+                                                            href={route('student.games.show', game.id)}
+                                                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full"
+                                                        >
+                                                            Play Game
+                                                        </Link>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -219,7 +249,7 @@ export default function GamesIndex({
                             )}
                         </div>
 
-                        {/* ✅ Pagination */}
+                        {/* Pagination */}
                         <div className="mt-6">
                             <Pagination pagination={pagination} />
                         </div>
