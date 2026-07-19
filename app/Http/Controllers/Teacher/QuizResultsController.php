@@ -43,7 +43,8 @@ class QuizResultsController extends Controller
                 'score' => $attempt ? $attempt->score : null,
                 'total_questions' => $attempt ? $attempt->total_questions : null,
                 'status' => $attempt ? $attempt->status : 'not_started',
-                'completed_at' => $attempt ? $attempt->completed_at : null,
+                // ✅ FIX: Format completed_at date for display
+                'completed_at' => $attempt && $attempt->completed_at ? $attempt->completed_at->format('Y-m-d H:i') : null,
             ];
         });
 

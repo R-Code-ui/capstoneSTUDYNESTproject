@@ -33,7 +33,7 @@ export default function Login({ status, canResetPassword }) {
 
             <form onSubmit={submit} className="space-y-5">
                 <div>
-                    <InputLabel htmlFor="username" value="Username / LRN / Teacher ID / Principal ID" />
+                    <InputLabel htmlFor="username" value="Username / Student ID / Teacher ID / Principal ID" />
 
                     <TextInput
                         id="username"
@@ -44,7 +44,7 @@ export default function Login({ status, canResetPassword }) {
                         autoComplete="username"
                         isFocused={true}
                         onChange={(e) => setData('username', e.target.value)}
-                        placeholder="Enter your LRN, Teacher ID, or Principal ID"
+                        placeholder="Enter your Student ID, Teacher ID, or Principal ID"
                     />
 
                     <InputError message={errors.username} className="mt-2" />
@@ -101,7 +101,7 @@ export default function Login({ status, canResetPassword }) {
                 <div className="mt-8 pt-6 border-t border-neutral-100 grid grid-cols-3 gap-2 text-center text-[11px] font-bold tracking-wide text-[#434343]/80 uppercase">
                     <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
                         <span className="block text-[#1C56A6]">Students</span>
-                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Use LRN</span>
+                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Use Student ID</span>
                     </div>
                     <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
                         <span className="block text-[#1C56A6]">Teachers</span>

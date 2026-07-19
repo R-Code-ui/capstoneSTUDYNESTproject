@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { DndContext, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import GameShell from './GameShell';
 
@@ -10,8 +10,9 @@ function DraggableWord({ id, word, used }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: used });
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-        opacity: isDragging ? 0.4 : used ? 0.25 : 1,
+        zIndex: isDragging ? 50 : 1,
     };
+
     return (
         <button
             type="button"
@@ -20,7 +21,12 @@ function DraggableWord({ id, word, used }) {
             {...listeners}
             {...attributes}
             disabled={used}
-            className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium shadow cursor-grab active:cursor-grabbing touch-none select-none"
+            className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-[0_4px_0_rgb(67,56,202)] touch-none select-none
+                ${used
+                    ? 'opacity-20 cursor-default'
+                    : 'bg-indigo-500 hover:bg-indigo-600 cursor-grab active:cursor-grabbing'
+                }
+            `}
         >
             {word}
         </button>
@@ -32,14 +38,15 @@ function BlankSlot({ id, filled, wrong }) {
     return (
         <span
             ref={setNodeRef}
-            className={`inline-flex min-w-[80px] px-3 py-1 mx-1 rounded-md border-2 justify-center font-semibold align-middle
+            className={`inline-flex min-w-[100px] px-3 py-1 mx-1.5 rounded-lg border-2 border-dashed font-bold align-middle justify-center
                 ${filled
-                    ? 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                    ? 'bg-green-100 border-green-400 text-green-700 shadow-inner'
                     : wrong
-                        ? 'bg-red-100 border-red-400 dark:bg-red-900/30'
+                        ? 'bg-red-100 border-red-400'
                         : isOver
-                            ? 'border-blue-500 border-dashed bg-blue-50 dark:bg-blue-900/30'
-                            : 'border-gray-300 dark:border-gray-600 border-dashed'}
+                            ? 'border-indigo-400 bg-indigo-50'
+                            : 'border-indigo-200 bg-white'
+                }
             `}
         >
             {filled || '\u00A0'}
@@ -47,18 +54,24 @@ function BlankSlot({ id, filled, wrong }) {
     );
 }
 
-export default function StoryFillIn({ content, onComplete, onExit }) {
+export default function StoryFillIn({ content, onComplete, onExit, onProgress, initialState }) {
     const { paragraph, blanks, wordBank } = content;
-    const [filledBlanks, setFilledBlanks] = useState(() => Array(blanks.length).fill(null));
-    const [usedWords, setUsedWords] = useState([]);
+    const [filledBlanks, setFilledBlanks] = useState(() => initialState?.filledBlanks ?? Array(blanks.length).fill(null));
+    const [usedWords, setUsedWords] = useState(() => initialState?.usedWords ?? []);
     const [wrongBlank, setWrongBlank] = useState(null);
-    const [wrongAttempts, setWrongAttempts] = useState(0);
+    const [wrongAttempts, setWrongAttempts] = useState(() => initialState?.wrongAttempts ?? 0);
     const [bankOrder] = useState(() => shuffle(wordBank));
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
     );
+
+    const updateProgress = useCallback((state) => {
+        if (onProgress) {
+            onProgress(state);
+        }
+    }, [onProgress]);
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -71,16 +84,20 @@ export default function StoryFillIn({ content, onComplete, onExit }) {
         if (blanks[blankIdx] === word) {
             const newFilled = [...filledBlanks];
             newFilled[blankIdx] = word;
+            const newUsed = [...usedWords, word];
             setFilledBlanks(newFilled);
-            setUsedWords([...usedWords, word]);
+            setUsedWords(newUsed);
+            updateProgress({ filledBlanks: newFilled, usedWords: newUsed, wrongAttempts });
 
             if (newFilled.every((b) => b !== null)) {
                 const finalScore = Math.max(0, 100 - wrongAttempts * 10);
                 setTimeout(() => onComplete(finalScore), 500);
             }
         } else {
-            setWrongAttempts((w) => w + 1);
+            const newWrongAttempts = wrongAttempts + 1;
+            setWrongAttempts(newWrongAttempts);
             setWrongBlank(blankIdx);
+            updateProgress({ filledBlanks, usedWords, wrongAttempts: newWrongAttempts });
             setTimeout(() => setWrongBlank(null), 500);
         }
     };
@@ -89,35 +106,39 @@ export default function StoryFillIn({ content, onComplete, onExit }) {
 
     return (
         <GameShell title="Story Fill-In" description={content.description} onExit={onExit}>
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                <p className="text-lg leading-loose text-gray-800 dark:text-gray-200">
-                    {parts.map((part, i) => {
-                        if (i % 2 === 1) {
-                            const blankIdx = parseInt(part, 10);
-                            return (
-                                <BlankSlot
-                                    key={i}
-                                    id={`blank-${blankIdx}`}
-                                    filled={filledBlanks[blankIdx]}
-                                    wrong={wrongBlank === blankIdx}
+            <div className="max-w-3xl mx-auto flex flex-col gap-10">
+                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                    <div className="bg-white p-8 rounded-3xl border border-indigo-100 shadow-xl leading-loose text-gray-700 text-lg">
+                        {parts.map((part, i) => {
+                            if (i % 2 === 1) {
+                                const blankIdx = parseInt(part, 10);
+                                return (
+                                    <BlankSlot
+                                        key={i}
+                                        id={`blank-${blankIdx}`}
+                                        filled={filledBlanks[blankIdx]}
+                                        wrong={wrongBlank === blankIdx}
+                                    />
+                                );
+                            }
+                            return <span key={i}>{part}</span>;
+                        })}
+                    </div>
+                    <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 shadow-inner">
+                        <p className="text-center text-indigo-400 font-bold mb-4 uppercase tracking-wider text-sm">Word Bank</p>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                            {bankOrder.map((word) => (
+                                <DraggableWord
+                                    key={word}
+                                    id={`word-${word}`}
+                                    word={word}
+                                    used={usedWords.includes(word)}
                                 />
-                            );
-                        }
-                        return <span key={i}>{part}</span>;
-                    })}
-                </p>
-
-                <div className="flex flex-wrap gap-2 justify-center mt-8">
-                    {bankOrder.map((word) => (
-                        <DraggableWord
-                            key={word}
-                            id={`word-${word}`}
-                            word={word}
-                            used={usedWords.includes(word)}
-                        />
-                    ))}
-                </div>
-            </DndContext>
+                            ))}
+                        </div>
+                    </div>
+                </DndContext>
+            </div>
         </GameShell>
     );
 }

@@ -75,8 +75,9 @@ export default function ReportsIndex({
         ...subjects.map((subject) => ({ value: subject, label: subject })),
     ];
 
+    // ✅ CHANGED: 'All Trimesters' → 'All Terms', 'Trimester' → 'Term'
     const trimesterOptions = [
-        { value: '', label: 'All Trimesters' },
+        { value: '', label: 'All Terms' },
         ...trimesters.map((t) => ({ value: t, label: t })),
     ];
 
@@ -172,12 +173,13 @@ export default function ReportsIndex({
                                     label="Subject"
                                     size="md"
                                 />
+                                {/* ✅ CHANGED: 'Trimester' → 'Term' */}
                                 <FilterDropdown
                                     options={trimesterOptions}
                                     value={formData.trimester}
                                     onChange={(val) => setFormData({ ...formData, trimester: val })}
-                                    placeholder="Trimester"
-                                    label="Trimester"
+                                    placeholder="Term"
+                                    label="Term"
                                     size="md"
                                 />
                             </div>

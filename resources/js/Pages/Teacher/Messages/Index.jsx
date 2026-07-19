@@ -52,10 +52,11 @@ export default function MessagesIndex({ conversations, unread_count, filters }) 
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                     <Card>
                         <div className="mb-4">
+                            {/* ✅ CHANGED: 'LRN' → 'Student ID' */}
                             <SearchBar
                                 value={search}
                                 onChange={handleSearch}
-                                placeholder="Search by student name or LRN..."
+                                placeholder="Search by student name or Student ID..."
                                 size="md"
                             />
                         </div>

@@ -29,7 +29,8 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
 
     const columns = [
         { key: 'student_name', label: 'Student' },
-        { key: 'lrn', label: 'LRN' },
+        // ✅ CHANGED: 'LRN' → 'Student ID'
+        { key: 'lrn', label: 'Student ID' },
         { key: 'score', label: 'Score', render: (row) => row.score !== null ? `${row.score}/${row.total_questions}` : '---' },
         { key: 'attempt_number', label: 'Attempt' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={getStatusBadge(row.status)} /> },
@@ -70,9 +71,9 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                             <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
                             Export CSV
                         </PrimaryButton>
-                        <SecondaryButton onClick={() => router.visit(route('teacher.quizzes.show', quiz.id))}>
+                        <SecondaryButton onClick={() => router.visit(route('teacher.quizzes.index'))}>
                             <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                            Back to Quiz
+                            Back to Quizzes
                         </SecondaryButton>
                     </div>
                 </div>

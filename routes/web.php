@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/reset-password/{id}', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
         Route::delete('/users/archive/{id}', [UserManagementController::class, 'archive'])->name('users.archive');
         Route::post('/users/restore/{id}', [UserManagementController::class, 'restore'])->name('users.restore');
+        Route::delete('/users/{id}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 
         Route::get('/teachers', [TeacherMonitoringController::class, 'index'])->name('teachers.index');
         Route::get('/teachers/{id}', [TeacherMonitoringController::class, 'show'])->name('teachers.show');
@@ -103,7 +104,6 @@ Route::middleware('auth')->group(function () {
     // ===========================================================
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
 
-        // Dashboard
         Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
 
         // ===== Lessons =====
@@ -227,6 +227,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/games/play/{result}', [StudentGameController::class, 'showPlay'])->name('games.play.show');
         Route::post('/games/submit/{result}', [StudentGameController::class, 'submitResult'])->name('games.submit-result');
         Route::get('/games/results/{result}', [StudentGameController::class, 'results'])->name('games.results');
+        // ✅ NEW route for saving progress
+        Route::post('/games/save-progress/{result}', [StudentGameController::class, 'saveProgress'])
+            ->name('games.save-progress');
 
         // ===== Progress Tracker =====
         Route::get('/progress', [ProgressTrackerController::class, 'index'])->name('progress.index');

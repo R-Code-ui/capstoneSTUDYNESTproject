@@ -53,8 +53,10 @@ class AssignmentGradingController extends Controller
                 'submission_method' => $submission ? $submission->submission_method : null,
                 'file_name' => $submission ? $submission->file_name : null,
                 'file_path' => $submission ? $submission->file_path : null,
-                'submitted_at' => $submission ? $submission->submitted_at : null,
-                'graded_at' => $submission ? $submission->graded_at : null,
+                // ✅ FIX: Format submitted_at date for display
+                'submitted_at' => $submission && $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : null,
+                // ✅ FIX: Format graded_at date for display
+                'graded_at' => $submission && $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i') : null,
             ];
         });
 

@@ -27,7 +27,8 @@ export default function GameResults({ game, results, statistics }) {
 
     const columns = [
         { key: 'student_name', label: 'Student' },
-        { key: 'lrn', label: 'LRN' },
+        // ✅ CHANGED: 'LRN' → 'Student ID'
+        { key: 'lrn', label: 'Student ID' },
         { key: 'score', label: 'Score', render: (row) => row.score !== null ? row.score : '---' },
         { key: 'attempt_number', label: 'Attempt' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={getStatusBadge(row.status)} /> },
@@ -46,9 +47,9 @@ export default function GameResults({ game, results, statistics }) {
                             <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
                             Export CSV
                         </PrimaryButton>
-                        <SecondaryButton onClick={() => router.visit(route('teacher.games.show', game.id))}>
+                        <SecondaryButton onClick={() => router.visit(route('teacher.games.index'))}>
                             <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                            Back to Game
+                            Back to Games
                         </SecondaryButton>
                     </div>
                 </div>

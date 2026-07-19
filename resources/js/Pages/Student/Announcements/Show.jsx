@@ -55,15 +55,9 @@ export default function AnnouncementsShow({ announcement }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        {announcement.title}
-                    </h2>
-                    <SecondaryButton onClick={() => router.visit(route('student.announcements.index'))}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                        Back to Announcements
-                    </SecondaryButton>
-                </div>
+                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    {announcement.title}
+                </h2>
             }
         >
             <Head title={announcement.title} />

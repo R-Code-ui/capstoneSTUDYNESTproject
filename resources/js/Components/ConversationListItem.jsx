@@ -54,9 +54,10 @@ export default function ConversationListItem({ conversation, onClick }) {
                     </span>
                 </div>
 
+                {/* ✅ CHANGED: 'LRN' → 'Student ID' */}
                 {conversation.grade_level && (
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        {conversation.grade_level}{conversation.lrn ? ` • LRN: ${conversation.lrn}` : ''}
+                        {conversation.grade_level}{conversation.lrn ? ` • Student ID: ${conversation.lrn}` : ''}
                     </div>
                 )}
             </div>

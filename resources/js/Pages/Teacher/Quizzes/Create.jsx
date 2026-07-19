@@ -24,7 +24,7 @@ export default function QuizzesCreate({
     const [questions, setQuestions] = useState([
         {
             question_text: '',
-            question_type: 'multiple_choice',   // will be overwritten by quiz type
+            question_type: 'multiple_choice',
             choice_a: '',
             choice_b: '',
             choice_c: '',
@@ -46,14 +46,12 @@ export default function QuizzesCreate({
         total_questions: 1,
         time_limit: '',
         passing_score: '',
-        // attempts_allowed removed – always 1 on server
         shuffle_questions: false,
         status: 'draft',
         publish_date: new Date().toISOString().split('T')[0],
         questions: questions,
     });
 
-    // Keep form data in sync with questions state
     useEffect(() => {
         setData('questions', questions);
         setData('total_questions', questions.length);
@@ -80,7 +78,6 @@ export default function QuizzesCreate({
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Client-side validation
         const hasEmptyQuestion = questions.some(q => !q.question_text.trim());
         if (hasEmptyQuestion) {
             alert('Please fill in all question text fields.');
@@ -95,7 +92,6 @@ export default function QuizzesCreate({
             return;
         }
 
-        // Make sure questions are up to date in form data
         setData('questions', questions);
         setData('total_questions', questions.length);
 
@@ -108,9 +104,7 @@ export default function QuizzesCreate({
                 console.error('Validation errors:', err);
                 setIsSubmitting(false);
             },
-            onFinish: () => {
-                // Already handled
-            },
+            onFinish: () => {},
         });
     };
 
@@ -119,7 +113,7 @@ export default function QuizzesCreate({
             ...questions,
             {
                 question_text: '',
-                question_type: data.quiz_type,   // inherit current quiz type
+                question_type: data.quiz_type,
                 choice_a: '',
                 choice_b: '',
                 choice_c: '',
@@ -162,7 +156,6 @@ export default function QuizzesCreate({
     };
 
     const getQuestionTypeFields = (question, index) => {
-        // question.question_type is now always equal to data.quiz_type
         switch (question.question_type) {
             case 'multiple_choice':
                 return (
@@ -351,7 +344,8 @@ export default function QuizzesCreate({
                                         <InputError message={errors.school_year} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="trimester" value="Trimester" required />
+                                        {/* ✅ CHANGED: "Trimester" → "Term" */}
+                                        <InputLabel htmlFor="trimester" value="Term" required />
                                         <select
                                             id="trimester"
                                             value={data.trimester}
@@ -359,7 +353,7 @@ export default function QuizzesCreate({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             required
                                         >
-                                            <option value="">Select Trimester</option>
+                                            <option value="">Select Term</option>
                                             {trimesters.map((trimester) => (
                                                 <option key={trimester} value={trimester}>{trimester}</option>
                                             ))}
@@ -446,7 +440,6 @@ export default function QuizzesCreate({
                                         />
                                         <InputError message={errors.passing_score} className="mt-2" />
                                     </div>
-                                    {/* Attempts Allowed removed – always 1 */}
                                     <div>
                                         <InputLabel htmlFor="shuffle_questions" value="Shuffle Questions" />
                                         <select
@@ -502,7 +495,6 @@ export default function QuizzesCreate({
                                             <InputError message={getQuestionError(index, 'question_text')} className="mt-1" />
                                         </div>
 
-                                        {/* Per‑question type dropdown REMOVED – type fixed to quiz type */}
                                         {getQuestionTypeFields(question, index)}
                                     </div>
                                 ))}

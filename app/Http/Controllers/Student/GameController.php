@@ -228,6 +228,7 @@ class GameController extends Controller
             'result' => [
                 'id' => $result->id,
                 'attempt_number' => $result->attempt_number,
+                'progress_data'  => $result->progress_data,   // ✅ included
             ],
             'game' => [
                 'id' => $game->id,
@@ -273,6 +274,29 @@ class GameController extends Controller
         ]);
 
         return redirect()->route('student.games.results', $result->id);
+    }
+
+    /**
+     * ✅ Save in‑game progress (called when student exits without finishing).
+     */
+    public function saveProgress(Request $request, GameResult $result)
+    {
+        $user = auth()->user();
+
+        if ($result->student_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'progress' => 'required|array',
+        ]);
+
+        $result->update([
+            'progress_data' => $validated['progress'],
+        ]);
+
+        // ✅ Redirect to the game list instead of returning JSON
+        return redirect()->route('student.games.index');
     }
 
     /**

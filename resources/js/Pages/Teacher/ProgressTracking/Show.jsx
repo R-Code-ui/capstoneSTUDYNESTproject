@@ -58,7 +58,8 @@ export default function ProgressShow({ student, progress }) {
                                 </div>
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">LRN</div>
+                                {/* ✅ CHANGED: 'LRN' → 'Student ID' */}
+                                <div className="text-sm text-gray-500 dark:text-gray-400">Student ID</div>
                                 <div className="font-medium text-gray-900 dark:text-white">{student.lrn}</div>
                             </div>
                             <div>

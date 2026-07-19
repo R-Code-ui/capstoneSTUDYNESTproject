@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import GameShell from './GameShell';
 import PrimaryButton from '@/Components/PrimaryButton';
 
-export default function ClueDetective({ content, onComplete, onExit }) {
+export default function ClueDetective({ content, onComplete, onExit, onProgress, initialState }) {
     const rounds = content.rounds;
-    const [roundIndex, setRoundIndex] = useState(0);
+    const [roundIndex, setRoundIndex] = useState(initialState?.roundIndex ?? 0);
     const [selected, setSelected] = useState(new Set());
-    const [correctCount, setCorrectCount] = useState(0);
+    const [correctCount, setCorrectCount] = useState(initialState?.correctCount ?? 0);
     const [feedback, setFeedback] = useState(null);
 
     const round = rounds[roundIndex];
+
+    const updateProgress = useCallback((newState) => {
+        if (onProgress) {
+            onProgress({
+                roundIndex: newState.roundIndex,
+                correctCount: newState.correctCount,
+            });
+        }
+    }, [onProgress]);
 
     const toggleWord = (idx) => {
         if (feedback || idx === round.targetIndex) return;
@@ -43,6 +52,7 @@ export default function ClueDetective({ content, onComplete, onExit }) {
                 setRoundIndex(next);
                 setSelected(new Set());
                 setFeedback(null);
+                updateProgress({ roundIndex: next, correctCount: newCorrectCount });
             } else {
                 const finalScore = Math.round((newCorrectCount / rounds.length) * 100);
                 onComplete(finalScore);
@@ -62,42 +72,63 @@ export default function ClueDetective({ content, onComplete, onExit }) {
             roundLabel={`Round ${roundIndex + 1} of ${rounds.length}`}
             onExit={onExit}
         >
-            <div className="flex flex-col items-center gap-6">
-                <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-                    Click the words that give a clue to the meaning of the bolded word, then submit.
-                </p>
+            <div className="flex flex-col items-center gap-8 p-6 bg-white rounded-3xl border border-indigo-100 shadow-xl max-w-2xl mx-auto">
+                <div className="bg-indigo-50 px-6 py-3 rounded-full text-indigo-600 font-bold text-sm shadow-inner text-center">
+                    🔍 Click the clues that define the bold word!
+                </div>
 
-                <p className="text-lg leading-loose text-center text-gray-800 dark:text-gray-200">
+                <div className="flex flex-wrap justify-center gap-2 leading-loose">
                     {round.words.map((word, i) => {
                         const isTarget = i === round.targetIndex;
                         const isSelected = selected.has(i);
                         const isClue = feedback && i >= round.clueRange[0] && i <= round.clueRange[1];
 
                         return (
-                            <span
+                            <button
                                 key={i}
+                                type="button"
                                 onClick={() => toggleWord(i)}
-                                className={`inline-block px-1 mx-0.5 rounded cursor-pointer transition
-                                    ${isTarget ? 'font-bold text-blue-600 dark:text-blue-400 cursor-default' : ''}
-                                    ${!isTarget && isSelected ? 'bg-blue-200 dark:bg-blue-800' : ''}
-                                    ${!isTarget && !isSelected && isClue ? 'bg-green-200 dark:bg-green-800' : ''}
+                                className={`px-3 py-1 rounded-xl font-medium text-lg active:scale-95 cursor-pointer
+                                    ${isTarget
+                                        ? 'text-indigo-600 font-black cursor-default underline decoration-4 decoration-indigo-400 underline-offset-4'
+                                        : ''
+                                    }
+                                    ${!isTarget && isSelected
+                                        ? 'bg-indigo-500 text-white shadow-md'
+                                        : !isTarget && !isSelected && isClue
+                                            ? 'bg-green-400 text-white shadow-md'
+                                            : !isTarget
+                                                ? 'bg-gray-100 text-gray-700'
+                                                : ''
+                                    }
                                 `}
                             >
                                 {word}
-                            </span>
+                            </button>
                         );
                     })}
-                </p>
+                </div>
 
-                {!feedback && (
-                    <PrimaryButton type="button" onClick={handleSubmit} disabled={selected.size === 0}>
-                        Submit Clue
-                    </PrimaryButton>
-                )}
+                <div className="h-20 flex items-center justify-center">
+                    {!feedback ? (
+                        <PrimaryButton
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={selected.size === 0}
+                            className="bg-indigo-600 text-white px-8 py-3 rounded-full text-lg shadow-lg disabled:opacity-50"
+                        >
+                            Submit Clue
+                        </PrimaryButton>
+                    ) : (
+                        <div className={`text-xl font-black px-8 py-4 rounded-full shadow-lg ${feedback === 'correct' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                            {feedback === 'correct' ? '✓ Great job!' : '✗ Almost! Look for clues.'}
+                        </div>
+                    )}
+                </div>
 
-                {feedback && (
-                    <div className={`text-lg font-semibold text-center ${feedback === 'correct' ? 'text-green-600' : 'text-red-600'}`}>
-                        {feedback === 'correct' ? '✓ Correct!' : `✗ The clue was: "${clueText()}"`}
+                {feedback === 'incorrect' && (
+                    <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <span className="font-bold text-gray-700">Clue:</span> "{clueText()}"
                     </div>
                 )}
             </div>

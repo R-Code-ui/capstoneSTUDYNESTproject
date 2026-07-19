@@ -70,8 +70,9 @@ export default function MessagesShow({ student, messages }) {
                         <div className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                             {student.name}
                         </div>
+                        {/* ✅ CHANGED: 'LRN' → 'Student ID' */}
                         <div className="text-xs text-gray-400 dark:text-gray-500">
-                            {student.grade_level}{student.lrn ? ` • LRN: ${student.lrn}` : ''}
+                            {student.grade_level}{student.lrn ? ` • Student ID: ${student.lrn}` : ''}
                         </div>
                     </div>
                 </div>

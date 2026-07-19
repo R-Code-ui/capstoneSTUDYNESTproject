@@ -133,7 +133,8 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
 
     const columns = [
         { key: 'student_name', label: 'Student' },
-        { key: 'lrn', label: 'LRN' },
+        // ✅ CHANGED: 'LRN' → 'Student ID'
+        { key: 'lrn', label: 'Student ID' },
         { key: 'submission_method', label: 'Method', render: (row) => row.submission_method ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1) : '---' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={getStatusBadge(row.status)} /> },
         { key: 'score', label: 'Score', render: (row) => row.score !== null ? `${row.score}/${assignment.total_points}` : '---' },
@@ -186,9 +187,9 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                     <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         Grading: {assignment.title}
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('teacher.assignments.show', assignment.id))}>
+                    <SecondaryButton onClick={() => router.visit(route('teacher.assignments.index'))}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                        Back to Assignment
+                        Back to Assignments
                     </SecondaryButton>
                 </div>
             }

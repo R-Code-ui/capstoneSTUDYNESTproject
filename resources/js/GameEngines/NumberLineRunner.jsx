@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import GameShell from './GameShell';
 
-export default function NumberLineRunner({ content, onComplete, onExit }) {
+export default function NumberLineRunner({ content, onComplete, onExit, onProgress, initialState }) {
     const rounds = content.rounds;
-    const [roundIndex, setRoundIndex] = useState(0);
-    const [correctCount, setCorrectCount] = useState(0);
+    const [roundIndex, setRoundIndex] = useState(initialState?.roundIndex ?? 0);
+    const [correctCount, setCorrectCount] = useState(initialState?.correctCount ?? 0);
     const [feedback, setFeedback] = useState(null);
     const [selected, setSelected] = useState(null);
 
     const round = rounds[roundIndex];
     const numbers = Array.from({ length: round.max - round.min + 1 }, (_, i) => round.min + i);
+
+    const updateProgress = useCallback((newState) => {
+        if (onProgress) {
+            onProgress({
+                roundIndex: newState.roundIndex,
+                correctCount: newState.correctCount,
+            });
+        }
+    }, [onProgress]);
 
     const handleSelect = (num) => {
         if (feedback) return;
@@ -25,6 +34,7 @@ export default function NumberLineRunner({ content, onComplete, onExit }) {
                 setRoundIndex(next);
                 setFeedback(null);
                 setSelected(null);
+                updateProgress({ roundIndex: next, correctCount: newCorrect });
             } else {
                 const finalScore = Math.round((newCorrect / rounds.length) * 100);
                 onComplete(finalScore);
@@ -33,41 +43,34 @@ export default function NumberLineRunner({ content, onComplete, onExit }) {
     };
 
     return (
-        <GameShell
-            title="Number Line Runner"
-            description={content.description}
-            roundLabel={`Round ${roundIndex + 1} of ${rounds.length}`}
-            onExit={onExit}
-        >
-            <div className="flex flex-col items-center gap-6">
-                <div className="text-xl font-semibold text-gray-900 dark:text-white text-center">
-                    Start at <span className="text-blue-600 dark:text-blue-400">{round.start}</span>. Jump{' '}
-                    <span className="text-blue-600 dark:text-blue-400">
-                        {round.operation === '+' ? 'forward' : 'backward'} {round.steps}
-                    </span>{' '}
-                    spaces. Click where you land!
+        <GameShell title="Number Line Runner" description={content.description} roundLabel={`Round ${roundIndex + 1} of ${rounds.length}`} onExit={onExit}>
+            <div className="flex flex-col items-center gap-8 p-6 bg-blue-50 rounded-3xl border border-blue-100 shadow-inner max-w-2xl mx-auto">
+                <div className="bg-white px-8 py-5 rounded-2xl shadow-sm border border-blue-100 text-center">
+                    <p className="text-xl font-bold text-gray-800">
+                        Start at <span className="text-blue-600 px-2 py-1 bg-blue-100 rounded-lg font-black">{round.start}</span>.
+                        Jump {round.operation === '+' ? 'forward' : 'backward'}
+                        <span className="text-blue-600 font-black px-1"> {round.steps} </span> spaces.
+                    </p>
+                    <p className="text-sm text-blue-400 font-medium mt-2">Click where you land!</p>
                 </div>
 
-                <div className="w-full overflow-x-auto">
-                    <div className="flex items-center gap-1 min-w-max px-4 py-6">
+                <div className="w-full overflow-x-auto py-4">
+                    <div className="flex items-center justify-center gap-3 min-w-max px-4">
                         {numbers.map((num) => {
                             const isStart = num === round.start;
                             const isSelected = selected === num;
                             const isCorrectAnswer = feedback && num === round.answer;
+                            let baseStyle = "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-sm border-2";
+                            let stateStyle = "bg-white border-blue-200 text-blue-900 hover:border-blue-400";
+
+                            if (isStart) stateStyle = "bg-blue-500 border-blue-600 text-white shadow-blue-200";
+                            if (isSelected && feedback === 'correct') stateStyle = "bg-green-500 border-green-600 text-white";
+                            if (isSelected && feedback === 'incorrect') stateStyle = "bg-red-500 border-red-600 text-white";
+                            if (isCorrectAnswer && !isSelected) stateStyle = "bg-green-100 border-green-400 text-green-700";
+                            if (feedback) stateStyle += " cursor-default opacity-80";
+
                             return (
-                                <button
-                                    key={num}
-                                    type="button"
-                                    onClick={() => handleSelect(num)}
-                                    disabled={!!feedback}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition
-                                        ${isStart ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'}
-                                        ${isSelected && feedback === 'correct' ? 'bg-green-500 text-white border-green-500' : ''}
-                                        ${isSelected && feedback === 'incorrect' ? 'bg-red-500 text-white border-red-500' : ''}
-                                        ${isCorrectAnswer && !isSelected ? 'border-green-500 bg-green-100 dark:bg-green-900/30' : ''}
-                                        ${!feedback ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer' : 'cursor-default'}
-                                    `}
-                                >
+                                <button key={num} type="button" onClick={() => handleSelect(num)} disabled={!!feedback} className={`${baseStyle} ${stateStyle}`}>
                                     {num}
                                 </button>
                             );
@@ -75,11 +78,13 @@ export default function NumberLineRunner({ content, onComplete, onExit }) {
                     </div>
                 </div>
 
-                {feedback && (
-                    <div className={`text-lg font-semibold ${feedback === 'correct' ? 'text-green-600' : 'text-red-600'}`}>
-                        {feedback === 'correct' ? '✓ Correct!' : `✗ The answer was ${round.answer}`}
-                    </div>
-                )}
+                <div className="h-10 flex items-center justify-center">
+                    {feedback && (
+                        <div className={`text-xl font-black px-6 py-2 rounded-full shadow-md ${feedback === 'correct' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                            {feedback === 'correct' ? '✓ Great Jump!' : `✗ Oops! The answer was ${round.answer}`}
+                        </div>
+                    )}
+                </div>
             </div>
         </GameShell>
     );

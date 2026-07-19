@@ -41,8 +41,9 @@ class GameResultsController extends Controller
                 'score' => $result ? $result->score : null,
                 'attempt_number' => $result ? $result->attempt_number : null,
                 'status' => $result ? $result->status : 'assigned',
-                'started_at' => $result ? $result->started_at : null,
-                'completed_at' => $result ? $result->completed_at : null,
+                'started_at' => $result && $result->started_at ? $result->started_at->format('Y-m-d H:i') : null,
+                // ✅ FIX: Format completed_at date for display
+                'completed_at' => $result && $result->completed_at ? $result->completed_at->format('Y-m-d H:i') : null,
             ];
         });
 

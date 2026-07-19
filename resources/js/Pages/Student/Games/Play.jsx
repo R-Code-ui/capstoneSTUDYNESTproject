@@ -36,17 +36,39 @@ const ENGINE_MAP = {
 
 export default function GamesPlay({ result, game }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [currentProgress, setCurrentProgress] = useState(
+        result.progress_data || null   // resume from saved state
+    );
 
     const definition = gameDefinitions[game.title];
     const EngineComponent = ENGINE_MAP[game.title];
 
-    const handleExit = () => {
-        if (confirm('Leave the game? Your progress on this attempt will not be saved.')) {
-            router.visit(route('student.games.index'));
-        }
+    // Called by the engine every time progress changes
+    const handleProgress = (progress) => {
+        setCurrentProgress(progress);
     };
 
-    // Auto-save: immediately submit the score to the backend
+    // Save progress and exit
+    const handleExit = () => {
+        if (!currentProgress) {
+            // No progress yet – just leave
+            router.visit(route('student.games.index'));
+            return;
+        }
+
+        setIsSubmitting(true);
+        // The server now redirects to the game list, so no manual navigation is needed
+        router.post(
+            route('student.games.save-progress', result.id),
+            { progress: currentProgress },
+            {
+                preserveState: true,
+                onFinish: () => setIsSubmitting(false),
+            }
+        );
+    };
+
+    // Game finished – submit final result
     const handleComplete = (score) => {
         setIsSubmitting(true);
         router.post(
@@ -58,47 +80,50 @@ export default function GamesPlay({ result, game }) {
         );
     };
 
-    // Fallback: unrecognised game or coming soon
     if (!definition || !EngineComponent || definition.comingSoon) {
         return (
             <AuthenticatedLayout
-                header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">{game.title}</h2>}
+                header={<h2 className="text-xl font-bold text-indigo-900 dark:text-white">{game.title}</h2>}
             >
                 <Head title={`Playing: ${game.title}`} />
-                <div className="py-12">
-                    <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
-                        <Card className="text-center py-10">
-                            <p className="text-gray-600 dark:text-gray-300">
-                                This game isn't available to play yet. Please check back later or ask your teacher.
-                            </p>
-                            <div className="mt-6">
-                                <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
-                                    Back to Games
-                                </SecondaryButton>
-                            </div>
-                        </Card>
-                    </div>
+                <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-6 flex items-center justify-center">
+                    <Card className="max-w-md w-full text-center p-10 bg-white rounded-3xl shadow-xl border border-indigo-100 animate-in zoom-in duration-300">
+                        <div className="text-6xl mb-6">🚀</div>
+                        <h3 className="text-2xl font-black text-indigo-900 mb-2">Coming Soon!</h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-8">
+                            This game isn't available to play yet. Check back later or ask your teacher!
+                        </p>
+                        <SecondaryButton
+                            onClick={() => router.visit(route('student.games.index'))}
+                            className="px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform"
+                        >
+                            Back to Games
+                        </SecondaryButton>
+                    </Card>
                 </div>
             </AuthenticatedLayout>
         );
     }
 
-    // Active gameplay
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">{game.title}</h2>}
+            header={<h2 className="text-xl font-bold text-indigo-900 dark:text-white">{game.title}</h2>}
         >
             <Head title={`Playing: ${game.title}`} />
 
-            {isSubmitting && <LoadingSpinner overlay size="lg" text="Saving your results..." />}
+            {isSubmitting && <LoadingSpinner overlay size="lg" text="Saving your progress..." />}
 
-            <div className="py-12">
-                <div className="mx-auto sm:px-6 lg:px-8">
-                    <EngineComponent
-                        content={definition.content}
-                        onComplete={handleComplete}
-                        onExit={handleExit}
-                    />
+            <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white py-8">
+                <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        <EngineComponent
+                            content={definition.content}
+                            onComplete={handleComplete}
+                            onExit={handleExit}
+                            onProgress={handleProgress}          // ✅ new
+                            initialState={result.progress_data}   // ✅ resume
+                        />
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DndContext, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import GameShell from './GameShell';
 
@@ -6,8 +6,9 @@ function DraggableWeight({ id, value }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 50 : 1,
     };
+
     return (
         <button
             type="button"
@@ -15,23 +16,23 @@ function DraggableWeight({ id, value }) {
             style={style}
             {...listeners}
             {...attributes}
-            className="w-12 h-12 flex items-center justify-center rounded-md bg-slate-600 text-white font-bold shadow cursor-grab active:cursor-grabbing touch-none select-none"
+            className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-indigo-500 text-white font-black text-lg shadow-lg border-b-4 border-indigo-700 cursor-grab active:cursor-grabbing active:scale-95 touch-none select-none ${isDragging ? 'opacity-50' : 'opacity-100'}`}
         >
             {value}
         </button>
     );
 }
 
-export default function BalanceScale({ content, onComplete, onExit }) {
+export default function BalanceScale({ content, onComplete, onExit, onProgress, initialState }) {
     const rounds = content.rounds;
-    const [roundIndex, setRoundIndex] = useState(0);
-    const [correctCount, setCorrectCount] = useState(0);
-    const [overshoots, setOvershoots] = useState(0);
+    const [roundIndex, setRoundIndex] = useState(initialState?.roundIndex ?? 0);
+    const [correctCount, setCorrectCount] = useState(initialState?.correctCount ?? 0);
+    const [overshoots, setOvershoots] = useState(initialState?.overshoots ?? 0);
     const [placed, setPlaced] = useState([]);
     const [bank, setBank] = useState(() =>
-        rounds[0].weights.map((v, i) => ({ key: `w-${i}-${v}`, value: v }))
+        rounds[initialState?.roundIndex ?? 0].weights.map((v, i) => ({ key: `w-${i}-${v}`, value: v }))
     );
-    const [status, setStatus] = useState('playing'); // playing | balanced | tooHeavy
+    const [status, setStatus] = useState('playing');
 
     const round = rounds[roundIndex];
     const rightSum = placed.reduce((sum, w) => sum + w.value, 0);
@@ -43,8 +44,20 @@ export default function BalanceScale({ content, onComplete, onExit }) {
         useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
     );
 
+    // Notify parent of progress change
+    const updateProgress = useCallback((newState) => {
+        if (onProgress) {
+            onProgress({
+                roundIndex: newState.roundIndex,
+                correctCount: newState.correctCount,
+                overshoots: newState.overshoots,
+            });
+        }
+    }, [onProgress]);
+
     const advanceRound = (wasCorrect) => {
         const newCorrect = correctCount + (wasCorrect ? 1 : 0);
+        const newOvershoots = overshoots;
         if (roundIndex + 1 < rounds.length) {
             const next = roundIndex + 1;
             setCorrectCount(newCorrect);
@@ -52,9 +65,10 @@ export default function BalanceScale({ content, onComplete, onExit }) {
             setPlaced([]);
             setBank(rounds[next].weights.map((v, i) => ({ key: `w-${i}-${v}-${next}`, value: v })));
             setStatus('playing');
+            updateProgress({ roundIndex: next, correctCount: newCorrect, overshoots: newOvershoots });
         } else {
             const rawScore = Math.round((newCorrect / rounds.length) * 100);
-            const finalScore = Math.max(0, rawScore - overshoots * 5);
+            const finalScore = Math.max(0, rawScore - newOvershoots * 5);
             onComplete(finalScore);
         }
     };
@@ -77,7 +91,11 @@ export default function BalanceScale({ content, onComplete, onExit }) {
             setTimeout(() => advanceRound(true), 900);
         } else if (newSum > round.leftValue) {
             setStatus('tooHeavy');
-            setOvershoots((o) => o + 1);
+            setOvershoots((prev) => {
+                const newVal = prev + 1;
+                updateProgress({ roundIndex, correctCount, overshoots: newVal });
+                return newVal;
+            });
         }
     };
 
@@ -95,61 +113,71 @@ export default function BalanceScale({ content, onComplete, onExit }) {
             roundLabel={`Round ${roundIndex + 1} of ${rounds.length}`}
             onExit={onExit}
         >
-            <div className="flex flex-col items-center gap-6">
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-3xl border border-indigo-100 shadow-inner">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="flex items-end gap-4">
-                        <div className="flex flex-col items-center">
-                            <div className="w-28 h-20 rounded-lg bg-amber-200 dark:bg-amber-800 flex items-center justify-center text-2xl font-bold text-amber-900 dark:text-amber-100">
-                                {round.leftValue}
+                    <div className="flex flex-col items-center gap-8 mb-8">
+                        <div className="flex items-end justify-center gap-8 w-full max-w-sm">
+                            <div className="flex flex-col items-center">
+                                <div className="w-28 h-28 rounded-3xl bg-amber-400 shadow-xl flex items-center justify-center text-4xl font-black text-white border-b-8 border-amber-600 animate-pulse">
+                                    {round.leftValue}
+                                </div>
+                                <span className="text-xs font-bold text-amber-600 mt-3 uppercase tracking-widest">Target</span>
                             </div>
-                            <span className="text-xs text-gray-400 mt-1">Target</span>
-                        </div>
 
-                        <div className="text-3xl text-gray-400 pb-6">⚖️</div>
+                            <div className="text-4xl text-indigo-300 pb-8">⚖️</div>
 
-                        <div className="flex flex-col items-center">
-                            <div
-                                ref={setNodeRef}
-                                className={`w-28 h-20 rounded-lg border-4 border-dashed flex flex-wrap items-center justify-center gap-1 p-1 transition
-                                    ${status === 'balanced' ? 'border-green-500 bg-green-100 dark:bg-green-900/30'
-                                        : status === 'tooHeavy' ? 'border-red-500 bg-red-100 dark:bg-red-900/30'
-                                        : isOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                                        : 'border-gray-300 dark:border-gray-600'}
-                                `}
-                            >
-                                {placed.map((w) => (
-                                    <span key={w.key} className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                                        {w.value}
-                                    </span>
-                                ))}
+                            <div className="flex flex-col items-center">
+                                <div
+                                    ref={setNodeRef}
+                                    className={`w-28 h-28 rounded-3xl border-4 border-dashed flex flex-wrap items-center justify-center gap-2 p-3 shadow-lg ${status === 'balanced' ? 'border-green-500 bg-green-100'
+                                        : status === 'tooHeavy' ? 'border-red-500 bg-red-100'
+                                            : isOver ? 'border-indigo-500 bg-indigo-50'
+                                                : 'border-indigo-200 bg-white'}
+                                    `}
+                                >
+                                    {placed.map((w) => (
+                                        <div key={w.key} className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-500 text-white font-bold text-xs shadow">
+                                            {w.value}
+                                        </div>
+                                    ))}
+                                </div>
+                                <span className={`text-xs font-bold mt-3 uppercase tracking-widest ${rightSum > round.leftValue ? 'text-red-500' : 'text-indigo-400'}`}>
+                                    Sum: {rightSum}
+                                </span>
                             </div>
-                            <span className="text-xs text-gray-400 mt-1">Sum: {rightSum}</span>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 justify-center mt-4 min-h-[3rem]">
-                        {bank.map((tile) => (
-                            <DraggableWeight key={tile.key} id={tile.key} value={tile.value} />
-                        ))}
+                    <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-white shadow-sm">
+                        <p className="text-center text-sm font-bold text-gray-400 mb-4 uppercase">Drag weights to the scale</p>
+                        <div className="flex flex-wrap gap-3 justify-center min-h-[4rem]">
+                            {bank.map((tile) => (
+                                <DraggableWeight key={tile.key} id={tile.key} value={tile.value} />
+                            ))}
+                        </div>
                     </div>
                 </DndContext>
 
-                {status === 'balanced' && (
-                    <div className="text-lg font-semibold text-green-600">✓ Balanced!</div>
-                )}
+                <div className="h-20 mt-6 flex justify-center items-center">
+                    {status === 'balanced' && (
+                        <div className="text-2xl font-black text-green-600 animate-bounce flex items-center gap-2">
+                            <span>✓</span> Perfect Balance!
+                        </div>
+                    )}
 
-                {status === 'tooHeavy' && (
-                    <div className="flex flex-col items-center gap-2">
-                        <div className="text-lg font-semibold text-red-600">Too heavy!</div>
-                        <button
-                            type="button"
-                            onClick={handleResetPan}
-                            className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
-                        >
-                            Reset Weights
-                        </button>
-                    </div>
-                )}
+                    {status === 'tooHeavy' && (
+                        <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in">
+                            <div className="text-xl font-black text-red-600">Too heavy!</div>
+                            <button
+                                type="button"
+                                onClick={handleResetPan}
+                                className="px-6 py-3 rounded-full bg-red-600 text-white font-bold shadow-lg active:scale-95"
+                            >
+                                Reset Pan
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </GameShell>
     );

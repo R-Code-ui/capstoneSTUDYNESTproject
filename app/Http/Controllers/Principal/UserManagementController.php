@@ -93,7 +93,6 @@ class UserManagementController extends Controller
                 'grade_level' => $gradeFilter,
                 'gender' => $genderFilter,
             ],
-            // ✅ CORRECT: Send separate pagination data for each tab
             'teachers_pagination' => $teachers->toArray(),
             'students_pagination' => $students->toArray(),
         ]);
@@ -270,5 +269,28 @@ class UserManagementController extends Controller
         $user->update(['is_active' => true]);
 
         return redirect()->back()->with('success', 'User restored successfully!');
+    }
+
+    /**
+     * ✅ NEW: Permanently delete a user.
+     */
+    public function destroy($id)
+    {
+        Gate::authorize('user.manage');
+
+        $user = User::findOrFail($id);
+
+        // Delete grade assignments if teacher
+        if ($user->hasRole('teacher')) {
+            TeacherGradeAssignment::where('teacher_id', $user->id)->delete();
+        }
+
+        // Remove all roles
+        $user->syncRoles([]);
+
+        // Delete the user
+        $user->delete();
+
+        return redirect()->back()->with('success', 'User deleted successfully!');
     }
 }

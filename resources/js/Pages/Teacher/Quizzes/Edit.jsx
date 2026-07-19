@@ -36,14 +36,12 @@ export default function QuizzesEdit({
         total_questions: quiz.total_questions || 1,
         time_limit: quiz.time_limit || '',
         passing_score: quiz.passing_score || '',
-        // attempts_allowed removed – always 1 on server
         shuffle_questions: quiz.shuffle_questions || false,
         status: quiz.status || 'draft',
         publish_date: quiz.publish_date || new Date().toISOString().split('T')[0],
         questions: questions,
     });
 
-    // Keep form data in sync with questions state
     useEffect(() => {
         setData('questions', questions);
         setData('total_questions', questions.length);
@@ -99,7 +97,7 @@ export default function QuizzesEdit({
             ...questions,
             {
                 question_text: '',
-                question_type: data.quiz_type,   // inherit current quiz type
+                question_type: data.quiz_type,
                 choice_a: '',
                 choice_b: '',
                 choice_c: '',
@@ -330,7 +328,8 @@ export default function QuizzesEdit({
                                         <InputError message={errors.school_year} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="trimester" value="Trimester" required />
+                                        {/* ✅ CHANGED: "Trimester" → "Term" */}
+                                        <InputLabel htmlFor="trimester" value="Term" required />
                                         <select
                                             id="trimester"
                                             value={data.trimester}
@@ -338,7 +337,7 @@ export default function QuizzesEdit({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                                             required
                                         >
-                                            <option value="">Select Trimester</option>
+                                            <option value="">Select Term</option>
                                             {trimesters.map((trimester) => (
                                                 <option key={trimester} value={trimester}>{trimester}</option>
                                             ))}
@@ -425,7 +424,6 @@ export default function QuizzesEdit({
                                         />
                                         <InputError message={errors.passing_score} className="mt-2" />
                                     </div>
-                                    {/* Attempts Allowed removed – always 1 */}
                                     <div>
                                         <InputLabel htmlFor="shuffle_questions" value="Shuffle Questions" />
                                         <select
@@ -481,7 +479,6 @@ export default function QuizzesEdit({
                                             <InputError message={getQuestionError(index, 'question_text')} className="mt-1" />
                                         </div>
 
-                                        {/* Per‑question type dropdown REMOVED – type fixed to quiz type */}
                                         {getQuestionTypeFields(question, index)}
                                     </div>
                                 ))}

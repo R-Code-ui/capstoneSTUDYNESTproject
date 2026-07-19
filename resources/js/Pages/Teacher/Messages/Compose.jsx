@@ -45,7 +45,8 @@ export default function MessagesCompose({ students }) {
 
     const studentOptions = [
         { value: '', label: 'Select Student' },
-        ...students.map((student) => ({ value: student.id, label: `${student.name} (${student.lrn})` })),
+        // ✅ CHANGED: 'LRN' → 'Student ID'
+        ...students.map((student) => ({ value: student.id, label: `${student.name} (Student ID: ${student.lrn})` })),
     ];
 
     return (

@@ -14,13 +14,16 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PasswordInput from '@/Components/PasswordInput';
 
+// ✅ ADDED: Import TrashIcon
+import { TrashIcon } from '@heroicons/react/24/outline';
+
 export default function UserManagement({
     teachers,
     students,
     grade_levels,
     filters,
-    teachers_pagination, // ✅ ADDED
-    students_pagination, // ✅ ADDED
+    teachers_pagination,
+    students_pagination,
 }) {
     const [activeTab, setActiveTab] = useState('teacher');
     const [search, setSearch] = useState(filters?.search || '');
@@ -95,6 +98,15 @@ export default function UserManagement({
         });
     };
 
+    // ✅ NEW: Handle permanent delete
+    const handleDelete = (user) => {
+        if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
+            router.delete(route('principal.users.destroy', user.id), {
+                preserveState: true,
+            });
+        }
+    };
+
     const gradeOptions = [
         { value: '', label: 'All Grades' },
         ...grade_levels.map((grade) => ({ value: grade, label: grade })),
@@ -117,7 +129,8 @@ export default function UserManagement({
 
     const studentColumns = [
         { key: 'name', label: 'Name' },
-        { key: 'lrn', label: 'LRN' },
+        // ✅ CHANGED: 'LRN' → 'STUDENT ID'
+        { key: 'lrn', label: 'STUDENT ID' },
         { key: 'grade_level', label: 'Grade Level' },
         {
             key: 'gender',
@@ -153,6 +166,13 @@ export default function UserManagement({
         </svg>
     );
 
+    // ✅ NEW: Delete Icon SVG
+    const DeleteIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+    );
+
     const teacherActions = (row) => [
         { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
         { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
@@ -160,6 +180,8 @@ export default function UserManagement({
             ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
             : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
         ),
+        // ✅ NEW: Delete button
+        { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => handleDelete(row) },
     ];
 
     const studentActions = (row) => [
@@ -169,12 +191,14 @@ export default function UserManagement({
             ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
             : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
         ),
+        // ✅ NEW: Delete button
+        { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => handleDelete(row) },
     ];
 
     const currentData = activeTab === 'teacher' ? teachers : students;
     const currentColumns = activeTab === 'teacher' ? teacherColumns : studentColumns;
     const currentActions = activeTab === 'teacher' ? teacherActions : studentActions;
-    const currentPagination = activeTab === 'teacher' ? teachers_pagination : students_pagination; // ✅ ADDED
+    const currentPagination = activeTab === 'teacher' ? teachers_pagination : students_pagination;
 
     return (
         <AuthenticatedLayout
@@ -258,7 +282,7 @@ export default function UserManagement({
                                 emptyMessage={`No ${activeTab}s found.`}
                                 hoverable
                                 striped
-                                pagination={currentPagination} // ✅ ADDED
+                                pagination={currentPagination}
                             />
                         </div>
                     </Card>
@@ -362,7 +386,8 @@ export default function UserManagement({
                     ) : (
                         <>
                             <div>
-                                <InputLabel htmlFor="lrn" value="LRN" />
+                                {/* ✅ CHANGED: 'LRN' → 'STUDENT ID' */}
+                                <InputLabel htmlFor="lrn" value="STUDENT ID" />
                                 <TextInput
                                     id="lrn"
                                     name="lrn"

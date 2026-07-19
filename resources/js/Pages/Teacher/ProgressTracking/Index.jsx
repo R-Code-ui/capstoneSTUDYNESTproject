@@ -30,7 +30,7 @@ export default function ProgressIndex({
     subjects,
     trimesters,
     filters,
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
@@ -86,13 +86,14 @@ export default function ProgressIndex({
     ];
 
     const trimesterOptions = [
-        { value: '', label: 'All Terms' }, // ✅ CHANGED: "All Trimesters" → "All Terms"
+        { value: '', label: 'All Terms' },
         ...trimesters.map((t) => ({ value: t, label: t })),
     ];
 
     const columns = [
         { key: 'name', label: 'Student' },
-        { key: 'lrn', label: 'LRN' },
+        // ✅ CHANGED: 'LRN' → 'Student ID'
+        { key: 'lrn', label: 'Student ID' },
         { key: 'grade_level', label: 'Grade' },
         { key: 'lessons', label: 'Lessons' },
         { key: 'assignments', label: 'Assignments' },
@@ -220,10 +221,11 @@ export default function ProgressIndex({
                             {/* Filters */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1">
+                                    {/* ✅ CHANGED: 'LRN' → 'Student ID' */}
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
-                                        placeholder="Search by student name or LRN..."
+                                        placeholder="Search by student name or Student ID..."
                                         size="md"
                                     />
                                 </div>
@@ -248,7 +250,7 @@ export default function ProgressIndex({
                                         options={trimesterOptions}
                                         value={trimesterFilter}
                                         onChange={(val) => handleFilterChange('trimester', val)}
-                                        placeholder="Term" // ✅ CHANGED: "Trimester" → "Term"
+                                        placeholder="Term"
                                         size="md"
                                         className="w-40"
                                     />
@@ -267,7 +269,7 @@ export default function ProgressIndex({
                                     emptyMessage="No students found."
                                     hoverable
                                     striped
-                                    pagination={pagination} // ✅ ADDED
+                                    pagination={pagination}
                                 />
                             </div>
                         </Card>
