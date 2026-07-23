@@ -10,40 +10,40 @@ export default function StatusBadge({
     // Map status to variant
     const statusMap = {
         // Active/Published states
-        active: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Active' },
-        published: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Published' },
-        completed: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Completed' },
-        passed: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Passed' },
-        graded: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Graded' },
-        excellent: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Excellent' },
-        moderately_active: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Moderately Active' },
+        active: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Active' },
+        published: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Published' },
+        completed: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Completed' },
+        passed: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Passed' },
+        graded: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Graded' },
+        excellent: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Excellent' },
+        moderately_active: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Moderately Active' },
 
         // Draft/Pending states
-        draft: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Draft' },
-        pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Pending' },
-        in_progress: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'In Progress' },
-        started: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Started' },
-        needs_monitoring: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Needs Monitoring' },
-        important: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', text: 'text-yellow-800 dark:text-yellow-300', dot: 'bg-yellow-500', label: 'Important' },
+        draft: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Draft' },
+        pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Pending' },
+        in_progress: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'In Progress' },
+        started: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Started' },
+        needs_monitoring: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Needs Monitoring' },
+        important: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Important' },
 
         // Error/Danger states
-        archived: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-800 dark:text-gray-300', dot: 'bg-gray-500', label: 'Archived' },
-        inactive: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-800 dark:text-gray-300', dot: 'bg-gray-500', label: 'Inactive' },
-        failed: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-800 dark:text-red-300', dot: 'bg-red-500', label: 'Failed' },
-        needs_support: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-800 dark:text-red-300', dot: 'bg-red-500', label: 'Needs Support' },
-        incomplete: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-800 dark:text-red-300', dot: 'bg-red-500', label: 'Incomplete' },
-        not_submitted: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-800 dark:text-red-300', dot: 'bg-red-500', label: 'Not Submitted' },
-        urgent: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-800 dark:text-red-300', dot: 'bg-red-500', label: 'Urgent' },
+        archived: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500', label: 'Archived' },
+        inactive: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500', label: 'Inactive' },
+        failed: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Failed' },
+        needs_support: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Needs Support' },
+        incomplete: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Incomplete' },
+        not_submitted: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Not Submitted' },
+        urgent: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Urgent' },
 
         // Info states
-        submitted: { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-800 dark:text-blue-300', dot: 'bg-blue-500', label: 'Submitted' },
-        reviewed: { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-800 dark:text-blue-300', dot: 'bg-blue-500', label: 'Reviewed' },
-        returned: { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-800 dark:text-blue-300', dot: 'bg-blue-500', label: 'Returned' },
-        unread: { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-800 dark:text-blue-300', dot: 'bg-blue-500', label: 'Unread' },
-        normal: { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-800 dark:text-blue-300', dot: 'bg-blue-500', label: 'Normal' },
-        read: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-300', dot: 'bg-gray-400', label: 'Read' },
-        replied: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-800 dark:text-green-300', dot: 'bg-green-500', label: 'Replied' },
-        not_started: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-300', dot: 'bg-gray-400', label: 'Not Started' },
+        submitted: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', label: 'Submitted' },
+        reviewed: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', label: 'Reviewed' },
+        returned: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', label: 'Returned' },
+        unread: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', label: 'Unread' },
+        normal: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', label: 'Normal' },
+        read: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-400', label: 'Read' },
+        replied: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Replied' },
+        not_started: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-400', label: 'Not Started' },
     };
 
     const sizeClasses = {
@@ -60,8 +60,8 @@ export default function StatusBadge({
 
     // Get status config
     const config = statusMap[status] || {
-        bg: 'bg-gray-100 dark:bg-gray-700',
-        text: 'text-gray-800 dark:text-gray-300',
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
         dot: 'bg-gray-500',
         label: status?.replace(/_/g, ' ').toUpperCase() || 'Unknown',
     };

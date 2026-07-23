@@ -8,7 +8,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        username: '', // Changed from 'email' to 'username'
+        username: '',
         password: '',
         remember: false,
     });
@@ -26,8 +26,9 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in" />
 
             {status && (
-                <div className="mb-5 rounded-xl bg-green-50/60 p-4 text-sm font-medium text-green-600 border border-green-100">
-                    {status}
+                <div className="mb-5 rounded-2xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-700 border border-emerald-200/60 shadow-sm flex items-center gap-2">
+                    <span>✨</span>
+                    <span>{status}</span>
                 </div>
             )}
 
@@ -40,11 +41,11 @@ export default function Login({ status, canResetPassword }) {
                         type="text"
                         name="username"
                         value={data.username}
-                        className="mt-1 block w-full"
+                        className="mt-1.5 block w-full"
                         autoComplete="username"
                         isFocused={true}
                         onChange={(e) => setData('username', e.target.value)}
-                        placeholder="Enter your Student ID, Teacher ID, or Principal ID"
+                        placeholder="Enter Student ID, Teacher ID, or Principal ID"
                     />
 
                     <InputError message={errors.username} className="mt-2" />
@@ -58,7 +59,7 @@ export default function Login({ status, canResetPassword }) {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className="mt-1.5 block w-full"
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                         placeholder="••••••••"
@@ -68,7 +69,7 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
-                    <label className="flex items-center cursor-pointer select-none">
+                    <label className="flex items-center cursor-pointer select-none group">
                         <Checkbox
                             name="remember"
                             checked={data.remember}
@@ -76,7 +77,7 @@ export default function Login({ status, canResetPassword }) {
                                 setData('remember', e.target.checked)
                             }
                         />
-                        <span className="ms-2 text-sm text-[#434343] font-medium">
+                        <span className="ms-2.5 text-xs sm:text-sm text-slate-700 font-semibold group-hover:text-slate-900 transition">
                             Remember me
                         </span>
                     </label>
@@ -84,32 +85,32 @@ export default function Login({ status, canResetPassword }) {
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm font-semibold text-[#1C56A6] hover:text-[#22486A] focus:outline-none focus:ring-2 focus:ring-[#5EC4D2] transition duration-150"
+                            className="rounded-lg text-xs sm:text-sm font-bold text-[#FF6B6B] hover:text-[#FF5252] focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/30 transition"
                         >
-                            Forgot your password?
+                            Forgot password?
                         </Link>
                     )}
                 </div>
 
                 <div className="pt-2">
-                    <PrimaryButton className="w-full justify-center py-3 text-sm" disabled={processing}>
+                    <PrimaryButton className="w-full justify-center py-3.5 text-sm" disabled={processing}>
                         Log in
                     </PrimaryButton>
                 </div>
 
-                {/* Styled structural hints section */}
-                <div className="mt-8 pt-6 border-t border-neutral-100 grid grid-cols-3 gap-2 text-center text-[11px] font-bold tracking-wide text-[#434343]/80 uppercase">
-                    <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
-                        <span className="block text-[#1C56A6]">Students</span>
-                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Use Student ID</span>
+                {/* Role Guidance Badges */}
+                <div className="mt-6 pt-5 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-[#E0F2F1] p-2.5 rounded-2xl border border-[#B2DFDB] transition hover:scale-[1.02]">
+                        <span className="block text-xs font-black text-[#009688]">Students</span>
+                        <span className="text-[10px] text-slate-600 font-medium block mt-0.5">Use Student ID</span>
                     </div>
-                    <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
-                        <span className="block text-[#1C56A6]">Teachers</span>
-                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Teacher ID</span>
+                    <div className="bg-[#FFF3E0] p-2.5 rounded-2xl border border-[#FFE0B2] transition hover:scale-[1.02]">
+                        <span className="block text-xs font-black text-[#FF9800]">Teachers</span>
+                        <span className="text-[10px] text-slate-600 font-medium block mt-0.5">Teacher ID</span>
                     </div>
-                    <div className="bg-neutral-50/80 p-2.5 rounded-xl border border-neutral-100">
-                        <span className="block text-[#1C56A6]">Principal</span>
-                        <span className="text-[10px] text-neutral-400 font-medium normal-case block mt-0.5">Principal ID</span>
+                    <div className="bg-[#F3E5F5] p-2.5 rounded-2xl border border-[#E1BEE7] transition hover:scale-[1.02]">
+                        <span className="block text-xs font-black text-[#9C27B0]">Principal</span>
+                        <span className="text-[10px] text-slate-600 font-medium block mt-0.5">Principal ID</span>
                     </div>
                 </div>
             </form>

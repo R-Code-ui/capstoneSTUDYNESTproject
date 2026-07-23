@@ -172,6 +172,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages/{message}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{message}/reply', [MessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+        Route::delete('/messages/conversation/{student}', [MessageController::class, 'destroyConversation'])
+            ->name('messages.destroy-conversation');
 
         // ===== Progress Tracking =====
         Route::get('/progress', [ProgressTrackingController::class, 'index'])->name('progress.index');
@@ -241,6 +243,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages/{message}', [StudentMessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{message}/reply', [StudentMessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{message}', [StudentMessageController::class, 'destroy'])->name('messages.destroy');
+        Route::delete('/messages/conversation/{teacher}', [StudentMessageController::class, 'destroyConversation'])
+            ->name('messages.destroy-conversation');
 
         // ===== Announcements =====
         Route::get('/announcements', [StudentAnnouncementController::class, 'index'])->name('announcements.index');

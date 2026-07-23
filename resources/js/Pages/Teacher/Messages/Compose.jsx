@@ -45,22 +45,21 @@ export default function MessagesCompose({ students }) {
 
     const studentOptions = [
         { value: '', label: 'Select Student' },
-        // ✅ CHANGED: 'LRN' → 'Student ID'
         ...students.map((student) => ({ value: student.id, label: `${student.name} (Student ID: ${student.lrn})` })),
     ];
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">New Message</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">New Message</span>}
         >
             <Head title="Compose Message" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                    <Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             {/* ===== Recipient ===== */}
                             <div>
                                 <InputLabel htmlFor="receiver_id" value="Recipient" required />
@@ -70,7 +69,7 @@ export default function MessagesCompose({ students }) {
                                         id="receiver_id"
                                         value={data.receiver_id}
                                         onChange={(e) => setData('receiver_id', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 pl-10"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800 pl-10"
                                         required
                                     >
                                         {studentOptions.map((opt) => (
@@ -93,7 +92,7 @@ export default function MessagesCompose({ students }) {
                                             className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition ${
                                                 data.category === cat.value
                                                     ? 'bg-blue-600 text-white border-blue-600'
-                                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                                                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
                                             }`}
                                         >
                                             <span>{cat.emoji}</span>
@@ -125,7 +124,7 @@ export default function MessagesCompose({ students }) {
                                     value={data.message}
                                     onChange={(e) => setData('message', e.target.value)}
                                     rows={8}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                     required
                                     placeholder="Type your message here..."
                                 />
@@ -133,7 +132,7 @@ export default function MessagesCompose({ students }) {
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
                                 <SecondaryButton type="button" onClick={() => router.visit(route('teacher.messages.index'))}>
                                     <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                     Cancel
@@ -147,7 +146,7 @@ export default function MessagesCompose({ students }) {
                                 </PrimaryButton>
                             </div>
                         </form>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

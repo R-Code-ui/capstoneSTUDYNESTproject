@@ -77,18 +77,22 @@ export default function Pagination({ pagination, className = '' }) {
     const displayLinks = links && links.length > 0 ? links : buildLinks();
 
     return (
-        <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 ${className}`}>
+        <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 ${className}`}>
             {/* Info */}
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-gray-600">
                 Showing{' '}
-                <span className="font-medium">
+                <span className="font-medium text-gray-800">
                     {total > 0 ? (current_page - 1) * per_page + 1 : 0}
                 </span>{' '}
                 to{' '}
-                <span className="font-medium">
+                <span className="font-medium text-gray-800">
                     {Math.min(current_page * per_page, total)}
                 </span>{' '}
-                of <span className="font-medium">{total}</span> results
+                of{' '}
+                <span className="font-medium text-gray-800">
+                    {total}
+                </span>{' '}
+                results
             </div>
 
             {/* Controls */}
@@ -98,7 +102,7 @@ export default function Pagination({ pagination, className = '' }) {
                         return (
                             <span
                                 key={index}
-                                className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400"
+                                className="px-3 py-1 text-sm text-gray-400"
                             >
                                 {link.label}
                             </span>
@@ -114,10 +118,10 @@ export default function Pagination({ pagination, className = '' }) {
                                 preserveScroll
                                 preserveState
                                 className={`
-                                    inline-flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors
+                                    inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors
                                     ${link.active
                                         ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-gray-600 hover:bg-gray-100'
                                     }
                                 `}
                             >
@@ -136,10 +140,10 @@ export default function Pagination({ pagination, className = '' }) {
                                 preserveScroll
                                 preserveState
                                 className={`
-                                    inline-flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors
+                                    inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors
                                     ${link.active
                                         ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-gray-600 hover:bg-gray-100'
                                     }
                                 `}
                             >
@@ -157,11 +161,11 @@ export default function Pagination({ pagination, className = '' }) {
                             preserveScroll
                             preserveState
                             className={`
-                                px-3 py-1 text-sm rounded-md transition-colors
+                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors min-w-[36px] text-center
                                 ${
                                     link.active
                                         ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-gray-600 hover:bg-gray-100'
                                 }
                             `}
                         >

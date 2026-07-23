@@ -54,15 +54,12 @@ export default function AssignmentsEdit({
         status: assignment.status || 'draft',
         publish_date: assignment.publish_date || new Date().toISOString().split('T')[0],
         resources: [],
-        // ✅ FIX: Add deleted_resource_ids as string field
         deleted_resource_ids: '',
-        // BOW fields (will be auto-filled)
         bow_code: assignment.bow_code || '',
         learning_competency: assignment.learning_competency || '',
         learning_objective: assignment.learning_objective || '',
     });
 
-    // AUTO-FILL BOW FIELDS WHEN RELATED LESSON CHANGES
     const handleLessonChange = (e) => {
         const lessonId = e.target.value;
         setData('related_lesson_id', lessonId);
@@ -83,7 +80,6 @@ export default function AssignmentsEdit({
         }
     };
 
-    // When the component mounts, if there's a related lesson already set, auto-fill it
     useEffect(() => {
         if (data.related_lesson_id) {
             const selectedLesson = related_lessons.find(
@@ -101,7 +97,6 @@ export default function AssignmentsEdit({
         e.preventDefault();
         setIsSubmitting(true);
 
-        // ✅ FIX: Set deleted_resource_ids as comma-separated string
         setData('deleted_resource_ids', deletedResourceIds.join(','));
 
         const formData = new FormData();
@@ -147,7 +142,7 @@ export default function AssignmentsEdit({
         const validFiles = [];
 
         const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        const maxSize = 2 * 1024 * 1024; // 2MB
+        const maxSize = 2 * 1024 * 1024;
         const maxFiles = 5;
         const currentTotal = existingResources.length + data.resources.length;
 
@@ -189,7 +184,6 @@ export default function AssignmentsEdit({
         setData('resources', newResourcesList);
     };
 
-    // ✅ FIX: Track deleted resource by ID
     const removeExistingResource = (resourceId) => {
         setDeletedResourceIds((prev) => [...prev, resourceId]);
         setExistingResources((prev) => prev.filter(r => r.id !== resourceId));
@@ -201,7 +195,7 @@ export default function AssignmentsEdit({
             return <DocumentIcon className="w-5 h-5 text-red-500" />;
         }
         if (['jpg', 'jpeg', 'png'].includes(ext)) {
-            return <PhotoIcon className="w-5 h-5 text-green-500" />;
+            return <PhotoIcon className="w-5 h-5 text-emerald-500" />;
         }
         return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
     };
@@ -223,27 +217,27 @@ export default function AssignmentsEdit({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Assignment</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">Edit Assignment</span>}
         >
             <Head title="Edit Assignment" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             {/* ===== Section 1: Academic Information ===== */}
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Academic Information</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="grade_level" value="Grade Level" required />
                                         <select
                                             id="grade_level"
                                             value={data.grade_level}
                                             onChange={(e) => setData('grade_level', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Grade Level</option>
@@ -259,7 +253,7 @@ export default function AssignmentsEdit({
                                             id="subject"
                                             value={data.subject}
                                             onChange={(e) => setData('subject', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Subject</option>
@@ -275,7 +269,7 @@ export default function AssignmentsEdit({
                                             id="school_year"
                                             value={data.school_year}
                                             onChange={(e) => setData('school_year', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {school_years.map((year) => (
@@ -285,15 +279,15 @@ export default function AssignmentsEdit({
                                         <InputError message={errors.school_year} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="trimester" value="Trimester" required />
+                                        <InputLabel htmlFor="trimester" value="Term" required />
                                         <select
                                             id="trimester"
                                             value={data.trimester}
                                             onChange={(e) => setData('trimester', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
-                                            <option value="">Select Trimester</option>
+                                            <option value="">Select Term</option>
                                             {trimesters.map((trimester) => (
                                                 <option key={trimester} value={trimester}>{trimester}</option>
                                             ))}
@@ -306,7 +300,7 @@ export default function AssignmentsEdit({
                                             id="week_number"
                                             value={data.week_number}
                                             onChange={(e) => setData('week_number', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Week</option>
@@ -322,7 +316,7 @@ export default function AssignmentsEdit({
                                             id="related_lesson_id"
                                             value={data.related_lesson_id}
                                             onChange={handleLessonChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
                                             {related_lessons.map((lesson) => (
@@ -335,8 +329,8 @@ export default function AssignmentsEdit({
                             </div>
 
                             {/* ===== Section 2: BOW Reference (Auto-filled) ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">BOW Reference</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">BOW Reference</h3>
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <InputLabel htmlFor="bow_code" value="BOW Code" />
@@ -344,7 +338,7 @@ export default function AssignmentsEdit({
                                             id="bow_code"
                                             value={data.bow_code}
                                             onChange={(e) => setData('bow_code', e.target.value)}
-                                            className="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
+                                            className="mt-1 block w-full bg-gray-100"
                                             readOnly
                                             placeholder="Auto-filled from lesson"
                                         />
@@ -357,7 +351,7 @@ export default function AssignmentsEdit({
                                             value={data.learning_competency}
                                             onChange={(e) => setData('learning_competency', e.target.value)}
                                             rows={2}
-                                            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 text-gray-800"
                                             readOnly
                                             placeholder="Auto-filled from lesson"
                                         />
@@ -370,7 +364,7 @@ export default function AssignmentsEdit({
                                             value={data.learning_objective}
                                             onChange={(e) => setData('learning_objective', e.target.value)}
                                             rows={2}
-                                            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 text-gray-800"
                                             readOnly
                                             placeholder="Auto-filled from lesson"
                                         />
@@ -380,8 +374,8 @@ export default function AssignmentsEdit({
                             </div>
 
                             {/* ===== Section 3: Assignment Details ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Assignment Details</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Assignment Details</h3>
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <InputLabel htmlFor="assignment_title" value="Assignment Title" required />
@@ -400,7 +394,7 @@ export default function AssignmentsEdit({
                                             id="assignment_type"
                                             value={data.assignment_type}
                                             onChange={(e) => setData('assignment_type', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Type</option>
@@ -419,12 +413,12 @@ export default function AssignmentsEdit({
                                             value={data.instructions}
                                             onChange={(e) => setData('instructions', e.target.value)}
                                             rows={4}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         />
                                         <InputError message={errors.instructions} className="mt-2" />
                                     </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                         <div>
                                             <InputLabel htmlFor="total_points" value="Total Points" required />
                                             <TextInput
@@ -456,7 +450,7 @@ export default function AssignmentsEdit({
                                                 id="allow_late_submission"
                                                 value={data.allow_late_submission ? '1' : '0'}
                                                 onChange={(e) => setData('allow_late_submission', e.target.value === '1')}
-                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             >
                                                 <option value="0">No</option>
                                                 <option value="1">Yes</option>
@@ -494,8 +488,8 @@ export default function AssignmentsEdit({
                             </div>
 
                             {/* ===== Section 4: Submission Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Submission Settings</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Submission Settings</h3>
                                 <div>
                                     <InputLabel value="Submission Methods" required />
                                     <div className="mt-2 space-y-2">
@@ -505,9 +499,9 @@ export default function AssignmentsEdit({
                                                     type="checkbox"
                                                     checked={data.submission_methods.includes(method)}
                                                     onChange={() => toggleSubmissionMethod(method)}
-                                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-600"
                                                 />
-                                                <span className="text-gray-700 dark:text-gray-300">
+                                                <span className="text-gray-700">
                                                     {method.charAt(0).toUpperCase() + method.slice(1)} Upload
                                                 </span>
                                             </label>
@@ -518,16 +512,16 @@ export default function AssignmentsEdit({
                             </div>
 
                             {/* ===== Section 5: Learning Resources ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Learning Resources</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
 
                                 {/* Existing Resources */}
                                 {existingResources.length > 0 && (
                                     <div className="mb-4">
-                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Resources:</p>
+                                        <p className="text-sm font-medium text-gray-700 mb-2">Current Resources:</p>
                                         <div className="space-y-1">
                                             {existingResources.map((resource) => (
-                                                <div key={resource.id} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                                <div key={resource.id} className="flex items-center justify-between text-sm text-gray-600 p-2 bg-gray-50 rounded-lg border border-gray-100">
                                                     <div className="flex items-center gap-2">
                                                         {getFileIcon(resource.name)}
                                                         <span>{resource.name}</span>
@@ -544,7 +538,7 @@ export default function AssignmentsEdit({
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        <p className="text-xs text-gray-500 mt-1">
                                             Total: {existingResources.length} of 5 files
                                         </p>
                                     </div>
@@ -558,20 +552,20 @@ export default function AssignmentsEdit({
                                         type="file"
                                         multiple
                                         onChange={handleFileChange}
-                                        className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
+                                        className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                         accept=".pdf,.docx,.jpg,.jpeg,.png"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
                                             {fileErrors.map((error, index) => (
-                                                <p key={index} className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                                                <p key={index} className="text-sm text-red-600">{error}</p>
                                             ))}
                                         </div>
                                     )}
                                     {data.resources.length > 0 && (
                                         <div className="mt-2 space-y-1">
                                             {data.resources.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 p-2 bg-gray-50 rounded-lg border border-gray-100">
                                                     <div className="flex items-center gap-2">
                                                         {getFileIcon(file.name)}
                                                         <span>{file.name}</span>
@@ -587,12 +581,12 @@ export default function AssignmentsEdit({
                                                     </button>
                                                 </div>
                                             ))}
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            <p className="text-xs text-gray-500">
                                                 New files: {data.resources.length} of {5 - existingResources.length} remaining
                                             </p>
                                         </div>
                                     )}
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="mt-1 text-xs text-gray-500">
                                         Accepted: PDF, DOCX, JPG, JPEG, PNG (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
@@ -600,16 +594,16 @@ export default function AssignmentsEdit({
                             </div>
 
                             {/* ===== Section 6: Publication Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publication Settings</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Publication Settings</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="status" value="Status" required />
                                         <select
                                             id="status"
                                             value={data.status}
                                             onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {statuses.map((status) => (
@@ -634,7 +628,7 @@ export default function AssignmentsEdit({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
                                 <SecondaryButton type="button" onClick={() => router.visit(route('teacher.assignments.index'))}>
                                     Cancel
                                 </SecondaryButton>
@@ -643,7 +637,7 @@ export default function AssignmentsEdit({
                                 </PrimaryButton>
                             </div>
                         </form>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

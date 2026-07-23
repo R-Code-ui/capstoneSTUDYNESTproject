@@ -5,10 +5,11 @@ import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Pagination from '@/Components/Pagination';
 import ConversationListItem from '@/Components/ConversationListItem';
-import { PencilSquareIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, ChatBubbleLeftRightIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-export default function MessagesIndex({ conversations, unread_count, filters }) {
+export default function MessagesIndex({ conversations, unread_count, filters, pagination }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -20,6 +21,16 @@ export default function MessagesIndex({ conversations, unread_count, filters }) 
             preserveState: true,
             preserveScroll: true,
             onFinish: () => setIsLoading(false),
+        });
+    };
+
+    const handleDeleteConversation = (teacherId, teacherName) => {
+        if (!confirm(`Delete the entire conversation with ${teacherName}? This action cannot be undone.`)) {
+            return;
+        }
+        router.delete(route('student.messages.destroy-conversation', teacherId), {
+            preserveState: true,
+            preserveScroll: true,
         });
     };
 
@@ -75,14 +86,34 @@ export default function MessagesIndex({ conversations, unread_count, filters }) 
                         ) : (
                             <div className="divide-y divide-gray-100 dark:divide-gray-700">
                                 {conversations.map((conv) => (
-                                    <ConversationListItem
-                                        key={conv.teacher_id}
-                                        conversation={conv}
-                                        onClick={() =>
-                                            router.visit(route('student.messages.show', conv.last_message_id))
-                                        }
-                                    />
+                                    <div key={conv.teacher_id} className="flex items-center">
+                                        <div className="flex-1">
+                                            <ConversationListItem
+                                                conversation={conv}
+                                                onClick={() =>
+                                                    router.visit(route('student.messages.show', conv.last_message_id))
+                                                }
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteConversation(conv.teacher_id, conv.name);
+                                            }}
+                                            className="ml-2 p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                            title="Delete conversation"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {pagination && pagination.total > 0 && (
+                            <div className="mt-6">
+                                <Pagination pagination={pagination} />
                             </div>
                         )}
                     </Card>

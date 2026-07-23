@@ -96,7 +96,7 @@ export default function SearchBar({
                 {/* Search Icon */}
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <svg
-                        className={`${iconSizeClasses[size]} text-gray-400 dark:text-gray-500 ${iconClassName}`}
+                        className={`${iconSizeClasses[size]} text-gray-400 ${iconClassName}`}
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -122,12 +122,12 @@ export default function SearchBar({
                     className={`
                         block ${widthClasses} ${sizeClasses[size]}
                         pl-10 pr-10
-                        bg-white dark:bg-gray-800
-                        text-gray-900 dark:text-gray-100
-                        placeholder-gray-400 dark:placeholder-gray-500
-                        border border-gray-300 dark:border-gray-600
-                        focus:border-blue-500 dark:focus:border-blue-400
-                        focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20
+                        bg-white
+                        text-gray-800
+                        placeholder-gray-400
+                        border border-gray-300
+                        focus:border-blue-600
+                        focus:outline-none focus:ring-2 focus:ring-blue-600/20
                         ${roundedClasses[rounded]}
                         transition duration-200
                         ${inputClassName}
@@ -139,7 +139,7 @@ export default function SearchBar({
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors"
                         aria-label="Clear search"
                     >
                         <svg
@@ -162,7 +162,7 @@ export default function SearchBar({
                 {/* Search Button (mobile friendly) */}
                 <button
                     type="submit"
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors sm:hidden"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-600 hover:text-blue-700 transition-colors sm:hidden"
                     aria-label="Search"
                 >
                     <svg
@@ -184,8 +184,8 @@ export default function SearchBar({
 
             {/* Keyboard shortcut hint (optional) */}
             {searchValue && (
-                <div className="absolute right-14 top-1/2 hidden -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 sm:block">
-                    <kbd className="rounded border border-gray-300 px-1.5 py-0.5 font-mono text-[10px] dark:border-gray-600">
+                <div className="absolute right-14 top-1/2 hidden -translate-y-1/2 text-xs text-gray-400 sm:block">
+                    <kbd className="rounded border border-gray-300 px-1.5 py-0.5 font-mono text-[10px]">
                         Esc
                     </kbd>
                 </div>

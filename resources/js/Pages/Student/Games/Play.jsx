@@ -6,32 +6,67 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
 import gameDefinitions from '@/GameEngines/gameDefinitions';
+
+// Grade 4
 import WordBuilder from '@/GameEngines/WordBuilder';
 import SentenceScramble from '@/GameEngines/SentenceScramble';
 import BalloonPopMath from '@/GameEngines/BalloonPopMath';
 import SortingBaskets from '@/GameEngines/SortingBaskets';
+import RhymeMatch from '@/GameEngines/RhymeMatch';
+import LetterHunt from '@/GameEngines/LetterHunt';
+import CoinCounter from '@/GameEngines/CoinCounter';
+import SkipCountingPath from '@/GameEngines/SkipCountingPath';
+
+// Grade 5
 import MatchTheMeaning from '@/GameEngines/MatchTheMeaning';
 import StoryFillIn from '@/GameEngines/StoryFillIn';
 import FractionPizza from '@/GameEngines/FractionPizza';
 import NumberLineRunner from '@/GameEngines/NumberLineRunner';
+import CompoundWordCombiner from '@/GameEngines/CompoundWordCombiner';
+import AnalogySolver from '@/GameEngines/AnalogySolver';
+import AreaBlocks from '@/GameEngines/AreaBlocks';
+import DecimalNumberLine from '@/GameEngines/DecimalNumberLine';
+
+// Grade 6
 import ClueDetective from '@/GameEngines/ClueDetective';
 import WordWebBuilder from '@/GameEngines/WordWebBuilder';
 import BalanceScale from '@/GameEngines/BalanceScale';
 import GraphBuilder from '@/GameEngines/GraphBuilder';
+import SequenceTheStory from '@/GameEngines/SequenceTheStory';
+import IdiomMatch from '@/GameEngines/IdiomMatch';
+import CoordinatePlaneTreasureHunt from '@/GameEngines/CoordinatePlaneTreasureHunt';
+import PercentBarBuilder from '@/GameEngines/PercentBarBuilder';
 
 const ENGINE_MAP = {
+    // Grade 4
     'Word Builder': WordBuilder,
     'Sentence Scramble': SentenceScramble,
     'Balloon Pop Math': BalloonPopMath,
     'Sorting Baskets': SortingBaskets,
+    'Rhyme Match': RhymeMatch,
+    'Letter Hunt': LetterHunt,
+    'Coin Counter': CoinCounter,
+    'Skip Counting Path': SkipCountingPath,
+
+    // Grade 5
     'Match the Meaning': MatchTheMeaning,
     'Story Fill-In': StoryFillIn,
     'Fraction Pizza': FractionPizza,
     'Number Line Runner': NumberLineRunner,
+    'Compound Word Combiner': CompoundWordCombiner,
+    'Analogy Solver': AnalogySolver,
+    'Area Blocks': AreaBlocks,
+    'Decimal Number Line': DecimalNumberLine,
+
+    // Grade 6
     'Clue Detective': ClueDetective,
     'Word Web Builder': WordWebBuilder,
     'Balance Scale': BalanceScale,
     'Graph Builder': GraphBuilder,
+    'Sequence the Story': SequenceTheStory,
+    'Idiom Match': IdiomMatch,
+    'Coordinate Plane Treasure Hunt': CoordinatePlaneTreasureHunt,
+    'Percent Bar Builder': PercentBarBuilder,
 };
 
 export default function GamesPlay({ result, game }) {

@@ -28,7 +28,7 @@ export default function AnnouncementsIndex({
     statuses,
     priorities,
     filters,
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters?.category || '');
@@ -112,10 +112,35 @@ export default function AnnouncementsIndex({
         { value: 'principal', label: 'Principal' },
     ];
 
+    // 🔧 FIX: Added truncation to columns that may overflow
     const columns = [
-        { key: 'title', label: 'Title' },
-        { key: 'category', label: 'Category' },
-        { key: 'target_audience', label: 'Audience', render: (row) => row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) },
+        {
+            key: 'title',
+            label: 'Title',
+            render: (row) => (
+                <div className="max-w-[120px] truncate" title={row.title}>
+                    {row.title}
+                </div>
+            ),
+        },
+        {
+            key: 'category',
+            label: 'Category',
+            render: (row) => (
+                <div className="max-w-[80px] truncate" title={row.category}>
+                    {row.category}
+                </div>
+            ),
+        },
+        {
+            key: 'target_audience',
+            label: 'Audience',
+            render: (row) => (
+                <div className="max-w-[100px] truncate" title={row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}>
+                    {row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </div>
+            ),
+        },
         {
             key: 'posted_by',
             label: 'Posted By',
@@ -124,12 +149,12 @@ export default function AnnouncementsIndex({
                     {row.is_principal ? (
                         <>
                             <BuildingOfficeIcon className="w-4 h-4 text-blue-500" />
-                            <span className="text-blue-600 font-medium dark:text-blue-400">Principal</span>
+                            <span className="text-blue-600 font-medium">Principal</span>
                         </>
                     ) : (
                         <>
                             <UserIcon className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-600 dark:text-gray-300">Teacher</span>
+                            <span className="text-gray-600">Teacher</span>
                         </>
                     )}
                 </div>
@@ -140,17 +165,37 @@ export default function AnnouncementsIndex({
             label: 'Priority',
             render: (row) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    row.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                    row.priority === 'important' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                    row.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                    row.priority === 'important' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-blue-100 text-blue-800'
                 }`}>
                     {row.priority?.charAt(0).toUpperCase() + row.priority?.slice(1)}
                 </span>
             )
         },
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-        { key: 'view_count', label: 'Views' },
-        { key: 'created_at', label: 'Date Posted' },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => <StatusBadge status={row.status} />,
+        },
+        {
+            key: 'view_count',
+            label: 'Views',
+            render: (row) => (
+                <div className="max-w-[50px] truncate" title={row.view_count}>
+                    {row.view_count}
+                </div>
+            ),
+        },
+        {
+            key: 'created_at',
+            label: 'Date Posted',
+            render: (row) => (
+                <div className="max-w-[100px] truncate" title={row.created_at}>
+                    {row.created_at}
+                </div>
+            ),
+        },
     ];
 
     const actions = (row) => [
@@ -189,8 +234,9 @@ export default function AnnouncementsIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Announcements</span>
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">My Announcements</span>
                     <PrimaryButton onClick={() => router.visit(route('teacher.announcements.create'))}>
                         <PlusIcon className="w-4 h-4 mr-1" />
                         Create Announcement
@@ -202,69 +248,72 @@ export default function AnnouncementsIndex({
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Card>
-                        {/* Filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder="Search announcements by title or content..."
-                                    size="md"
-                                />
+                    {/* 🔧 FIX: Removed overflow-hidden from Card container */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search announcements by title or content..."
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    <FilterDropdown
+                                        options={gradeOptions}
+                                        value={gradeFilter}
+                                        onChange={(val) => handleFilterChange('grade', val)}
+                                        placeholder="Audience"
+                                        size="md"
+                                        className="w-40"
+                                    />
+                                    <FilterDropdown
+                                        options={categoryOptions}
+                                        value={categoryFilter}
+                                        onChange={(val) => handleFilterChange('category', val)}
+                                        placeholder="Category"
+                                        size="md"
+                                        className="w-40"
+                                    />
+                                    <FilterDropdown
+                                        options={statusOptions}
+                                        value={statusFilter}
+                                        onChange={(val) => handleFilterChange('status', val)}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={authorOptions}
+                                        value={authorFilter}
+                                        onChange={(val) => handleFilterChange('author', val)}
+                                        placeholder="Author"
+                                        size="md"
+                                        className="w-40"
+                                    />
+                                </div>
                             </div>
-                            <div className="flex flex-wrap gap-3">
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={gradeFilter}
-                                    onChange={(val) => handleFilterChange('grade', val)}
-                                    placeholder="Audience"
-                                    size="md"
-                                    className="w-40"
-                                />
-                                <FilterDropdown
-                                    options={categoryOptions}
-                                    value={categoryFilter}
-                                    onChange={(val) => handleFilterChange('category', val)}
-                                    placeholder="Category"
-                                    size="md"
-                                    className="w-40"
-                                />
-                                <FilterDropdown
-                                    options={statusOptions}
-                                    value={statusFilter}
-                                    onChange={(val) => handleFilterChange('status', val)}
-                                    placeholder="Status"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                <FilterDropdown
-                                    options={authorOptions}
-                                    value={authorFilter}
-                                    onChange={(val) => handleFilterChange('author', val)}
-                                    placeholder="Author"
-                                    size="md"
-                                    className="w-40"
+
+                            {/* Loading Spinner */}
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                            {/* Table */}
+                            <div className="mt-6">
+                                <Table
+                                    columns={columns}
+                                    rows={announcements}
+                                    actions={actions}
+                                    emptyMessage="No announcements found. Create your first announcement!"
+                                    hoverable
+                                    striped
+                                    pagination={pagination}
                                 />
                             </div>
                         </div>
-
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                        {/* Table */}
-                        <div className="mt-6">
-                            <Table
-                                columns={columns}
-                                rows={announcements}
-                                actions={actions}
-                                emptyMessage="No announcements found. Create your first announcement!"
-                                hoverable
-                                striped
-                                pagination={pagination} // ✅ ADDED
-                            />
-                        </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

@@ -7,6 +7,13 @@ import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
+// Heroicons
+import {
+    DocumentDuplicateIcon,
+    AcademicCapIcon,
+    UsersIcon,
+} from '@heroicons/react/24/outline';
+
 export default function PrincipalReports({
     school_years,
     grade_levels,
@@ -17,7 +24,7 @@ export default function PrincipalReports({
     report_data = null,
     report_id = null,
     show_results = false,
-    pagination, // ✅ ADDED (for teachers list if needed)
+    pagination,
 }) {
     const [selectedReport, setSelectedReport] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -33,26 +40,18 @@ export default function PrincipalReports({
     const { flash } = usePage().props;
     const hasReportData = report_data && show_results;
 
-    // Safely extract data and summary
     const resultData = hasReportData ? (report_data.data || []) : [];
     const resultSummary = hasReportData ? (report_data.summary || null) : null;
 
-    // SVG ICONS
     const ReportIcons = {
         teacher_activity: () => (
-            <svg className="w-10 h-10 mb-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
+            <UsersIcon className="w-10 h-10 mb-2 text-gray-600" />
         ),
         student_participation: () => (
-            <svg className="w-10 h-10 mb-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            <AcademicCapIcon className="w-10 h-10 mb-2 text-gray-600" />
         ),
         school_summary: () => (
-            <svg className="w-10 h-10 mb-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+            <DocumentDuplicateIcon className="w-10 h-10 mb-2 text-gray-600" />
         ),
     };
 
@@ -79,7 +78,7 @@ export default function PrincipalReports({
     ];
 
     const trimesterOptions = [
-        { value: '', label: 'All Terms' }, // ✅ CHANGED: "All Trimesters" → "All Terms"
+        { value: '', label: 'All Terms' },
         ...(trimesters || []).filter(t => t !== 'All Trimesters' && t !== 'All Terms').map((t) => ({ value: t, label: t })),
     ];
 
@@ -133,9 +132,9 @@ export default function PrincipalReports({
                 {resultSummary && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {Object.entries(resultSummary).map(([key, value]) => (
-                            <div key={key} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                                <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{value}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div key={key} className="bg-gray-50 p-4 rounded-lg text-center">
+                                <div className="text-xl font-bold text-gray-800">{value}</div>
+                                <div className="text-xs text-gray-500">
                                     {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </div>
                             </div>
@@ -145,8 +144,8 @@ export default function PrincipalReports({
 
                 {resultData.length > 0 ? (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <table className="w-full text-sm text-left text-gray-600">
+                            <thead className="text-xs font-semibold text-gray-500 uppercase bg-gray-50">
                                 <tr>
                                     {Object.keys(resultData[0]).map((key) => (
                                         <th key={key} className="px-6 py-3">
@@ -155,9 +154,9 @@ export default function PrincipalReports({
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-100">
                                 {resultData.map((row, index) => (
-                                    <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
                                         {Object.values(row).map((value, i) => (
                                             <td key={i} className="px-6 py-4">
                                                 {typeof value === 'number' ? value : value || '—'}
@@ -169,12 +168,12 @@ export default function PrincipalReports({
                         </table>
                     </div>
                 ) : (
-                    <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                    <p className="text-center text-gray-500 py-8">
                         No detailed rows found for this report.
                     </p>
                 )}
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <SecondaryButton onClick={handleExportPdf} disabled={isExporting}>
                         <span className="flex items-center gap-1">
                             <PdfIcon /> Download PDF
@@ -189,41 +188,46 @@ export default function PrincipalReports({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Reports</h2>}
+            header={<h2 className="text-xl font-bold text-gray-800">Reports</h2>}
         >
             <Head title="Reports" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                     {/* Report Selection Cards */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {reportTypes.map((type) => {
                             const IconComponent = ReportIcons[type.icon] || ReportIcons.school_summary;
                             return (
-                                <Card
+                                <div
                                     key={type.value}
-                                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${
-                                        selectedReport === type.value ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''
-                                    }`}
+                                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 bg-white rounded-xl border ${
+                                        selectedReport === type.value
+                                            ? 'border-blue-600 ring-2 ring-blue-600'
+                                            : 'border-gray-200'
+                                    } shadow-sm overflow-hidden`}
                                     onClick={() => {
                                         setSelectedReport(type.value);
                                         setFormData({ ...formData, report_type: type.value });
                                     }}
                                 >
-                                    <div className="flex flex-col items-center text-center">
+                                    <div className="p-6 flex flex-col items-center text-center">
                                         <IconComponent />
-                                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                                        <h4 className="font-semibold text-gray-800">
                                             {type.label}
                                         </h4>
                                     </div>
-                                </Card>
+                                </div>
                             );
                         })}
                     </div>
 
-                    {/* Filter Panel */}
-                    <div className="mt-6">
-                        <Card title="Report Filters">
+                    {/* Filter Panel - FIX: removed overflow-hidden */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Report Filters</h3>
+                        </div>
+                        <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 <FilterDropdown
                                     options={schoolYearOptions}
@@ -253,14 +257,14 @@ export default function PrincipalReports({
                                     options={trimesterOptions}
                                     value={formData.trimester}
                                     onChange={(val) => setFormData({ ...formData, trimester: val })}
-                                    placeholder="Term" // ✅ CHANGED: "Trimester" → "Term"
-                                    label="Term" // ✅ CHANGED: "Trimester" → "Term"
+                                    placeholder="Term"
+                                    label="Term"
                                     size="md"
                                 />
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                                 <SecondaryButton type="button" onClick={handleReset}>
                                     Reset Filters
                                 </SecondaryButton>
@@ -272,16 +276,19 @@ export default function PrincipalReports({
                                     {isLoading ? 'Generating...' : 'Generate Report'}
                                 </PrimaryButton>
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
                     {isLoading && <LoadingSpinner overlay size="lg" text="Generating report..." />}
 
                     {hasReportData && (
-                        <div className="mt-6">
-                            <Card title={resultsTitle}>
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700">{resultsTitle}</h3>
+                            </div>
+                            <div className="p-6">
                                 {renderReportResults()}
-                            </Card>
+                            </div>
                         </div>
                     )}
                 </div>

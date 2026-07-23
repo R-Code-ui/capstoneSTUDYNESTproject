@@ -15,7 +15,7 @@ export default function ActivityLogs({
     activity_types,
     grade_levels,
     filters,
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [activityTypeFilter, setActivityTypeFilter] = useState(filters?.activity_type || '');
@@ -96,39 +96,40 @@ export default function ActivityLogs({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Activity Logs</h2>}
+            header={<h2 className="text-xl font-bold text-gray-800">Activity Logs</h2>}
         >
             <Head title="Activity Logs" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                     {/* ===== Activity Summary Cards ===== */}
-                    <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-5">
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{summary.teacher_logins}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Teacher Logins</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{summary.lesson_uploads}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Lesson Uploads</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{summary.assignments_created}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Assignments Created</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{summary.quiz_attempts}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Quiz Attempts</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{summary.student_submissions}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Student Submissions</div>
-                        </Card>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.teacher_logins}</div>
+                            <div className="text-xs font-medium text-gray-500">Teacher Logins</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.lesson_uploads}</div>
+                            <div className="text-xs font-medium text-gray-500">Lesson Uploads</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.assignments_created}</div>
+                            <div className="text-xs font-medium text-gray-500">Assignments Created</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.quiz_attempts}</div>
+                            <div className="text-xs font-medium text-gray-500">Quiz Attempts</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.student_submissions}</div>
+                            <div className="text-xs font-medium text-gray-500">Student Submissions</div>
+                        </div>
                     </div>
 
                     {/* ===== Filters ===== */}
-                    <div className="mt-6">
-                        <Card>
+                    {/* 🔧 FIX: Removed overflow-hidden to prevent dropdown clipping */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1">
                                     <SearchBar
@@ -159,24 +160,24 @@ export default function ActivityLogs({
                                         type="date"
                                         value={dateFrom}
                                         onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                                        className="px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md dark:text-gray-200 w-36"
+                                        className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md text-gray-800 w-36 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                                         placeholder="From"
                                     />
                                     <input
                                         type="date"
                                         value={dateTo}
                                         onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                                        className="px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md dark:text-gray-200 w-36"
+                                        className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md text-gray-800 w-36 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                                         placeholder="To"
                                     />
                                 </div>
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
                     {/* ===== Log Table ===== */}
-                    <div className="mt-6">
-                        <Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="p-6">
                             {isLoading && <LoadingSpinner overlay size="lg" />}
 
                             <Table
@@ -186,9 +187,9 @@ export default function ActivityLogs({
                                 emptyMessage="No activity logs found."
                                 hoverable
                                 striped
-                                pagination={pagination} // ✅ ADDED
+                                pagination={pagination}
                             />
-                        </Card>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -204,34 +205,34 @@ export default function ActivityLogs({
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">User</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedLog.user}</div>
+                                <div className="text-sm text-gray-500">User</div>
+                                <div className="font-medium text-gray-800">{selectedLog.user}</div>
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Role</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedLog.role}</div>
+                                <div className="text-sm text-gray-500">Role</div>
+                                <div className="font-medium text-gray-800">{selectedLog.role}</div>
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Date & Time</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedLog.date_time}</div>
+                                <div className="text-sm text-gray-500">Date & Time</div>
+                                <div className="font-medium text-gray-800">{selectedLog.date_time}</div>
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Module</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedLog.module || 'N/A'}</div>
+                                <div className="text-sm text-gray-500">Module</div>
+                                <div className="font-medium text-gray-800">{selectedLog.module || 'N/A'}</div>
                             </div>
                             <div className="col-span-2">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Activity Description</div>
-                                <div className="font-medium text-gray-900 dark:text-white p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mt-1">
+                                <div className="text-sm text-gray-500">Activity Description</div>
+                                <div className="font-medium text-gray-800 p-3 bg-gray-50 rounded-lg mt-1">
                                     {selectedLog.activity}
                                 </div>
                             </div>
                             <div className="col-span-2">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">User ID</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{selectedLog.user_id}</div>
+                                <div className="text-sm text-gray-500">User ID</div>
+                                <div className="font-medium text-gray-800">{selectedLog.user_id}</div>
                             </div>
                         </div>
 
-                        <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-end pt-4 border-t border-gray-200">
                             <button
                                 onClick={() => { setShowLogDetail(false); setSelectedLog(null); }}
                                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"

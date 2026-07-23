@@ -25,7 +25,7 @@ export default function AssignmentsIndex({
     assignment_types,
     trimesters,
     filters,
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -93,14 +93,67 @@ export default function AssignmentsIndex({
         ...assignment_types.map((type) => ({ value: type, label: type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) })),
     ];
 
+    // 🔧 FIX: Added truncation to columns that may overflow
     const columns = [
-        { key: 'title', label: 'Title' },
-        { key: 'subject', label: 'Subject' },
-        { key: 'grade_level', label: 'Grade' },
-        { key: 'type', label: 'Type', render: (row) => row.type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) },
-        { key: 'due_date', label: 'Due Date' },
-        { key: 'submissions', label: 'Submissions' },
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+        {
+            key: 'title',
+            label: 'Title',
+            render: (row) => (
+                <div className="max-w-[120px] truncate" title={row.title}>
+                    {row.title}
+                </div>
+            ),
+        },
+        {
+            key: 'subject',
+            label: 'Subject',
+            render: (row) => (
+                <div className="max-w-[80px] truncate" title={row.subject}>
+                    {row.subject}
+                </div>
+            ),
+        },
+        {
+            key: 'grade_level',
+            label: 'Grade',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.grade_level}>
+                    {row.grade_level}
+                </div>
+            ),
+        },
+        {
+            key: 'type',
+            label: 'Type',
+            render: (row) => (
+                <div className="max-w-[90px] truncate" title={row.type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}>
+                    {row.type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </div>
+            ),
+        },
+        {
+            key: 'due_date',
+            label: 'Due Date',
+            render: (row) => (
+                <div className="max-w-[90px] truncate" title={row.due_date}>
+                    {row.due_date}
+                </div>
+            ),
+        },
+        {
+            key: 'submissions',
+            label: 'Submissions',
+            render: (row) => (
+                <div className="max-w-[80px] truncate" title={row.submissions}>
+                    {row.submissions}
+                </div>
+            ),
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => <StatusBadge status={row.status} />,
+        },
     ];
 
     const actions = (row) => [
@@ -138,71 +191,74 @@ export default function AssignmentsIndex({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Assignments</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">My Assignments</span>}
         >
             <Head title="Assignments" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Card>
-                        {/* Filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder="Search assignments by title or subject..."
-                                    size="md"
+                    {/* 🔧 FIX: Removed overflow-hidden from Card container */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search assignments by title or subject..."
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    <FilterDropdown
+                                        options={gradeOptions}
+                                        value={gradeFilter}
+                                        onChange={(val) => handleFilterChange('grade', val)}
+                                        placeholder="Grade"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={statusOptions}
+                                        value={statusFilter}
+                                        onChange={(val) => handleFilterChange('status', val)}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={typeOptions}
+                                        value={typeFilter}
+                                        onChange={(val) => handleFilterChange('type', val)}
+                                        placeholder="Type"
+                                        size="md"
+                                        className="w-40"
+                                    />
+                                    <PrimaryButton onClick={() => router.visit(route('teacher.assignments.create'))}>
+                                        <PlusIcon className="w-4 h-4 mr-1" />
+                                        Create Assignment
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+
+                            {/* Loading Spinner */}
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                            {/* Table */}
+                            <div className="mt-6">
+                                <Table
+                                    columns={columns}
+                                    rows={assignments}
+                                    actions={actions}
+                                    emptyMessage="No assignments found. Create your first assignment!"
+                                    hoverable
+                                    striped
+                                    pagination={pagination}
                                 />
                             </div>
-                            <div className="flex flex-wrap gap-3">
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={gradeFilter}
-                                    onChange={(val) => handleFilterChange('grade', val)}
-                                    placeholder="Grade"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                <FilterDropdown
-                                    options={statusOptions}
-                                    value={statusFilter}
-                                    onChange={(val) => handleFilterChange('status', val)}
-                                    placeholder="Status"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                <FilterDropdown
-                                    options={typeOptions}
-                                    value={typeFilter}
-                                    onChange={(val) => handleFilterChange('type', val)}
-                                    placeholder="Type"
-                                    size="md"
-                                    className="w-40"
-                                />
-                                <PrimaryButton onClick={() => router.visit(route('teacher.assignments.create'))}>
-                                    <PlusIcon className="w-4 h-4 mr-1" />
-                                    Create Assignment
-                                </PrimaryButton>
-                            </div>
                         </div>
-
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                        {/* Table */}
-                        <div className="mt-6">
-                            <Table
-                                columns={columns}
-                                rows={assignments}
-                                actions={actions}
-                                emptyMessage="No assignments found. Create your first assignment!"
-                                hoverable
-                                striped
-                                pagination={pagination} // ✅ ADDED
-                            />
-                        </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

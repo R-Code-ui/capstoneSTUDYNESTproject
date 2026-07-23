@@ -26,7 +26,7 @@ export default function LessonsIndex({
     trimesters,
     school_years,
     filters,
-    pagination, // ✅ NEW: Pagination data from controller
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -95,17 +95,62 @@ export default function LessonsIndex({
     ];
 
     const trimesterOptions = [
-        { value: '', label: 'All Terms' }, // ✅ CHANGED: "All Trimesters" → "All Terms"
+        { value: '', label: 'All Terms' },
         ...trimesters.map((t) => ({ value: t, label: t })),
     ];
 
+    // 🔧 FIX: Added truncation to columns that might overflow
     const columns = [
-        { key: 'title', label: 'Title' },
-        { key: 'subject', label: 'Subject' },
-        { key: 'grade_level', label: 'Grade' },
-        { key: 'trimester', label: 'Term' }, // ✅ CHANGED: "Trimester" → "Term"
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-        { key: 'created_at', label: 'Date Created' },
+        {
+            key: 'title',
+            label: 'Title',
+            render: (row) => (
+                <div className="max-w-[120px] truncate" title={row.title}>
+                    {row.title}
+                </div>
+            ),
+        },
+        {
+            key: 'subject',
+            label: 'Subject',
+            render: (row) => (
+                <div className="max-w-[80px] truncate" title={row.subject}>
+                    {row.subject}
+                </div>
+            ),
+        },
+        {
+            key: 'grade_level',
+            label: 'Grade',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.grade_level}>
+                    {row.grade_level}
+                </div>
+            ),
+        },
+        {
+            key: 'trimester',
+            label: 'Term',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.trimester}>
+                    {row.trimester}
+                </div>
+            ),
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => <StatusBadge status={row.status} />,
+        },
+        {
+            key: 'created_at',
+            label: 'Date Created',
+            render: (row) => (
+                <div className="max-w-[100px] truncate" title={row.created_at}>
+                    {row.created_at}
+                </div>
+            ),
+        },
     ];
 
     const actions = (row) => [
@@ -143,70 +188,73 @@ export default function LessonsIndex({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Lessons</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">My Lessons</span>}
         >
             <Head title="Lessons" />
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Card>
-                        {/* Filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder="Search lessons by title, subject, or competency..."
-                                    size="md"
+                    {/* 🔧 FIX: Removed overflow-hidden from Card */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search lessons by title, subject, or competency..."
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    <FilterDropdown
+                                        options={gradeOptions}
+                                        value={gradeFilter}
+                                        onChange={(val) => handleFilterChange('grade', val)}
+                                        placeholder="Grade"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={statusOptions}
+                                        value={statusFilter}
+                                        onChange={(val) => handleFilterChange('status', val)}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={trimesterOptions}
+                                        value={trimesterFilter}
+                                        onChange={(val) => handleFilterChange('trimester', val)}
+                                        placeholder="Term"
+                                        size="md"
+                                        className="w-40"
+                                    />
+                                    <PrimaryButton onClick={() => router.visit(route('teacher.lessons.create'))}>
+                                        <PlusIcon className="w-4 h-4 mr-1" />
+                                        Create Lesson
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+
+                            {/* Loading Spinner */}
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                            {/* Table */}
+                            <div className="mt-6">
+                                <Table
+                                    columns={columns}
+                                    rows={lessons}
+                                    actions={actions}
+                                    emptyMessage="No lessons found. Create your first lesson!"
+                                    hoverable
+                                    striped
+                                    pagination={pagination}
                                 />
                             </div>
-                            <div className="flex flex-wrap gap-3">
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={gradeFilter}
-                                    onChange={(val) => handleFilterChange('grade', val)}
-                                    placeholder="Grade"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                <FilterDropdown
-                                    options={statusOptions}
-                                    value={statusFilter}
-                                    onChange={(val) => handleFilterChange('status', val)}
-                                    placeholder="Status"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                <FilterDropdown
-                                    options={trimesterOptions}
-                                    value={trimesterFilter}
-                                    onChange={(val) => handleFilterChange('trimester', val)}
-                                    placeholder="Term" // ✅ CHANGED: "Trimester" → "Term"
-                                    size="md"
-                                    className="w-40"
-                                />
-                                <PrimaryButton onClick={() => router.visit(route('teacher.lessons.create'))}>
-                                    <PlusIcon className="w-4 h-4 mr-1" />
-                                    Create Lesson
-                                </PrimaryButton>
-                            </div>
                         </div>
-
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                        {/* Table */}
-                        <div className="mt-6">
-                            <Table
-                                columns={columns}
-                                rows={lessons}
-                                actions={actions}
-                                emptyMessage="No lessons found. Create your first lesson!"
-                                hoverable
-                                striped
-                                pagination={pagination} // ✅ NEW: Pass pagination data
-                            />
-                        </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

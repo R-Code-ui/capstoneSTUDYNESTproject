@@ -12,14 +12,13 @@ export default function TeacherMonitoring({
     grade_levels,
     status_options,
     filters,
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Handle search
     const handleSearch = (value) => {
         setSearch(value);
         setIsLoading(true);
@@ -30,7 +29,6 @@ export default function TeacherMonitoring({
         });
     };
 
-    // Handle filter change
     const handleFilterChange = (type, value) => {
         if (type === 'grade') setGradeFilter(value);
         if (type === 'status') setStatusFilter(value);
@@ -47,7 +45,6 @@ export default function TeacherMonitoring({
         });
     };
 
-    // View teacher profile - Navigate to full page
     const handleViewProfile = (teacher) => {
         router.visit(route('principal.teachers.show', teacher.id));
     };
@@ -62,7 +59,6 @@ export default function TeacherMonitoring({
         ...status_options.map((status) => ({ value: status, label: status })),
     ];
 
-    // SVG Icons
     const ViewProfileIcon = () => (
         <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -90,59 +86,62 @@ export default function TeacherMonitoring({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Teacher Monitoring</h2>}
+            header={<h2 className="text-xl font-bold text-gray-800">Teacher Monitoring</h2>}
         >
             <Head title="Teacher Monitoring" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Card>
-                        {/* Filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder="Search by name or teacher ID..."
-                                    size="md"
-                                />
+            <div className="py-6 sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    {/* 🔧 FIX: Removed overflow-hidden from this container to allow dropdowns to overflow */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search by name or teacher ID..."
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <FilterDropdown
+                                        options={gradeOptions}
+                                        value={gradeFilter}
+                                        onChange={(val) => handleFilterChange('grade', val)}
+                                        placeholder="Grade Level"
+                                        size="md"
+                                        className="w-48"
+                                    />
+                                    <FilterDropdown
+                                        options={statusOptions}
+                                        value={statusFilter}
+                                        onChange={(val) => handleFilterChange('status', val)}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-48"
+                                    />
+                                </div>
                             </div>
-                            <div className="flex gap-3">
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={gradeFilter}
-                                    onChange={(val) => handleFilterChange('grade', val)}
-                                    placeholder="Grade Level"
-                                    size="md"
-                                    className="w-48"
-                                />
-                                <FilterDropdown
-                                    options={statusOptions}
-                                    value={statusFilter}
-                                    onChange={(val) => handleFilterChange('status', val)}
-                                    placeholder="Status"
-                                    size="md"
-                                    className="w-48"
+
+                            {/* Loading Spinner */}
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                            {/* Table */}
+                            <div className="mt-6">
+                                <Table
+                                    columns={columns}
+                                    rows={teachers}
+                                    actions={actions}
+                                    emptyMessage="No teachers found."
+                                    hoverable
+                                    striped
+                                    pagination={pagination}
                                 />
                             </div>
                         </div>
-
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                        {/* Table */}
-                        <div className="mt-6">
-                            <Table
-                                columns={columns}
-                                rows={teachers}
-                                actions={actions}
-                                emptyMessage="No teachers found."
-                                hoverable
-                                striped
-                                pagination={pagination} // ✅ ADDED
-                            />
-                        </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

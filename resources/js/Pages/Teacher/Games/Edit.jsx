@@ -88,16 +88,16 @@ export default function GamesEdit({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Game</h2>}
+            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Edit Game</h2>}
         >
             <Head title="Edit Game" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
-                    <Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             {/* ===== Grade Level ===== */}
                             <div>
                                 <InputLabel htmlFor="grade_level" value="Grade Level" required />
@@ -105,7 +105,7 @@ export default function GamesEdit({
                                     id="grade_level"
                                     value={data.grade_level}
                                     onChange={(e) => handleGradeChange(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                     required
                                 >
                                     <option value="">Select Grade Level</option>
@@ -123,7 +123,7 @@ export default function GamesEdit({
                                     id="game_type"
                                     value={data.game_type}
                                     onChange={(e) => handleTypeChange(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                     required
                                     disabled={!data.grade_level}
                                 >
@@ -140,7 +140,7 @@ export default function GamesEdit({
                                     <InputLabel value="Select Game" required />
                                     <div className="mt-2 grid grid-cols-1 gap-2">
                                         {availableGames.length === 0 ? (
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            <p className="text-sm text-gray-500">
                                                 No games available for this grade and type.
                                             </p>
                                         ) : (
@@ -152,17 +152,17 @@ export default function GamesEdit({
                                                     className={`
                                                         w-full text-left px-4 py-3 rounded-lg border-2 transition
                                                         ${data.game_title === gameTitle
-                                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400'
-                                                            : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                                                            ? 'border-blue-600 bg-blue-50'
+                                                            : 'border-gray-200 hover:border-blue-300'
                                                         }
                                                     `}
                                                 >
                                                     <div className="flex items-center justify-between">
-                                                        <span className="font-medium text-gray-900 dark:text-white">
+                                                        <span className="font-medium text-gray-800">
                                                             {gameTitle}
                                                         </span>
                                                         {data.game_title === gameTitle && (
-                                                            <span className="text-blue-500">✓</span>
+                                                            <span className="text-blue-600">✓</span>
                                                         )}
                                                     </div>
                                                 </button>
@@ -175,19 +175,19 @@ export default function GamesEdit({
 
                             {/* ===== Game Preview ===== */}
                             {data.game_title && data.game_data && (
-                                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Game Preview</h4>
-                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                <div className="border-t border-gray-200 pt-4">
+                                    <h4 className="font-medium text-gray-800 mb-2">Game Preview</h4>
+                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                        <div className="text-sm font-medium text-gray-800">
                                             {data.game_title}
                                         </div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        <div className="text-sm text-gray-500 mt-1">
                                             Type: {data.game_type?.charAt(0).toUpperCase() + data.game_type?.slice(1)}
                                         </div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        <div className="text-sm text-gray-500">
                                             Grade: {data.grade_level}
                                         </div>
-                                        <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                                        <div className="text-sm text-gray-600 mt-2">
                                             {data.game_data?.instructions || 'Play the game and complete the activity.'}
                                         </div>
                                     </div>
@@ -195,9 +195,9 @@ export default function GamesEdit({
                             )}
 
                             {/* ===== Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                <h4 className="font-medium text-gray-900 dark:text-white mb-4">Game Settings</h4>
-                                <div className="grid grid-cols-2 gap-4">
+                            <div className="border-t border-gray-200 pt-4">
+                                <h4 className="font-medium text-gray-800 mb-4">Game Settings</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="max_attempts" value="Max Attempts" />
                                         <TextInput
@@ -227,15 +227,15 @@ export default function GamesEdit({
                             </div>
 
                             {/* ===== Publication Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                <h4 className="font-medium text-gray-900 dark:text-white mb-4">Publication Settings</h4>
+                            <div className="border-t border-gray-200 pt-4">
+                                <h4 className="font-medium text-gray-800 mb-4">Publication Settings</h4>
                                 <div>
                                     <InputLabel htmlFor="status" value="Status" required />
                                     <select
                                         id="status"
                                         value={data.status}
                                         onChange={(e) => setData('status', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         required
                                     >
                                         {statuses.map((status) => (
@@ -247,7 +247,7 @@ export default function GamesEdit({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                                 <SecondaryButton type="button" onClick={() => router.visit(route('teacher.games.index'))}>
                                     Cancel
                                 </SecondaryButton>
@@ -256,7 +256,7 @@ export default function GamesEdit({
                                 </PrimaryButton>
                             </div>
                         </form>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

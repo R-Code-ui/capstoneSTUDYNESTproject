@@ -20,7 +20,7 @@ export default function PrincipalAnnouncements({
     statuses = [],
     audience_options = [],
     filters = {},
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters?.category || '');
@@ -173,71 +173,72 @@ export default function PrincipalAnnouncements({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Announcements</h2>}
+            header={<h2 className="text-xl font-bold text-gray-800">Announcements</h2>}
         >
             <Head title="Announcements" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Card>
-                        {/* Filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder="Search announcements..."
-                                    size="md"
+            <div className="py-6 sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search announcements..."
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <FilterDropdown
+                                        options={categoryOptions}
+                                        value={categoryFilter}
+                                        onChange={(val) => handleFilterChange('category', val)}
+                                        placeholder="Category"
+                                        size="md"
+                                        className="w-48"
+                                    />
+                                    <FilterDropdown
+                                        options={statusOptions}
+                                        value={statusFilter}
+                                        onChange={(val) => handleFilterChange('status', val)}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-48"
+                                    />
+                                    <PrimaryButton onClick={() => { setSelectedAnnouncement(null); setShowCreateModal(true); }}>
+                                        + Create Announcement
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                            {/* Table */}
+                            <div className="mt-6">
+                                <Table
+                                    columns={columns}
+                                    rows={announcements}
+                                    actions={actions}
+                                    emptyMessage="No announcements found."
+                                    hoverable
+                                    striped
+                                    pagination={pagination}
                                 />
                             </div>
-                            <div className="flex gap-3">
-                                <FilterDropdown
-                                    options={categoryOptions}
-                                    value={categoryFilter}
-                                    onChange={(val) => handleFilterChange('category', val)}
-                                    placeholder="Category"
-                                    size="md"
-                                    className="w-48"
-                                />
-                                <FilterDropdown
-                                    options={statusOptions}
-                                    value={statusFilter}
-                                    onChange={(val) => handleFilterChange('status', val)}
-                                    placeholder="Status"
-                                    size="md"
-                                    className="w-48"
-                                />
-                                <PrimaryButton onClick={() => { setSelectedAnnouncement(null); setShowCreateModal(true); }}>
-                                    + Create Announcement
-                                </PrimaryButton>
-                            </div>
                         </div>
-
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                        {/* Table */}
-                        <div className="mt-6">
-                            <Table
-                                columns={columns}
-                                rows={announcements}
-                                actions={actions}
-                                emptyMessage="No announcements found."
-                                hoverable
-                                striped
-                                pagination={pagination} // ✅ ADDED
-                            />
-                        </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
 
-            {/* ===== CREATE/EDIT ANNOUNCEMENT MODAL ===== */}
+            {/* ===== CREATE/EDIT ANNOUNCEMENT MODAL (Compact Grid Layout) ===== */}
             <Modal
                 show={showCreateModal || showEditModal}
                 onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedAnnouncement(null); }}
                 title={showCreateModal ? 'Create Announcement' : 'Edit Announcement'}
-                size="xl"
+                size="2xl"
             >
                 <form
                     onSubmit={(e) => {
@@ -266,7 +267,7 @@ export default function PrincipalAnnouncements({
                     }}
                     className="space-y-4"
                 >
-                    {/* Title */}
+                    {/* Title – full width */}
                     <div>
                         <InputLabel htmlFor="title" value="Announcement Title" />
                         <TextInput
@@ -279,105 +280,108 @@ export default function PrincipalAnnouncements({
                         <InputError message={errors?.title} className="mt-2" />
                     </div>
 
-                    {/* Category */}
-                    <div>
-                        <InputLabel htmlFor="category" value="Category" />
-                        <select
-                            id="category"
-                            name="category"
-                            defaultValue={selectedAnnouncement?.category || ''}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                            required
-                        >
-                            <option value="">Select Category</option>
-                            {categories.map((cat) => (
-                                <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                        </select>
-                        <InputError message={errors?.category} className="mt-2" />
+                    {/* Two columns: Category + Target Audience */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel htmlFor="category" value="Category" />
+                            <select
+                                id="category"
+                                name="category"
+                                defaultValue={selectedAnnouncement?.category || ''}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
+                                required
+                            >
+                                <option value="">Select Category</option>
+                                {categories.map((cat) => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                            <InputError message={errors?.category} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="target_audience" value="Target Audience" />
+                            <select
+                                id="target_audience"
+                                name="target_audience"
+                                defaultValue={selectedAnnouncement?.audience || ''}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
+                                required
+                            >
+                                <option value="">Select Audience</option>
+                                {audienceOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                            <InputError message={errors?.target_audience} className="mt-2" />
+                        </div>
                     </div>
 
-                    {/* Content */}
+                    {/* Content – full width, but fewer rows */}
                     <div>
                         <InputLabel htmlFor="content" value="Announcement Content" />
                         <textarea
                             id="content"
                             name="content"
                             defaultValue={selectedAnnouncement?.content || ''}
-                            rows={6}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                            rows={4}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                             required
                         />
                         <InputError message={errors?.content} className="mt-2" />
                     </div>
 
-                    {/* Target Audience */}
-                    <div>
-                        <InputLabel htmlFor="target_audience" value="Target Audience" />
-                        <select
-                            id="target_audience"
-                            name="target_audience"
-                            defaultValue={selectedAnnouncement?.audience || ''}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                            required
-                        >
-                            <option value="">Select Audience</option>
-                            {audienceOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
-                        <InputError message={errors?.target_audience} className="mt-2" />
-                    </div>
+                    {/* Three columns: Priority, Pin, Status */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <InputLabel htmlFor="priority" value="Priority" />
+                            <select
+                                id="priority"
+                                name="priority"
+                                defaultValue={selectedAnnouncement?.priority || 'normal'}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
+                                required
+                            >
+                                {priorityOptions.map((p) => (
+                                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                                ))}
+                            </select>
+                            <InputError message={errors?.priority} className="mt-2" />
+                        </div>
 
-                    {/* Priority */}
-                    <div>
-                        <InputLabel htmlFor="priority" value="Priority" />
-                        <select
-                            id="priority"
-                            name="priority"
-                            defaultValue={selectedAnnouncement?.priority || 'normal'}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                            required
-                        >
-                            {priorityOptions.map((p) => (
-                                <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                            ))}
-                        </select>
-                        <InputError message={errors?.priority} className="mt-2" />
-                    </div>
-
-                    {/* Pin & Status */}
-                    <div className="grid grid-cols-2 gap-4">
                         <div>
                             <InputLabel htmlFor="is_pinned" value="Pin Announcement" />
                             <select
                                 id="is_pinned"
                                 name="is_pinned"
                                 defaultValue={selectedAnnouncement?.is_pinned ? '1' : '0'}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                             >
                                 <option value="0">No</option>
                                 <option value="1">Yes</option>
                             </select>
+                            <InputError message={errors?.is_pinned} className="mt-2" />
                         </div>
+
                         <div>
                             <InputLabel htmlFor="status" value="Status" />
                             <select
                                 id="status"
                                 name="status"
                                 defaultValue={selectedAnnouncement?.status || 'draft'}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                                 required
                             >
                                 <option value="draft">Draft</option>
                                 <option value="published">Published</option>
                                 <option value="archived">Archived</option>
                             </select>
+                            <InputError message={errors?.status} className="mt-2" />
                         </div>
                     </div>
 
-                    {/* Dates */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Two columns: Publish Date + Expiration Date */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <InputLabel htmlFor="publish_date" value="Publish Date" />
                             <TextInput
@@ -390,6 +394,7 @@ export default function PrincipalAnnouncements({
                             />
                             <InputError message={errors?.publish_date} className="mt-2" />
                         </div>
+
                         <div>
                             <InputLabel htmlFor="expiration_date" value="Expiration Date (Optional)" />
                             <TextInput
@@ -403,7 +408,8 @@ export default function PrincipalAnnouncements({
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedAnnouncement(null); }}>
                             Cancel
                         </SecondaryButton>
@@ -425,10 +431,10 @@ export default function PrincipalAnnouncements({
                     <div className="space-y-4">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                <h3 className="text-xl font-bold text-gray-800">
                                     {selectedAnnouncement.title}
                                 </h3>
-                                <div className="mt-1 flex flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <div className="mt-1 flex flex-wrap gap-2 text-sm text-gray-500">
                                     <span>Category: {selectedAnnouncement.category}</span>
                                     <span>•</span>
                                     <span>Audience: {selectedAnnouncement.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
@@ -436,7 +442,7 @@ export default function PrincipalAnnouncements({
                                     <span>Status: <StatusBadge status={selectedAnnouncement.status} /></span>
                                 </div>
                             </div>
-                            <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-right text-sm text-gray-500">
                                 <div>Posted: {selectedAnnouncement.created_at}</div>
                                 <div>Views: {selectedAnnouncement.view_count}</div>
                                 {selectedAnnouncement.expiration_date && (
@@ -445,13 +451,13 @@ export default function PrincipalAnnouncements({
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        <div className="pt-4 border-t border-gray-200">
+                            <div className="text-gray-700 whitespace-pre-wrap">
                                 {selectedAnnouncement.content}
                             </div>
                         </div>
 
-                        <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-end pt-4 border-t border-gray-200">
                             <button
                                 onClick={() => { setShowViewModal(false); setSelectedAnnouncement(null); }}
                                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"

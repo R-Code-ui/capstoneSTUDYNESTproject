@@ -24,7 +24,7 @@ export default function LessonsShow({ lesson }) {
             case 'pdf_module':
                 return <DocumentIcon className="w-6 h-6 text-red-500" />;
             case 'image':
-                return <PhotoIcon className="w-6 h-6 text-green-500" />;
+                return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
             case 'worksheet':
                 return <DocumentTextIcon className="w-6 h-6 text-blue-500" />;
             default:
@@ -51,11 +51,12 @@ export default function LessonsShow({ lesson }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to make justify-between work
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         {lesson.lesson_title}
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Link href={route('teacher.lessons.edit', lesson.id)}>
                             <SecondaryButton>
                                 <PencilSquareIcon className="w-4 h-4 mr-1" />
@@ -77,109 +78,132 @@ export default function LessonsShow({ lesson }) {
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
 
                     {/* ===== Basic Information ===== */}
-                    <Card>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Grade Level</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{lesson.grade_level}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Subject</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{lesson.subject}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Status</div>
-                                <StatusBadge status={lesson.status} />
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Publish Date</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{lesson.publish_date}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">School Year</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{lesson.school_year}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Term</div> {/* ✅ CHANGED: "Trimester" → "Term" */}
-                                <div className="font-medium text-gray-900 dark:text-white">{lesson.trimester}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Week</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{lesson.week_number}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Created At</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{lesson.created_at}</div>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="p-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Grade Level</div>
+                                    <div className="font-medium text-gray-800">{lesson.grade_level}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Subject</div>
+                                    <div className="font-medium text-gray-800">{lesson.subject}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Status</div>
+                                    <StatusBadge status={lesson.status} />
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Publish Date</div>
+                                    <div className="font-medium text-gray-800">{lesson.publish_date}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">School Year</div>
+                                    <div className="font-medium text-gray-800">{lesson.school_year}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Term</div>
+                                    <div className="font-medium text-gray-800">{lesson.trimester}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Week</div>
+                                    <div className="font-medium text-gray-800">{lesson.week_number}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Created At</div>
+                                    <div className="font-medium text-gray-800">{lesson.created_at}</div>
+                                </div>
                             </div>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* ===== BOW Reference ===== */}
                     <div className="mt-6">
-                        <Card title="BOW Reference">
-                            <div className="space-y-3">
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700">BOW Reference</h3>
+                            </div>
+                            <div className="p-6 space-y-3">
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Learning Competency</div>
-                                    <div className="text-gray-900 dark:text-white">{lesson.learning_competency}</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Learning Competency</div>
+                                    <div className="text-gray-800">{lesson.learning_competency}</div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Learning Objective</div>
-                                    <div className="text-gray-900 dark:text-white">{lesson.learning_objective}</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Learning Objective</div>
+                                    <div className="text-gray-800">{lesson.learning_objective}</div>
                                 </div>
                                 {lesson.bow_code && (
                                     <div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">BOW Code</div>
-                                        <div className="text-gray-900 dark:text-white font-mono">{lesson.bow_code}</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">BOW Code</div>
+                                        <div className="text-gray-800 font-mono">{lesson.bow_code}</div>
                                     </div>
                                 )}
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
                     {/* ===== Lesson Content ===== */}
                     <div className="mt-6">
-                        <Card title="Lesson Description">
-                            <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                                {lesson.lesson_description}
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700">Lesson Description</h3>
                             </div>
-                        </Card>
+                            <div className="p-6">
+                                <div className="text-gray-700 whitespace-pre-wrap">
+                                    {lesson.lesson_description}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="mt-6">
-                        <Card title="Lesson Content">
-                            <div className="prose prose-blue dark:prose-invert max-w-none">
-                                <div dangerouslySetInnerHTML={{ __html: lesson.lesson_content }} />
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700">Lesson Content</h3>
                             </div>
-                        </Card>
+                            <div className="p-6">
+                                <div className="prose prose-blue max-w-none text-gray-700">
+                                    <div dangerouslySetInnerHTML={{ __html: lesson.lesson_content }} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {lesson.key_takeaways && (
                         <div className="mt-6">
-                            <Card title="Key Takeaways">
-                                <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                                    {lesson.key_takeaways}
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700">Key Takeaways</h3>
                                 </div>
-                            </Card>
+                                <div className="p-6">
+                                    <div className="text-gray-700 whitespace-pre-wrap">
+                                        {lesson.key_takeaways}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
                     {/* ===== Learning Resources ===== */}
                     {lesson.resources && lesson.resources.length > 0 && (
                         <div className="mt-6">
-                            <Card title="Learning Resources">
-                                <div className="space-y-3">
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700">Learning Resources</h3>
+                                </div>
+                                <div className="p-6 space-y-3">
                                     {lesson.resources.map((resource) => (
                                         <div
                                             key={resource.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 gap-3"
                                         >
                                             <div className="flex items-center gap-3">
                                                 {getResourceIcon(resource.type)}
                                                 <div>
-                                                    <div className="font-medium text-gray-900 dark:text-white">
+                                                    <div className="font-medium text-gray-800">
                                                         {resource.name}
                                                     </div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                    <div className="text-sm text-gray-500">
                                                         {getResourceLabel(resource.type)} • {formatFileSize(resource.size)}
                                                     </div>
                                                 </div>
@@ -196,44 +220,49 @@ export default function LessonsShow({ lesson }) {
                                         </div>
                                     ))}
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     )}
 
                     {/* ===== Related Activities ===== */}
                     {(lesson.related_assignment_id || lesson.related_quiz_id || lesson.related_game_id) && (
                         <div className="mt-6">
-                            <Card title="Related Activities">
-                                <div className="flex flex-wrap gap-3">
-                                    {lesson.related_assignment_id && (
-                                        <Link
-                                            href={route('teacher.assignments.show', lesson.related_assignment_id)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors"
-                                        >
-                                            <DocumentTextIcon className="w-4 h-4" />
-                                            Open Assignment
-                                        </Link>
-                                    )}
-                                    {lesson.related_quiz_id && (
-                                        <Link
-                                            href={route('teacher.quizzes.show', lesson.related_quiz_id)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
-                                        >
-                                            <ChartBarIcon className="w-4 h-4" />
-                                            Take Quiz
-                                        </Link>
-                                    )}
-                                    {lesson.related_game_id && (
-                                        <Link
-                                            href={route('teacher.games.show', lesson.related_game_id)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
-                                        >
-                                            <PuzzlePieceIcon className="w-4 h-4" />
-                                            Play Game
-                                        </Link>
-                                    )}
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700">Related Activities</h3>
                                 </div>
-                            </Card>
+                                <div className="p-6">
+                                    <div className="flex flex-wrap gap-3">
+                                        {lesson.related_assignment_id && (
+                                            <Link
+                                                href={route('teacher.assignments.show', lesson.related_assignment_id)}
+                                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors"
+                                            >
+                                                <DocumentTextIcon className="w-4 h-4" />
+                                                Open Assignment
+                                            </Link>
+                                        )}
+                                        {lesson.related_quiz_id && (
+                                            <Link
+                                                href={route('teacher.quizzes.show', lesson.related_quiz_id)}
+                                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
+                                            >
+                                                <ChartBarIcon className="w-4 h-4" />
+                                                Take Quiz
+                                            </Link>
+                                        )}
+                                        {lesson.related_game_id && (
+                                            <Link
+                                                href={route('teacher.games.show', lesson.related_game_id)}
+                                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"
+                                            >
+                                                <PuzzlePieceIcon className="w-4 h-4" />
+                                                Play Game
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 

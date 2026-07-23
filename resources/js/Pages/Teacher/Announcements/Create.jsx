@@ -50,19 +50,19 @@ export default function AnnouncementsCreate({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Announcement</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">Create Announcement</span>}
         >
             <Head title="Create Announcement" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                    <Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             {/* ===== Section 1: Announcement Information ===== */}
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Announcement Information</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Announcement Information</h3>
                                 <div>
                                     <InputLabel htmlFor="title" value="Announcement Title" required />
                                     <TextInput
@@ -81,7 +81,7 @@ export default function AnnouncementsCreate({
                                         id="category"
                                         value={data.category}
                                         onChange={(e) => setData('category', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         required
                                     >
                                         <option value="">Select Category</option>
@@ -98,7 +98,7 @@ export default function AnnouncementsCreate({
                                         value={data.content}
                                         onChange={(e) => setData('content', e.target.value)}
                                         rows={6}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         required
                                         placeholder="Write your announcement content here..."
                                     />
@@ -107,15 +107,15 @@ export default function AnnouncementsCreate({
                             </div>
 
                             {/* ===== Section 2: Target Audience ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Target Audience</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Target Audience</h3>
                                 <div>
                                     <InputLabel htmlFor="target_audience" value="Target Audience" required />
                                     <select
                                         id="target_audience"
                                         value={data.target_audience}
                                         onChange={(e) => setData('target_audience', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         required
                                     >
                                         {audienceOptions.map((opt) => (
@@ -127,16 +127,16 @@ export default function AnnouncementsCreate({
                             </div>
 
                             {/* ===== Section 3: Visibility Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Visibility Settings</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Visibility Settings</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="priority" value="Priority" required />
                                         <select
                                             id="priority"
                                             value={data.priority}
                                             onChange={(e) => setData('priority', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {priorities.map((priority) => (
@@ -153,7 +153,7 @@ export default function AnnouncementsCreate({
                                             id="is_pinned"
                                             value={data.is_pinned ? '1' : '0'}
                                             onChange={(e) => setData('is_pinned', e.target.value === '1')}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="0">No</option>
                                             <option value="1">Yes</option>
@@ -164,16 +164,16 @@ export default function AnnouncementsCreate({
                             </div>
 
                             {/* ===== Section 4: Publication Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publication Settings</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Publication Settings</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="status" value="Status" required />
                                         <select
                                             id="status"
                                             value={data.status}
                                             onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {statuses.map((status) => (
@@ -196,7 +196,7 @@ export default function AnnouncementsCreate({
                                         />
                                         <InputError message={errors.publish_date} className="mt-2" />
                                     </div>
-                                    <div className="md:col-span-2">
+                                    <div className="sm:col-span-2">
                                         <InputLabel htmlFor="expiration_date" value="Expiration Date (Optional)" />
                                         <TextInput
                                             id="expiration_date"
@@ -212,7 +212,7 @@ export default function AnnouncementsCreate({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
                                 <SecondaryButton type="button" onClick={() => router.visit(route('teacher.announcements.index'))}>
                                     Cancel
                                 </SecondaryButton>
@@ -221,7 +221,7 @@ export default function AnnouncementsCreate({
                                 </PrimaryButton>
                             </div>
                         </form>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

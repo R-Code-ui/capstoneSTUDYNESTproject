@@ -131,14 +131,46 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
         return statusMap[status] || status;
     };
 
+    // 🔧 FIX: Added truncation to student_name and lrn columns
     const columns = [
-        { key: 'student_name', label: 'Student' },
-        // ✅ CHANGED: 'LRN' → 'Student ID'
-        { key: 'lrn', label: 'Student ID' },
-        { key: 'submission_method', label: 'Method', render: (row) => row.submission_method ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1) : '---' },
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status={getStatusBadge(row.status)} /> },
-        { key: 'score', label: 'Score', render: (row) => row.score !== null ? `${row.score}/${assignment.total_points}` : '---' },
-        { key: 'submitted_at', label: 'Submitted', render: (row) => row.submitted_at || '---' },
+        {
+            key: 'student_name',
+            label: 'Student',
+            render: (row) => (
+                <div className="max-w-[120px] truncate" title={row.student_name}>
+                    {row.student_name}
+                </div>
+            ),
+        },
+        {
+            key: 'lrn',
+            label: 'Student ID',
+            render: (row) => (
+                <div className="max-w-[100px] truncate" title={row.lrn}>
+                    {row.lrn}
+                </div>
+            ),
+        },
+        {
+            key: 'submission_method',
+            label: 'Method',
+            render: (row) => row.submission_method ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1) : '---',
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => <StatusBadge status={getStatusBadge(row.status)} />,
+        },
+        {
+            key: 'score',
+            label: 'Score',
+            render: (row) => row.score !== null ? `${row.score}/${assignment.total_points}` : '---',
+        },
+        {
+            key: 'submitted_at',
+            label: 'Submitted',
+            render: (row) => row.submitted_at || '---',
+        },
     ];
 
     const actions = (row) => {
@@ -183,8 +215,9 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         Grading: {assignment.title}
                     </span>
                     <SecondaryButton onClick={() => router.visit(route('teacher.assignments.index'))}>
@@ -199,45 +232,47 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     {/* ===== Statistics ===== */}
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{statistics.total_students}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Students</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{statistics.submitted}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Submitted</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{statistics.pending}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Pending</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{statistics.graded}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Graded</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                {statistics.average_score ? Math.round(statistics.average_score) : '---'}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-blue-600">{statistics.total_students}</div>
+                            <div className="text-sm font-medium text-gray-500">Total Students</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-emerald-600">{statistics.submitted}</div>
+                            <div className="text-sm font-medium text-gray-500">Submitted</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-amber-600">{statistics.pending}</div>
+                            <div className="text-sm font-medium text-gray-500">Pending</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-purple-600">{statistics.graded}</div>
+                            <div className="text-sm font-medium text-gray-500">Graded</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-indigo-600">
+                                {statistics.average_score ? Math.round(statistics.average_score) : '—'}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Average Score</div>
-                        </Card>
+                            <div className="text-sm font-medium text-gray-500">Average Score</div>
+                        </div>
                     </div>
 
                     {/* ===== Submissions Table ===== */}
                     <div className="mt-6">
-                        <Card title="Student Submissions">
-                            {isLoading && <LoadingSpinner overlay size="lg" />}
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="p-6">
+                                {isLoading && <LoadingSpinner overlay size="lg" />}
 
-                            <Table
-                                columns={columns}
-                                rows={submissions}
-                                actions={actions}
-                                emptyMessage="No students found for this assignment."
-                                hoverable
-                                striped
-                            />
-                        </Card>
+                                <Table
+                                    columns={columns}
+                                    rows={submissions}
+                                    actions={actions}
+                                    emptyMessage="No students found for this assignment."
+                                    hoverable
+                                    striped
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -271,7 +306,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                             value={formData.feedback}
                             onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
                             rows={3}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                             placeholder="Provide feedback to the student..."
                         />
                         <InputError message={errors?.feedback} className="mt-2" />
@@ -282,7 +317,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                             id="status"
                             value={formData.status}
                             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                         >
                             <option value="graded">Graded</option>
                             <option value="reviewed">Reviewed</option>
@@ -291,7 +326,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                         <InputError message={errors?.status} className="mt-2" />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                         <SecondaryButton type="button" onClick={() => { setShowGradeModal(false); setSelectedSubmission(null); }}>
                             Cancel
                         </SecondaryButton>
@@ -310,7 +345,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                 size="md"
             >
                 <form onSubmit={submitPaper} className="space-y-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600">
                         Mark this student's paper-based submission as completed.
                     </p>
                     <div>
@@ -333,13 +368,13 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                             value={paperFormData.feedback}
                             onChange={(e) => setPaperFormData({ ...paperFormData, feedback: e.target.value })}
                             rows={3}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                             placeholder="Provide feedback..."
                         />
                         <InputError message={errors?.feedback} className="mt-2" />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                         <SecondaryButton type="button" onClick={() => { setShowPaperModal(false); setSelectedStudent(null); }}>
                             Cancel
                         </SecondaryButton>

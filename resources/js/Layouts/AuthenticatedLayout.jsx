@@ -102,31 +102,27 @@ export default function AuthenticatedLayout({ header, children }) {
                 />
             )}
 
-            {/* Main Premium Layout Wrapper */}
-            <div className="min-h-screen bg-[#1E2530] font-sans antialiased text-gray-100 flex flex-col md:flex-row">
+            <div className="min-h-screen bg-slate-50 font-sans antialiased text-slate-900 flex flex-col md:flex-row">
 
-                {/* DESKTOP SIDEBAR (Hidden on mobile) */}
-                <aside className="hidden md:flex md:w-64 md:flex-shrink-0 flex-col bg-[#22486A] border-r border-white/5 shadow-2xl z-20">
-                    {/* Sidebar Brand Logo Wrapper */}
-                    <div className="h-20 flex items-center px-6 bg-[#1A3752] border-b border-white/5">
-                        <Link href="/" className="flex items-center gap-3 group">
+                {/* ===== DESKTOP SIDEBAR (Clean White) ===== */}
+                <aside className="hidden md:flex md:w-64 md:flex-shrink-0 flex-col bg-white border-r border-slate-200 shadow-sm z-20">
+                    {/* Brand Logo Header */}
+                    <div className="h-16 flex items-center px-6 border-b border-slate-200">
+                        <Link href="/" className="flex items-center gap-3">
                             <img
                                 src="/storage/images/studynestLogo.png"
                                 alt="StudyNest Logo"
-                                className="h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(94,196,210,0.3)] transition-transform duration-300 group-hover:scale-105"
+                                className="h-8 w-auto object-contain"
                             />
-                            <div className="flex flex-col">
-                                <span className="font-bold text-lg tracking-wider text-white group-hover:text-[#5EC4D2] transition-colors duration-200">STUDYNEST</span>
-                                <span className="text-[10px] font-semibold text-[#7DD3E1]/70 tracking-widest uppercase">{userRole || 'Academic'} Portal</span>
-                            </div>
+                            <span className="font-bold text-base tracking-wide text-slate-800">STUDYNEST</span>
                         </Link>
                     </div>
 
-                    {/* Navigation Container */}
-                    <div className="flex-1 flex flex-col justify-between overflow-y-auto p-4 space-y-8">
-                        <nav className="space-y-1.5">
-                            <div className="px-3 mb-2 text-[11px] font-bold tracking-widest text-[#7DD3E1]/50 uppercase">
-                                Core Navigation
+                    {/* Sidebar Navigation */}
+                    <div className="flex-1 flex flex-col justify-between overflow-y-auto p-4">
+                        <nav className="space-y-1">
+                            <div className="px-3 py-2 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                Menu
                             </div>
                             {navLinks.map((link) => (
                                 <NavLink
@@ -142,66 +138,23 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </NavLink>
                             ))}
                         </nav>
-
-                        {/* Footer Profile Control Block */}
-                        <div className="pt-4 border-t border-[#1A3752]">
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <button
-                                        type="button"
-                                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[#1A3752]/60 hover:bg-[#1A3752] border border-white/5 transition-all duration-200 group text-left"
-                                    >
-                                        <div className="flex items-center gap-3 overflow-hidden">
-                                            <div className="h-8 w-8 rounded-lg bg-[#5EC4D2] text-[#22486A] flex items-center justify-center font-bold text-sm shrink-0 shadow-md">
-                                                {user.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="truncate flex flex-col">
-                                                <span className="text-xs font-semibold text-white truncate">{user.name}</span>
-                                                <span className="text-[10px] text-[#7DD3E1]/70 truncate">{user.email}</span>
-                                            </div>
-                                        </div>
-                                        <svg
-                                            className="h-4 w-4 text-[#7DD3E1]/60 group-hover:text-[#5EC4D2] transition-colors ml-2 shrink-0"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
-                                    </button>
-                                </Dropdown.Trigger>
-
-                                <Dropdown.Content align="left" width="48" contentClasses="py-1 bg-[#22486A] border border-white/5 shadow-xl rounded-xl">
-                                    <Dropdown.Link href={route('profile.edit')}>
-                                        Profile Settings
-                                    </Dropdown.Link>
-                                    <Dropdown.Link href={route('logout')} method="post" as="button">
-                                        Log Out
-                                    </Dropdown.Link>
-                                </Dropdown.Content>
-                            </Dropdown>
-                        </div>
                     </div>
                 </aside>
 
-                {/* MOBILE HEADER RESPONSIVE TOGGLES */}
-                <div className="md:hidden flex h-16 items-center justify-between px-4 bg-[#22486A] border-b border-white/5 shadow-md z-30">
+                {/* ===== MOBILE TOPBAR ===== */}
+                <div className="md:hidden flex h-16 items-center justify-between px-4 bg-white border-b border-slate-200 shadow-sm z-30">
                     <Link href="/" className="flex items-center gap-2">
                         <img
                             src="/storage/images/studynestLogo.png"
                             alt="StudyNest Logo"
-                            className="h-8 w-auto object-contain"
+                            className="h-7 w-auto object-contain"
                         />
-                        <span className="font-bold text-sm tracking-wider text-white">STUDYNEST</span>
+                        <span className="font-bold text-sm tracking-wide text-slate-800">STUDYNEST</span>
                     </Link>
 
                     <button
                         onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
-                        className="inline-flex items-center justify-center rounded-lg p-2 text-[#7DD3E1] hover:bg-[#1A3752] hover:text-[#5EC4D2] focus:outline-none transition-all duration-200"
+                        className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100 focus:outline-none transition-colors"
                     >
                         <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path
@@ -222,8 +175,8 @@ export default function AuthenticatedLayout({ header, children }) {
                     </button>
                 </div>
 
-                {/* MOBILE EXPANDED DROPDOWN DRAWER */}
-                <div className={(showingNavigationDropdown ? 'block animate-fadeIn' : 'hidden') + ' md:hidden bg-[#1A3752] border-b border-white/5 z-30'}>
+                {/* ===== MOBILE NAVIGATION DRAWER ===== */}
+                <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' md:hidden bg-white border-b border-slate-200 z-30'}>
                     <div className="space-y-1 px-3 pb-3 pt-2">
                         {navLinks.map((link) => (
                             <ResponsiveNavLink
@@ -240,14 +193,14 @@ export default function AuthenticatedLayout({ header, children }) {
                         ))}
                     </div>
 
-                    <div className="border-t border-[#22486A] pb-3 pt-4 px-4 bg-[#142B41]">
+                    <div className="border-t border-slate-200 pb-3 pt-4 px-4 bg-slate-50">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="h-9 w-9 rounded-lg bg-[#5EC4D2] text-[#22486A] flex items-center justify-center font-bold">
+                            <div className="h-9 w-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold">
                                 {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                                <div className="text-sm font-semibold text-white">{user.name}</div>
-                                <div className="text-xs text-[#7DD3E1]/70">{user.email}</div>
+                                <div className="text-sm font-semibold text-slate-800">{user.name}</div>
+                                <div className="text-xs text-slate-500">{user.email}</div>
                             </div>
                         </div>
 
@@ -262,19 +215,63 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 </div>
 
-                {/* RIGHT SIDE MAIN DASHBOARD PORTAL SCROLLBOX */}
-                <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
-                    {header && (
-                        <header className="sticky top-0 z-10 px-6 pt-6 pb-2">
-                            <div className="mx-auto max-w-7xl">
-                                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white drop-shadow-sm">
-                                    {header}
-                                </h1>
+                {/* ===== MAIN CONTENT AREA ===== */}
+                <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-slate-50">
+                    {/* ===== TOP HEADER BAR (Clean, Light) ===== */}
+                    <header className="hidden md:flex h-16 items-center justify-between px-8 bg-white border-b border-slate-200 shadow-sm">
+                        <div className="text-lg font-bold text-slate-800">
+                            {typeof header === 'string' ? header : 'Dashboard'}
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <button
+                                        type="button"
+                                        className="flex items-center gap-3 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+                                    >
+                                        <div className="h-8 w-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                            {user.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="text-sm font-semibold text-slate-700">{user.name}</span>
+                                        <svg
+                                            className="h-4 w-4 text-slate-400"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </Dropdown.Trigger>
+
+                                <Dropdown.Content align="right" width="48">
+                                    <Dropdown.Link href={route('profile.edit')}>
+                                        Profile Settings
+                                    </Dropdown.Link>
+                                    <Dropdown.Link href={route('logout')} method="post" as="button">
+                                        Log Out
+                                    </Dropdown.Link>
+                                </Dropdown.Content>
+                            </Dropdown>
+                        </div>
+                    </header>
+
+                    {/* ===== PAGE HEADER (Supports JSX) ===== */}
+                    {header && typeof header !== 'string' && (
+                        <div className="px-6 pt-6 pb-2">
+                            <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-slate-800">
+                                {header}
                             </div>
-                        </header>
+                        </div>
                     )}
 
-                    <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
+                    {/* ===== MAIN BODY ===== */}
+                    <main className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">
                         {children}
                     </main>
                 </div>

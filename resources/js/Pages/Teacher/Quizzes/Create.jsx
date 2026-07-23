@@ -205,7 +205,7 @@ export default function QuizzesCreate({
                             <select
                                 value={question.correct_answer || ''}
                                 onChange={(e) => updateQuestion(index, 'correct_answer', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                             >
                                 <option value="">Select Correct Answer</option>
                                 <option value="A">A</option>
@@ -249,7 +249,7 @@ export default function QuizzesCreate({
                         <select
                             value={question.correct_answer || ''}
                             onChange={(e) => updateQuestion(index, 'correct_answer', e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                         >
                             <option value="">Select Correct Answer</option>
                             <option value="True">True</option>
@@ -265,19 +265,19 @@ export default function QuizzesCreate({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Quiz</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">Create Quiz</span>}
         >
             <Head title="Create Quiz" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             {/* ===== Basic Information ===== */}
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
                                 <div>
                                     <InputLabel htmlFor="quiz_title" value="Quiz Title" required />
                                     <TextInput
@@ -293,16 +293,16 @@ export default function QuizzesCreate({
                             </div>
 
                             {/* ===== Section 1: Academic Information ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Academic Information</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="grade_level" value="Grade Level" required />
                                         <select
                                             id="grade_level"
                                             value={data.grade_level}
                                             onChange={(e) => setData('grade_level', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Grade Level</option>
@@ -318,7 +318,7 @@ export default function QuizzesCreate({
                                             id="subject"
                                             value={data.subject}
                                             onChange={(e) => setData('subject', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Subject</option>
@@ -334,7 +334,7 @@ export default function QuizzesCreate({
                                             id="school_year"
                                             value={data.school_year}
                                             onChange={(e) => setData('school_year', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {school_years.map((year) => (
@@ -344,13 +344,12 @@ export default function QuizzesCreate({
                                         <InputError message={errors.school_year} className="mt-2" />
                                     </div>
                                     <div>
-                                        {/* ✅ CHANGED: "Trimester" → "Term" */}
                                         <InputLabel htmlFor="trimester" value="Term" required />
                                         <select
                                             id="trimester"
                                             value={data.trimester}
                                             onChange={(e) => setData('trimester', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Term</option>
@@ -366,7 +365,7 @@ export default function QuizzesCreate({
                                             id="week_number"
                                             value={data.week_number}
                                             onChange={(e) => setData('week_number', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Week</option>
@@ -382,7 +381,7 @@ export default function QuizzesCreate({
                                             id="related_lesson_id"
                                             value={data.related_lesson_id}
                                             onChange={(e) => setData('related_lesson_id', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
                                             {related_lessons.map((lesson) => (
@@ -395,16 +394,16 @@ export default function QuizzesCreate({
                             </div>
 
                             {/* ===== Section 2: Quiz Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quiz Settings</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Quiz Settings</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div>
                                         <InputLabel htmlFor="quiz_type" value="Quiz Type" required />
                                         <select
                                             id="quiz_type"
                                             value={data.quiz_type}
                                             onChange={handleQuizTypeChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {quiz_types.map((type) => (
@@ -446,7 +445,7 @@ export default function QuizzesCreate({
                                             id="shuffle_questions"
                                             value={data.shuffle_questions ? '1' : '0'}
                                             onChange={(e) => setData('shuffle_questions', e.target.value === '1')}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="0">No</option>
                                             <option value="1">Yes</option>
@@ -457,9 +456,9 @@ export default function QuizzesCreate({
                             </div>
 
                             {/* ===== Section 3: Questions ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Questions</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-800">Questions</h3>
                                     <PrimaryButton type="button" onClick={addQuestion}>
                                         <PlusIcon className="w-4 h-4 mr-1" />
                                         Add Question
@@ -469,15 +468,15 @@ export default function QuizzesCreate({
                                 <InputError message={errors.questions} className="mb-2" />
 
                                 {questions.map((question, index) => (
-                                    <div key={index} className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-4 border border-gray-200 dark:border-gray-600">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h4 className="font-medium text-gray-900 dark:text-white">
+                                    <div key={index} className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
+                                            <h4 className="font-medium text-gray-800">
                                                 Question {index + 1}
                                             </h4>
                                             <button
                                                 type="button"
                                                 onClick={() => removeQuestion(index)}
-                                                className="text-red-500 hover:text-red-700 flex items-center gap-1"
+                                                className="text-red-500 hover:text-red-700 flex items-center gap-1 text-sm"
                                             >
                                                 <TrashIcon className="w-4 h-4" />
                                                 Remove
@@ -501,16 +500,16 @@ export default function QuizzesCreate({
                             </div>
 
                             {/* ===== Section 4: Publication Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publication Settings</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Publication Settings</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="status" value="Status" required />
                                         <select
                                             id="status"
                                             value={data.status}
                                             onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {statuses.map((status) => (
@@ -537,7 +536,7 @@ export default function QuizzesCreate({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
                                 <SecondaryButton type="button" onClick={() => router.visit(route('teacher.quizzes.index'))}>
                                     Cancel
                                 </SecondaryButton>
@@ -546,7 +545,7 @@ export default function QuizzesCreate({
                                 </PrimaryButton>
                             </div>
                         </form>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

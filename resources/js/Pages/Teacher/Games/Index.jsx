@@ -24,7 +24,7 @@ export default function GamesIndex({
     statuses,
     game_types,
     filters,
-    pagination, // ✅ ADDED
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
@@ -92,14 +92,67 @@ export default function GamesIndex({
         ...game_types.map((type) => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) })),
     ];
 
+    // 🔧 FIX: Added truncation to columns that may overflow
     const columns = [
-        { key: 'title', label: 'Game' },
-        { key: 'grade_level', label: 'Grade' },
-        { key: 'game_type', label: 'Type', render: (row) => row.game_type?.charAt(0).toUpperCase() + row.game_type?.slice(1) },
-        { key: 'max_attempts', label: 'Attempts' },
-        { key: 'due_date', label: 'Due Date', render: (row) => row.due_date || '---' },
-        { key: 'participants', label: 'Participants' },
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+        {
+            key: 'title',
+            label: 'Game',
+            render: (row) => (
+                <div className="max-w-[120px] truncate" title={row.title}>
+                    {row.title}
+                </div>
+            ),
+        },
+        {
+            key: 'grade_level',
+            label: 'Grade',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.grade_level}>
+                    {row.grade_level}
+                </div>
+            ),
+        },
+        {
+            key: 'game_type',
+            label: 'Type',
+            render: (row) => (
+                <div className="max-w-[80px] truncate" title={row.game_type?.charAt(0).toUpperCase() + row.game_type?.slice(1)}>
+                    {row.game_type?.charAt(0).toUpperCase() + row.game_type?.slice(1)}
+                </div>
+            ),
+        },
+        {
+            key: 'max_attempts',
+            label: 'Attempts',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.max_attempts}>
+                    {row.max_attempts}
+                </div>
+            ),
+        },
+        {
+            key: 'due_date',
+            label: 'Due Date',
+            render: (row) => (
+                <div className="max-w-[90px] truncate" title={row.due_date}>
+                    {row.due_date || '---'}
+                </div>
+            ),
+        },
+        {
+            key: 'participants',
+            label: 'Participants',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.participants}>
+                    {row.participants}
+                </div>
+            ),
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => <StatusBadge status={row.status} />,
+        },
     ];
 
     const actions = (row) => [
@@ -137,71 +190,74 @@ export default function GamesIndex({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Games</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">My Games</span>}
         >
             <Head title="Games" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Card>
-                        {/* Filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder="Search games by title..."
-                                    size="md"
+                    {/* 🔧 FIX: Removed overflow-hidden from Card container */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search games by title..."
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    <FilterDropdown
+                                        options={gradeOptions}
+                                        value={gradeFilter}
+                                        onChange={(val) => handleFilterChange('grade', val)}
+                                        placeholder="Grade"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={statusOptions}
+                                        value={statusFilter}
+                                        onChange={(val) => handleFilterChange('status', val)}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={typeOptions}
+                                        value={typeFilter}
+                                        onChange={(val) => handleFilterChange('type', val)}
+                                        placeholder="Type"
+                                        size="md"
+                                        className="w-40"
+                                    />
+                                    <PrimaryButton onClick={() => router.visit(route('teacher.games.create'))}>
+                                        <PlusIcon className="w-4 h-4 mr-1" />
+                                        Assign Game
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+
+                            {/* Loading Spinner */}
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                            {/* Table */}
+                            <div className="mt-6">
+                                <Table
+                                    columns={columns}
+                                    rows={games}
+                                    actions={actions}
+                                    emptyMessage="No games assigned. Assign your first game!"
+                                    hoverable
+                                    striped
+                                    pagination={pagination}
                                 />
                             </div>
-                            <div className="flex flex-wrap gap-3">
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={gradeFilter}
-                                    onChange={(val) => handleFilterChange('grade', val)}
-                                    placeholder="Grade"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                <FilterDropdown
-                                    options={statusOptions}
-                                    value={statusFilter}
-                                    onChange={(val) => handleFilterChange('status', val)}
-                                    placeholder="Status"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                <FilterDropdown
-                                    options={typeOptions}
-                                    value={typeFilter}
-                                    onChange={(val) => handleFilterChange('type', val)}
-                                    placeholder="Type"
-                                    size="md"
-                                    className="w-40"
-                                />
-                                <PrimaryButton onClick={() => router.visit(route('teacher.games.create'))}>
-                                    <PlusIcon className="w-4 h-4 mr-1" />
-                                    Assign Game
-                                </PrimaryButton>
-                            </div>
                         </div>
-
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                        {/* Table */}
-                        <div className="mt-6">
-                            <Table
-                                columns={columns}
-                                rows={games}
-                                actions={actions}
-                                emptyMessage="No games assigned. Assign your first game!"
-                                hoverable
-                                striped
-                                pagination={pagination} // ✅ ADDED
-                            />
-                        </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

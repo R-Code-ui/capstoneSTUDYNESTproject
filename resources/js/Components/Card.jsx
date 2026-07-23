@@ -18,8 +18,8 @@ export default function Card({
     padding = 'p-6',
 }) {
     const cardClasses = [
-        'bg-white dark:bg-gray-800 rounded-lg',
-        bordered ? 'border border-gray-200 dark:border-gray-700' : '',
+        'bg-white rounded-xl',
+        bordered ? 'border border-gray-200' : '',
         shadow === 'sm' ? 'shadow-sm' : shadow === 'md' ? 'shadow-md' : shadow === 'lg' ? 'shadow-lg' : '',
         hoverable ? 'transition duration-200 hover:shadow-lg hover:-translate-y-1' : '',
         className,
@@ -29,18 +29,18 @@ export default function Card({
         <div className={cardClasses}>
             {/* Header */}
             {(title || subtitle || header) && (
-                <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-700 ${headerClassName}`}>
+                <div className={`px-6 py-4 border-b border-gray-200 ${headerClassName}`}>
                     {header ? (
                         header
                     ) : (
                         <>
                             {title && (
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                <h3 className="text-lg font-semibold text-gray-800">
                                     {title}
                                 </h3>
                             )}
                             {subtitle && (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                <p className="text-sm text-gray-500">
                                     {subtitle}
                                 </p>
                             )}
@@ -56,7 +56,7 @@ export default function Card({
 
             {/* Footer */}
             {footer && (
-                <div className={`px-6 py-4 border-t border-gray-200 dark:border-gray-700 ${footerClassName}`}>
+                <div className={`px-6 py-4 border-t border-gray-200 ${footerClassName}`}>
                     {footer}
                 </div>
             )}

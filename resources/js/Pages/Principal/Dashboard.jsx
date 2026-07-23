@@ -3,6 +3,21 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 
+// Heroicons
+import {
+    UserGroupIcon,
+    AcademicCapIcon,
+    DocumentTextIcon,
+    ClipboardDocumentListIcon,
+    ChartBarIcon,
+    MegaphoneIcon,
+    UsersIcon,
+    EyeIcon,
+    DocumentDuplicateIcon,
+    CalendarIcon,
+    ArrowRightIcon,
+} from '@heroicons/react/24/outline';
+
 export default function PrincipalDashboard({
     stats,
     teacher_activity,
@@ -15,82 +30,137 @@ export default function PrincipalDashboard({
 }) {
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Principal Dashboard</h2>}
+            header={<h2 className="text-xl font-bold text-gray-800">Principal Dashboard</h2>}
         >
             <Head title="Principal Dashboard" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+
                     {/* ===== Section 1: School Overview Cards ===== */}
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.total_teachers}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Teachers</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.total_students}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Students</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.total_lessons}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Lessons</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.total_assignments}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Assignments</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.total_quizzes}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Quizzes</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.total_announcements}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Announcements</div>
-                        </Card>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-amber-50 rounded-lg">
+                                    <UserGroupIcon className="w-5 h-5 text-amber-600" />
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-gray-800">{stats.total_teachers}</div>
+                                    <div className="text-xs font-medium text-gray-500">Teachers</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-50 rounded-lg">
+                                    <AcademicCapIcon className="w-5 h-5 text-emerald-600" />
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-gray-800">{stats.total_students}</div>
+                                    <div className="text-xs font-medium text-gray-500">Students</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-purple-50 rounded-lg">
+                                    <DocumentTextIcon className="w-5 h-5 text-purple-600" />
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-gray-800">{stats.total_lessons}</div>
+                                    <div className="text-xs font-medium text-gray-500">Lessons</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-sky-50 rounded-lg">
+                                    <ClipboardDocumentListIcon className="w-5 h-5 text-sky-600" />
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-gray-800">{stats.total_assignments}</div>
+                                    <div className="text-xs font-medium text-gray-500">Assignments</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-rose-50 rounded-lg">
+                                    <ChartBarIcon className="w-5 h-5 text-rose-600" />
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-gray-800">{stats.total_quizzes}</div>
+                                    <div className="text-xs font-medium text-gray-500">Quizzes</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-yellow-50 rounded-lg">
+                                    <MegaphoneIcon className="w-5 h-5 text-yellow-600" />
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-gray-800">{stats.total_announcements}</div>
+                                    <div className="text-xs font-medium text-gray-500">Announcements</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* ===== Section 2: Teacher Activity Summary ===== */}
-                    <div className="mt-6">
-                        <Card title="Teacher Activity Summary">
-                            <div className="mb-4 flex flex-wrap gap-4">
-                                <div className="flex-1 min-w-[200px]">
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">Most Active Teacher</span>
-                                    <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Teacher Activity Summary</h3>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-amber-700">Most Active Teacher</span>
+                                    <div className="text-base font-bold text-amber-900 mt-0.5">
                                         {most_active_teacher ? most_active_teacher.name : 'N/A'}
                                     </div>
                                 </div>
-                                <div className="flex-1 min-w-[200px]">
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">Teachers Without Activity</span>
-                                    <div className="text-lg font-semibold text-red-600 dark:text-red-400">{inactive_teachers_count}</div>
+                                <div className="p-4 bg-rose-50 rounded-lg border border-rose-200">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-rose-700">Teachers Without Activity</span>
+                                    <div className="text-base font-bold text-rose-600 mt-0.5">
+                                        {inactive_teachers_count}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                <table className="w-full text-sm text-left text-gray-600">
+                                    <thead className="text-xs font-semibold text-gray-500 uppercase bg-gray-50">
                                         <tr>
-                                            <th className="px-6 py-3">Teacher</th>
-                                            <th className="px-6 py-3">Lessons</th>
-                                            <th className="px-6 py-3">Assignments</th>
-                                            <th className="px-6 py-3">Quizzes</th>
-                                            <th className="px-6 py-3">Last Activity</th>
-                                            <th className="px-6 py-3">Status</th>
+                                            <th className="px-4 py-3">Teacher</th>
+                                            <th className="px-4 py-3 text-center">Lessons</th>
+                                            <th className="px-4 py-3 text-center">Assignments</th>
+                                            <th className="px-4 py-3 text-center">Quizzes</th>
+                                            <th className="px-4 py-3">Last Activity</th>
+                                            <th className="px-4 py-3 text-right">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="divide-y divide-gray-100">
                                         {teacher_activity.length === 0 ? (
                                             <tr>
-                                                <td colSpan="6" className="px-6 py-12 text-center text-gray-500">No teacher activity data available.</td>
+                                                <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                                                    No teacher activity data available.
+                                                </td>
                                             </tr>
                                         ) : (
                                             teacher_activity.slice(0, 5).map((teacher, index) => (
-                                                <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{teacher.name}</td>
-                                                    <td className="px-6 py-4">{teacher.lessons_count}</td>
-                                                    <td className="px-6 py-4">{teacher.assignments_count}</td>
-                                                    <td className="px-6 py-4">{teacher.quizzes_count}</td>
-                                                    <td className="px-6 py-4">{teacher.last_activity}</td>
-                                                    <td className="px-6 py-4">
+                                                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-4 py-3 font-medium text-gray-800">{teacher.name}</td>
+                                                    <td className="px-4 py-3 text-center">{teacher.lessons_count}</td>
+                                                    <td className="px-4 py-3 text-center">{teacher.assignments_count}</td>
+                                                    <td className="px-4 py-3 text-center">{teacher.quizzes_count}</td>
+                                                    <td className="px-4 py-3 text-gray-500">{teacher.last_activity}</td>
+                                                    <td className="px-4 py-3 text-right">
                                                         <StatusBadge status={teacher.is_active ? 'active' : 'inactive'} />
                                                     </td>
                                                 </tr>
@@ -99,60 +169,73 @@ export default function PrincipalDashboard({
                                     </tbody>
                                 </table>
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
-                    {/* ===== Section 3: Student Participation ===== */}
-                    <div className="mt-6 grid gap-6 md:grid-cols-2">
-                        <Card title="Student Participation">
-                            <div className="space-y-4">
+                    {/* ===== Section 3: Student Participation & Summary ===== */}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        {/* Student Participation */}
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700">Student Participation</h3>
+                            </div>
+                            <div className="p-6 space-y-4">
                                 {student_participation.map((grade) => (
-                                    <div key={grade.grade_level}>
+                                    <div key={grade.grade_level} className="space-y-1">
                                         <div className="flex justify-between text-sm">
-                                            <span className="font-medium text-gray-700 dark:text-gray-300">{grade.grade_level}</span>
-                                            <span className="text-gray-500 dark:text-gray-400">{grade.active_students} / {grade.total_students}</span>
+                                            <span className="font-medium text-gray-700">{grade.grade_level}</span>
+                                            <span className="text-gray-500">{grade.active_students} / {grade.total_students} ({grade.participation_rate}%)</span>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                        <div className="w-full bg-gray-100 rounded-full h-2">
                                             <div
-                                                className="bg-blue-600 h-2.5 rounded-full"
+                                                className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
                                                 style={{ width: `${grade.participation_rate}%` }}
                                             />
                                         </div>
-                                        <div className="text-right text-xs text-gray-500 dark:text-gray-400">{grade.participation_rate}%</div>
                                     </div>
                                 ))}
                             </div>
-                        </Card>
+                        </div>
 
+                        {/* Right Column */}
                         <div className="space-y-6">
                             {/* Academic Summary */}
-                            <Card title="Academic Summary">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">Average Quiz Score</span>
-                                        <span className="font-semibold text-gray-900 dark:text-white">{academic_summary.average_quiz_score}%</span>
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700">Academic Summary</h3>
+                                </div>
+                                <div className="p-6 space-y-3">
+                                    <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                        <span className="text-sm text-gray-600">Average Quiz Score</span>
+                                        <span className="text-sm font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-md">{academic_summary.average_quiz_score}%</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">Assignment Completion Rate</span>
-                                        <span className="font-semibold text-gray-900 dark:text-white">{academic_summary.assignment_completion_rate}%</span>
+                                    <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                        <span className="text-sm text-gray-600">Assignment Completion Rate</span>
+                                        <span className="text-sm font-bold text-sky-700 bg-sky-50 px-3 py-1 rounded-md">{academic_summary.assignment_completion_rate}%</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">Lesson Completion Rate</span>
-                                        <span className="font-semibold text-gray-900 dark:text-white">{academic_summary.lesson_completion_rate}%</span>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-600">Lesson Completion Rate</span>
+                                        <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-md">{academic_summary.lesson_completion_rate}%</span>
                                     </div>
                                 </div>
-                            </Card>
+                            </div>
 
                             {/* Recent Announcements */}
-                            <Card title="Recent Announcements">
-                                <div className="space-y-3">
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-gray-700">Recent Announcements</h3>
+                                    <Link href={route('principal.announcements.index')} className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                                        View All <ArrowRightIcon className="w-3 h-3" />
+                                    </Link>
+                                </div>
+                                <div className="p-6 space-y-3">
                                     {recent_announcements.length === 0 ? (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No recent announcements.</p>
+                                        <p className="text-sm text-gray-500">No recent announcements.</p>
                                     ) : (
                                         recent_announcements.map((announcement, index) => (
-                                            <div key={index} className="border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
-                                                <div className="font-medium text-gray-900 dark:text-white">{announcement.title}</div>
-                                                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                            <div key={index} className="pb-2 border-b border-gray-100 last:border-0 last:pb-0">
+                                                <div className="font-medium text-sm text-gray-800">{announcement.title}</div>
+                                                <div className="flex justify-between text-xs text-gray-500 mt-1">
                                                     <span>By {announcement.posted_by}</span>
                                                     <span>{announcement.date}</span>
                                                 </div>
@@ -160,94 +243,82 @@ export default function PrincipalDashboard({
                                         ))
                                     )}
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     </div>
 
                     {/* ===== Section 4: Recent Activities ===== */}
-                    <div className="mt-6">
-                        <Card title="Recent Teacher Activities">
-                            <div className="space-y-2">
-                                {recent_activities.length === 0 ? (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">No recent activities.</p>
-                                ) : (
-                                    recent_activities.map((activity, index) => (
-                                        <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                                            <div>
-                                                <span className="font-medium text-gray-900 dark:text-white">{activity.teacher}</span>
-                                                <span className="text-gray-600 dark:text-gray-300"> {activity.action}</span>
-                                            </div>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">{activity.date}</span>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Recent Teacher Activities</h3>
+                        </div>
+                        <div className="p-6 space-y-2">
+                            {recent_activities.length === 0 ? (
+                                <p className="text-sm text-gray-500">No recent activities.</p>
+                            ) : (
+                                recent_activities.map((activity, index) => (
+                                    <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm">
+                                        <div className="text-gray-600">
+                                            <span className="font-medium text-gray-800">{activity.teacher}</span>
+                                            <span className="text-gray-500"> {activity.action}</span>
                                         </div>
-                                    ))
-                                )}
-                            </div>
-                        </Card>
+                                        <span className="text-xs text-gray-400 shrink-0 ml-2">{activity.date}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
 
-                    {/* ===== Section 5: Quick Navigation Buttons ===== */}
-                    <div className="mt-6">
-                        <Card title="Quick Navigation">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                                {/* Manage Teachers */}
+                    {/* ===== Section 5: Quick Navigation ===== */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Quick Navigation</h3>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                 <Link
                                     href={route('principal.users.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200 hover:scale-105 hover:shadow-md"
+                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-200 rounded-xl transition-all text-gray-700 hover:text-amber-700"
                                 >
-                                    <svg className="w-8 h-8 mb-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Manage Teachers</span>
+                                    <UserGroupIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-amber-600" />
+                                    <span className="text-xs font-medium text-center">Manage Users</span>
                                 </Link>
 
-                                {/* Teacher Monitoring */}
                                 <Link
                                     href={route('principal.teachers.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/30 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/50 transition-all duration-200 hover:scale-105 hover:shadow-md"
+                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-200 rounded-xl transition-all text-gray-700 hover:text-emerald-700"
                                 >
-                                    <svg className="w-8 h-8 mb-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Teacher Monitoring</span>
+                                    <UsersIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-emerald-600" />
+                                    <span className="text-xs font-medium text-center">Teacher Monitoring</span>
                                 </Link>
 
-                                {/* Announcements */}
                                 <Link
                                     href={route('principal.announcements.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/30 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all duration-200 hover:scale-105 hover:shadow-md"
+                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-xl transition-all text-gray-700 hover:text-purple-700"
                                 >
-                                    <svg className="w-8 h-8 mb-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-1.76 1.76v0a1.76 1.76 0 01-1.76-1.76V5.882a1.76 1.76 0 011.76-1.76v0a1.76 1.76 0 011.76 1.76z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5.882V19.24a1.76 1.76 0 01-1.76 1.76v0a1.76 1.76 0 01-1.76-1.76V5.882a1.76 1.76 0 011.76-1.76v0a1.76 1.76 0 011.76 1.76z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Announcements</span>
+                                    <MegaphoneIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-purple-600" />
+                                    <span className="text-xs font-medium text-center">Announcements</span>
                                 </Link>
 
-                                {/* Reports */}
                                 <Link
                                     href={route('principal.reports.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-900/30 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-all duration-200 hover:scale-105 hover:shadow-md"
+                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-sky-50 border border-gray-200 hover:border-sky-200 rounded-xl transition-all text-gray-700 hover:text-sky-700"
                                 >
-                                    <svg className="w-8 h-8 mb-2 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">View Reports</span>
+                                    <DocumentDuplicateIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-sky-600" />
+                                    <span className="text-xs font-medium text-center">View Reports</span>
                                 </Link>
 
-                                {/* Activity Logs */}
                                 <Link
                                     href={route('principal.logs.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-red-50 dark:bg-red-900/30 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition-all duration-200 hover:scale-105 hover:shadow-md"
+                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-rose-50 border border-gray-200 hover:border-rose-200 rounded-xl transition-all text-gray-700 hover:text-rose-700"
                                 >
-                                    <svg className="w-8 h-8 mb-2 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Activity Logs</span>
+                                    <EyeIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-rose-600" />
+                                    <span className="text-xs font-medium text-center">Activity Logs</span>
                                 </Link>
                             </div>
-                        </Card>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </AuthenticatedLayout>

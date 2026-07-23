@@ -14,8 +14,8 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <div className="flex items-center justify-between w-full">
+                    <h2 className="text-xl font-bold text-gray-800">
                         Teacher Profile: {teacher.name}
                     </h2>
                     <div className="flex gap-2">
@@ -28,39 +28,56 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
         >
             <Head title={`Teacher Profile: ${teacher.name}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                     {/* ===== Basic Information & Stats ===== */}
-                    <Card title="Basic Information">
-                        <TeacherProfile teacher={teacher} />
-                    </Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Basic Information</h3>
+                        </div>
+                        <div className="p-6">
+                            <TeacherProfile teacher={teacher} />
+                        </div>
+                    </div>
 
                     {/* ===== Student Engagement ===== */}
-                    <div className="mt-6">
-                        <Card title="Student Engagement Overview">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Student Engagement Overview</h3>
+                        </div>
+                        <div className="p-6">
                             <StudentEngagement stats={classroom_stats} />
-                        </Card>
+                        </div>
                     </div>
 
                     {/* ===== Lessons ===== */}
-                    <div className="mt-6">
-                        <Card title="Lesson Monitoring">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Lesson Monitoring</h3>
+                        </div>
+                        <div className="p-6">
                             <LessonMonitoring lessons={lessons} />
-                        </Card>
+                        </div>
                     </div>
 
                     {/* ===== Assignments ===== */}
-                    <div className="mt-6">
-                        <Card title="Assignment Monitoring">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Assignment Monitoring</h3>
+                        </div>
+                        <div className="p-6">
                             <AssignmentMonitoring assignments={assignments} />
-                        </Card>
+                        </div>
                     </div>
 
                     {/* ===== Quizzes ===== */}
-                    <div className="mt-6">
-                        <Card title="Quiz Monitoring">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Quiz Monitoring</h3>
+                        </div>
+                        <div className="p-6">
                             <QuizMonitoring quizzes={quizzes} />
-                        </Card>
+                        </div>
                     </div>
                 </div>
             </div>

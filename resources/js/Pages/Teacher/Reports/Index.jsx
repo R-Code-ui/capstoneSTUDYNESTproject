@@ -48,13 +48,13 @@ export default function ReportsIndex({
         {
             value: 'student_progress',
             label: 'Student Progress Report',
-            icon: <ArrowTrendingUpIcon className="w-10 h-10 text-green-500" />,
+            icon: <ArrowTrendingUpIcon className="w-10 h-10 text-emerald-500" />,
             description: 'View overall student academic progress',
         },
         {
             value: 'lesson_completion',
             label: 'Lesson Completion Report',
-            icon: <BookOpenIcon className="w-10 h-10 text-orange-500" />,
+            icon: <BookOpenIcon className="w-10 h-10 text-amber-500" />,
             description: 'Monitor lesson participation rates',
         },
         {
@@ -75,7 +75,6 @@ export default function ReportsIndex({
         ...subjects.map((subject) => ({ value: subject, label: subject })),
     ];
 
-    // ✅ CHANGED: 'All Trimesters' → 'All Terms', 'Trimester' → 'Term'
     const trimesterOptions = [
         { value: '', label: 'All Terms' },
         ...trimesters.map((t) => ({ value: t, label: t })),
@@ -112,8 +111,8 @@ export default function ReportsIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <div className="flex items-center justify-between w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         Reports
                     </span>
                 </div>
@@ -126,77 +125,85 @@ export default function ReportsIndex({
                     {/* Report Types */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {reportTypes.map((type) => (
-                            <Card
+                            <div
                                 key={type.value}
                                 className={`
+                                    bg-white rounded-xl border shadow-sm overflow-hidden
                                     cursor-pointer transition-all duration-200
                                     hover:shadow-lg hover:-translate-y-1
-                                    ${selectedReport === type.value ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
+                                    ${selectedReport === type.value ? 'ring-2 ring-blue-600 border-blue-600' : 'border-gray-200'}
                                 `}
                                 onClick={() => {
                                     setSelectedReport(type.value);
                                     setFormData({ ...formData, report_type: type.value });
                                 }}
                             >
-                                <div className="flex items-start gap-4">
-                                    <div className="text-4xl">{type.icon}</div>
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                                            {type.label}
-                                        </h4>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            {type.description}
-                                        </p>
+                                <div className="p-6">
+                                    <div className="flex items-start gap-4">
+                                        <div className="text-4xl">{type.icon}</div>
+                                        <div>
+                                            <h4 className="font-semibold text-gray-800">
+                                                {type.label}
+                                            </h4>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                {type.description}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </Card>
+                            </div>
                         ))}
                     </div>
 
                     {/* Filters + Generate Button */}
                     <div className="mt-6">
-                        <Card title="Report Filters">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={formData.grade_level}
-                                    onChange={(val) => setFormData({ ...formData, grade_level: val })}
-                                    placeholder="Grade Level"
-                                    label="Grade Level"
-                                    size="md"
-                                />
-                                <FilterDropdown
-                                    options={subjectOptions}
-                                    value={formData.subject}
-                                    onChange={(val) => setFormData({ ...formData, subject: val })}
-                                    placeholder="Subject"
-                                    label="Subject"
-                                    size="md"
-                                />
-                                {/* ✅ CHANGED: 'Trimester' → 'Term' */}
-                                <FilterDropdown
-                                    options={trimesterOptions}
-                                    value={formData.trimester}
-                                    onChange={(val) => setFormData({ ...formData, trimester: val })}
-                                    placeholder="Term"
-                                    label="Term"
-                                    size="md"
-                                />
+                        {/* 🔧 FIX: Removed overflow-hidden from Card container */}
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700">Report Filters</h3>
                             </div>
+                            <div className="p-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <FilterDropdown
+                                        options={gradeOptions}
+                                        value={formData.grade_level}
+                                        onChange={(val) => setFormData({ ...formData, grade_level: val })}
+                                        placeholder="Grade Level"
+                                        label="Grade Level"
+                                        size="md"
+                                    />
+                                    <FilterDropdown
+                                        options={subjectOptions}
+                                        value={formData.subject}
+                                        onChange={(val) => setFormData({ ...formData, subject: val })}
+                                        placeholder="Subject"
+                                        label="Subject"
+                                        size="md"
+                                    />
+                                    <FilterDropdown
+                                        options={trimesterOptions}
+                                        value={formData.trimester}
+                                        onChange={(val) => setFormData({ ...formData, trimester: val })}
+                                        placeholder="Term"
+                                        label="Term"
+                                        size="md"
+                                    />
+                                </div>
 
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <SecondaryButton onClick={handleReset}>
-                                    <ArrowPathIcon className="w-4 h-4 mr-1" />
-                                    Reset Filters
-                                </SecondaryButton>
-                                <PrimaryButton
-                                    onClick={handleGeneratePdf}
-                                    disabled={!formData.report_type || isLoading}
-                                >
-                                    {isLoading ? 'Generating...' : 'Generate Report (PDF)'}
-                                </PrimaryButton>
+                                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                                    <SecondaryButton onClick={handleReset}>
+                                        <ArrowPathIcon className="w-4 h-4 mr-1" />
+                                        Reset Filters
+                                    </SecondaryButton>
+                                    <PrimaryButton
+                                        onClick={handleGeneratePdf}
+                                        disabled={!formData.report_type || isLoading}
+                                    >
+                                        {isLoading ? 'Generating...' : 'Generate Report (PDF)'}
+                                    </PrimaryButton>
+                                </div>
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
                     {isLoading && <LoadingSpinner overlay size="lg" text="Generating PDF..." />}

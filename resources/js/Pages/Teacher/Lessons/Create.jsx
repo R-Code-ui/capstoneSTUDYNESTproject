@@ -133,7 +133,7 @@ export default function LessonsCreate({
             return <DocumentIcon className="w-5 h-5 text-red-500" />;
         }
         if (['jpg', 'jpeg', 'png'].includes(ext)) {
-            return <PhotoIcon className="w-5 h-5 text-green-500" />;
+            return <PhotoIcon className="w-5 h-5 text-emerald-500" />;
         }
         if (['doc', 'docx'].includes(ext)) {
             return <DocumentIcon className="w-5 h-5 text-blue-500" />;
@@ -151,26 +151,26 @@ export default function LessonsCreate({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Lesson</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">Create Lesson</span>}
         >
             <Head title="Create Lesson" />
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <Card>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
 
                             {/* ===== Section 1: Curriculum Information ===== */}
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Curriculum Information</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Curriculum Information</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="grade_level" value="Grade Level" required />
                                         <select
                                             id="grade_level"
                                             value={data.grade_level}
                                             onChange={(e) => setData('grade_level', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Grade Level</option>
@@ -186,7 +186,7 @@ export default function LessonsCreate({
                                             id="subject"
                                             value={data.subject}
                                             onChange={(e) => setData('subject', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Subject</option>
@@ -202,7 +202,7 @@ export default function LessonsCreate({
                                             id="school_year"
                                             value={data.school_year}
                                             onChange={(e) => setData('school_year', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {school_years.map((year) => (
@@ -212,15 +212,15 @@ export default function LessonsCreate({
                                         <InputError message={errors.school_year} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="trimester" value="Term" required /> {/* ✅ CHANGED: "Trimester" → "Term" */}
+                                        <InputLabel htmlFor="trimester" value="Term" required />
                                         <select
                                             id="trimester"
                                             value={data.trimester}
                                             onChange={(e) => setData('trimester', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
-                                            <option value="">Select Term</option> {/* ✅ CHANGED: "Select Trimester" → "Select Term" */}
+                                            <option value="">Select Term</option>
                                             {trimesters.map((trimester) => (
                                                 <option key={trimester} value={trimester}>{trimester}</option>
                                             ))}
@@ -233,7 +233,7 @@ export default function LessonsCreate({
                                             id="week_number"
                                             value={data.week_number}
                                             onChange={(e) => setData('week_number', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             <option value="">Select Week</option>
@@ -247,8 +247,8 @@ export default function LessonsCreate({
                             </div>
 
                             {/* ===== Section 2: BOW Reference ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">BOW Reference</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">BOW Reference</h3>
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <InputLabel htmlFor="learning_competency" value="Learning Competency" required />
@@ -257,7 +257,7 @@ export default function LessonsCreate({
                                             value={data.learning_competency}
                                             onChange={(e) => setData('learning_competency', e.target.value)}
                                             rows={2}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                             placeholder="e.g., Infer the meaning of unfamiliar words using context clues."
                                         />
@@ -270,7 +270,7 @@ export default function LessonsCreate({
                                             value={data.learning_objective}
                                             onChange={(e) => setData('learning_objective', e.target.value)}
                                             rows={2}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                             placeholder="e.g., At the end of the lesson, learners should be able to..."
                                         />
@@ -291,8 +291,8 @@ export default function LessonsCreate({
                             </div>
 
                             {/* ===== Section 3: Lesson Information ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lesson Information</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Lesson Information</h3>
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <InputLabel htmlFor="lesson_title" value="Lesson Title" required />
@@ -312,7 +312,7 @@ export default function LessonsCreate({
                                             value={data.lesson_description}
                                             onChange={(e) => setData('lesson_description', e.target.value)}
                                             rows={2}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         />
                                         <InputError message={errors.lesson_description} className="mt-2" />
@@ -324,7 +324,7 @@ export default function LessonsCreate({
                                             value={data.lesson_content}
                                             onChange={(e) => setData('lesson_content', e.target.value)}
                                             rows={6}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                             placeholder="Write your lesson content here..."
                                         />
@@ -337,7 +337,7 @@ export default function LessonsCreate({
                                             value={data.key_takeaways}
                                             onChange={(e) => setData('key_takeaways', e.target.value)}
                                             rows={2}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             placeholder="Key takeaways for students..."
                                         />
                                         <InputError message={errors.key_takeaways} className="mt-2" />
@@ -346,8 +346,8 @@ export default function LessonsCreate({
                             </div>
 
                             {/* ===== Section 4: Learning Resources ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Learning Resources</h3>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
                                 <div>
                                     <InputLabel htmlFor="resources" value="Upload Resources (Max 5 files, 2MB each)" />
                                     <input
@@ -355,20 +355,20 @@ export default function LessonsCreate({
                                         type="file"
                                         multiple
                                         onChange={handleFileChange}
-                                        className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
+                                        className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
                                             {fileErrors.map((error, index) => (
-                                                <p key={index} className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                                                <p key={index} className="text-sm text-red-600">{error}</p>
                                             ))}
                                         </div>
                                     )}
                                     {data.resources.length > 0 && (
                                         <div className="mt-2 space-y-1">
                                             {data.resources.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                                <div key={index} className="flex items-center justify-between text-sm text-gray-600 p-2 bg-gray-50 rounded-lg border border-gray-100">
                                                     <div className="flex items-center gap-2">
                                                         {getFileIcon(file.name)}
                                                         <span>{file.name}</span>
@@ -384,12 +384,12 @@ export default function LessonsCreate({
                                                     </button>
                                                 </div>
                                             ))}
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            <p className="text-xs text-gray-500">
                                                 Total: {data.resources.length} of 5 files
                                             </p>
                                         </div>
                                     )}
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="mt-1 text-xs text-gray-500">
                                         Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
@@ -397,16 +397,16 @@ export default function LessonsCreate({
                             </div>
 
                             {/* ===== Section 5: Related Activities ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Related Activities</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Related Activities</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div>
                                         <InputLabel htmlFor="related_assignment_id" value="Related Assignment (Optional)" />
                                         <select
                                             id="related_assignment_id"
                                             value={data.related_assignment_id}
                                             onChange={(e) => setData('related_assignment_id', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
                                             {related_assignments.map((assignment) => (
@@ -421,7 +421,7 @@ export default function LessonsCreate({
                                             id="related_quiz_id"
                                             value={data.related_quiz_id}
                                             onChange={(e) => setData('related_quiz_id', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
                                             {related_quizzes.map((quiz) => (
@@ -436,7 +436,7 @@ export default function LessonsCreate({
                                             id="related_game_id"
                                             value={data.related_game_id}
                                             onChange={(e) => setData('related_game_id', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
                                             {related_games.map((game) => (
@@ -449,16 +449,16 @@ export default function LessonsCreate({
                             </div>
 
                             {/* ===== Section 6: Publication Settings ===== */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publication Settings</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Publication Settings</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <InputLabel htmlFor="status" value="Status" required />
                                         <select
                                             id="status"
                                             value={data.status}
                                             onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
                                             {statuses.map((status) => (
@@ -483,7 +483,7 @@ export default function LessonsCreate({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
                                 <SecondaryButton type="button" onClick={() => router.visit(route('teacher.lessons.index'))}>
                                     Cancel
                                 </SecondaryButton>
@@ -493,7 +493,7 @@ export default function LessonsCreate({
                             </div>
 
                         </form>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

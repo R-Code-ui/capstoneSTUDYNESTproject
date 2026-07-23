@@ -90,24 +90,80 @@ export default function ProgressIndex({
         ...trimesters.map((t) => ({ value: t, label: t })),
     ];
 
+    // 🔧 FIX: Added truncation to columns that may overflow
     const columns = [
-        { key: 'name', label: 'Student' },
-        // ✅ CHANGED: 'LRN' → 'Student ID'
-        { key: 'lrn', label: 'Student ID' },
-        { key: 'grade_level', label: 'Grade' },
-        { key: 'lessons', label: 'Lessons' },
-        { key: 'assignments', label: 'Assignments' },
-        { key: 'quiz_average', label: 'Quiz Avg' },
-        { key: 'games', label: 'Games' },
+        {
+            key: 'name',
+            label: 'Student',
+            render: (row) => (
+                <div className="max-w-[120px] truncate" title={row.name}>
+                    {row.name}
+                </div>
+            ),
+        },
+        {
+            key: 'lrn',
+            label: 'Student ID',
+            render: (row) => (
+                <div className="max-w-[100px] truncate" title={row.lrn}>
+                    {row.lrn}
+                </div>
+            ),
+        },
+        {
+            key: 'grade_level',
+            label: 'Grade',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.grade_level}>
+                    {row.grade_level}
+                </div>
+            ),
+        },
+        {
+            key: 'lessons',
+            label: 'Lessons',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.lessons}>
+                    {row.lessons}
+                </div>
+            ),
+        },
+        {
+            key: 'assignments',
+            label: 'Assignments',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.assignments}>
+                    {row.assignments}
+                </div>
+            ),
+        },
+        {
+            key: 'quiz_average',
+            label: 'Quiz Avg',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.quiz_average}>
+                    {row.quiz_average}
+                </div>
+            ),
+        },
+        {
+            key: 'games',
+            label: 'Games',
+            render: (row) => (
+                <div className="max-w-[60px] truncate" title={row.games}>
+                    {row.games}
+                </div>
+            ),
+        },
         {
             key: 'overall_progress',
             label: 'Overall Progress',
             render: (row) => (
                 <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                    <div className="w-24 bg-gray-200 rounded-full h-2.5">
                         <div
                             className={`h-2.5 rounded-full ${
-                                row.overall_progress >= 80 ? 'bg-green-500' :
+                                row.overall_progress >= 80 ? 'bg-emerald-500' :
                                 row.overall_progress >= 60 ? 'bg-yellow-500' :
                                 'bg-red-500'
                             }`}
@@ -144,8 +200,9 @@ export default function ProgressIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Progress Tracking</span>
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">Progress Tracking</span>
                     <PrimaryButton onClick={handleExport}>
                         <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
                         Export CSV
@@ -158,121 +215,126 @@ export default function ProgressIndex({
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     {/* ===== Statistics Cards ===== */}
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.total_students}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Total Students</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.lesson_completion_rate}%</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Lesson Completion</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.assignment_completion_rate}%</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Assignment Completion</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.average_quiz_score}%</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Avg Quiz Score</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.game_participation}%</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Game Participation</div>
-                        </Card>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-blue-600">{stats.total_students}</div>
+                            <div className="text-sm font-medium text-gray-500">Total Students</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-emerald-600">{stats.lesson_completion_rate}%</div>
+                            <div className="text-sm font-medium text-gray-500">Lesson Completion</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-purple-600">{stats.assignment_completion_rate}%</div>
+                            <div className="text-sm font-medium text-gray-500">Assignment Completion</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-indigo-600">{stats.average_quiz_score}%</div>
+                            <div className="text-sm font-medium text-gray-500">Avg Quiz Score</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-amber-600">{stats.game_participation}%</div>
+                            <div className="text-sm font-medium text-gray-500">Game Participation</div>
+                        </div>
                     </div>
 
                     {/* ===== At-Risk Students ===== */}
                     {at_risk_students.length > 0 && (
                         <div className="mt-6">
-                            <Card title={
-                                <div className="flex items-center gap-2">
-                                    <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
-                                    Students Requiring Support
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                                        Students Requiring Support
+                                    </h3>
                                 </div>
-                            }>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {at_risk_students.map((student) => (
-                                        <div
-                                            key={student.student_id}
-                                            className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
-                                        >
-                                            <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">{student.name}</div>
-                                                <div className="text-sm text-red-600 dark:text-red-400">
-                                                    Progress: {student.overall_progress}%
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => router.visit(route('teacher.progress.show', student.student_id))}
-                                                className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                                <div className="p-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {at_risk_students.map((student) => (
+                                            <div
+                                                key={student.student_id}
+                                                className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
                                             >
-                                                View
-                                            </button>
-                                        </div>
-                                    ))}
+                                                <div>
+                                                    <div className="font-medium text-gray-800">{student.name}</div>
+                                                    <div className="text-sm text-red-600">
+                                                        Progress: {student.overall_progress}%
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => router.visit(route('teacher.progress.show', student.student_id))}
+                                                    className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     )}
 
                     {/* ===== Student Progress Table ===== */}
                     <div className="mt-6">
-                        <Card>
-                            {/* Filters */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
-                                    {/* ✅ CHANGED: 'LRN' → 'Student ID' */}
-                                    <SearchBar
-                                        value={search}
-                                        onChange={handleSearch}
-                                        placeholder="Search by student name or Student ID..."
-                                        size="md"
-                                    />
+                        {/* 🔧 FIX: Removed overflow-hidden from Card container */}
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <div className="p-6">
+                                {/* Filters */}
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <div className="flex-1">
+                                        <SearchBar
+                                            value={search}
+                                            onChange={handleSearch}
+                                            placeholder="Search by student name or Student ID..."
+                                            size="md"
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap gap-3">
+                                        <FilterDropdown
+                                            options={gradeOptions}
+                                            value={gradeFilter}
+                                            onChange={(val) => handleFilterChange('grade', val)}
+                                            placeholder="Grade"
+                                            size="md"
+                                            className="w-36"
+                                        />
+                                        <FilterDropdown
+                                            options={subjectOptions}
+                                            value={subjectFilter}
+                                            onChange={(val) => handleFilterChange('subject', val)}
+                                            placeholder="Subject"
+                                            size="md"
+                                            className="w-40"
+                                        />
+                                        <FilterDropdown
+                                            options={trimesterOptions}
+                                            value={trimesterFilter}
+                                            onChange={(val) => handleFilterChange('trimester', val)}
+                                            placeholder="Term"
+                                            size="md"
+                                            className="w-40"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="flex flex-wrap gap-3">
-                                    <FilterDropdown
-                                        options={gradeOptions}
-                                        value={gradeFilter}
-                                        onChange={(val) => handleFilterChange('grade', val)}
-                                        placeholder="Grade"
-                                        size="md"
-                                        className="w-36"
-                                    />
-                                    <FilterDropdown
-                                        options={subjectOptions}
-                                        value={subjectFilter}
-                                        onChange={(val) => handleFilterChange('subject', val)}
-                                        placeholder="Subject"
-                                        size="md"
-                                        className="w-40"
-                                    />
-                                    <FilterDropdown
-                                        options={trimesterOptions}
-                                        value={trimesterFilter}
-                                        onChange={(val) => handleFilterChange('trimester', val)}
-                                        placeholder="Term"
-                                        size="md"
-                                        className="w-40"
+
+                                {/* Loading Spinner */}
+                                {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                                {/* Table */}
+                                <div className="mt-6">
+                                    <Table
+                                        columns={columns}
+                                        rows={student_progress}
+                                        actions={actions}
+                                        emptyMessage="No students found."
+                                        hoverable
+                                        striped
+                                        pagination={pagination}
                                     />
                                 </div>
                             </div>
-
-                            {/* Loading Spinner */}
-                            {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                            {/* Table */}
-                            <div className="mt-6">
-                                <Table
-                                    columns={columns}
-                                    rows={student_progress}
-                                    actions={actions}
-                                    emptyMessage="No students found."
-                                    hoverable
-                                    striped
-                                    pagination={pagination}
-                                />
-                            </div>
-                        </Card>
+                        </div>
                     </div>
                 </div>
             </div>

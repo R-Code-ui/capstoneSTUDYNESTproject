@@ -32,8 +32,9 @@ export default function ProgressShow({ student, progress }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         Student Progress: {student.name}
                     </span>
                     <SecondaryButton onClick={() => router.visit(route('teacher.progress.index'))}>
@@ -48,239 +49,246 @@ export default function ProgressShow({ student, progress }) {
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                     {/* ===== Student Information ===== */}
-                    <Card>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Student Name</div>
-                                <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                                    <UserIcon className="w-4 h-4 text-gray-400" />
-                                    {student.name}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="p-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student Name</div>
+                                    <div className="font-medium text-gray-800 flex items-center gap-2">
+                                        <UserIcon className="w-4 h-4 text-gray-400" />
+                                        {student.name}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student ID</div>
+                                    <div className="font-medium text-gray-800">{student.lrn}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Grade Level</div>
+                                    <div className="font-medium text-gray-800">{student.grade_level}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Overall Progress</div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-800">
+                                            {progress.overall_progress}%
+                                        </span>
+                                        <StatusBadge status={getStatusBadge(progress.overall_progress)} />
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                {/* ✅ CHANGED: 'LRN' → 'Student ID' */}
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Student ID</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{student.lrn}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Grade Level</div>
-                                <div className="font-medium text-gray-900 dark:text-white">{student.grade_level}</div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Overall Progress</div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-900 dark:text-white">
+
+                            {/* Overall Progress Bar */}
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+                                    <span className="text-sm font-medium text-gray-700">
                                         {progress.overall_progress}%
                                     </span>
-                                    <StatusBadge status={getStatusBadge(progress.overall_progress)} />
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-4">
+                                    <div
+                                        className={`h-4 rounded-full transition-all duration-500 ${
+                                            progress.overall_progress >= 80 ? 'bg-emerald-500' :
+                                            progress.overall_progress >= 60 ? 'bg-yellow-500' :
+                                            'bg-red-500'
+                                        }`}
+                                        style={{ width: `${progress.overall_progress}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-1 text-xs text-gray-500">
+                                    <span>Needs Support (0-59%)</span>
+                                    <span>Needs Monitoring (60-79%)</span>
+                                    <span>Excellent (80-100%)</span>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Overall Progress Bar */}
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Progress</span>
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {progress.overall_progress}%
-                                </span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
-                                <div
-                                    className={`h-4 rounded-full transition-all duration-500 ${
-                                        progress.overall_progress >= 80 ? 'bg-green-500' :
-                                        progress.overall_progress >= 60 ? 'bg-yellow-500' :
-                                        'bg-red-500'
-                                    }`}
-                                    style={{ width: `${progress.overall_progress}%` }}
-                                />
-                            </div>
-                            <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                <span>Needs Support (0-59%)</span>
-                                <span>Needs Monitoring (60-79%)</span>
-                                <span>Excellent (80-100%)</span>
-                            </div>
-                        </div>
-                    </Card>
+                    </div>
 
                     {/* ===== Progress Breakdown ===== */}
                     <div className="mt-6 grid gap-6 md:grid-cols-2">
                         {/* Lessons */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <BookOpenIcon className="w-5 h-5 text-blue-500" />
-                                Lessons
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                                    Lessons
+                                </h3>
                             </div>
-                        }>
-                            <div className="space-y-2">
+                            <div className="p-6 space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Completed</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">
+                                    <span className="text-gray-600">Completed</span>
+                                    <span className="font-medium text-gray-800">
                                         {progress.lessons.completed} / {progress.lessons.total}
                                     </span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
                                     <div
                                         className="bg-blue-500 h-2.5 rounded-full"
                                         style={{ width: `${progress.lessons.percentage}%` }}
                                     />
                                 </div>
-                                <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+                                <div className="text-right text-sm text-gray-500">
                                     {progress.lessons.percentage}%
                                 </div>
                             </div>
-                        </Card>
+                        </div>
 
                         {/* Assignments */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <ClipboardDocumentListIcon className="w-5 h-5 text-green-500" />
-                                Assignments
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <ClipboardDocumentListIcon className="w-5 h-5 text-emerald-500" />
+                                    Assignments
+                                </h3>
                             </div>
-                        }>
-                            <div className="space-y-2">
+                            <div className="p-6 space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Submitted</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">
+                                    <span className="text-gray-600">Submitted</span>
+                                    <span className="font-medium text-gray-800">
                                         {progress.assignments.submitted} / {progress.assignments.total}
                                     </span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
                                     <div
-                                        className="bg-green-500 h-2.5 rounded-full"
+                                        className="bg-emerald-500 h-2.5 rounded-full"
                                         style={{ width: `${progress.assignments.percentage}%` }}
                                     />
                                 </div>
-                                <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+                                <div className="text-right text-sm text-gray-500">
                                     {progress.assignments.percentage}%
                                 </div>
                             </div>
-                        </Card>
+                        </div>
 
                         {/* Quizzes */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <DocumentTextIcon className="w-5 h-5 text-purple-500" />
-                                Quizzes
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <DocumentTextIcon className="w-5 h-5 text-purple-500" />
+                                    Quizzes
+                                </h3>
                             </div>
-                        }>
-                            <div className="space-y-2">
+                            <div className="p-6 space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Completed</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">
+                                    <span className="text-gray-600">Completed</span>
+                                    <span className="font-medium text-gray-800">
                                         {progress.quizzes.attempts} / {progress.quizzes.total}
                                     </span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
                                     <div
                                         className="bg-purple-500 h-2.5 rounded-full"
                                         style={{ width: `${progress.quizzes.total > 0 ? (progress.quizzes.attempts / progress.quizzes.total) * 100 : 0}%` }}
                                     />
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500 dark:text-gray-400">Avg Score</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">
+                                    <span className="text-gray-500">Avg Score</span>
+                                    <span className="font-medium text-gray-800">
                                         {progress.quizzes.average_score}%
                                     </span>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
 
                         {/* Games */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <PuzzlePieceIcon className="w-5 h-5 text-orange-500" />
-                                Games
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <PuzzlePieceIcon className="w-5 h-5 text-amber-500" />
+                                    Games
+                                </h3>
                             </div>
-                        }>
-                            <div className="space-y-2">
+                            <div className="p-6 space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Completed</span>
-                                    <span className="font-medium text-gray-900 dark:text-white">
+                                    <span className="text-gray-600">Completed</span>
+                                    <span className="font-medium text-gray-800">
                                         {progress.games.completed} / {progress.games.total}
                                     </span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
                                     <div
-                                        className="bg-orange-500 h-2.5 rounded-full"
+                                        className="bg-amber-500 h-2.5 rounded-full"
                                         style={{ width: `${progress.games.total > 0 ? (progress.games.completed / progress.games.total) * 100 : 0}%` }}
                                     />
                                 </div>
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
                     {/* ===== Quiz Performance Detail ===== */}
                     {progress.quizzes.performance && progress.quizzes.performance.length > 0 && (
                         <div className="mt-6">
-                            <Card title={
-                                <div className="flex items-center gap-2">
-                                    <ChartBarIcon className="w-5 h-5 text-purple-500" />
-                                    Quiz Performance Details
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <ChartBarIcon className="w-5 h-5 text-purple-500" />
+                                        Quiz Performance Details
+                                    </h3>
                                 </div>
-                            }>
-                                <div className="space-y-3">
+                                <div className="p-6 space-y-3">
                                     {progress.quizzes.performance.map((quiz, index) => (
                                         <div
                                             key={index}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 gap-2"
                                         >
                                             <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
+                                                <div className="font-medium text-gray-800">
                                                     {quiz.quiz_title}
                                                 </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                <div className="text-sm text-gray-500">
                                                     {quiz.completed_at || 'Not yet completed'}
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <div className={`font-bold ${
-                                                    quiz.percentage >= 80 ? 'text-green-600 dark:text-green-400' :
-                                                    quiz.percentage >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
-                                                    'text-red-600 dark:text-red-400'
+                                                    quiz.percentage >= 80 ? 'text-emerald-600' :
+                                                    quiz.percentage >= 60 ? 'text-yellow-600' :
+                                                    'text-red-600'
                                                 }`}>
                                                     {quiz.score}/{quiz.total}
                                                 </div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                <div className="text-xs text-gray-500">
                                                     {quiz.percentage}%
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     )}
 
                     {/* ===== Game Performance Detail ===== */}
                     {progress.games.performance && progress.games.performance.length > 0 && (
                         <div className="mt-6">
-                            <Card title={
-                                <div className="flex items-center gap-2">
-                                    <PuzzlePieceIcon className="w-5 h-5 text-orange-500" />
-                                    Game Performance Details
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <PuzzlePieceIcon className="w-5 h-5 text-amber-500" />
+                                        Game Performance Details
+                                    </h3>
                                 </div>
-                            }>
-                                <div className="space-y-3">
+                                <div className="p-6 space-y-3">
                                     {progress.games.performance.map((game, index) => (
                                         <div
                                             key={index}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 gap-2"
                                         >
                                             <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
+                                                <div className="font-medium text-gray-800">
                                                     {game.game_title}
                                                 </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                <div className="text-sm text-gray-500">
                                                     {game.game_type?.charAt(0).toUpperCase() + game.game_type?.slice(1)}
                                                     {game.completed_at && ` • ${game.completed_at}`}
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <div className={`font-bold ${
-                                                    game.score >= 80 ? 'text-green-600 dark:text-green-400' :
-                                                    game.score >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
-                                                    'text-red-600 dark:text-red-400'
+                                                    game.score >= 80 ? 'text-emerald-600' :
+                                                    game.score >= 60 ? 'text-yellow-600' :
+                                                    'text-red-600'
                                                 }`}>
                                                     {game.score !== null ? game.score : '---'}
                                                 </div>
@@ -288,7 +296,7 @@ export default function ProgressShow({ student, progress }) {
                                         </div>
                                     ))}
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     )}
                 </div>

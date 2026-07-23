@@ -20,9 +20,9 @@ import {
 export default function AnnouncementsShow({ announcement }) {
     const getPriorityBadge = (priority) => {
         const classes = {
-            normal: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-            important: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-            urgent: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+            normal: 'bg-blue-100 text-blue-800',
+            important: 'bg-yellow-100 text-yellow-800',
+            urgent: 'bg-red-100 text-red-800',
         };
         return classes[priority] || classes.normal;
     };
@@ -30,11 +30,12 @@ export default function AnnouncementsShow({ announcement }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         {announcement.title}
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Link href={route('teacher.announcements.edit', announcement.id)}>
                             <SecondaryButton>
                                 <PencilSquareIcon className="w-4 h-4 mr-1" />
@@ -56,21 +57,21 @@ export default function AnnouncementsShow({ announcement }) {
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                     {/* ===== Announcement Details ===== */}
-                    <Card>
-                        <div className="space-y-6">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="p-6 space-y-6">
                             {/* Header */}
-                            <div className="flex items-start justify-between">
+                            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                                 <div>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    <h3 className="text-2xl font-bold text-gray-800">
                                         {announcement.title}
                                     </h3>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <span className="text-sm text-gray-500 flex items-center gap-1">
                                             <UserIcon className="w-4 h-4" />
                                             Posted by {announcement.posted_by}
                                         </span>
-                                        <span className="text-sm text-gray-400 dark:text-gray-500">•</span>
-                                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <span className="text-sm text-gray-400">•</span>
+                                        <span className="text-sm text-gray-500 flex items-center gap-1">
                                             <CalendarIcon className="w-4 h-4" />
                                             {announcement.created_at}
                                         </span>
@@ -85,50 +86,50 @@ export default function AnnouncementsShow({ announcement }) {
                             </div>
 
                             {/* Meta Info */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Category</div>
-                                    <div className="font-medium text-gray-900 dark:text-white">{announcement.category}</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Category</div>
+                                    <div className="font-medium text-gray-800">{announcement.category}</div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Target Audience</div>
-                                    <div className="font-medium text-gray-900 dark:text-white">
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Target Audience</div>
+                                    <div className="font-medium text-gray-800">
                                         {announcement.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Publish Date</div>
-                                    <div className="font-medium text-gray-900 dark:text-white">{announcement.publish_date}</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Publish Date</div>
+                                    <div className="font-medium text-gray-800">{announcement.publish_date}</div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
                                         <EyeIcon className="w-4 h-4" />
                                         Views
                                     </div>
-                                    <div className="font-medium text-gray-900 dark:text-white">{announcement.view_count}</div>
+                                    <div className="font-medium text-gray-800">{announcement.view_count}</div>
                                 </div>
                                 {announcement.expiration_date && (
                                     <div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">Expiration Date</div>
-                                        <div className="font-medium text-gray-900 dark:text-white">{announcement.expiration_date}</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Expiration Date</div>
+                                        <div className="font-medium text-gray-800">{announcement.expiration_date}</div>
                                     </div>
                                 )}
                                 <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Pinned</div>
-                                    <div className="font-medium text-gray-900 dark:text-white">{announcement.is_pinned ? 'Yes' : 'No'}</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Pinned</div>
+                                    <div className="font-medium text-gray-800">{announcement.is_pinned ? 'Yes' : 'No'}</div>
                                 </div>
                             </div>
 
                             {/* Content */}
-                            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <div className="prose prose-blue dark:prose-invert max-w-none">
-                                    <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                            <div className="pt-4 border-t border-gray-200">
+                                <div className="prose prose-blue max-w-none">
+                                    <div className="text-gray-700 whitespace-pre-wrap">
                                         {announcement.content}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

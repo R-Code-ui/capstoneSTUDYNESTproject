@@ -14,7 +14,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PasswordInput from '@/Components/PasswordInput';
 
-// ✅ ADDED: Import TrashIcon
+// Heroicons
 import { TrashIcon } from '@heroicons/react/24/outline';
 
 export default function UserManagement({
@@ -38,7 +38,6 @@ export default function UserManagement({
 
     const { errors } = usePage().props;
 
-    // Handle search with debounce
     const handleSearch = (value) => {
         setSearch(value);
         setIsLoading(true);
@@ -49,7 +48,6 @@ export default function UserManagement({
         });
     };
 
-    // Handle grade filter change
     const handleGradeFilterChange = (value) => {
         setGradeFilter(value);
         setIsLoading(true);
@@ -60,7 +58,6 @@ export default function UserManagement({
         });
     };
 
-    // Handle gender filter change
     const handleGenderFilterChange = (value) => {
         setGenderFilter(value);
         setIsLoading(true);
@@ -71,7 +68,6 @@ export default function UserManagement({
         });
     };
 
-    // Handle tab change
     const handleTabChange = (tab) => {
         setActiveTab(tab);
         setIsLoading(true);
@@ -82,7 +78,6 @@ export default function UserManagement({
         });
     };
 
-    // Handle delete/archive
     const handleArchive = (user) => {
         if (confirm(`Are you sure you want to archive ${user.name}?`)) {
             router.delete(route('principal.users.archive', user.id), {
@@ -91,14 +86,12 @@ export default function UserManagement({
         }
     };
 
-    // Handle restore
     const handleRestore = (user) => {
         router.post(route('principal.users.restore', user.id), {}, {
             preserveState: true,
         });
     };
 
-    // ✅ NEW: Handle permanent delete
     const handleDelete = (user) => {
         if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
             router.delete(route('principal.users.destroy', user.id), {
@@ -118,7 +111,6 @@ export default function UserManagement({
         { value: 'female', label: 'Female' },
     ];
 
-    // Teacher table columns
     const teacherColumns = [
         { key: 'name', label: 'Name' },
         { key: 'teacher_id', label: 'Teacher ID' },
@@ -129,8 +121,7 @@ export default function UserManagement({
 
     const studentColumns = [
         { key: 'name', label: 'Name' },
-        // ✅ CHANGED: 'LRN' → 'STUDENT ID'
-        { key: 'lrn', label: 'STUDENT ID' },
+        { key: 'lrn', label: 'Student ID' },
         { key: 'grade_level', label: 'Grade Level' },
         {
             key: 'gender',
@@ -141,7 +132,6 @@ export default function UserManagement({
         { key: 'created_at', label: 'Date Created' },
     ];
 
-    // SVG Icons
     const EditIcon = () => (
         <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -166,7 +156,6 @@ export default function UserManagement({
         </svg>
     );
 
-    // ✅ NEW: Delete Icon SVG
     const DeleteIcon = () => (
         <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -180,7 +169,6 @@ export default function UserManagement({
             ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
             : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
         ),
-        // ✅ NEW: Delete button
         { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => handleDelete(row) },
     ];
 
@@ -191,7 +179,6 @@ export default function UserManagement({
             ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
             : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
         ),
-        // ✅ NEW: Delete button
         { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => handleDelete(row) },
     ];
 
@@ -202,22 +189,23 @@ export default function UserManagement({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">User Management</h2>}
+            header={<h2 className="text-xl font-bold text-gray-800">User Management</h2>}
         >
             <Head title="User Management" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Card>
+            <div className="py-6 sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    {/* 🔧 FIX: Removed overflow-hidden from this container to allow dropdowns to overflow */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         {/* Tabs */}
-                        <div className="border-b border-gray-200 dark:border-gray-700">
+                        <div className="border-b border-gray-200 px-6">
                             <nav className="-mb-px flex space-x-8">
                                 <button
                                     onClick={() => handleTabChange('teacher')}
                                     className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
                                         activeTab === 'teacher'
-                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                            ? 'border-blue-600 text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
                                     }`}
                                 >
                                     Teachers
@@ -226,8 +214,8 @@ export default function UserManagement({
                                     onClick={() => handleTabChange('student')}
                                     className={`py-4 px-1 border-b-2 font-medium text-sm transition ${
                                         activeTab === 'student'
-                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                            ? 'border-blue-600 text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
                                     }`}
                                 >
                                     Students
@@ -236,56 +224,58 @@ export default function UserManagement({
                         </div>
 
                         {/* Filters & Actions */}
-                        <div className="mt-4 flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder={`Search ${activeTab}s...`}
-                                    size="md"
-                                />
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={gradeFilter}
-                                    onChange={handleGradeFilterChange}
-                                    placeholder="Grade Level"
-                                    size="md"
-                                    className="w-36"
-                                />
-                                {activeTab === 'student' && (
+                        <div className="p-6">
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder={`Search ${activeTab}s...`}
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="flex flex-wrap gap-3">
                                     <FilterDropdown
-                                        options={genderOptions}
-                                        value={genderFilter}
-                                        onChange={handleGenderFilterChange}
-                                        placeholder="Gender"
+                                        options={gradeOptions}
+                                        value={gradeFilter}
+                                        onChange={handleGradeFilterChange}
+                                        placeholder="Grade Level"
                                         size="md"
                                         className="w-36"
                                     />
-                                )}
-                                <PrimaryButton onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}>
-                                    + Add {activeTab === 'teacher' ? 'Teacher' : 'Student'}
-                                </PrimaryButton>
+                                    {activeTab === 'student' && (
+                                        <FilterDropdown
+                                            options={genderOptions}
+                                            value={genderFilter}
+                                            onChange={handleGenderFilterChange}
+                                            placeholder="Gender"
+                                            size="md"
+                                            className="w-36"
+                                        />
+                                    )}
+                                    <PrimaryButton onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}>
+                                        + Add {activeTab === 'teacher' ? 'Teacher' : 'Student'}
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+
+                            {/* Loading Spinner */}
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
+
+                            {/* Table */}
+                            <div className="mt-6">
+                                <Table
+                                    columns={currentColumns}
+                                    rows={currentData}
+                                    actions={currentActions}
+                                    emptyMessage={`No ${activeTab}s found.`}
+                                    hoverable
+                                    striped
+                                    pagination={currentPagination}
+                                />
                             </div>
                         </div>
-
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
-
-                        {/* Table */}
-                        <div className="mt-6">
-                            <Table
-                                columns={currentColumns}
-                                rows={currentData}
-                                actions={currentActions}
-                                emptyMessage={`No ${activeTab}s found.`}
-                                hoverable
-                                striped
-                                pagination={currentPagination}
-                            />
-                        </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
 
@@ -303,13 +293,11 @@ export default function UserManagement({
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
 
-                        // Handle grade_levels as array for teachers
                         if (activeTab === 'teacher') {
                             const gradeLevels = formData.getAll('grade_levels[]');
                             data.grade_levels = gradeLevels.length ? gradeLevels : [];
                         }
 
-                        // Close modal on success
                         const handleSuccess = () => {
                             setShowCreateModal(false);
                             setShowEditModal(false);
@@ -376,7 +364,7 @@ export default function UserManagement({
                                                 value={grade}
                                                 defaultChecked={selectedUser?.grade_assignments?.includes(grade)}
                                             />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">{grade}</span>
+                                            <span className="text-sm text-gray-700">{grade}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -386,8 +374,7 @@ export default function UserManagement({
                     ) : (
                         <>
                             <div>
-                                {/* ✅ CHANGED: 'LRN' → 'STUDENT ID' */}
-                                <InputLabel htmlFor="lrn" value="STUDENT ID" />
+                                <InputLabel htmlFor="lrn" value="Student ID" />
                                 <TextInput
                                     id="lrn"
                                     name="lrn"
@@ -403,7 +390,7 @@ export default function UserManagement({
                                     id="grade_level"
                                     name="grade_level"
                                     defaultValue={selectedUser?.grade_level || ''}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                                     required
                                 >
                                     <option value="">Select Grade Level</option>
@@ -422,9 +409,9 @@ export default function UserManagement({
                                             name="gender"
                                             value="male"
                                             defaultChecked={selectedUser?.gender === 'male'}
-                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                            className="rounded border-gray-300 text-gray-600 shadow-sm focus:ring-blue-600"
                                         />
-                                        <span className="text-sm text-gray-700 dark:text-gray-300">Male</span>
+                                        <span className="text-sm text-gray-700">Male</span>
                                     </label>
                                     <label className="flex items-center gap-2">
                                         <input
@@ -432,9 +419,9 @@ export default function UserManagement({
                                             name="gender"
                                             value="female"
                                             defaultChecked={selectedUser?.gender === 'female'}
-                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                            className="rounded border-gray-300 text-gray-600 shadow-sm focus:ring-blue-600"
                                         />
-                                        <span className="text-sm text-gray-700 dark:text-gray-300">Female</span>
+                                        <span className="text-sm text-gray-700">Female</span>
                                     </label>
                                 </div>
                                 <InputError message={errors?.gender} className="mt-2" />
@@ -442,7 +429,7 @@ export default function UserManagement({
                         </>
                     )}
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}>
                             Cancel
                         </SecondaryButton>
@@ -466,8 +453,6 @@ export default function UserManagement({
                         const form = e.target;
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
-
-                        // Add password from state to form data
                         data.new_password = password;
 
                         router.put(route('principal.users.reset-password', selectedUser?.id), data, {
@@ -495,7 +480,7 @@ export default function UserManagement({
                         />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <SecondaryButton type="button" onClick={() => { setShowResetModal(false); setSelectedUser(null); setPassword(''); }}>
                             Cancel
                         </SecondaryButton>

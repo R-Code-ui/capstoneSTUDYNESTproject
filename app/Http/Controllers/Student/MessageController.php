@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -13,8 +14,7 @@ use Inertia\Inertia;
 class MessageController extends Controller
 {
     /**
-     * Display all conversations (grouped by teacher) for the logged-in student.
-     * Same pattern as the Teacher panel's Message module.
+     * Display all conversations (grouped by teacher) with pagination.
      */
     public function index(Request $request)
     {
@@ -22,56 +22,62 @@ class MessageController extends Controller
 
         $user = auth()->user();
         $search = $request->input('search');
+        $studentId = $user->id;
 
-        $messages = Message::where(function ($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                  ->orWhere('receiver_id', $user->id);
+        // Subquery: latest message per conversation pair
+        $latestIds = DB::table('messages')
+            ->selectRaw('LEAST(sender_id, receiver_id) AS person1, GREATEST(sender_id, receiver_id) AS person2, MAX(id) AS latest_id')
+            ->where(function ($q) use ($studentId) {
+                $q->where('sender_id', $studentId)
+                  ->orWhere('receiver_id', $studentId);
+            })
+            ->groupBy('person1', 'person2');
+
+        $conversationsQuery = Message::joinSub($latestIds, 'lm', function ($join) {
+                $join->on('messages.id', '=', 'lm.latest_id');
             })
             ->with(['sender:id,name,lrn,grade_level', 'receiver:id,name,lrn,grade_level'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $conversations = $messages
-            ->groupBy(function ($msg) use ($user) {
-                return $msg->sender_id === $user->id ? $msg->receiver_id : $msg->sender_id;
-            })
-            ->map(function ($thread, $teacherId) use ($user) {
-                $latest = $thread->first(); // already sorted desc, so first = latest
-                $otherUser = $latest->sender_id === $user->id ? $latest->receiver : $latest->sender;
-
-                $unreadCount = $thread
-                    ->where('receiver_id', $user->id)
-                    ->where('status', 'unread')
-                    ->count();
-
-                return [
-                    'teacher_id'         => $teacherId,
-                    'name'               => $otherUser->name ?? 'Unknown Teacher',
-                    'last_message'       => Str::limit($latest->message, 70),
-                    'last_message_time'  => $latest->created_at->diffForHumans(),
-                    'last_message_at'    => $latest->created_at,
-                    'last_message_id'    => $latest->id,
-                    'category'           => $latest->category,
-                    'unread_count'       => $unreadCount,
-                    'is_last_from_me'    => $latest->sender_id === $user->id,
-                ];
-            })
-            ->when($search, function ($collection) use ($search) {
-                return $collection->filter(function ($conv) use ($search) {
-                    return stripos($conv['name'], $search) !== false;
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('sender', fn($sq) => $sq->where('name', 'like', "%{$search}%"))
+                      ->orWhereHas('receiver', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
                 });
             })
-            ->sortByDesc('last_message_at')
-            ->values();
+            ->orderBy('messages.created_at', 'desc');
 
-        $totalUnread = $conversations->sum('unread_count');
+        $paginator = $conversationsQuery->paginate(10);
+
+        $conversations = $paginator->through(function ($msg) use ($user) {
+            $otherUser = $msg->sender_id === $user->id ? $msg->receiver : $msg->sender;
+            $teacherId = $otherUser->id;
+
+            $unreadCount = Message::where(function ($q) use ($user, $teacherId) {
+                    $q->where('sender_id', $teacherId)
+                      ->where('receiver_id', $user->id);
+                })->where('status', 'unread')->count();
+
+            return [
+                'teacher_id'         => $teacherId,
+                'name'               => $otherUser->name ?? 'Unknown Teacher',
+                'last_message'       => Str::limit($msg->message, 70),
+                'last_message_time'  => $msg->created_at->diffForHumans(),
+                'last_message_at'    => $msg->created_at,
+                'last_message_id'    => $msg->id,
+                'category'           => $msg->category,
+                'unread_count'       => $unreadCount,
+                'is_last_from_me'    => $msg->sender_id === $user->id,
+            ];
+        });
+
+        $totalUnread = Message::where('receiver_id', $user->id)
+            ->where('status', 'unread')
+            ->count();
 
         return Inertia::render('Student/Messages/Index', [
-            'conversations' => $conversations,
+            'conversations' => $conversations->items(),   // plain array
             'unread_count'  => $totalUnread,
-            'filters'       => [
-                'search' => $search,
-            ],
+            'filters'       => ['search' => $search],
+            'pagination'    => $paginator->toArray(),
         ]);
     }
 
@@ -142,9 +148,6 @@ class MessageController extends Controller
 
     /**
      * View the full conversation thread with a teacher.
-     * The route still binds a single Message ($message) — we only use it
-     * to identify which teacher this conversation is with, then load the
-     * whole thread, same pattern as the Teacher panel.
      */
     public function show(Message $message)
     {
@@ -191,9 +194,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Reply to a message.
-     * Left untouched — kept for backward compatibility / other callers.
-     * The conversation view sends follow-ups through store() instead.
+     * Reply to a message (kept for backward compatibility).
      */
     public function reply(Request $request, Message $message)
     {
@@ -225,8 +226,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Delete a message (only if the student is sender or receiver).
-     * Mirrors the Teacher panel's destroy() method exactly.
+     * Delete a single message.
      */
     public function destroy(Message $message)
     {
@@ -241,5 +241,26 @@ class MessageController extends Controller
 
         return redirect()->route('student.messages.index')
             ->with('success', 'Message deleted successfully.');
+    }
+
+    /**
+     * ✅ NEW: Delete an entire conversation thread with a teacher.
+     */
+    public function destroyConversation(Request $request, $teacherId)
+    {
+        Gate::authorize('message.delete');
+
+        $student = auth()->user();
+
+        Message::where(function ($q) use ($student, $teacherId) {
+            $q->where('sender_id', $student->id)
+              ->where('receiver_id', $teacherId);
+        })->orWhere(function ($q) use ($student, $teacherId) {
+            $q->where('sender_id', $teacherId)
+              ->where('receiver_id', $student->id);
+        })->delete();
+
+        return redirect()->route('student.messages.index')
+            ->with('success', 'Conversation deleted successfully.');
     }
 }
