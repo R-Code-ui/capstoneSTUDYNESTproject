@@ -23,7 +23,6 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
 
     const totalQuestions = questions.length;
 
-    // Initialize answers from existing answers
     useEffect(() => {
         const initialAnswers = {};
         questions.forEach((q) => {
@@ -34,7 +33,6 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         setAnswers(initialAnswers);
     }, [questions]);
 
-    // Timer logic
     useEffect(() => {
         if (attempt.time_limit) {
             const storedStart = sessionStorage.getItem(`quiz_${attempt.id}_start`);
@@ -118,7 +116,6 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         return answer !== null && answer !== undefined && answer !== '';
     }).length;
 
-    // Render question based on type
     const renderQuestion = (question) => {
         const userAnswer = answers[question.id] || '';
 
@@ -131,8 +128,8 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                 key={key}
                                 className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                     userAnswer === key
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500'
+                                        ? 'border-blue-600 bg-blue-50'
+                                        : 'border-gray-200 hover:border-blue-300'
                                 }`}
                             >
                                 <input
@@ -141,9 +138,9 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                     value={key}
                                     checked={userAnswer === key}
                                     onChange={() => handleAnswer(question.id, key)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-600"
                                 />
-                                <span className="text-gray-700 dark:text-gray-200">
+                                <span className="text-gray-700">
                                     <span className="font-medium">{key}.</span> {value}
                                 </span>
                             </label>
@@ -159,8 +156,8 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                 key={option}
                                 className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                     userAnswer === option
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500'
+                                        ? 'border-blue-600 bg-blue-50'
+                                        : 'border-gray-200 hover:border-blue-300'
                                 }`}
                             >
                                 <input
@@ -169,9 +166,9 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                     value={option}
                                     checked={userAnswer === option}
                                     onChange={() => handleAnswer(question.id, option)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-600"
                                 />
-                                <span className="text-gray-700 dark:text-gray-200">{option}</span>
+                                <span className="text-gray-700">{option}</span>
                             </label>
                         ))}
                     </div>
@@ -184,7 +181,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                             type="text"
                             value={userAnswer}
                             onChange={(e) => handleAnswer(question.id, e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-800 dark:text-gray-200 transition-colors"
+                            className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-gray-800 transition-colors"
                             placeholder="Type your answer..."
                         />
                     </div>
@@ -198,20 +195,20 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         {quiz.title}
                     </span>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
                         {timeRemaining !== null && (
                             <div className={`text-lg font-bold flex items-center gap-1 ${
-                                timeRemaining === '0:00' ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'
+                                timeRemaining === '0:00' ? 'text-red-600' : 'text-gray-700'
                             }`}>
                                 <ClockIcon className="w-5 h-5" />
                                 {timeRemaining}
                             </div>
                         )}
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                        <span className="text-sm text-gray-500">
                             {answeredCount}/{totalQuestions} answered
                         </span>
                     </div>
@@ -225,101 +222,108 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                     {isSubmitting && <LoadingSpinner overlay size="lg" text="Submitting your quiz..." />}
 
                     {timeUp && (
-                        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2">
+                        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                             <ClockIcon className="w-5 h-5 text-red-500" />
-                            <p className="text-red-600 dark:text-red-400 font-medium">
+                            <p className="text-red-600 font-medium">
                                 Time's up! Your quiz is being submitted automatically.
                             </p>
                         </div>
                     )}
 
-                    <Card>
-                        {/* Progress Bar */}
-                        <div className="mb-6">
-                            <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
-                                <span>Question {currentQuestionIndex + 1} of {totalQuestions}</span>
-                                <span>{Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100)}%</span>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="p-6">
+                            {/* Progress Bar */}
+                            <div className="mb-6">
+                                <div className="flex justify-between text-sm text-gray-500 mb-1">
+                                    <span>Question {currentQuestionIndex + 1} of {totalQuestions}</span>
+                                    <span>{Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100)}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+                                    />
+                                </div>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                                <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
-                                />
-                            </div>
-                        </div>
 
-                        {/* Question */}
-                        <div className="space-y-4">
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Question {currentQuestionIndex + 1} of {totalQuestions}
+                            {/* Question */}
+                            <div className="space-y-4">
+                                <div className="text-sm text-gray-500">
+                                    Question {currentQuestionIndex + 1} of {totalQuestions}
+                                </div>
+                                <div className="text-lg font-medium text-gray-800 break-words">
+                                    {currentQuestion.text}
+                                </div>
+                                {renderQuestion(currentQuestion)}
                             </div>
-                            <div className="text-lg font-medium text-gray-900 dark:text-white">
-                                {currentQuestion.text}
-                            </div>
-                            {renderQuestion(currentQuestion)}
-                        </div>
 
-                        {/* Navigation Buttons */}
-                        <div className="flex justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                            <div>
-                                {!isFirstQuestion && (
-                                    <SecondaryButton onClick={handlePrevious}>
-                                        ← Previous
-                                    </SecondaryButton>
-                                )}
-                            </div>
-                            <div className="flex gap-3">
-                                {isLastQuestion ? (
-                                    <PrimaryButton onClick={() => handleSubmit(false)}>
-                                        Submit Quiz
-                                    </PrimaryButton>
-                                ) : (
-                                    <PrimaryButton onClick={handleNext}>
-                                        Next →
-                                    </PrimaryButton>
-                                )}
+                            {/* Navigation Buttons */}
+                            <div className="flex flex-wrap justify-between mt-8 pt-6 border-t border-gray-200">
+                                <div>
+                                    {!isFirstQuestion && (
+                                        <SecondaryButton onClick={handlePrevious}>
+                                            ← Previous
+                                        </SecondaryButton>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    {isLastQuestion ? (
+                                        <PrimaryButton onClick={() => handleSubmit(false)}>
+                                            Submit Quiz
+                                        </PrimaryButton>
+                                    ) : (
+                                        <PrimaryButton onClick={handleNext}>
+                                            Next →
+                                        </PrimaryButton>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* Question Navigator */}
                     <div className="mt-6">
-                        <Card title="Question Navigator">
-                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-                                {questions.map((q, index) => {
-                                    const isAnswered = answers[q.id] !== null && answers[q.id] !== undefined && answers[q.id] !== '';
-                                    const isCurrent = index === currentQuestionIndex;
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700">Question Navigator</h3>
+                            </div>
+                            <div className="p-6">
+                                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                                    {questions.map((q, index) => {
+                                        const isAnswered = answers[q.id] !== null && answers[q.id] !== undefined && answers[q.id] !== '';
+                                        const isCurrent = index === currentQuestionIndex;
 
-                                    return (
-                                        <button
-                                            key={q.id}
-                                            onClick={() => setCurrentQuestionIndex(index)}
-                                            className={`
-                                                py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1
-                                                ${isCurrent ? 'ring-2 ring-blue-500' : ''}
-                                                ${isAnswered
-                                                    ? 'bg-green-500 text-white hover:bg-green-600'
-                                                    : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                                }
-                                            `}
-                                        >
-                                            {index + 1}
-                                            {isAnswered && <CheckCircleIcon className="w-3 h-3" />}
-                                        </button>
-                                    );
-                                })}
+                                        return (
+                                            <button
+                                                key={q.id}
+                                                onClick={() => setCurrentQuestionIndex(index)}
+                                                className={`
+                                                    py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1
+                                                    ${isCurrent ? 'ring-2 ring-blue-600' : ''}
+                                                    ${isAnswered
+                                                        ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                                    }
+                                                `}
+                                            >
+                                                {index + 1}
+                                                {isAnswered && <CheckCircleIcon className="w-3 h-3" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">
+                                    <span className="flex items-center gap-1">
+                                        <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
+                                        Answered
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <XCircleIcon className="w-4 h-4 text-gray-400" />
+                                        Not Answered
+                                    </span>
+                                </div>
                             </div>
-                            <div className="mt-3 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                <span className="flex items-center gap-1">
-                                    <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                    Answered
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <XCircleIcon className="w-4 h-4 text-gray-400" />
-                                    Not Answered
-                                </span>
-                            </div>
-                        </Card>
+                        </div>
                     </div>
                 </div>
             </div>

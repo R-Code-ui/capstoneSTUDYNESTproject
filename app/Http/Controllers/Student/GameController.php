@@ -13,66 +13,27 @@ use App\Models\ActivityLog;
 class GameController extends Controller
 {
     /**
-     * Display a listing of games.
+     * Display a listing of games assigned to the student.
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $gradeLevel = $user->grade_level;
+        $student = auth()->user();
 
-        $search = $request->input('search');
-        $gameTypeFilter = $request->input('game_type');
-        $statusFilter = $request->input('status');
-
-        $games = Game::where('grade_level', $gradeLevel)
+        $games = Game::where('grade_level', $student->grade_level)
             ->where('status', 'published')
-            ->when($search, function ($query, $search) {
-                return $query->where('game_title', 'like', "%{$search}%");
-            })
-            ->when($gameTypeFilter, function ($query, $type) {
-                return $query->where('game_type', $type);
-            })
-            ->when($statusFilter, function ($query, $status) use ($user) {
-                if ($status === 'completed') {
-                    return $query->whereHas('results', function ($q) use ($user) {
-                        $q->where('student_id', $user->id)->where('status', 'completed');
-                    });
-                } elseif ($status === 'in_progress') {
-                    return $query->whereHas('results', function ($q) use ($user) {
-                        $q->where('student_id', $user->id)->where('status', 'started');
-                    });
-                } elseif ($status === 'not_started') {
-                    return $query->whereDoesntHave('results', function ($q) use ($user) {
-                        $q->where('student_id', $user->id);
-                    });
-                }
-                return $query;
-            })
+            ->with('results')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return Inertia::render('Student/Games/Index', [
-            'games' => $games->map(function ($game) use ($user) {
-                // Count completed attempts
-                $completedCount = GameResult::where('game_id', $game->id)
-                    ->where('student_id', $user->id)
-                    ->where('status', 'completed')
-                    ->count();
+            'games' => $games->map(function ($game) use ($student) {
+                $results = $game->results()->where('student_id', $student->id)->get();
+                $completedCount = $results->where('status', 'completed')->count();
+                $highestScore = $results->where('status', 'completed')->max('score') ?? 0;
+                $attemptsRemaining = max(0, $game->max_attempts - $results->count());
 
-                // Latest completed attempt (for results link)
-                $latestCompleted = GameResult::where('game_id', $game->id)
-                    ->where('student_id', $user->id)
-                    ->where('status', 'completed')
-                    ->orderBy('completed_at', 'desc')
-                    ->first();
-
-                // Check for any in-progress attempt
-                $hasStarted = GameResult::where('game_id', $game->id)
-                    ->where('student_id', $user->id)
-                    ->where('status', 'started')
-                    ->exists();
-
-                // Determine status
+                // Determine status for the card
+                $hasStarted = $results->where('status', '!=', 'completed')->first();
                 if ($hasStarted) {
                     $status = 'started';
                 } elseif ($completedCount > 0) {
@@ -81,126 +42,112 @@ class GameController extends Controller
                     $status = 'assigned';
                 }
 
+                // Latest completed attempt (for "View Results" link)
+                $latestCompleted = $results->where('status', 'completed')->sortByDesc('completed_at')->first();
+
                 return [
                     'id' => $game->id,
                     'title' => $game->game_title,
+                    'grade_level' => $game->grade_level,
                     'game_type' => $game->game_type,
                     'max_attempts' => $game->max_attempts,
-                    'due_date' => $game->due_date ? $game->due_date->format('M d, Y') : null,
+                    'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
+                    'teacher' => $game->teacher->name,
                     'status' => $status,
                     'score' => $latestCompleted ? $latestCompleted->score : null,
-                    'attempts_remaining' => $game->max_attempts - $completedCount,
+                    'attempts_remaining' => $attemptsRemaining,
                     'latest_completed_attempt_id' => $latestCompleted ? $latestCompleted->id : null,
                 ];
             }),
             'filters' => [
-                'search' => $search,
-                'game_type' => $gameTypeFilter,
-                'status' => $statusFilter,
+                'search' => $request->input('search'),
+                'game_type' => $request->input('game_type'),
+                'status' => $request->input('status'),
             ],
             'pagination' => $games->toArray(),
         ]);
     }
 
     /**
-     * Display the specified game.
+     * Show the game details and instructions.
      */
-    public function show(Game $game)
+    public function show(Game $game, Request $request)
     {
-        $user = auth()->user();
+        Gate::authorize('view', $game);
 
-        if ($game->grade_level !== $user->grade_level) {
-            abort(403);
+        $student = auth()->user();
+        $results = $game->results()
+            ->where('student_id', $student->id)
+            ->orderBy('attempt_number', 'desc')
+            ->get();
+
+        $completedResults = $results->where('status', 'completed');
+        $currentResult = $results->where('status', '!=', 'completed')->first();
+
+        $canPlay = $results->count() < $game->max_attempts;
+        $attemptsRemaining = max(0, $game->max_attempts - $results->count());
+
+        $gameData = $game->game_data;
+        if (is_string($gameData)) {
+            $gameData = json_decode($gameData, true);
         }
 
-        $completedCount = GameResult::where('game_id', $game->id)
-            ->where('student_id', $user->id)
-            ->where('status', 'completed')
-            ->count();
-
-        $latestCompleted = GameResult::where('game_id', $game->id)
-            ->where('student_id', $user->id)
-            ->where('status', 'completed')
-            ->orderBy('completed_at', 'desc')
-            ->first();
-
-        $existingStarted = GameResult::where('game_id', $game->id)
-            ->where('student_id', $user->id)
-            ->where('status', 'started')
-            ->first();
-
-        $canPlay = $completedCount < $game->max_attempts;
-        $attemptsRemaining = $game->max_attempts - $completedCount;
-
-        // Handle game_data
-        $gameData = is_string($game->game_data)
-            ? json_decode($game->game_data, true)
-            : $game->game_data;
+        // Latest completed attempt (for "View Results" link at the top)
+        $latestCompleted = $completedResults->sortByDesc('completed_at')->first();
 
         return Inertia::render('Student/Games/Show', [
             'game' => [
                 'id' => $game->id,
                 'title' => $game->game_title,
+                'grade_level' => $game->grade_level,
                 'game_type' => $game->game_type,
-                'instructions' => $gameData['instructions'] ?? 'Follow the instructions to complete the game.',
                 'max_attempts' => $game->max_attempts,
-                'due_date' => $game->due_date ? $game->due_date->format('M d, Y') : null,
-                'teacher' => $game->teacher->name ?? 'Unknown',
+                'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
+                'teacher' => $game->teacher->name,
+                'instructions' => $gameData['instructions'] ?? 'Play and do your best!',
             ],
             'can_play' => $canPlay,
             'attempts_remaining' => $attemptsRemaining,
-            'current_result' => $existingStarted ? [
-                'id' => $existingStarted->id,
+            'current_result' => $currentResult ? [
+                'id' => $currentResult->id,
+                'attempt_number' => $currentResult->attempt_number,
+                'status' => $currentResult->status,
             ] : null,
             'latest_completed_attempt_id' => $latestCompleted ? $latestCompleted->id : null,
         ]);
     }
 
     /**
-     * Start a game (now a GET request).
+     * Start a new game or resume an in-progress one.
      */
-    public function play(Game $game)
+    public function play(Game $game, Request $request)
     {
-        $user = auth()->user();
+        Gate::authorize('view', $game);
 
-        if ($game->grade_level !== $user->grade_level) {
-            abort(403);
+        $student = auth()->user();
+        $results = $game->results()->where('student_id', $student->id)->get();
+
+        if ($results->count() >= $game->max_attempts) {
+            return back()->with('error', 'You have reached the maximum number of attempts.');
         }
 
-        $completedAttempts = GameResult::where('game_id', $game->id)
-            ->where('student_id', $user->id)
-            ->where('status', 'completed')
-            ->count();
+        $result = $results->where('status', '!=', 'completed')->first();
 
-        if ($completedAttempts >= $game->max_attempts) {
-            return redirect()->back()->with('error', 'You have reached the maximum number of attempts.');
+        if (!$result) {
+            $result = GameResult::create([
+                'game_id' => $game->id,
+                'student_id' => $student->id,
+                'attempt_number' => $results->count() + 1,
+                'status' => 'started',
+                'started_at' => now(),
+            ]);
         }
-
-        $existingResult = GameResult::where('game_id', $game->id)
-            ->where('student_id', $user->id)
-            ->where('status', 'started')
-            ->first();
-
-        if ($existingResult) {
-            return redirect()->route('student.games.play.show', $existingResult->id);
-        }
-
-        $attemptNumber = $completedAttempts + 1;
-
-        $result = GameResult::create([
-            'game_id' => $game->id,
-            'student_id' => $user->id,
-            'attempt_number' => $attemptNumber,
-            'score' => null,
-            'status' => 'started',
-            'started_at' => now(),
-        ]);
 
         ActivityLog::create([
-            'user_id'             => $user->id,
+            'user_id'             => $student->id,
             'user_role'           => 'student',
-            'activity_type'       => 'play',
-            'activity_description'=> 'Started game "' . $game->game_title . '" (Attempt ' . $attemptNumber . ')',
+            'activity_type'       => 'start_game',
+            'activity_description'=> 'Started game: ' . $game->game_title . ' (Attempt #' . $result->attempt_number . ')',
             'related_module'      => 'Game Module',
         ]);
 
@@ -208,128 +155,113 @@ class GameController extends Controller
     }
 
     /**
-     * Display the game play interface.
+     * Display the play screen for an existing game result.
      */
     public function showPlay(GameResult $result)
     {
-        $user = auth()->user();
-
-        if ($result->student_id !== $user->id) {
-            abort(403);
-        }
+        Gate::authorize('view', $result->game);
 
         $game = $result->game;
-
-        $gameData = is_string($game->game_data)
-            ? json_decode($game->game_data, true)
-            : $game->game_data;
 
         return Inertia::render('Student/Games/Play', [
             'result' => [
                 'id' => $result->id,
-                'attempt_number' => $result->attempt_number,
-                'progress_data'  => $result->progress_data,   // ✅ included
+                'progress_data' => $result->progress_data,
             ],
             'game' => [
                 'id' => $game->id,
                 'title' => $game->game_title,
-                'game_type' => $game->game_type,
-                'questions' => $gameData['questions'] ?? [],
-                'config' => $gameData['config'] ?? [],
             ],
         ]);
     }
 
     /**
-     * Submit game results.
-     */
-    public function submitResult(Request $request, GameResult $result)
-    {
-        $user = auth()->user();
-
-        if ($result->student_id !== $user->id) {
-            abort(403);
-        }
-
-        if ($result->status === 'completed') {
-            return redirect()->route('student.games.results', $result->id);
-        }
-
-        $validated = $request->validate([
-            'score' => 'required|integer|min:0',
-        ]);
-
-        $result->update([
-            'score' => $validated['score'],
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
-
-        ActivityLog::create([
-            'user_id'             => $user->id,
-            'user_role'           => 'student',
-            'activity_type'       => 'play',
-            'activity_description'=> 'Completed game "' . $result->game->game_title . '" with score ' . $validated['score'],
-            'related_module'      => 'Game Module',
-        ]);
-
-        return redirect()->route('student.games.results', $result->id);
-    }
-
-    /**
-     * ✅ Save in‑game progress (called when student exits without finishing).
+     * Save progress mid-game (called when student exits).
      */
     public function saveProgress(Request $request, GameResult $result)
     {
-        $user = auth()->user();
-
-        if ($result->student_id !== $user->id) {
+        // ✅ Fix: use direct ownership check instead of a missing policy
+        if ($result->student_id !== auth()->id()) {
             abort(403);
         }
 
         $validated = $request->validate([
-            'progress' => 'required|array',
+            'progress' => 'nullable|array',
         ]);
 
         $result->update([
             'progress_data' => $validated['progress'],
         ]);
 
-        // ✅ Redirect to the game list instead of returning JSON
-        return redirect()->route('student.games.index');
+        return redirect()->route('student.games.index')
+            ->with('success', 'Progress saved. You can resume later!');
     }
 
     /**
-     * Display game results.
+     * Submit the final score and mark game as completed.
+     */
+    public function submitResult(Request $request, GameResult $result)
+    {
+        Gate::authorize('view', $result->game);
+
+        $validated = $request->validate([
+            'score' => 'required|integer|min:0|max:100',
+        ]);
+
+        $result->update([
+            'score' => $validated['score'],
+            'status' => 'completed',
+            'completed_at' => now(),
+            'progress_data' => null,
+        ]);
+
+        ActivityLog::create([
+            'user_id'             => auth()->id(),
+            'user_role'           => 'student',
+            'activity_type'       => 'complete_game',
+            'activity_description'=> 'Completed game: ' . $result->game->game_title . ' - Score: ' . $validated['score'],
+            'related_module'      => 'Game Module',
+        ]);
+
+        return redirect()->route('student.games.results', $result->id)
+            ->with('success', 'Game completed!');
+    }
+
+    /**
+     * Display the results/summary after a game is completed.
      */
     public function results(GameResult $result)
     {
-        $user = auth()->user();
-
-        if ($result->student_id !== $user->id) {
-            abort(403);
-        }
+        Gate::authorize('view', $result->game);
 
         $game = $result->game;
+        $student = auth()->user();
+        $allResults = $game->results()
+            ->where('student_id', $student->id)
+            ->orderBy('attempt_number', 'desc')
+            ->get();
 
-        $completedCount = GameResult::where('game_id', $game->id)
-            ->where('student_id', $user->id)
-            ->where('status', 'completed')
-            ->count();
+        $averageScore = $allResults->where('status', 'completed')->avg('score') ?? 0;
+        $highestScore = $allResults->where('status', 'completed')->max('score') ?? 0;
+        $lowestScore = $allResults->where('status', 'completed')->min('score') ?? 0;
 
         return Inertia::render('Student/Games/Results', [
             'result' => [
                 'id' => $result->id,
                 'score' => $result->score,
                 'attempt_number' => $result->attempt_number,
-                'completed_at' => $result->completed_at->format('M d, Y'),
+                'completed_at' => $result->completed_at?->format('Y-m-d H:i'),
             ],
             'game' => [
                 'id' => $game->id,
                 'title' => $game->game_title,
-                'game_type' => $game->game_type,
             ],
-            'can_play_again' => $completedCount < $game->max_attempts,
+            'statistics' => [
+                'average_score' => round($averageScore, 2),
+                'highest_score' => $highestScore,
+                'lowest_score' => $lowestScore,
+                'total_attempts' => $allResults->count(),
+            ],
         ]);
     }
 }

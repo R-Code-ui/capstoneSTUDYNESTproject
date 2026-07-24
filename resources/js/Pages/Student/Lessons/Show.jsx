@@ -31,7 +31,7 @@ export default function LessonsShow({ lesson, related_activities }) {
             case 'pdf_module':
                 return <DocumentIcon className="w-6 h-6 text-red-500" />;
             case 'image':
-                return <PhotoIcon className="w-6 h-6 text-green-500" />;
+                return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
             case 'worksheet':
                 return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
             default:
@@ -62,7 +62,6 @@ export default function LessonsShow({ lesson, related_activities }) {
         window.open(route('student.lessons.download-resource', resourceId), '_blank');
     };
 
-    // Placeholder for unimplemented routes
     const comingSoon = (e) => {
         e.preventDefault();
         alert('This activity will be available soon!');
@@ -71,11 +70,12 @@ export default function LessonsShow({ lesson, related_activities }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         {lesson.title}
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         {!lesson.is_completed && (
                             <PrimaryButton onClick={handleMarkComplete} disabled={isLoading}>
                                 <CheckCircleIcon className="w-4 h-4 mr-1" />
@@ -98,87 +98,91 @@ export default function LessonsShow({ lesson, related_activities }) {
                     {isLoading && <LoadingSpinner overlay size="lg" />}
 
                     {/* ===== Lesson Information ===== */}
-                    <Card>
-                        <div className="space-y-4">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="p-6 space-y-4">
                             <div className="flex flex-wrap items-center gap-3">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     {lesson.subject}
                                 </span>
                                 {lesson.is_completed && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                                         <CheckCircleIcon className="w-3 h-3 mr-1" />
                                         Completed
                                     </span>
                                 )}
-                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                <span className="text-sm text-gray-500 flex items-center gap-1">
                                     <UserIcon className="w-4 h-4" />
                                     {lesson.teacher}
                                 </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                <span className="text-sm text-gray-500 flex items-center gap-1">
                                     <CalendarIcon className="w-4 h-4" />
                                     {lesson.publish_date}
                                 </span>
                             </div>
 
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <BookOpenIcon className="w-6 h-6 text-blue-500" />
+                                <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2 break-words">
+                                    <BookOpenIcon className="w-6 h-6 text-blue-500 shrink-0" />
                                     {lesson.title}
                                 </h3>
                             </div>
 
-                            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
-                                <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                            <div className="pt-4 border-t border-gray-200">
+                                <h4 className="font-semibold text-gray-800 mb-2">Description</h4>
+                                <div className="text-gray-700 whitespace-pre-wrap break-words">
                                     {lesson.description}
                                 </div>
                             </div>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* ===== Lesson Content ===== */}
                     <div className="mt-6">
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <BookOpenIcon className="w-5 h-5 text-blue-500" />
-                                Lesson Content
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                                    Lesson Content
+                                </h3>
                             </div>
-                        }>
-                            <div className="prose prose-blue dark:prose-invert max-w-none">
-                                <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
+                            <div className="p-6">
+                                <div className="prose prose-blue max-w-none text-gray-700 break-words">
+                                    <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
+                                </div>
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
                     {/* ===== Learning Resources ===== */}
                     {lesson.resources && lesson.resources.length > 0 && (
                         <div className="mt-6">
-                            <Card title={
-                                <div className="flex items-center gap-2">
-                                    <PaperClipIcon className="w-5 h-5 text-gray-500" />
-                                    Learning Resources
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <PaperClipIcon className="w-5 h-5 text-gray-500" />
+                                        Learning Resources
+                                    </h3>
                                 </div>
-                            }>
-                                <div className="space-y-3">
+                                <div className="p-6 space-y-3">
                                     {lesson.resources.map((resource) => (
                                         <div
                                             key={resource.id}
-                                            className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-3"
                                         >
                                             <div className="flex items-center gap-4">
                                                 {getResourceIcon(resource.type)}
                                                 <div>
-                                                    <div className="font-medium text-gray-900 dark:text-white">
+                                                    <div className="font-medium text-gray-800 break-words">
                                                         {resource.name}
                                                     </div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                    <div className="text-sm text-gray-500">
                                                         {getResourceLabel(resource.type)}
                                                     </div>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() => handleDownload(resource.id, resource.name)}
-                                                className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shrink-0"
                                             >
                                                 <ArrowDownTrayIcon className="w-4 h-4" />
                                                 Download
@@ -186,87 +190,88 @@ export default function LessonsShow({ lesson, related_activities }) {
                                         </div>
                                     ))}
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     )}
 
-                    {/* ===== Related Activities (non‑functional links until implemented) ===== */}
+                    {/* ===== Related Activities ===== */}
                     {(related_activities.assignment || related_activities.quiz || related_activities.game) && (
                         <div className="mt-6">
-                            <Card title={
-                                <div className="flex items-center gap-2">
-                                    <LinkIcon className="w-5 h-5 text-gray-500" />
-                                    Related Activities
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <LinkIcon className="w-5 h-5 text-gray-500" />
+                                        Related Activities
+                                    </h3>
                                 </div>
-                            }>
-                                <div className="flex flex-wrap gap-3">
-                                    {related_activities.assignment && (
-                                        <a
-                                            href="#"
-                                            onClick={comingSoon}
-                                            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors"
-                                        >
-                                            <ClipboardDocumentListIcon className="w-4 h-4" />
-                                            Open Assignment: {related_activities.assignment.title}
-                                        </a>
-                                    )}
+                                <div className="p-6">
+                                    <div className="flex flex-wrap gap-3">
+                                        {related_activities.assignment && (
+                                            <a
+                                                href="#"
+                                                onClick={comingSoon}
+                                                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors"
+                                            >
+                                                <ClipboardDocumentListIcon className="w-4 h-4" />
+                                                Open Assignment: {related_activities.assignment.title}
+                                            </a>
+                                        )}
 
-                                    {related_activities.quiz && (
-                                        <a
-                                            href="#"
-                                            onClick={comingSoon}
-                                            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
-                                        >
-                                            <ChartBarIcon className="w-4 h-4" />
-                                            Take Quiz: {related_activities.quiz.title}
-                                        </a>
-                                    )}
+                                        {related_activities.quiz && (
+                                            <a
+                                                href="#"
+                                                onClick={comingSoon}
+                                                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
+                                            >
+                                                <ChartBarIcon className="w-4 h-4" />
+                                                Take Quiz: {related_activities.quiz.title}
+                                            </a>
+                                        )}
 
-                                    {related_activities.game && (
-                                        <a
-                                            href="#"
-                                            onClick={comingSoon}
-                                            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
-                                        >
-                                            <PuzzlePieceIcon className="w-4 h-4" />
-                                            Play Game: {related_activities.game.title}
-                                        </a>
-                                    )}
+                                        {related_activities.game && (
+                                            <a
+                                                href="#"
+                                                onClick={comingSoon}
+                                                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"
+                                            >
+                                                <PuzzlePieceIcon className="w-4 h-4" />
+                                                Play Game: {related_activities.game.title}
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     )}
 
                     {/* ===== Completion Status ===== */}
-                    {lesson.is_completed ? (
-                        <div className="mt-6">
-                            <Card className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                                <div className="flex items-center gap-3 text-green-700 dark:text-green-300">
+                    <div className="mt-6">
+                        {lesson.is_completed ? (
+                            <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-6">
+                                <div className="flex items-center gap-3 text-emerald-700">
                                     <CheckCircleIcon className="w-6 h-6" />
                                     <div>
                                         <div className="font-semibold">Lesson Completed!</div>
-                                        <div className="text-sm text-green-600 dark:text-green-400">
+                                        <div className="text-sm text-emerald-600">
                                             Great job! You have completed this lesson.
                                         </div>
                                     </div>
                                 </div>
-                            </Card>
-                        </div>
-                    ) : (
-                        <div className="mt-6">
-                            <Card className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-                                <div className="flex items-center gap-3 text-yellow-700 dark:text-yellow-300">
+                            </div>
+                        ) : (
+                            <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-6">
+                                <div className="flex items-center gap-3 text-yellow-700">
                                     <BookOpenIcon className="w-6 h-6" />
                                     <div>
                                         <div className="font-semibold">Not Yet Completed</div>
-                                        <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                                        <div className="text-sm text-yellow-600">
                                             Click the "Mark as Completed" button above when you finish this lesson.
                                         </div>
                                     </div>
                                 </div>
-                            </Card>
-                        </div>
-                    )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

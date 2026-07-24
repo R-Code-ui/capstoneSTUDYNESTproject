@@ -33,7 +33,7 @@ class LessonController extends Controller
                 return $query->where('subject', $subject);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // ✅ PAGINATION ADDED
+            ->paginate(10);
 
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
 
@@ -45,7 +45,7 @@ class LessonController extends Controller
                     'subject' => $lesson->subject,
                     'description' => $lesson->lesson_description,
                     'teacher' => $lesson->teacher->name ?? 'Unknown',
-                    'publish_date' => $lesson->publish_date,
+                    'publish_date' => $lesson->publish_date ? $lesson->publish_date->format('Y-m-d') : '',
                     'created_at' => $lesson->created_at->diffForHumans(),
                 ];
             }),
@@ -54,7 +54,7 @@ class LessonController extends Controller
                 'search' => $search,
                 'subject' => $subjectFilter,
             ],
-            'pagination' => $lessons->toArray(), // ✅ PAGINATION DATA
+            'pagination' => $lessons->toArray(),
         ]);
     }
 
@@ -81,7 +81,7 @@ class LessonController extends Controller
                 'description' => $lesson->lesson_description,
                 'content' => $lesson->lesson_content,
                 'teacher' => $lesson->teacher->name ?? 'Unknown',
-                'publish_date' => $lesson->publish_date,
+                'publish_date' => $lesson->publish_date ? $lesson->publish_date->format('Y-m-d') : '',   // ✅ clean date
                 'is_completed' => $isCompleted,
                 'resources' => $lesson->resources->map(function ($resource) {
                     return [
@@ -118,7 +118,6 @@ class LessonController extends Controller
 
         Gate::authorize('view', $lesson);
 
-        // Attach the lesson to the student's completed lessons (many‑to‑many)
         $user->completedLessons()->syncWithoutDetaching([$lesson->id => [
             'completed_at' => now(),
         ]]);

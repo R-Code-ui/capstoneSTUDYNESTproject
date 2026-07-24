@@ -20,16 +20,16 @@ class GameController extends Controller
     {
         return [
             'Grade 4' => [
-                'literacy' => ['Word Builder', 'Sentence Scramble'],
-                'numeracy' => ['Balloon Pop Math', 'Sorting Baskets'],
+                'literacy' => ['Word Builder', 'Sentence Scramble', 'Rhyme Match', 'Letter Hunt'],
+                'numeracy' => ['Balloon Pop Math', 'Sorting Baskets', 'Coin Counter', 'Skip Counting Path'],
             ],
             'Grade 5' => [
-                'literacy' => ['Match the Meaning', 'Story Fill-In'],
-                'numeracy' => ['Fraction Pizza', 'Number Line Runner'],
+                'literacy' => ['Match the Meaning', 'Story Fill-In', 'Compound Word Combiner', 'Analogy Solver'],
+                'numeracy' => ['Fraction Pizza', 'Number Line Runner', 'Area Blocks', 'Decimal Number Line'],
             ],
             'Grade 6' => [
-                'literacy' => ['Clue Detective', 'Word Web Builder'],
-                'numeracy' => ['Balance Scale', 'Graph Builder'],
+                'literacy' => ['Clue Detective', 'Word Web Builder', 'Sequence the Story', 'Idiom Match'],
+                'numeracy' => ['Balance Scale', 'Graph Builder', 'Coordinate Plane Treasure Hunt', 'Percent Bar Builder'],
             ],
         ];
     }

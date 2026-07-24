@@ -26,6 +26,18 @@ export default function StudentDashboard({
     progress_summary,
     unread_messages,
 }) {
+    // Array of gentle falling emoji background particles
+    const particles = [
+        { emoji: '🍃', left: '5%', duration: '12s', delay: '0s', size: '14px' },
+        { emoji: '✏️', left: '15%', duration: '15s', delay: '2s', size: '16px' },
+        { emoji: '🍂', left: '28%', duration: '11s', delay: '4s', size: '14px' },
+        { emoji: '📏', left: '42%', duration: '14s', delay: '1s', size: '15px' },
+        { emoji: '🍃', left: '55%', duration: '13s', delay: '5s', size: '14px' },
+        { emoji: '📚', left: '68%', duration: '16s', delay: '3s', size: '15px' },
+        { emoji: '🎒', left: '80%', duration: '12s', delay: '0.5s', size: '16px' },
+        { emoji: '🎨', left: '92%', duration: '14s', delay: '2.5s', size: '16px' },
+    ];
+
     const getStatusBadge = (status) => {
         switch (status) {
             case 'submitted':
@@ -43,417 +55,491 @@ export default function StudentDashboard({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Student Dashboard
+        <>
+            {/* ========================================================= */}
+            {/* FALLING PARTICLES (Leaves & School Supplies)               */}
+            {/* ========================================================= */}
+            <style>{`
+                @keyframes fallAndRotate {
+                    0% {
+                        transform: translateY(-20px) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% {
+                        opacity: 0.6;
+                    }
+                    90% {
+                        opacity: 0.6;
+                    }
+                    100% {
+                        transform: translateY(100vh) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+                .animate-falling-particle {
+                    position: fixed;
+                    top: -30px;
+                    animation-name: fallAndRotate;
+                    animation-timing-function: linear;
+                    animation-iteration-count: infinite;
+                    pointer-events: none;
+                    user-select: none;
+                    z-index: 0;
+                }
+            `}</style>
+
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+                {particles.map((p, idx) => (
+                    <span
+                        key={idx}
+                        className="animate-falling-particle opacity-50"
+                        style={{
+                            left: p.left,
+                            animationDuration: p.duration,
+                            animationDelay: p.delay,
+                            fontSize: p.size,
+                        }}
+                    >
+                        {p.emoji}
                     </span>
-                    {unread_messages > 0 && (
-                        <Link
-                            href={route('student.messages.index')}
-                            className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800"
-                        >
-                            <EnvelopeIcon className="w-5 h-5" />
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full">
-                                {unread_messages}
-                            </span>
-                        </Link>
-                    )}
-                </div>
-            }
-        >
-            <Head title="Student Dashboard" />
-
-            <div className="py-4">
-                <div className="mx-auto max-w-7xl">
-                    {/* ===== Welcome Section ===== */}
-                    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">
-                                Welcome back! 👋
-                            </h2>
-                            <p className="text-sm text-gray-300">
-                                <UserIcon className="inline-block w-4 h-4 mr-1" />
-                                Grade {grade_level}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                            <span className="text-sm text-gray-300">Quick Links:</span>
-                            <div className="flex gap-1">
-                                {[
-                                    { icon: BookOpenIcon, color: 'blue', label: 'Lessons', route: 'student.lessons.index' },
-                                    { icon: ClipboardDocumentListIcon, color: 'green', label: 'Assignments', route: 'student.assignments.index' },
-                                    { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes', route: 'student.quizzes.index' },
-                                    { icon: PuzzlePieceIcon, color: 'orange', label: 'Games', route: 'student.games.index' },
-                                    { icon: MegaphoneIcon, color: 'red', label: 'Announcements', route: 'student.announcements.index' },
-                                    { icon: ChartBarIcon, color: 'indigo', label: 'Progress', route: 'student.progress.index' },
-                                ].map((item, idx) => (
-                                    <Link
-                                        key={idx}
-                                        href={route(item.route)}
-                                        className={`p-1.5 bg-${item.color}-500/20 rounded-lg hover:bg-${item.color}-500/30 transition-colors`}
-                                        title={item.label}
-                                    >
-                                        <item.icon className={`w-5 h-5 text-${item.color}-400`} />
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ===== Recent Announcements ===== */}
-                    <Card title={
-                        <div className="flex items-center gap-2">
-                            <MegaphoneIcon className="w-5 h-5 text-red-500" />
-                            Recent Announcements
-                        </div>
-                    }>
-                        {recent_announcements && recent_announcements.length > 0 ? (
-                            <div className="space-y-3">
-                                {recent_announcements.map((announcement) => (
-                                    <div
-                                        key={announcement.id}
-                                        className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                    >
-                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                            <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
-                                                    {announcement.title}
-                                                </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                                                    {announcement.content}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-end shrink-0">
-                                                <span className="text-xs text-gray-400 dark:text-gray-500">
-                                                    {announcement.posted_by}
-                                                </span>
-                                                <span className="text-xs text-gray-400 dark:text-gray-500">
-                                                    {announcement.date}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                <div className="text-center">
-                                    <Link
-                                        href={route('student.announcements.index')}
-                                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                    >
-                                        View All Announcements →
-                                    </Link>
-                                </div>
-                            </div>
-                        ) : (
-                            <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                                No recent announcements.
-                            </p>
-                        )}
-                    </Card>
-
-                    {/* ===== Recent Lessons & Upcoming Assignments ===== */}
-                    <div className="mt-6 grid gap-6 md:grid-cols-2">
-                        {/* Recent Lessons */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <BookOpenIcon className="w-5 h-5 text-blue-500" />
-                                Recent Lessons
-                            </div>
-                        }>
-                            {recent_lessons && recent_lessons.length > 0 ? (
-                                <div className="space-y-3">
-                                    {recent_lessons.map((lesson) => (
-                                        <div
-                                            key={lesson.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        >
-                                            <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
-                                                    {lesson.title}
-                                                </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {lesson.subject}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-end shrink-0">
-                                                <span className="text-xs text-gray-400 dark:text-gray-500">
-                                                    {lesson.date}
-                                                </span>
-                                                <Link
-                                                    href={route('student.lessons.show', lesson.id)}
-                                                    className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                >
-                                                    View →
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="text-center">
-                                        <Link
-                                            href={route('student.lessons.index')}
-                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                        >
-                                            View All Lessons →
-                                        </Link>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                                    No lessons available.
-                                </p>
-                            )}
-                        </Card>
-
-                        {/* Upcoming Assignments */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <ClipboardDocumentListIcon className="w-5 h-5 text-green-500" />
-                                Upcoming Assignments
-                            </div>
-                        }>
-                            {upcoming_assignments && upcoming_assignments.length > 0 ? (
-                                <div className="space-y-3">
-                                    {upcoming_assignments.map((assignment) => (
-                                        <div
-                                            key={assignment.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        >
-                                            <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
-                                                    {assignment.title}
-                                                </div>
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <span className="text-gray-500 dark:text-gray-400">
-                                                        {assignment.subject}
-                                                    </span>
-                                                    <span className="text-gray-300 dark:text-gray-600">•</span>
-                                                    <span className="flex items-center gap-1 text-gray-400 dark:text-gray-500">
-                                                        <CalendarIcon className="w-3 h-3" />
-                                                        {assignment.due_date}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-end shrink-0">
-                                                {getStatusBadge(assignment.status)}
-                                                <Link
-                                                    href={route('student.assignments.show', assignment.id)}
-                                                    className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                >
-                                                    View →
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="text-center">
-                                        <Link
-                                            href={route('student.assignments.index')}
-                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                        >
-                                            View All Assignments →
-                                        </Link>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                                    No upcoming assignments.
-                                </p>
-                            )}
-                        </Card>
-                    </div>
-
-                    {/* ===== Available Quizzes & Assigned Games ===== */}
-                    <div className="mt-6 grid gap-6 md:grid-cols-2">
-                        {/* Available Quizzes */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <DocumentTextIcon className="w-5 h-5 text-purple-500" />
-                                Available Quizzes
-                            </div>
-                        }>
-                            {available_quizzes && available_quizzes.length > 0 ? (
-                                <div className="space-y-3">
-                                    {available_quizzes.map((quiz) => (
-                                        <div
-                                            key={quiz.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        >
-                                            <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
-                                                    {quiz.title}
-                                                </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {quiz.subject} • {quiz.questions} questions
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-end shrink-0">
-                                                {quiz.status === 'completed' ? (
-                                                    <>
-                                                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                                                            {quiz.score}%
-                                                        </span>
-                                                        <Link
-                                                            href={route('student.quizzes.show', quiz.id)}
-                                                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                        >
-                                                            View Results →
-                                                        </Link>
-                                                    </>
-                                                ) : (
-                                                    <Link
-                                                        href={route('student.quizzes.show', quiz.id)}
-                                                        className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                    >
-                                                        Start Quiz →
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="text-center">
-                                        <Link
-                                            href={route('student.quizzes.index')}
-                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                        >
-                                            View All Quizzes →
-                                        </Link>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                                    No quizzes available.
-                                </p>
-                            )}
-                        </Card>
-
-                        {/* Assigned Games */}
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <PuzzlePieceIcon className="w-5 h-5 text-orange-500" />
-                                Assigned Games
-                            </div>
-                        }>
-                            {assigned_games && assigned_games.length > 0 ? (
-                                <div className="space-y-3">
-                                    {assigned_games.map((game) => (
-                                        <div
-                                            key={game.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        >
-                                            <div>
-                                                <div className="font-medium text-gray-900 dark:text-white">
-                                                    {game.title}
-                                                </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                                                    {game.game_type}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-end shrink-0">
-                                                {game.status === 'completed' ? (
-                                                    <>
-                                                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                                                            {game.score}%
-                                                        </span>
-                                                        <Link
-                                                            href={route('student.games.show', game.id)}
-                                                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                        >
-                                                            Play Again →
-                                                        </Link>
-                                                    </>
-                                                ) : (
-                                                    <Link
-                                                        href={route('student.games.show', game.id)}
-                                                        className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                    >
-                                                        Play Game →
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="text-center">
-                                        <Link
-                                            href={route('student.games.index')}
-                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                        >
-                                            View All Games →
-                                        </Link>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                                    No games assigned.
-                                </p>
-                            )}
-                        </Card>
-                    </div>
-
-                    {/* ===== Learning Progress Summary ===== */}
-                    <div className="mt-6">
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <ChartBarIcon className="w-5 h-5 text-indigo-500" />
-                                Learning Progress Summary
-                            </div>
-                        }>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                        {progress_summary?.lessons?.completed || 0}/{progress_summary?.lessons?.total || 0}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Lessons Completed</div>
-                                </div>
-                                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {progress_summary?.assignments?.submitted || 0}/{progress_summary?.assignments?.total || 0}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Assignments Submitted</div>
-                                </div>
-                                <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                        {progress_summary?.quizzes?.average || 0}%
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Quiz Average</div>
-                                </div>
-                                <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                                        {progress_summary?.games?.completed || 0}/{progress_summary?.games?.total || 0}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Games Completed</div>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
-
-                    {/* ===== Quick Access Buttons (now functional) ===== */}
-                    <div className="mt-6">
-                        <Card title={<div className="flex items-center gap-2">Quick Access</div>}>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                                {[
-                                    { icon: BookOpenIcon, color: 'blue', label: 'Lessons', route: 'student.lessons.index' },
-                                    { icon: ClipboardDocumentListIcon, color: 'green', label: 'Assignments', route: 'student.assignments.index' },
-                                    { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes', route: 'student.quizzes.index' },
-                                    { icon: PuzzlePieceIcon, color: 'orange', label: 'Games', route: 'student.games.index' },
-                                    { icon: MegaphoneIcon, color: 'red', label: 'Announcements', route: 'student.announcements.index' },
-                                    { icon: ChartBarIcon, color: 'indigo', label: 'Progress', route: 'student.progress.index' },
-                                ].map((item, idx) => (
-                                    <Link
-                                        key={idx}
-                                        href={route(item.route)}
-                                        className={`flex flex-col items-center justify-center p-4 bg-${item.color}-50 dark:bg-${item.color}-900/30 rounded-xl hover:bg-${item.color}-100 dark:hover:bg-${item.color}-900/50 transition-all duration-200 hover:scale-105 hover:shadow-md`}
-                                    >
-                                        <item.icon className={`w-8 h-8 text-${item.color}-600 dark:text-${item.color}-400`} />
-                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center mt-2">
-                                            {item.label}
-                                        </span>
-                                    </Link>
-                                ))}
-                            </div>
-                        </Card>
-                    </div>
-                </div>
+                ))}
             </div>
-        </AuthenticatedLayout>
+
+            <AuthenticatedLayout
+                header={
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full relative z-10">
+                        <span className="text-xl font-semibold leading-tight text-gray-800">
+                            Student Dashboard
+                        </span>
+                        {unread_messages > 0 && (
+                            <Link
+                                href={route('student.messages.index')}
+                                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                            >
+                                <EnvelopeIcon className="w-5 h-5" />
+                                <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full">
+                                    {unread_messages}
+                                </span>
+                            </Link>
+                        )}
+                    </div>
+                }
+            >
+                <Head title="Student Dashboard" />
+
+                <div className="py-4 relative z-10">
+                    <div className="mx-auto max-w-7xl">
+
+                        {/* ===== Welcome Section ===== */}
+                        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-blue-50/80 to-purple-50/80 p-5 rounded-xl border border-blue-100 shadow-sm">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800">
+                                    Welcome back! 👋
+                                </h2>
+                                {/* 🔧 FIX: Changed "Grade {grade_level}" to "{grade_level} Student" */}
+                                <p className="text-sm text-gray-600 flex items-center gap-1 mt-0.5">
+                                    <UserIcon className="inline-block w-4 h-4 text-blue-500" />
+                                    {grade_level} Student
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                                <span className="text-sm text-gray-500 font-medium">Quick Links:</span>
+                                <div className="flex flex-wrap gap-1">
+                                    {[
+                                        { icon: BookOpenIcon, color: 'blue', label: 'Lessons', route: 'student.lessons.index' },
+                                        { icon: ClipboardDocumentListIcon, color: 'emerald', label: 'Assignments', route: 'student.assignments.index' },
+                                        { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes', route: 'student.quizzes.index' },
+                                        { icon: PuzzlePieceIcon, color: 'amber', label: 'Games', route: 'student.games.index' },
+                                        { icon: MegaphoneIcon, color: 'rose', label: 'Announcements', route: 'student.announcements.index' },
+                                        { icon: ChartBarIcon, color: 'indigo', label: 'Progress', route: 'student.progress.index' },
+                                    ].map((item, idx) => (
+                                        <Link
+                                            key={idx}
+                                            href={route(item.route)}
+                                            className={`p-1.5 bg-${item.color}-100 rounded-lg hover:bg-${item.color}-200 transition-colors`}
+                                            title={item.label}
+                                        >
+                                            <item.icon className={`w-5 h-5 text-${item.color}-600`} />
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ===== Recent Announcements ===== */}
+                        <Card
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <MegaphoneIcon className="w-5 h-5 text-rose-500" />
+                                    Recent Announcements
+                                </div>
+                            }
+                        >
+                            {recent_announcements && recent_announcements.length > 0 ? (
+                                <div className="space-y-3">
+                                    {recent_announcements.map((announcement) => (
+                                        <div
+                                            key={announcement.id}
+                                            className="p-3 bg-rose-50/50 rounded-lg border-l-4 border-rose-500 hover:bg-rose-50 transition-colors"
+                                        >
+                                            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
+                                                <div className="min-w-0">
+                                                    <div className="font-medium text-gray-800 truncate" title={announcement.title}>
+                                                        {announcement.title}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600 line-clamp-2 break-words">
+                                                        {announcement.content}
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end shrink-0">
+                                                    <span className="text-xs text-rose-600 font-medium">
+                                                        {announcement.posted_by}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">
+                                                        {announcement.date}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="text-center pt-2">
+                                        <Link
+                                            href={route('student.announcements.index')}
+                                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                        >
+                                            View All Announcements →
+                                        </Link>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-center text-gray-500 py-4">
+                                    No recent announcements.
+                                </p>
+                            )}
+                        </Card>
+
+                        {/* ===== Recent Lessons & Upcoming Assignments ===== */}
+                        <div className="mt-6 grid gap-6 md:grid-cols-2">
+                            {/* Recent Lessons */}
+                            <Card
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                                        Recent Lessons
+                                    </div>
+                                }
+                            >
+                                {recent_lessons && recent_lessons.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {recent_lessons.map((lesson) => (
+                                            <div
+                                                key={lesson.id}
+                                                className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors"
+                                            >
+                                                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-gray-800 truncate" title={lesson.title}>
+                                                            {lesson.title}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500 break-words">
+                                                            {lesson.subject}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end shrink-0">
+                                                        <span className="text-xs text-gray-400">
+                                                            {lesson.date}
+                                                        </span>
+                                                        <Link
+                                                            href={route('student.lessons.show', lesson.id)}
+                                                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                                        >
+                                                            View →
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="text-center pt-2">
+                                            <Link
+                                                href={route('student.lessons.index')}
+                                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                View All Lessons →
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-gray-500 py-4">
+                                        No lessons available.
+                                    </p>
+                                )}
+                            </Card>
+
+                            {/* Upcoming Assignments */}
+                            <Card
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <ClipboardDocumentListIcon className="w-5 h-5 text-emerald-500" />
+                                        Upcoming Assignments
+                                    </div>
+                                }
+                            >
+                                {upcoming_assignments && upcoming_assignments.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {upcoming_assignments.map((assignment) => (
+                                            <div
+                                                key={assignment.id}
+                                                className="p-3 bg-emerald-50/50 rounded-lg border border-emerald-100 hover:bg-emerald-50 transition-colors"
+                                            >
+                                                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-gray-800 truncate" title={assignment.title}>
+                                                            {assignment.title}
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-2 text-sm break-words">
+                                                            <span className="text-gray-500">
+                                                                {assignment.subject}
+                                                            </span>
+                                                            <span className="text-gray-300">•</span>
+                                                            <span className="flex items-center gap-1 text-gray-400">
+                                                                <CalendarIcon className="w-3 h-3" />
+                                                                {assignment.due_date}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end shrink-0">
+                                                        {getStatusBadge(assignment.status)}
+                                                        <Link
+                                                            href={route('student.assignments.show', assignment.id)}
+                                                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                                        >
+                                                            View →
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="text-center pt-2">
+                                            <Link
+                                                href={route('student.assignments.index')}
+                                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                View All Assignments →
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-gray-500 py-4">
+                                        No upcoming assignments.
+                                    </p>
+                                )}
+                            </Card>
+                        </div>
+
+                        {/* ===== Available Quizzes & Assigned Games ===== */}
+                        <div className="mt-6 grid gap-6 md:grid-cols-2">
+                            {/* Available Quizzes */}
+                            <Card
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <DocumentTextIcon className="w-5 h-5 text-purple-500" />
+                                        Available Quizzes
+                                    </div>
+                                }
+                            >
+                                {available_quizzes && available_quizzes.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {available_quizzes.map((quiz) => (
+                                            <div
+                                                key={quiz.id}
+                                                className="p-3 bg-purple-50/50 rounded-lg border border-purple-100 hover:bg-purple-50 transition-colors"
+                                            >
+                                                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-gray-800 truncate" title={quiz.title}>
+                                                            {quiz.title}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500 break-words">
+                                                            {quiz.subject} • {quiz.questions} questions
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end shrink-0">
+                                                        {quiz.status === 'completed' ? (
+                                                            <>
+                                                                <span className="text-sm font-medium text-emerald-600">
+                                                                    {quiz.score}%
+                                                                </span>
+                                                                <Link
+                                                                    href={route('student.quizzes.show', quiz.id)}
+                                                                    className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                                                >
+                                                                    View Results →
+                                                                </Link>
+                                                            </>
+                                                        ) : (
+                                                            <Link
+                                                                href={route('student.quizzes.show', quiz.id)}
+                                                                className="mt-1 text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                                                            >
+                                                                Start Quiz →
+                                                            </Link>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="text-center pt-2">
+                                            <Link
+                                                href={route('student.quizzes.index')}
+                                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                View All Quizzes →
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-gray-500 py-4">
+                                        No quizzes available.
+                                    </p>
+                                )}
+                            </Card>
+
+                            {/* Assigned Games */}
+                            <Card
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <PuzzlePieceIcon className="w-5 h-5 text-amber-500" />
+                                        Assigned Games
+                                    </div>
+                                }
+                            >
+                                {assigned_games && assigned_games.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {assigned_games.map((game) => (
+                                            <div
+                                                key={game.id}
+                                                className="p-3 bg-amber-50/50 rounded-lg border border-amber-100 hover:bg-amber-50 transition-colors"
+                                            >
+                                                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-gray-800 truncate" title={game.title}>
+                                                            {game.title}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500 capitalize break-words">
+                                                            {game.game_type}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end shrink-0">
+                                                        {game.status === 'completed' ? (
+                                                            <>
+                                                                <span className="text-sm font-medium text-emerald-600">
+                                                                    {game.score}%
+                                                                </span>
+                                                                <Link
+                                                                    href={route('student.games.show', game.id)}
+                                                                    className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                                                >
+                                                                    Play Again →
+                                                                </Link>
+                                                            </>
+                                                        ) : (
+                                                            <Link
+                                                                href={route('student.games.show', game.id)}
+                                                                className="mt-1 text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                                                            >
+                                                                Play Game →
+                                                            </Link>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="text-center pt-2">
+                                            <Link
+                                                href={route('student.games.index')}
+                                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                View All Games →
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-gray-500 py-4">
+                                        No games assigned.
+                                    </p>
+                                )}
+                            </Card>
+                        </div>
+
+                        {/* ===== Learning Progress Summary ===== */}
+                        <div className="mt-6">
+                            <Card
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <ChartBarIcon className="w-5 h-5 text-indigo-500" />
+                                        Learning Progress Summary
+                                    </div>
+                                }
+                            >
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                        <div className="text-2xl font-bold text-blue-600">
+                                            {progress_summary?.lessons?.completed || 0}/{progress_summary?.lessons?.total || 0}
+                                        </div>
+                                        <div className="text-xs font-medium text-gray-500">Lessons Completed</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                                        <div className="text-2xl font-bold text-emerald-600">
+                                            {progress_summary?.assignments?.submitted || 0}/{progress_summary?.assignments?.total || 0}
+                                        </div>
+                                        <div className="text-xs font-medium text-gray-500">Assignments Submitted</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                                        <div className="text-2xl font-bold text-purple-600">
+                                            {progress_summary?.quizzes?.average || 0}%
+                                        </div>
+                                        <div className="text-xs font-medium text-gray-500">Quiz Average</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                        <div className="text-2xl font-bold text-amber-600">
+                                            {progress_summary?.games?.completed || 0}/{progress_summary?.games?.total || 0}
+                                        </div>
+                                        <div className="text-xs font-medium text-gray-500">Games Completed</div>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+
+                        {/* ===== Quick Access Buttons ===== */}
+                        <div className="mt-6">
+                            <Card title={<span className="font-semibold text-gray-700">Quick Access</span>}>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                                    {[
+                                        { icon: BookOpenIcon, color: 'blue', bg: 'bg-blue-50', hover: 'hover:bg-blue-100', text: 'text-blue-600', label: 'Lessons', route: 'student.lessons.index' },
+                                        { icon: ClipboardDocumentListIcon, color: 'emerald', bg: 'bg-emerald-50', hover: 'hover:bg-emerald-100', text: 'text-emerald-600', label: 'Assignments', route: 'student.assignments.index' },
+                                        { icon: DocumentTextIcon, color: 'purple', bg: 'bg-purple-50', hover: 'hover:bg-purple-100', text: 'text-purple-600', label: 'Quizzes', route: 'student.quizzes.index' },
+                                        { icon: PuzzlePieceIcon, color: 'amber', bg: 'bg-amber-50', hover: 'hover:bg-amber-100', text: 'text-amber-600', label: 'Games', route: 'student.games.index' },
+                                        { icon: MegaphoneIcon, color: 'rose', bg: 'bg-rose-50', hover: 'hover:bg-rose-100', text: 'text-rose-600', label: 'Announcements', route: 'student.announcements.index' },
+                                        { icon: ChartBarIcon, color: 'indigo', bg: 'bg-indigo-50', hover: 'hover:bg-indigo-100', text: 'text-indigo-600', label: 'Progress', route: 'student.progress.index' },
+                                    ].map((item, idx) => (
+                                        <Link
+                                            key={idx}
+                                            href={route(item.route)}
+                                            className={`flex flex-col items-center justify-center p-4 ${item.bg} ${item.hover} rounded-xl border border-gray-100 hover:border-${item.color}-300 transition-all duration-200 hover:scale-105 hover:shadow-md`}
+                                        >
+                                            <item.icon className={`w-8 h-8 ${item.text}`} />
+                                            <span className="text-xs font-medium text-gray-700 text-center mt-2">
+                                                {item.label}
+                                            </span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </Card>
+                        </div>
+
+                    </div>
+                </div>
+            </AuthenticatedLayout>
+        </>
     );
 }

@@ -22,8 +22,9 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <span className="text-xl font-semibold leading-tight text-gray-800">
                         Quiz Results: {quiz.title}
                     </span>
                     <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
@@ -38,25 +39,25 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
             <div className="py-4">
                 <div className="mx-auto max-w-3xl">
                     {/* ===== Score Card ===== */}
-                    <Card className={`text-center ${passed ? 'border-green-500' : 'border-red-500'} border-t-4`}>
-                        <div className="py-4">
+                    <div className={`bg-white rounded-xl border ${passed ? 'border-emerald-500' : 'border-red-500'} border-t-4 shadow-sm overflow-hidden`}>
+                        <div className="p-6 text-center py-8">
                             <div className="text-6xl mb-4">
                                 {passed ? (
-                                    <CheckCircleIcon className="w-20 h-20 mx-auto text-green-500" />
+                                    <CheckCircleIcon className="w-20 h-20 mx-auto text-emerald-500" />
                                 ) : (
                                     <XCircleIcon className="w-20 h-20 mx-auto text-red-500" />
                                 )}
                             </div>
-                            <div className="text-5xl font-bold text-gray-900 dark:text-white">
+                            <div className="text-5xl font-bold text-gray-800">
                                 {attempt.percentage}%
                             </div>
-                            <div className="text-2xl font-semibold mt-2">
+                            <div className="text-2xl font-semibold mt-2 text-gray-700">
                                 {attempt.score} / {attempt.total}
                             </div>
                             <div className={`mt-3 inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${
                                 passed
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-red-100 text-red-800'
                             }`}>
                                 {passed ? (
                                     <><CheckCircleIcon className="w-5 h-5 mr-1" /> Passed</>
@@ -64,31 +65,31 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                                     <><XCircleIcon className="w-5 h-5 mr-1" /> Failed</>
                                 )}
                             </div>
-                            <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="mt-2 text-sm text-gray-500">
                                 Attempt {attempt.attempt_number} • Completed {attempt.completed_at}
                             </div>
-                            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="mt-1 text-sm text-gray-500">
                                 Passing Score: {quiz.passing_score}%
                             </div>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* ===== Statistics ===== */}
                     <div className="mt-6 grid grid-cols-2 gap-4">
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 flex items-center justify-center gap-1">
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-blue-600 flex items-center justify-center gap-1">
                                 <CheckCircleIcon className="w-5 h-5" />
                                 {attempt.score}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Correct Answers</div>
-                        </Card>
-                        <Card className="text-center">
-                            <div className="text-2xl font-bold text-red-600 dark:text-red-400 flex items-center justify-center gap-1">
+                            <div className="text-sm font-medium text-gray-500">Correct Answers</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-red-600 flex items-center justify-center gap-1">
                                 <XCircleIcon className="w-5 h-5" />
                                 {attempt.total - attempt.score}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Incorrect Answers</div>
-                        </Card>
+                            <div className="text-sm font-medium text-gray-500">Incorrect Answers</div>
+                        </div>
                     </div>
 
                     {/* ===== Toggle Answers Button ===== */}
@@ -103,53 +104,55 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                     {showAnswers && (
                         <div className="mt-6 space-y-4">
                             {questions.map((question, index) => (
-                                <Card
+                                <div
                                     key={index}
-                                    className={`border-l-4 ${
+                                    className={`bg-white rounded-xl border-l-4 ${
                                         question.is_correct
-                                            ? 'border-green-500'
+                                            ? 'border-emerald-500'
                                             : 'border-red-500'
-                                    }`}
+                                    } border border-gray-200 shadow-sm overflow-hidden`}
                                 >
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex-shrink-0 text-lg font-semibold text-gray-500 dark:text-gray-400">
-                                            {index + 1}.
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900 dark:text-white">
-                                                {question.text}
+                                    <div className="p-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className="flex-shrink-0 text-lg font-semibold text-gray-500">
+                                                {index + 1}.
                                             </div>
-                                            <div className="mt-2 text-sm">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-gray-500 dark:text-gray-400">Your Answer:</span>
-                                                    <span className={question.is_correct ? 'text-green-600 dark:text-green-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'}>
-                                                        {question.user_answer || 'Not answered'}
-                                                        {question.is_correct ? ' ✅' : ' ❌'}
-                                                    </span>
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-800">
+                                                    {question.text}
                                                 </div>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-gray-500 dark:text-gray-400">Correct Answer:</span>
-                                                    <span className="text-green-600 dark:text-green-400 font-medium">
-                                                        {question.correct_answer}
-                                                    </span>
+                                                <div className="mt-2 text-sm">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="text-gray-500">Your Answer:</span>
+                                                        <span className={question.is_correct ? 'text-emerald-600 font-medium' : 'text-red-600 font-medium'}>
+                                                            {question.user_answer || 'Not answered'}
+                                                            {question.is_correct ? ' ✅' : ' ❌'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                        <span className="text-gray-500">Correct Answer:</span>
+                                                        <span className="text-emerald-600 font-medium">
+                                                            {question.correct_answer}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="flex-shrink-0">
-                                            {question.is_correct ? (
-                                                <CheckCircleIcon className="w-6 h-6 text-green-500" />
-                                            ) : (
-                                                <XCircleIcon className="w-6 h-6 text-red-500" />
-                                            )}
+                                            <div className="flex-shrink-0">
+                                                {question.is_correct ? (
+                                                    <CheckCircleIcon className="w-6 h-6 text-emerald-500" />
+                                                ) : (
+                                                    <XCircleIcon className="w-6 h-6 text-red-500" />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </Card>
+                                </div>
                             ))}
                         </div>
                     )}
 
                     {/* ===== Actions ===== */}
-                    <div className="mt-6 flex justify-center gap-3">
+                    <div className="mt-6 flex flex-wrap justify-center gap-3">
                         <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
                             Back to Quizzes
                         </SecondaryButton>

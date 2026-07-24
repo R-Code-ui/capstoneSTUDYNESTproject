@@ -219,8 +219,9 @@ export default function AuthenticatedLayout({ header, children }) {
                 <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-slate-50">
                     {/* ===== TOP HEADER BAR (Clean, Light) ===== */}
                     <header className="hidden md:flex h-16 items-center justify-between px-8 bg-white border-b border-slate-200 shadow-sm">
+                        {/* 🔧 FIX: Removed the header text entirely - no "Dashboard" text here */}
                         <div className="text-lg font-bold text-slate-800">
-                            {typeof header === 'string' ? header : 'Dashboard'}
+                            {/* Empty - no header text displayed */}
                         </div>
 
                         <div className="flex items-center gap-4">

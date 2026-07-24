@@ -72,27 +72,39 @@ const ENGINE_MAP = {
 export default function GamesPlay({ result, game }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentProgress, setCurrentProgress] = useState(
-        result.progress_data || null   // resume from saved state
+        result.progress_data || null
     );
 
     const definition = gameDefinitions[game.title];
     const EngineComponent = ENGINE_MAP[game.title];
 
-    // Called by the engine every time progress changes
+    // Array of falling emoji particles (larger and more prominent)
+    const particles = [
+        { emoji: '👾', left: '3%', duration: '14s', delay: '0s', size: '28px' },
+        { emoji: '🎮', left: '12%', duration: '18s', delay: '2s', size: '32px' },
+        { emoji: '🏀', left: '22%', duration: '16s', delay: '4s', size: '30px' },
+        { emoji: '⚽', left: '35%', duration: '20s', delay: '1s', size: '26px' },
+        { emoji: '⚙️', left: '48%', duration: '15s', delay: '5s', size: '34px' },
+        { emoji: '🛸', left: '60%', duration: '17s', delay: '3s', size: '30px' },
+        { emoji: '👾', left: '72%', duration: '19s', delay: '6s', size: '28px' },
+        { emoji: '🎮', left: '82%', duration: '13s', delay: '2.5s', size: '32px' },
+        { emoji: '🏀', left: '92%', duration: '16s', delay: '4.5s', size: '30px' },
+        { emoji: '⚙️', left: '8%', duration: '22s', delay: '7s', size: '26px' },
+        { emoji: '🛸', left: '45%', duration: '18s', delay: '8s', size: '30px' },
+        { emoji: '⚽', left: '68%', duration: '14s', delay: '9s', size: '28px' },
+    ];
+
     const handleProgress = (progress) => {
         setCurrentProgress(progress);
     };
 
-    // Save progress and exit
     const handleExit = () => {
         if (!currentProgress) {
-            // No progress yet – just leave
             router.visit(route('student.games.index'));
             return;
         }
 
         setIsSubmitting(true);
-        // The server now redirects to the game list, so no manual navigation is needed
         router.post(
             route('student.games.save-progress', result.id),
             { progress: currentProgress },
@@ -103,7 +115,6 @@ export default function GamesPlay({ result, game }) {
         );
     };
 
-    // Game finished – submit final result
     const handleComplete = (score) => {
         setIsSubmitting(true);
         router.post(
@@ -118,14 +129,21 @@ export default function GamesPlay({ result, game }) {
     if (!definition || !EngineComponent || definition.comingSoon) {
         return (
             <AuthenticatedLayout
-                header={<h2 className="text-xl font-bold text-indigo-900 dark:text-white">{game.title}</h2>}
+                header={
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                        <h2 className="text-xl font-semibold leading-tight text-gray-800">{game.title}</h2>
+                        <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
+                            Back to Games
+                        </SecondaryButton>
+                    </div>
+                }
             >
                 <Head title={`Playing: ${game.title}`} />
-                <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-6 flex items-center justify-center">
-                    <Card className="max-w-md w-full text-center p-10 bg-white rounded-3xl shadow-xl border border-indigo-100 animate-in zoom-in duration-300">
+                <div className="min-h-screen p-6 flex items-center justify-center bg-white">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm max-w-md w-full text-center p-10">
                         <div className="text-6xl mb-6">🚀</div>
-                        <h3 className="text-2xl font-black text-indigo-900 mb-2">Coming Soon!</h3>
-                        <p className="text-gray-600 dark:text-gray-300 mb-8">
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Coming Soon!</h3>
+                        <p className="text-gray-600 mb-8">
                             This game isn't available to play yet. Check back later or ask your teacher!
                         </p>
                         <SecondaryButton
@@ -134,7 +152,7 @@ export default function GamesPlay({ result, game }) {
                         >
                             Back to Games
                         </SecondaryButton>
-                    </Card>
+                    </div>
                 </div>
             </AuthenticatedLayout>
         );
@@ -142,21 +160,76 @@ export default function GamesPlay({ result, game }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-bold text-indigo-900 dark:text-white">{game.title}</h2>}
+            header={
+                // 🔧 FIX: Removed Exit Game button, only title remains
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">{game.title}</h2>
+                </div>
+            }
         >
             <Head title={`Playing: ${game.title}`} />
 
             {isSubmitting && <LoadingSpinner overlay size="lg" text="Saving your progress..." />}
 
-            <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white py-8">
+            {/* ========================================================= */}
+            {/* FALLING PARTICLES (Game Emojis)                            */}
+            {/* ========================================================= */}
+            <style>{`
+                @keyframes fallAndRotateLarge {
+                    0% {
+                        transform: translateY(-20px) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% {
+                        opacity: 0.8;
+                    }
+                    90% {
+                        opacity: 0.8;
+                    }
+                    100% {
+                        transform: translateY(100vh) rotate(720deg);
+                        opacity: 0;
+                    }
+                }
+                .animate-falling-particle-large {
+                    position: fixed;
+                    top: -30px;
+                    animation-name: fallAndRotateLarge;
+                    animation-timing-function: linear;
+                    animation-iteration-count: infinite;
+                    pointer-events: none;
+                    user-select: none;
+                    z-index: 1;
+                }
+            `}</style>
+
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+                {particles.map((p, idx) => (
+                    <span
+                        key={idx}
+                        className="animate-falling-particle-large opacity-60"
+                        style={{
+                            left: p.left,
+                            animationDuration: p.duration,
+                            animationDelay: p.delay,
+                            fontSize: p.size,
+                        }}
+                    >
+                        {p.emoji}
+                    </span>
+                ))}
+            </div>
+
+            {/* ===== Main Game Container ===== */}
+            <div className="relative z-10 min-h-screen bg-white py-8">
                 <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                         <EngineComponent
                             content={definition.content}
                             onComplete={handleComplete}
                             onExit={handleExit}
-                            onProgress={handleProgress}          // ✅ new
-                            initialState={result.progress_data}   // ✅ resume
+                            onProgress={handleProgress}
+                            initialState={result.progress_data}
                         />
                     </div>
                 </div>

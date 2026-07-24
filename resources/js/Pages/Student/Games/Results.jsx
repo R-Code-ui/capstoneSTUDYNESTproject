@@ -19,9 +19,9 @@ export default function GamesResults({ result, game, can_play_again }) {
 
     const getTypeIcon = (type) => {
         return type === 'literacy' ? (
-            <BookOpenIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <BookOpenIcon className="w-8 h-8 text-blue-600" />
         ) : (
-            <CalculatorIcon className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+            <CalculatorIcon className="w-8 h-8 text-purple-600" />
         );
     };
 
@@ -33,7 +33,7 @@ export default function GamesResults({ result, game, can_play_again }) {
         if (result.score >= 80) {
             return <StarIcon className="w-16 h-16 text-yellow-500" />;
         } else if (result.score >= 60) {
-            return <CheckCircleIcon className="w-16 h-16 text-green-500" />;
+            return <CheckCircleIcon className="w-16 h-16 text-emerald-500" />;
         } else {
             return <HeartIcon className="w-16 h-16 text-red-500" />;
         }
@@ -51,11 +51,11 @@ export default function GamesResults({ result, game, can_play_again }) {
 
     const getResultBadgeClass = () => {
         if (result.score >= 80) {
-            return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+            return 'bg-emerald-100 text-emerald-800';
         } else if (result.score >= 60) {
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+            return 'bg-yellow-100 text-yellow-800';
         } else {
-            return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+            return 'bg-red-100 text-red-800';
         }
     };
 
@@ -70,8 +70,9 @@ export default function GamesResults({ result, game, can_play_again }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         Game Results: {game.title}
                     </h2>
                     <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
@@ -87,13 +88,13 @@ export default function GamesResults({ result, game, can_play_again }) {
                     {isLoading && <LoadingSpinner overlay size="lg" />}
 
                     {/* ===== Results Card ===== */}
-                    <Card className="text-center">
-                        <div className="py-8">
-                            <div className="flex items-center justify-center gap-3 mb-4">
-                                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden text-center">
+                        <div className="p-6 py-8">
+                            <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+                                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50">
                                     {getTypeIcon(game.game_type)}
                                 </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     {getTypeLabel(game.game_type)}
                                 </span>
                             </div>
@@ -102,15 +103,15 @@ export default function GamesResults({ result, game, can_play_again }) {
                                 {getResultIcon()}
                             </div>
 
-                            <div className="text-5xl font-bold text-gray-900 dark:text-white">
+                            <div className="text-5xl font-bold text-gray-800">
                                 {result.score}
                             </div>
 
-                            <div className="text-lg text-gray-500 dark:text-gray-400 mt-1">
+                            <div className="text-lg text-gray-500 mt-1">
                                 points
                             </div>
 
-                            <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="mt-4 text-sm text-gray-500">
                                 Attempt {result.attempt_number} • Completed {result.completed_at}
                             </div>
 
@@ -118,7 +119,7 @@ export default function GamesResults({ result, game, can_play_again }) {
                                 {getResultMessage()}
                             </div>
                         </div>
-                    </Card>
+                    </div>
 
                     {/* ===== Actions ===== */}
                     <div className="mt-6 flex flex-wrap justify-center gap-3">

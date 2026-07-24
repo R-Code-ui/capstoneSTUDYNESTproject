@@ -17,6 +17,20 @@ import {
     XCircleIcon,
 } from '@heroicons/react/24/outline';
 
+// Soft gradient combinations for cards
+const GRADIENT_COLORS = [
+    { from: 'from-blue-100', to: 'to-pink-100' },
+    { from: 'from-orange-100', to: 'to-yellow-100' },
+    { from: 'from-purple-100', to: 'to-pink-100' },
+    { from: 'from-emerald-100', to: 'to-blue-100' },
+    { from: 'from-yellow-100', to: 'to-rose-100' },
+    { from: 'from-indigo-100', to: 'to-purple-100' },
+    { from: 'from-teal-100', to: 'to-emerald-100' },
+    { from: 'from-rose-100', to: 'to-orange-100' },
+    { from: 'from-cyan-100', to: 'to-blue-100' },
+    { from: 'from-amber-100', to: 'to-yellow-100' },
+];
+
 export default function QuizzesIndex({
     quizzes,
     subjects,
@@ -79,10 +93,10 @@ export default function QuizzesIndex({
 
     const getStatusBadge = (status) => {
         const badges = {
-            not_started: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-            started: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-            completed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-            failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+            not_started: 'bg-gray-100 text-gray-800',
+            started: 'bg-yellow-100 text-yellow-800',
+            completed: 'bg-emerald-100 text-emerald-800',
+            failed: 'bg-red-100 text-red-800',
         };
         return badges[status] || badges.not_started;
     };
@@ -99,158 +113,164 @@ export default function QuizzesIndex({
 
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Quizzes</span>}
+            header={<span className="text-xl font-semibold leading-tight text-gray-800">My Quizzes</span>}
         >
             <Head title="My Quizzes" />
 
             <div className="py-4">
                 <div className="mx-auto max-w-7xl">
-                    <Card>
-                        {/* Filters */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <SearchBar
-                                    value={search}
-                                    onChange={handleSearch}
-                                    placeholder="Search quizzes by title or subject..."
-                                    size="md"
-                                />
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                                <div className="w-full sm:w-40">
-                                    <FilterDropdown
-                                        options={subjectOptions}
-                                        value={subjectFilter}
-                                        onChange={(val) => handleFilterChange('subject', val)}
-                                        placeholder="Subject"
+                    {/* 🔧 FIX: Removed overflow-hidden from Card container */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-6">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search quizzes by title or subject..."
                                         size="md"
-                                        className="w-full"
                                     />
                                 </div>
-                                <div className="w-full sm:w-40">
-                                    <FilterDropdown
-                                        options={statusOptions}
-                                        value={statusFilter}
-                                        onChange={(val) => handleFilterChange('status', val)}
-                                        placeholder="Status"
-                                        size="md"
-                                        className="w-full"
-                                    />
+                                <div className="flex flex-wrap gap-3">
+                                    <div className="w-full sm:w-40">
+                                        <FilterDropdown
+                                            options={subjectOptions}
+                                            value={subjectFilter}
+                                            onChange={(val) => handleFilterChange('subject', val)}
+                                            placeholder="Subject"
+                                            size="md"
+                                            className="w-full"
+                                        />
+                                    </div>
+                                    <div className="w-full sm:w-40">
+                                        <FilterDropdown
+                                            options={statusOptions}
+                                            value={statusFilter}
+                                            onChange={(val) => handleFilterChange('status', val)}
+                                            placeholder="Status"
+                                            size="md"
+                                            className="w-full"
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Loading Spinner */}
-                        {isLoading && <LoadingSpinner overlay size="lg" />}
+                            {/* Loading Spinner */}
+                            {isLoading && <LoadingSpinner overlay size="lg" />}
 
-                        {/* Quizzes Grid */}
-                        <div className="mt-6">
-                            {quizzes.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <ChartBarIcon className="w-20 h-20 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                                        No quizzes available
-                                    </h3>
-                                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                        Check back later for new quizzes from your teacher.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {quizzes.map((quiz) => (
-                                        <div
-                                            key={quiz.id}
-                                            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-                                        >
-                                            <div className="p-6">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                                            {quiz.subject}
-                                                        </span>
-                                                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                                            {getTypeLabel(quiz.type)}
-                                                        </span>
-                                                    </div>
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(quiz.status)}`}>
-                                                        {getStatusLabel(quiz.status)}
-                                                    </span>
-                                                </div>
-
-                                                <h3 className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {quiz.title}
-                                                </h3>
-
-                                                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                                                    <div>
-                                                        <span className="text-gray-500 dark:text-gray-400">Questions:</span>
-                                                        <span className="ml-1 font-medium text-gray-900 dark:text-white">{quiz.questions}</span>
-                                                    </div>
-                                                    {quiz.time_limit && (
-                                                        <div className="flex items-center gap-1">
-                                                            <ClockIcon className="w-3 h-3 text-gray-400" />
-                                                            <span className="text-gray-500 dark:text-gray-400">Time:</span>
-                                                            <span className="font-medium text-gray-900 dark:text-white">{quiz.time_limit} min</span>
+                            {/* Quizzes Grid */}
+                            <div className="mt-6">
+                                {quizzes.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <ChartBarIcon className="w-20 h-20 mx-auto text-gray-300 mb-4" />
+                                        <h3 className="text-lg font-medium text-gray-800">
+                                            No quizzes available
+                                        </h3>
+                                        <p className="mt-2 text-sm text-gray-500">
+                                            Check back later for new quizzes from your teacher.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {quizzes.map((quiz, index) => {
+                                            const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
+                                            return (
+                                                <div
+                                                    key={quiz.id}
+                                                    className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                                                >
+                                                    <div className="p-6">
+                                                        <div className="flex flex-wrap items-start justify-between gap-2">
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
+                                                                    {quiz.subject}
+                                                                </span>
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
+                                                                    {getTypeLabel(quiz.type)}
+                                                                </span>
+                                                            </div>
+                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(quiz.status)}`}>
+                                                                {getStatusLabel(quiz.status)}
+                                                            </span>
                                                         </div>
-                                                    )}
-                                                    <div>
-                                                        <span className="text-gray-500 dark:text-gray-400">Passing:</span>
-                                                        <span className="ml-1 font-medium text-gray-900 dark:text-white">{quiz.passing_score || 75}%</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-500 dark:text-gray-400">Attempts:</span>
-                                                        <span className="ml-1 font-medium text-gray-900 dark:text-white">{quiz.attempt_number}/{quiz.attempts_allowed}</span>
-                                                    </div>
-                                                </div>
 
-                                                {quiz.status === 'completed' && (
-                                                    <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                                        <span className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
-                                                            <CheckCircleIcon className="w-4 h-4" />
-                                                            Score: {quiz.score}/{quiz.questions}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                        <h3 className="mt-3 text-lg font-semibold text-gray-800 truncate max-w-full" title={quiz.title}>
+                                                            {quiz.title}
+                                                        </h3>
 
-                                                <div className="mt-4">
-                                                    <Link
-                                                        href={
-                                                            quiz.status === 'completed' && quiz.latest_attempt_id
-                                                                ? route('student.quizzes.results', quiz.latest_attempt_id)
-                                                                : route('student.quizzes.show', quiz.id)
-                                                        }
-                                                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full"
-                                                    >
-                                                        {quiz.status === 'completed' ? (
-                                                            <>
-                                                                <ChartBarIcon className="w-4 h-4 mr-1" />
-                                                                View Results
-                                                            </>
-                                                        ) : quiz.status === 'started' ? (
-                                                            <>
-                                                                <ClockIcon className="w-4 h-4 mr-1" />
-                                                                Continue
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <DocumentTextIcon className="w-4 h-4 mr-1" />
-                                                                Start Quiz
-                                                            </>
+                                                        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                                                            <div>
+                                                                <span className="text-gray-600">Questions:</span>
+                                                                <span className="ml-1 font-medium text-gray-800">{quiz.questions}</span>
+                                                            </div>
+                                                            {quiz.time_limit && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <ClockIcon className="w-3 h-3 text-gray-500" />
+                                                                    <span className="text-gray-600">Time:</span>
+                                                                    <span className="font-medium text-gray-800">{quiz.time_limit} min</span>
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <span className="text-gray-600">Passing:</span>
+                                                                <span className="ml-1 font-medium text-gray-800">{quiz.passing_score || 75}%</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-gray-600">Attempts:</span>
+                                                                <span className="ml-1 font-medium text-gray-800">{quiz.attempt_number}/{quiz.attempts_allowed}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {quiz.status === 'completed' && (
+                                                            <div className="mt-3 p-2 bg-emerald-50 rounded-lg">
+                                                                <span className="text-sm font-medium text-emerald-600 flex items-center gap-1">
+                                                                    <CheckCircleIcon className="w-4 h-4" />
+                                                                    Score: {quiz.score}/{quiz.questions}
+                                                                </span>
+                                                            </div>
                                                         )}
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
 
-                        {/* Pagination */}
-                        <div className="mt-6">
-                            <Pagination pagination={pagination} />
+                                                        <div className="mt-4">
+                                                            <Link
+                                                                href={
+                                                                    quiz.status === 'completed' && quiz.latest_attempt_id
+                                                                        ? route('student.quizzes.results', quiz.latest_attempt_id)
+                                                                        : route('student.quizzes.show', quiz.id)
+                                                                }
+                                                                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full shadow-sm"
+                                                            >
+                                                                {quiz.status === 'completed' ? (
+                                                                    <>
+                                                                        <ChartBarIcon className="w-4 h-4 mr-1" />
+                                                                        View Results
+                                                                    </>
+                                                                ) : quiz.status === 'started' ? (
+                                                                    <>
+                                                                        <ClockIcon className="w-4 h-4 mr-1" />
+                                                                        Continue
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <DocumentTextIcon className="w-4 h-4 mr-1" />
+                                                                        Start Quiz
+                                                                    </>
+                                                                )}
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pagination */}
+                            <div className="mt-6">
+                                <Pagination pagination={pagination} />
+                            </div>
                         </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

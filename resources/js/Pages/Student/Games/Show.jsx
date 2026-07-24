@@ -28,9 +28,9 @@ export default function GamesShow({
 
     const getTypeIcon = (type) => {
         return type === 'literacy' ? (
-            <BookOpenIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <BookOpenIcon className="w-8 h-8 text-blue-600" />
         ) : (
-            <CalculatorIcon className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+            <CalculatorIcon className="w-8 h-8 text-purple-600" />
         );
     };
 
@@ -52,11 +52,12 @@ export default function GamesShow({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                // 🔧 FIX: Added w-full to push buttons to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         {game.title}
                     </h2>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         {latest_completed_attempt_id && (
                             <Link href={route('student.games.results', latest_completed_attempt_id)}>
                                 <PrimaryButton>
@@ -78,21 +79,21 @@ export default function GamesShow({
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
                     {isLoading && <LoadingSpinner overlay size="lg" />}
 
-                    <Card>
-                        <div className="space-y-6">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="p-6 space-y-6">
                             <div className="flex flex-wrap items-center gap-3">
-                                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30">
+                                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50">
                                     {getTypeIcon(game.game_type)}
                                 </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     {getTypeLabel(game.game_type)}
                                 </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                <span className="text-sm text-gray-500 flex items-center gap-1">
                                     <UserIcon className="w-4 h-4" />
                                     {game.teacher}
                                 </span>
                                 {game.due_date && (
-                                    <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                    <span className="text-sm text-gray-500 flex items-center gap-1">
                                         <CalendarIcon className="w-4 h-4" />
                                         Due: {game.due_date}
                                     </span>
@@ -100,54 +101,54 @@ export default function GamesShow({
                             </div>
 
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                <h3 className="text-2xl font-bold text-gray-800 break-words">
                                     {game.title}
                                 </h3>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{game.max_attempts}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Max Attempts</div>
+                                    <div className="text-2xl font-bold text-blue-600">{game.max_attempts}</div>
+                                    <div className="text-xs font-medium text-gray-500">Max Attempts</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{attempts_remaining}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Attempts Remaining</div>
+                                    <div className="text-2xl font-bold text-emerald-600">{attempts_remaining}</div>
+                                    <div className="text-xs font-medium text-gray-500">Attempts Remaining</div>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">How to Play</h4>
-                                <p className="text-gray-600 dark:text-gray-300">
+                            <div className="pt-4 border-t border-gray-200">
+                                <h4 className="font-semibold text-gray-800 mb-2">How to Play</h4>
+                                <p className="text-gray-600 break-words">
                                     {friendlyDescription}
                                 </p>
                             </div>
 
                             {definition?.comingSoon && (
-                                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                    <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <p className="text-yellow-700 text-sm">
                                         This game is still being finished. Check back soon!
                                     </p>
                                 </div>
                             )}
 
                             {!can_play && (
-                                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                    <p className="text-red-600 dark:text-red-400 font-medium">
+                                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                    <p className="text-red-600 font-medium">
                                         You have reached the maximum number of attempts for this game.
                                     </p>
                                 </div>
                             )}
 
                             {can_play && current_result && (
-                                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                    <p className="text-yellow-700 dark:text-yellow-300">
+                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <p className="text-yellow-700">
                                         You have an in-progress attempt.
                                     </p>
                                 </div>
                             )}
 
-                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                                 <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
                                     Cancel
                                 </SecondaryButton>
@@ -158,7 +159,7 @@ export default function GamesShow({
                                 )}
                             </div>
                         </div>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
