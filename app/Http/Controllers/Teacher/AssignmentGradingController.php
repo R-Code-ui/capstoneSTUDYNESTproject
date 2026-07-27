@@ -12,9 +12,6 @@ use Inertia\Inertia;
 
 class AssignmentGradingController extends Controller
 {
-    /**
-     * Display all submissions for an assignment.
-     */
     public function index(Assignment $assignment)
     {
         Gate::authorize('update', $assignment);
@@ -24,124 +21,101 @@ class AssignmentGradingController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Get all students assigned to this grade level
         $students = User::role('student')
             ->where('grade_level', $assignment->grade_level)
             ->get();
 
-        // ✅ FIX: submission_methods is already cast to array by the model
-        // No need for json_decode()
         $submissionMethods = $assignment->submission_methods;
-
-        // If it's a string (legacy data), decode it
         if (is_string($submissionMethods)) {
             $submissionMethods = json_decode($submissionMethods, true);
         }
 
-        // Merge to show all students (including those who haven't submitted)
         $allStudents = $students->map(function ($student) use ($submissions) {
             $submission = $submissions->firstWhere('student_id', $student->id);
 
             return [
-                'student_id' => $student->id,
-                'student_name' => $student->name,
-                'lrn' => $student->lrn,
-                'submission_id' => $submission ? $submission->id : null,
-                'status' => $submission ? $submission->status : 'not_submitted',
-                'score' => $submission ? $submission->score : null,
-                'feedback' => $submission ? $submission->feedback : null,
-                'submission_method' => $submission ? $submission->submission_method : null,
-                'file_name' => $submission ? $submission->file_name : null,
-                'file_path' => $submission ? $submission->file_path : null,
-                // ✅ FIX: Format submitted_at date for display
-                'submitted_at' => $submission && $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : null,
-                // ✅ FIX: Format graded_at date for display
-                'graded_at' => $submission && $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i') : null,
+                'student_id'       => $student->id,
+                'student_name'     => $student->name,
+                'lrn'              => $student->lrn,
+                'submission_id'    => $submission ? $submission->id : null,
+                'status'           => $submission ? $submission->status : 'not_submitted',
+                'score'            => $submission ? $submission->score : null,
+                'feedback'         => $submission ? $submission->feedback : null,
+                'submission_method'=> $submission ? $submission->submission_method : null,
+                'files'            => $submission ? $submission->files : [],
+                'submitted_at'     => $submission && $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : null,
+                'graded_at'        => $submission && $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i') : null,
             ];
         });
 
         return Inertia::render('Teacher/Assignments/Grading', [
             'assignment' => [
-                'id' => $assignment->id,
-                'title' => $assignment->assignment_title,
-                'grade_level' => $assignment->grade_level,
-                'subject' => $assignment->subject,
-                'total_points' => $assignment->total_points,
-                'due_date' => $assignment->due_date,
-                'submission_methods' => $submissionMethods, // ✅ FIXED
+                'id'                 => $assignment->id,
+                'title'              => $assignment->assignment_title,
+                'grade_level'        => $assignment->grade_level,
+                'subject'            => $assignment->subject,
+                'total_points'       => $assignment->total_points,
+                'due_date'           => $assignment->due_date,
+                'submission_methods' => $submissionMethods,
             ],
             'submissions' => $allStudents,
             'statistics' => [
                 'total_students' => $allStudents->count(),
-                'submitted' => $allStudents->filter(function ($s) {
-                    return $s['status'] === 'submitted' || $s['status'] === 'graded' || $s['status'] === 'reviewed';
-                })->count(),
-                'pending' => $allStudents->filter(function ($s) {
-                    return $s['status'] === 'not_submitted';
-                })->count(),
-                'graded' => $allStudents->filter(function ($s) {
-                    return $s['status'] === 'graded';
-                })->count(),
-                'average_score' => $allStudents->filter(function ($s) {
-                    return $s['score'] !== null;
-                })->avg('score'),
+                'submitted'      => $allStudents->filter(fn($s) => in_array($s['status'], ['submitted','graded','reviewed']))->count(),
+                'pending'        => $allStudents->filter(fn($s) => $s['status'] === 'not_submitted')->count(),
+                'graded'         => $allStudents->filter(fn($s) => $s['status'] === 'graded')->count(),
+                'average_score'  => $allStudents->filter(fn($s) => $s['score'] !== null)->avg('score'),
             ],
         ]);
     }
 
-    /**
-     * Grade a specific submission.
-     */
     public function grade(Request $request, Assignment $assignment, AssignmentSubmission $submission)
     {
         Gate::authorize('update', $assignment);
 
         $validated = $request->validate([
-            'score' => 'required|integer|min:0|max:' . $assignment->total_points,
+            'score'    => 'required|integer|min:0|max:' . $assignment->total_points,
             'feedback' => 'nullable|string',
-            'status' => 'required|in:graded,reviewed,returned_for_revision',
+            'status'   => 'required|in:graded,reviewed,returned_for_revision',
         ]);
 
         $submission->update([
-            'score' => $validated['score'],
-            'feedback' => $validated['feedback'] ?? null,
-            'status' => $validated['status'],
-            'graded_at' => now(),
+            'score'      => $validated['score'],
+            'feedback'   => $validated['feedback'] ?? null,
+            'status'     => $validated['status'],
+            'graded_at'  => now(),
         ]);
 
         return redirect()->back()->with('success', 'Submission graded successfully!');
     }
 
-    /**
-     * Mark paper-based submission as completed.
-     */
     public function markPaper(Request $request, Assignment $assignment, $studentId)
     {
         Gate::authorize('update', $assignment);
 
         $validated = $request->validate([
-            'score' => 'nullable|integer|min:0|max:' . $assignment->total_points,
+            'score'    => 'nullable|integer|min:0|max:' . $assignment->total_points,
             'feedback' => 'nullable|string',
         ]);
 
         $submission = AssignmentSubmission::firstOrCreate(
             [
                 'assignment_id' => $assignment->id,
-                'student_id' => $studentId,
+                'student_id'    => $studentId,
             ],
             [
                 'submission_method' => 'paper',
-                'submitted_at' => now(),
-                'status' => 'submitted',
+                'submitted_at'      => now(),
+                'status'            => 'submitted',
             ]
         );
 
         if ($validated['score'] !== null) {
             $submission->update([
-                'score' => $validated['score'],
-                'feedback' => $validated['feedback'] ?? null,
-                'status' => 'graded',
-                'graded_at' => now(),
+                'score'      => $validated['score'],
+                'feedback'   => $validated['feedback'] ?? null,
+                'status'     => 'graded',
+                'graded_at'  => now(),
             ]);
         }
 
@@ -149,35 +123,81 @@ class AssignmentGradingController extends Controller
     }
 
     /**
-     * View submission file.
+     * Display all files for a specific submission.
      */
-    public function viewFile($submissionId)
+    public function showFiles(AssignmentSubmission $submission)
     {
-        $submission = AssignmentSubmission::findOrFail($submissionId);
         Gate::authorize('update', $submission->assignment);
 
-        if (!$submission->file_path) {
-            abort(404, 'No file uploaded for this submission.');
-        }
+        $submission->load('student', 'assignment');
 
-        return response()->file(storage_path('app/public/' . $submission->file_path));
+        return Inertia::render('Teacher/Assignments/SubmissionFiles', [
+            'submission' => [
+                'id'           => $submission->id,
+                'files'        => $submission->files,
+                'file_path'    => $submission->file_path,   // legacy
+                'file_name'    => $submission->file_name,   // legacy
+                'submitted_at' => $submission->submitted_at?->format('Y-m-d H:i'),
+            ],
+            'assignment' => [
+                'id'      => $submission->assignment->id,
+                'title'   => $submission->assignment->assignment_title,
+                'subject' => $submission->assignment->subject,
+            ],
+            'student' => [
+                'name' => $submission->student->name,
+                'lrn'  => $submission->student->lrn,
+            ],
+        ]);
     }
 
     /**
-     * Download submission file.
+     * View a specific file from the submission's files array.
      */
-    public function downloadFile($submissionId)
+    public function viewFile($submissionId, $index = 0)
     {
         $submission = AssignmentSubmission::findOrFail($submissionId);
         Gate::authorize('update', $submission->assignment);
 
-        if (!$submission->file_path) {
-            abort(404, 'No file uploaded for this submission.');
+        $file = $this->getFileFromSubmission($submission, $index);
+        return response()->file(storage_path('app/public/' . $file['path']));
+    }
+
+    /**
+     * Download a specific file from the submission's files array.
+     */
+    public function downloadFile($submissionId, $index = 0)
+    {
+        $submission = AssignmentSubmission::findOrFail($submissionId);
+        Gate::authorize('update', $submission->assignment);
+
+        $file = $this->getFileFromSubmission($submission, $index);
+        return response()->download(
+            storage_path('app/public/' . $file['path']),
+            $file['name']
+        );
+    }
+
+    /**
+     * Helper to retrieve a file from either the new `files` JSON array
+     * or the legacy `file_path`/`file_name` columns.
+     */
+    private function getFileFromSubmission($submission, $index)
+    {
+        if (!empty($submission->files)) {
+            if (!isset($submission->files[$index])) {
+                abort(404, 'File not found.');
+            }
+            return $submission->files[$index];
         }
 
-        return response()->download(
-            storage_path('app/public/' . $submission->file_path),
-            $submission->file_name
-        );
+        if ($submission->file_path) {
+            return [
+                'name' => $submission->file_name ?? 'download',
+                'path' => $submission->file_path,
+            ];
+        }
+
+        abort(404, 'No file uploaded for this submission.');
     }
 }

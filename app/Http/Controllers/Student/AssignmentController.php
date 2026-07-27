@@ -13,9 +13,6 @@ use App\Models\ActivityLog;
 
 class AssignmentController extends Controller
 {
-    /**
-     * Display a listing of assignments for the student.
-     */
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -24,7 +21,6 @@ class AssignmentController extends Controller
         $search = $request->input('search');
         $subjectFilter = $request->input('subject');
 
-        // Get assignments for student's grade level
         $assignments = Assignment::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->when($search, function ($query, $search) {
@@ -35,23 +31,23 @@ class AssignmentController extends Controller
                 return $query->where('subject', $subject);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // ✅ PAGINATION ADDED
+            ->paginate(10);
 
-        // Get submission status for each assignment
         $assignmentsData = $assignments->map(function ($assignment) use ($user) {
             $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
                 ->where('student_id', $user->id)
                 ->first();
 
             return [
-                'id' => $assignment->id,
-                'title' => $assignment->assignment_title,
-                'subject' => $assignment->subject,
+                'id'              => $assignment->id,
+                'title'           => $assignment->assignment_title,
+                'subject'         => $assignment->subject,
                 'assignment_type' => $assignment->assignment_type,
-                'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : null,
-                'status' => $submission ? $submission->status : 'not_submitted',
-                'score' => $submission ? $submission->score : null,
-                'is_graded' => $submission && $submission->status === 'graded',
+                'due_date'        => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : null,
+                'status'          => $submission ? $submission->status : 'not_submitted',
+                'score'           => $submission ? $submission->score : null,
+                'is_graded'       => $submission && $submission->status === 'graded',
+                'total_points'    => $assignment->total_points,
             ];
         });
 
@@ -59,46 +55,38 @@ class AssignmentController extends Controller
 
         return Inertia::render('Student/Assignments/Index', [
             'assignments' => $assignmentsData,
-            'subjects' => $subjects,
-            'filters' => [
-                'search' => $search,
+            'subjects'    => $subjects,
+            'filters'     => [
+                'search'  => $search,
                 'subject' => $subjectFilter,
             ],
-            'pagination' => $assignments->toArray(), // ✅ PAGINATION DATA
+            'pagination' => $assignments->toArray(),
         ]);
     }
 
-    /**
-     * Display the specified assignment.
-     */
     public function show(Assignment $assignment)
     {
         $user = auth()->user();
         $gradeLevel = $user->grade_level;
 
-        // Ensure student can only view their grade level
         if ($assignment->grade_level !== $gradeLevel) {
             abort(403);
         }
 
-        // Load resources
         $assignment->load('resources');
 
-        // Get submission if exists
         $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
             ->where('student_id', $user->id)
             ->first();
 
-        // Get allowed submission methods
         $submissionMethods = $assignment->submission_methods;
         if (is_string($submissionMethods)) {
             $submissionMethods = json_decode($submissionMethods, true);
         }
 
-        // Prepare resources for display
         $resources = $assignment->resources->map(function ($resource) {
             return [
-                'id' => $resource->id,
+                'id'   => $resource->id,
                 'type' => $resource->resource_type,
                 'name' => $resource->file_name,
                 'path' => $resource->file_path,
@@ -107,56 +95,56 @@ class AssignmentController extends Controller
 
         return Inertia::render('Student/Assignments/Show', [
             'assignment' => [
-                'id' => $assignment->id,
-                'title' => $assignment->assignment_title,
-                'subject' => $assignment->subject,
-                'assignment_type' => $assignment->assignment_type,
-                'instructions' => $assignment->instructions,
-                'total_points' => $assignment->total_points,
-                'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : null,
-                'due_time' => $assignment->due_time,
-                'submission_methods' => $submissionMethods,
+                'id'                  => $assignment->id,
+                'title'               => $assignment->assignment_title,
+                'subject'             => $assignment->subject,
+                'assignment_type'     => $assignment->assignment_type,
+                'instructions'        => $assignment->instructions,
+                'total_points'        => $assignment->total_points,
+                'due_date'            => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : null,
+                'due_time'            => $assignment->due_time,
+                'submission_methods'  => $submissionMethods,
                 'allow_late_submission' => $assignment->allow_late_submission,
             ],
-            'resources' => $resources,
+            'resources'  => $resources,
             'submission' => $submission ? [
-                'id' => $submission->id,
-                'status' => $submission->status,
-                'score' => $submission->score,
-                'feedback' => $submission->feedback,
-                'submitted_at' => $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : null,
-                'graded_at' => $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i') : null,
-                'file_name' => $submission->file_name,
-                'file_path' => $submission->file_path,
+                'id'                => $submission->id,
+                'status'            => $submission->status,
+                'score'             => $submission->score,
+                'feedback'          => $submission->feedback,
+                'submitted_at'      => $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : null,
+                'graded_at'         => $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i') : null,
+                'file_name'         => $submission->file_name,
+                'file_path'         => $submission->file_path,
                 'submission_method' => $submission->submission_method,
             ] : null,
         ]);
     }
 
     /**
-     * Submit an assignment.
+     * Submit an assignment – now stores all files in a single JSON column.
      */
     public function submit(Request $request, Assignment $assignment)
     {
         $user = auth()->user();
         $gradeLevel = $user->grade_level;
 
-        // Ensure student can only submit to their grade level
         if ($assignment->grade_level !== $gradeLevel) {
             abort(403);
         }
 
         $validated = $request->validate([
-            'submission_method' => 'required|in:digital,photo,paper',
-            'file' => 'nullable|file|max:2048|mimes:pdf,docx,jpg,jpeg,png', // 2MB limit
+            'submission_method' => 'required|in:digital,paper',
+            'files'             => 'nullable|array|max:5',
+            'files.*'           => 'file|max:2048|mimes:pdf,docx,jpg,jpeg,png',
         ]);
 
-        // Check if already submitted
+        // Check existing submission
         $existing = AssignmentSubmission::where('assignment_id', $assignment->id)
             ->where('student_id', $user->id)
             ->first();
 
-        if ($existing && $existing->status !== 'returned_for_revision') {
+        if ($existing && !in_array($existing->status, ['returned_for_revision', 'not_submitted'])) {
             return redirect()->back()->with('error', 'You have already submitted this assignment.');
         }
 
@@ -164,68 +152,76 @@ class AssignmentController extends Controller
         $isLate = false;
         if ($assignment->due_date && now()->gt($assignment->due_date)) {
             if (!$assignment->allow_late_submission) {
-                return redirect()->back()->with('error', 'Late submissions are not allowed for this assignment.');
+                return redirect()->back()->with('error', 'Late submissions are not allowed.');
             }
             $isLate = true;
         }
 
-        $submissionData = [
-            'assignment_id' => $assignment->id,
-            'student_id' => $user->id,
-            'submission_method' => $validated['submission_method'],
-            'status' => $isLate ? 'late_submission' : 'submitted',
-            'submitted_at' => now(),
-        ];
-
-        // Handle file upload for digital or photo upload
-        if (in_array($validated['submission_method'], ['digital', 'photo']) && $request->hasFile('file')) {
-            $file = $request->file('file');
-            $path = $file->store('assignment-submissions/' . $assignment->id . '/' . $user->id, 'public');
-            $submissionData['file_path'] = $path;
-            $submissionData['file_name'] = $file->getClientOriginalName();
-        }
-
-        // For paper-based, we just record the submission without file
-        if ($validated['submission_method'] === 'paper') {
-            // Paper-based submissions are marked as submitted, teacher will grade later
-        }
-
-        // Update or create submission
+        // Delete old submission and its files
         if ($existing) {
-            $existing->update($submissionData);
-            $submission = $existing;
-        } else {
-            $submission = AssignmentSubmission::create($submissionData);
+            if ($existing->file_path && Storage::disk('public')->exists($existing->file_path)) {
+                Storage::disk('public')->delete($existing->file_path);
+            }
+            if ($existing->files) {
+                foreach ($existing->files as $oldFile) {
+                    if (Storage::disk('public')->exists($oldFile['path'])) {
+                        Storage::disk('public')->delete($oldFile['path']);
+                    }
+                }
+            }
+            $existing->delete();
         }
 
-        // ✅ Log assignment submission
+        // Build files array for JSON column
+        $filesArray = [];
+        if ($validated['submission_method'] === 'digital' && $request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('assignment-submissions/' . $assignment->id . '/' . $user->id, 'public');
+                $filesArray[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType(),
+                ];
+            }
+        } elseif ($validated['submission_method'] === 'digital') {
+            return redirect()->back()->with('error', 'Please select at least one file.');
+        }
+
+        // Create single submission record
+        AssignmentSubmission::create([
+            'assignment_id'    => $assignment->id,
+            'student_id'       => $user->id,
+            'submission_method'=> $validated['submission_method'],
+            'file_path'        => null,      // no longer used for new submissions
+            'file_name'        => null,
+            'files'            => $filesArray,
+            'status'           => $isLate ? 'late_submission' : 'submitted',
+            'submitted_at'     => now(),
+        ]);
+
         ActivityLog::create([
-            'user_id'             => $user->id,
-            'user_role'           => 'student',
-            'activity_type'       => 'submit',
+            'user_id'              => $user->id,
+            'user_role'            => 'student',
+            'activity_type'        => 'submit',
             'activity_description'=> 'Submitted assignment "' . $assignment->assignment_title . '"',
-            'related_module'      => 'Assignment Module',
+            'related_module'       => 'Assignment Module',
         ]);
 
         return redirect()->back()->with('success', 'Assignment submitted successfully!');
     }
 
-    /**
-     * Download an assignment resource.
-     */
     public function downloadResource($id)
     {
         $resource = AssignmentResource::findOrFail($id);
         $assignment = $resource->assignment;
         $user = auth()->user();
 
-        // Ensure student can only download resources for their grade level
         if ($assignment->grade_level !== $user->grade_level) {
             abort(403);
         }
 
         $filePath = storage_path('app/public/' . $resource->file_path);
-
         if (!file_exists($filePath)) {
             abort(404, 'File not found.');
         }

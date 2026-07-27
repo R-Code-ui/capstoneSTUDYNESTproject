@@ -1,4 +1,4 @@
-import Table, { StatusBadge } from '@/Components/Table';
+import Table from '@/Components/Table';
 
 export default function AssignmentMonitoring({ assignments }) {
     const columns = [

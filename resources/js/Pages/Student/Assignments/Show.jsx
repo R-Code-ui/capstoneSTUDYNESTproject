@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Head, router, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -9,113 +8,142 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
-// Heroicons
 import {
     ArrowLeftIcon,
     DocumentTextIcon,
     ClipboardDocumentListIcon,
     CalendarIcon,
     ClockIcon,
-    UserIcon,
     CheckCircleIcon,
     XCircleIcon,
     DocumentIcon,
     PhotoIcon,
     PaperClipIcon,
     ArrowDownTrayIcon,
-    CameraIcon,
     CloudArrowUpIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AssignmentsShow({ assignment, resources, submission }) {
+    const { flash } = usePage().props; // to show success/error messages
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [selectedFiles, setSelectedFiles] = useState([]);
     const [selectedMethod, setSelectedMethod] = useState('');
-
-    const { data, setData, errors, post } = useForm({
-        submission_method: '',
-        file: null,
-    });
+    const [fileErrors, setFileErrors] = useState([]);
+    const [formErrors, setFormErrors] = useState({});
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-                alert('File size exceeds 2MB limit. Please upload a smaller file.');
-                e.target.value = '';
-                return;
-            }
-            const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png', 'image/jpg'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('File type not allowed. Please upload PDF, DOCX, JPG, JPEG, or PNG.');
-                e.target.value = '';
-                return;
-            }
-            setSelectedFile(file);
-            setData('file', file);
+        const files = Array.from(e.target.files);
+        const errorsList = [];
+        const validFiles = [];
+        const maxFiles = 5;
+        const maxSize = 2 * 1024 * 1024;
+        const allowedTypes = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'image/jpeg',
+            'image/png',
+            'image/jpg',
+        ];
+
+        if (files.length + selectedFiles.length > maxFiles) {
+            errorsList.push(`You can only upload a maximum of ${maxFiles} files.`);
+            e.target.value = '';
+            setFileErrors(errorsList);
+            return;
         }
+
+        files.forEach((file) => {
+            if (!allowedTypes.includes(file.type)) {
+                errorsList.push(`"${file.name}" is not allowed. Allowed types: PDF, DOCX, JPG, JPEG, PNG.`);
+                return;
+            }
+            if (file.size > maxSize) {
+                errorsList.push(`"${file.name}" exceeds the 2MB limit.`);
+                return;
+            }
+            validFiles.push(file);
+        });
+
+        setFileErrors(errorsList);
+        if (validFiles.length > 0) {
+            setSelectedFiles((prev) => [...prev, ...validFiles]);
+        }
+        e.target.value = '';
+    };
+
+    const removeFile = (index) => {
+        setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
     const handleMethodSelect = (method) => {
         setSelectedMethod(method);
-        setData('submission_method', method);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
         if (!selectedMethod) {
             alert('Please select a submission method.');
             return;
         }
-
-        if ((selectedMethod === 'digital' || selectedMethod === 'photo') && !selectedFile) {
-            alert('Please select a file to upload.');
+        if (selectedMethod === 'digital' && selectedFiles.length === 0) {
+            alert('Please select at least one file to upload.');
             return;
         }
 
         setIsSubmitting(true);
+        setFormErrors({});
 
+        // Build FormData exactly like the old single-file version, but with multiple files
         const formData = new FormData();
         formData.append('submission_method', selectedMethod);
-        if (selectedFile) {
-            formData.append('file', selectedFile);
+        if (selectedMethod === 'digital') {
+            selectedFiles.forEach((file) => {
+                formData.append('files[]', file); // array of files
+            });
         }
 
-        post(route('student.assignments.submit', assignment.id), {
-            data: formData,
+        // Use router.post directly – NOT useForm's post
+        router.post(route('student.assignments.submit', assignment.id), formData, {
             forceFormData: true,
             preserveState: true,
-            onFinish: () => {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Clear form state on success
+                setSelectedFiles([]);
+                setSelectedMethod('');
+                setFileErrors([]);
+                router.reload(); // reload to show updated submission status
+            },
+            onError: (errors) => {
+                setFormErrors(errors);
                 setIsSubmitting(false);
-                router.reload();
+            },
+            onFinish: () => {
+                // Only set false if we didn't already reload (i.e., on error)
+                if (Object.keys(formErrors).length === 0) {
+                    setIsSubmitting(false);
+                }
             },
         });
     };
 
     const getResourceIcon = (type) => {
         switch (type) {
-            case 'pdf_module':
-                return <DocumentIcon className="w-6 h-6 text-red-500" />;
-            case 'image':
-                return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
-            case 'worksheet':
-                return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
-            default:
-                return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
+            case 'pdf_module': return <DocumentIcon className="w-6 h-6 text-red-500" />;
+            case 'image': return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
+            case 'worksheet': return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
+            default: return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
         }
     };
 
     const getResourceLabel = (type) => {
-        const labels = {
-            pdf_module: 'PDF Module',
-            worksheet: 'Worksheet',
-            image: 'Image',
-        };
+        const labels = { pdf_module: 'PDF Module', worksheet: 'Worksheet', image: 'Image' };
         return labels[type] || type;
     };
 
     const getSubmissionStatusBadge = (status) => {
-        const statusMap = {
+        const map = {
             not_submitted: 'not_started',
             submitted: 'submitted',
             late_submission: 'late_submission',
@@ -123,7 +151,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
             graded: 'graded',
             returned_for_revision: 'returned_for_revision',
         };
-        return statusMap[status] || status;
+        return map[status] || status;
     };
 
     const canSubmit = () => {
@@ -135,17 +163,15 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
         window.open(route('student.assignments.download-resource', resourceId), '_blank');
     };
 
+    const availableMethods = assignment.submission_methods?.filter((m) => m !== 'photo') || [];
+
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
-                        {assignment.title}
-                    </span>
+                    <span className="text-xl font-semibold leading-tight text-gray-800">{assignment.title}</span>
                     <SecondaryButton onClick={() => router.visit(route('student.assignments.index'))}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                        Back to Assignments
+                        <ArrowLeftIcon className="w-4 h-4 mr-1" /> Back to Assignments
                     </SecondaryButton>
                 </div>
             }
@@ -156,7 +182,19 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                 <div className="mx-auto max-w-4xl">
                     {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                    {/* ===== Assignment Information ===== */}
+                    {/* Flash messages */}
+                    {flash?.success && (
+                        <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700">
+                            {flash.success}
+                        </div>
+                    )}
+                    {flash?.error && (
+                        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                            {flash.error}
+                        </div>
+                    )}
+
+                    {/* Assignment Information */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-6 space-y-4">
                             <div className="flex flex-wrap items-center gap-3">
@@ -166,97 +204,66 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                     {assignment.assignment_type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </span>
-                                {submission && (
-                                    <StatusBadge status={getSubmissionStatusBadge(submission.status)} />
-                                )}
+                                {submission && <StatusBadge status={getSubmissionStatusBadge(submission.status)} />}
                             </div>
 
-                            <h3 className="text-2xl font-bold text-gray-800 break-words">
-                                {assignment.title}
-                            </h3>
+                            <h3 className="text-2xl font-bold text-gray-800 break-words">{assignment.title}</h3>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                                        <ClipboardDocumentListIcon className="w-4 h-4" />
-                                        Total Points
+                                        <ClipboardDocumentListIcon className="w-4 h-4" /> Total Points
                                     </div>
-                                    <div className="font-medium text-gray-800">
-                                        {assignment.total_points}
-                                    </div>
+                                    <div className="font-medium text-gray-800">{assignment.total_points}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                                        <CalendarIcon className="w-4 h-4" />
-                                        Due Date
+                                        <CalendarIcon className="w-4 h-4" /> Due Date
                                     </div>
-                                    <div className="font-medium text-gray-800">
-                                        {assignment.due_date || 'No due date'}
-                                    </div>
+                                    <div className="font-medium text-gray-800">{assignment.due_date || 'No due date'}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                                        <ClockIcon className="w-4 h-4" />
-                                        Due Time
+                                        <ClockIcon className="w-4 h-4" /> Due Time
                                     </div>
-                                    <div className="font-medium text-gray-800">
-                                        {assignment.due_time || 'No time specified'}
-                                    </div>
+                                    <div className="font-medium text-gray-800">{assignment.due_time || 'No time specified'}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                                        <ClockIcon className="w-4 h-4" />
-                                        Late Submission
+                                        <ClockIcon className="w-4 h-4" /> Late Submission
                                     </div>
-                                    <div className="font-medium text-gray-800">
-                                        {assignment.allow_late_submission ? 'Allowed' : 'Not Allowed'}
-                                    </div>
+                                    <div className="font-medium text-gray-800">{assignment.allow_late_submission ? 'Allowed' : 'Not Allowed'}</div>
                                 </div>
                             </div>
 
-                            {/* ===== Instructions ===== */}
                             <div className="pt-4 border-t border-gray-200">
                                 <h4 className="font-semibold text-gray-800 mb-2">Instructions</h4>
-                                <div className="text-gray-700 whitespace-pre-wrap break-words">
-                                    {assignment.instructions}
-                                </div>
+                                <div className="text-gray-700 whitespace-pre-wrap break-words">{assignment.instructions}</div>
                             </div>
                         </div>
                     </div>
 
-                    {/* ===== Learning Resources ===== */}
+                    {/* Resources */}
                     {resources && resources.length > 0 && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-200">
                                     <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <PaperClipIcon className="w-5 h-5 text-gray-500" />
-                                        Learning Resources
+                                        <PaperClipIcon className="w-5 h-5 text-gray-500" /> Learning Resources
                                     </h3>
                                 </div>
                                 <div className="p-6 space-y-3">
                                     {resources.map((resource) => (
-                                        <div
-                                            key={resource.id}
-                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-3"
-                                        >
+                                        <div key={resource.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-3">
                                             <div className="flex items-center gap-4">
                                                 {getResourceIcon(resource.type)}
                                                 <div>
-                                                    <div className="font-medium text-gray-800 break-words">
-                                                        {resource.name}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {getResourceLabel(resource.type)}
-                                                    </div>
+                                                    <div className="font-medium text-gray-800 break-words">{resource.name}</div>
+                                                    <div className="text-sm text-gray-500">{getResourceLabel(resource.type)}</div>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => handleDownload(resource.id)}
-                                                className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shrink-0"
-                                            >
-                                                <ArrowDownTrayIcon className="w-4 h-4" />
-                                                Download
+                                            <button onClick={() => handleDownload(resource.id)} className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shrink-0">
+                                                <ArrowDownTrayIcon className="w-4 h-4" /> Download
                                             </button>
                                         </div>
                                     ))}
@@ -265,7 +272,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                         </div>
                     )}
 
-                    {/* ===== Submission Status ===== */}
+                    {/* Submission Status */}
                     {submission && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -286,18 +293,13 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                         </div>
                                         <div>
                                             <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Submitted At</div>
-                                            <div className="font-medium text-gray-800">
-                                                {submission.submitted_at || 'Not submitted'}
-                                            </div>
+                                            <div className="font-medium text-gray-800">{submission.submitted_at || 'Not submitted'}</div>
                                         </div>
                                         <div>
-                                            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Submission Method</div>
-                                            <div className="font-medium text-gray-800 capitalize">
-                                                {submission.submission_method || '—'}
-                                            </div>
+                                            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Method</div>
+                                            <div className="font-medium text-gray-800 capitalize">{submission.submission_method || '—'}</div>
                                         </div>
                                     </div>
-
                                     {submission.feedback && (
                                         <div className="pt-4 border-t border-gray-200">
                                             <h4 className="font-semibold text-gray-800 mb-2">Teacher Feedback</h4>
@@ -311,7 +313,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                         </div>
                     )}
 
-                    {/* ===== Submission Form ===== */}
+                    {/* Submission Form */}
                     {canSubmit() && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -320,76 +322,61 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                 </div>
                                 <div className="p-6">
                                     <form onSubmit={handleSubmit} className="space-y-6">
-                                        {/* ===== Submission Method ===== */}
                                         <div>
                                             <InputLabel value="Submission Method" required />
-                                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                                {assignment.submission_methods && assignment.submission_methods.includes('digital') && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleMethodSelect('digital')}
+                                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {availableMethods.includes('digital') && (
+                                                    <button type="button" onClick={() => handleMethodSelect('digital')}
                                                         className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition ${
-                                                            selectedMethod === 'digital'
-                                                                ? 'border-blue-600 bg-blue-50'
-                                                                : 'border-gray-200 hover:border-blue-300'
-                                                        }`}
-                                                    >
+                                                            selectedMethod === 'digital' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                                                        }`}>
                                                         <CloudArrowUpIcon className={`w-8 h-8 ${selectedMethod === 'digital' ? 'text-blue-600' : 'text-gray-400'}`} />
                                                         <span className="mt-2 text-sm font-medium text-gray-700">Digital Upload</span>
                                                     </button>
                                                 )}
-                                                {assignment.submission_methods && assignment.submission_methods.includes('photo') && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleMethodSelect('photo')}
+                                                {availableMethods.includes('paper') && (
+                                                    <button type="button" onClick={() => handleMethodSelect('paper')}
                                                         className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition ${
-                                                            selectedMethod === 'photo'
-                                                                ? 'border-blue-600 bg-blue-50'
-                                                                : 'border-gray-200 hover:border-blue-300'
-                                                        }`}
-                                                    >
-                                                        <CameraIcon className={`w-8 h-8 ${selectedMethod === 'photo' ? 'text-blue-600' : 'text-gray-400'}`} />
-                                                        <span className="mt-2 text-sm font-medium text-gray-700">Photo Upload</span>
-                                                    </button>
-                                                )}
-                                                {assignment.submission_methods && assignment.submission_methods.includes('paper') && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleMethodSelect('paper')}
-                                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition ${
-                                                            selectedMethod === 'paper'
-                                                                ? 'border-blue-600 bg-blue-50'
-                                                                : 'border-gray-200 hover:border-blue-300'
-                                                        }`}
-                                                    >
+                                                            selectedMethod === 'paper' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                                                        }`}>
                                                         <DocumentTextIcon className={`w-8 h-8 ${selectedMethod === 'paper' ? 'text-blue-600' : 'text-gray-400'}`} />
                                                         <span className="mt-2 text-sm font-medium text-gray-700">Paper-Based</span>
                                                     </button>
                                                 )}
                                             </div>
-                                            <InputError message={errors.submission_method} className="mt-2" />
+                                            {formErrors.submission_method && <InputError message={formErrors.submission_method} className="mt-2" />}
                                         </div>
 
-                                        {/* ===== File Upload ===== */}
-                                        {(selectedMethod === 'digital' || selectedMethod === 'photo') && (
+                                        {selectedMethod === 'digital' && (
                                             <div>
-                                                <InputLabel htmlFor="file" value="Select File (PDF, DOCX, JPG, JPEG, PNG - Max 2MB)" required />
-                                                <input
-                                                    id="file"
-                                                    type="file"
-                                                    onChange={handleFileChange}
+                                                <InputLabel htmlFor="files" value="Select Files (Max 5 files, 2MB each)" required />
+                                                <input id="files" type="file" multiple onChange={handleFileChange}
                                                     className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                    accept=".pdf,.docx,.jpg,.jpeg,.png"
-                                                />
-                                                {selectedFile && (
-                                                    <div className="mt-2 text-sm text-emerald-600">
-                                                        Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" />
+                                                {fileErrors.length > 0 && (
+                                                    <div className="mt-2 space-y-1">
+                                                        {fileErrors.map((error, idx) => <p key={idx} className="text-sm text-red-600">{error}</p>)}
                                                     </div>
                                                 )}
-                                                <p className="mt-1 text-xs text-gray-500">
-                                                    Accepted: PDF, DOCX, JPG, JPEG, PNG (Max 2MB)
-                                                </p>
-                                                <InputError message={errors.file} className="mt-2" />
+                                                {selectedFiles.length > 0 && (
+                                                    <div className="mt-2 space-y-1">
+                                                        {selectedFiles.map((file, index) => (
+                                                            <div key={index} className="flex items-center justify-between text-sm text-gray-600 p-2 bg-gray-50 rounded-lg border border-gray-100">
+                                                                <div className="flex items-center gap-2">
+                                                                    <PaperClipIcon className="w-4 h-4 text-gray-500" />
+                                                                    <span>{file.name}</span>
+                                                                    <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(1)} KB)</span>
+                                                                </div>
+                                                                <button type="button" onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700">
+                                                                    <XCircleIcon className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                        <p className="text-xs text-gray-500">{selectedFiles.length} of 5 files selected</p>
+                                                    </div>
+                                                )}
+                                                <p className="mt-1 text-xs text-gray-500">Accepted: PDF, DOCX, JPG, JPEG, PNG (Max 2MB per file)</p>
+                                                {formErrors.files && <InputError message={formErrors.files} className="mt-2" />}
                                             </div>
                                         )}
 
@@ -402,7 +389,6 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                             </div>
                                         )}
 
-                                        {/* ===== Submit Button ===== */}
                                         <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                                             <SecondaryButton type="button" onClick={() => router.visit(route('student.assignments.index'))}>
                                                 Cancel

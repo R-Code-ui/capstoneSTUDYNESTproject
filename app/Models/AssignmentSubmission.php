@@ -9,48 +9,34 @@ class AssignmentSubmission extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'assignment_id',
         'student_id',
         'submission_method',
-        'file_path',
+        'file_path',        // kept for legacy, will be null for new submissions
         'file_name',
         'submitted_at',
         'status',
         'score',
         'feedback',
         'graded_at',
+        'files',            // new JSON column
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'submitted_at' => 'datetime',
-            'graded_at' => 'datetime',
+            'graded_at'    => 'datetime',
+            'files'        => 'array',   // auto JSON <-> array
         ];
     }
 
-    /**
-     * Get the assignment this submission belongs to.
-     */
     public function assignment()
     {
         return $this->belongsTo(Assignment::class);
     }
 
-    /**
-     * Get the student who submitted this.
-     */
     public function student()
     {
         return $this->belongsTo(User::class, 'student_id');

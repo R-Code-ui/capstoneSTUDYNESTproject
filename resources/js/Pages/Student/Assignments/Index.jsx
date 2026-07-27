@@ -103,7 +103,6 @@ export default function AssignmentsIndex({
 
             <div className="py-4">
                 <div className="mx-auto max-w-7xl">
-                    {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters */}
@@ -147,6 +146,13 @@ export default function AssignmentsIndex({
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {assignments.map((assignment, index) => {
                                             const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
+                                            // ✅ Score display logic: show slash only if total_points exists
+                                            const scoreText = assignment.is_graded
+                                                ? (assignment.total_points
+                                                    ? `Score: ${assignment.score}/${assignment.total_points}`
+                                                    : `Score: ${assignment.score}`)
+                                                : '';
+
                                             return (
                                                 <div
                                                     key={assignment.id}
@@ -178,7 +184,7 @@ export default function AssignmentsIndex({
                                                         {assignment.is_graded && (
                                                             <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
                                                                 <CheckCircleIcon className="w-3 h-3 mr-1" />
-                                                                Score: {assignment.score}/{assignment.total_points}
+                                                                {scoreText}
                                                             </div>
                                                         )}
                                                         <div className="mt-4 flex items-center justify-between">

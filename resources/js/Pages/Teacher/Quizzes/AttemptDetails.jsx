@@ -41,7 +41,8 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                // 🔧 FIX: Added w-full to push button to the right
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         Attempt Details: {quiz_title}
                     </span>

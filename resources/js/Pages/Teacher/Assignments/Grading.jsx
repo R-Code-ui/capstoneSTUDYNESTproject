@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import Table, { StatusBadge } from '@/Components/Table';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
@@ -11,15 +10,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 
-// Heroicons
 import {
     DocumentIcon,
     ClipboardDocumentListIcon,
     EyeIcon,
-    ArrowDownTrayIcon,
     ArrowLeftIcon,
-    CheckCircleIcon,
-    XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AssignmentGrading({ assignment, submissions, statistics }) {
@@ -28,15 +23,8 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
     const [showPaperModal, setShowPaperModal] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        score: '',
-        feedback: '',
-        status: 'graded',
-    });
-    const [paperFormData, setPaperFormData] = useState({
-        score: '',
-        feedback: '',
-    });
+    const [formData, setFormData] = useState({ score: '', feedback: '', status: 'graded' });
+    const [paperFormData, setPaperFormData] = useState({ score: '', feedback: '' });
     const [errors, setErrors] = useState({});
 
     const handleGrade = (submission) => {
@@ -51,34 +39,20 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
 
     const handleMarkPaper = (student) => {
         setSelectedStudent(student);
-        setPaperFormData({
-            score: '',
-            feedback: '',
-        });
+        setPaperFormData({ score: '', feedback: '' });
         setShowPaperModal(true);
     };
 
     const submitGrade = (e) => {
         e.preventDefault();
         setIsLoading(true);
-
         router.post(
             route('teacher.assignments.grade.store', [assignment.id, selectedSubmission.submission_id]),
-            {
-                score: formData.score,
-                feedback: formData.feedback,
-                status: formData.status,
-            },
+            { score: formData.score, feedback: formData.feedback, status: formData.status },
             {
                 preserveState: true,
-                onSuccess: () => {
-                    setShowGradeModal(false);
-                    setIsLoading(false);
-                },
-                onError: (err) => {
-                    setErrors(err);
-                    setIsLoading(false);
-                },
+                onSuccess: () => { setShowGradeModal(false); setIsLoading(false); },
+                onError: (err) => { setErrors(err); setIsLoading(false); },
             }
         );
     };
@@ -86,41 +60,19 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
     const submitPaper = (e) => {
         e.preventDefault();
         setIsLoading(true);
-
         router.post(
             route('teacher.assignments.grade.mark-paper', [assignment.id, selectedStudent.student_id]),
-            {
-                score: paperFormData.score,
-                feedback: paperFormData.feedback,
-            },
+            { score: paperFormData.score, feedback: paperFormData.feedback },
             {
                 preserveState: true,
-                onSuccess: () => {
-                    setShowPaperModal(false);
-                    setIsLoading(false);
-                },
-                onError: (err) => {
-                    setErrors(err);
-                    setIsLoading(false);
-                },
+                onSuccess: () => { setShowPaperModal(false); setIsLoading(false); },
+                onError: (err) => { setErrors(err); setIsLoading(false); },
             }
         );
     };
 
-    const viewFile = (submission) => {
-        if (submission.file_path) {
-            window.open(route('teacher.assignments.view-file', submission.submission_id), '_blank');
-        }
-    };
-
-    const downloadFile = (submission) => {
-        if (submission.file_path) {
-            window.open(route('teacher.assignments.download-file', submission.submission_id), '_blank');
-        }
-    };
-
     const getStatusBadge = (status) => {
-        const statusMap = {
+        const map = {
             not_submitted: 'not_submitted',
             submitted: 'submitted',
             late_submission: 'late_submission',
@@ -128,33 +80,30 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             graded: 'graded',
             returned_for_revision: 'returned_for_revision',
         };
-        return statusMap[status] || status;
+        return map[status] || status;
     };
 
-    // 🔧 FIX: Added truncation to student_name and lrn columns
     const columns = [
         {
             key: 'student_name',
             label: 'Student',
             render: (row) => (
-                <div className="max-w-[120px] truncate" title={row.student_name}>
-                    {row.student_name}
-                </div>
-            ),
-        },
-        {
-            key: 'lrn',
-            label: 'Student ID',
-            render: (row) => (
-                <div className="max-w-[100px] truncate" title={row.lrn}>
-                    {row.lrn}
+                <div>
+                    <div className="font-medium text-gray-800 truncate max-w-[150px]" title={row.student_name}>
+                        {row.student_name}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                        Student ID: {row.lrn}
+                    </div>
                 </div>
             ),
         },
         {
             key: 'submission_method',
             label: 'Method',
-            render: (row) => row.submission_method ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1) : '---',
+            render: (row) => row.submission_method
+                ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1)
+                : '—',
         },
         {
             key: 'status',
@@ -164,21 +113,24 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
         {
             key: 'score',
             label: 'Score',
-            render: (row) => row.score !== null ? `${row.score}/${assignment.total_points}` : '---',
+            render: (row) => row.score !== null
+                ? `${row.score} / ${assignment.total_points}`
+                : '—',
         },
         {
             key: 'submitted_at',
             label: 'Submitted',
-            render: (row) => row.submitted_at || '---',
+            render: (row) => row.submitted_at || '—',
         },
     ];
 
     const actions = (row) => {
-        const actionsList = [];
+        const list = [];
 
+        // Grade or Mark Paper
         if (row.status === 'not_submitted') {
             if (assignment.submission_methods?.includes('paper')) {
-                actionsList.push({
+                list.push({
                     label: 'Mark Paper',
                     icon: <DocumentIcon className="w-4 h-4" />,
                     color: 'warning',
@@ -186,7 +138,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                 });
             }
         } else {
-            actionsList.push({
+            list.push({
                 label: 'Grade',
                 icon: <ClipboardDocumentListIcon className="w-4 h-4" />,
                 color: 'success',
@@ -194,28 +146,23 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             });
         }
 
-        if (row.file_path) {
-            actionsList.push({
-                label: 'View',
+        // Single "View Files" button if there are files
+        const files = row.files || [];
+        if (files.length > 0 || row.file_path) {
+            list.push({
+                label: 'View Files',
                 icon: <EyeIcon className="w-4 h-4" />,
                 color: 'primary',
-                onClick: () => viewFile(row),
-            });
-            actionsList.push({
-                label: 'Download',
-                icon: <ArrowDownTrayIcon className="w-4 h-4" />,
-                color: 'primary',
-                onClick: () => downloadFile(row),
+                onClick: () => router.visit(route('teacher.assignments.submission.files', row.submission_id)),
             });
         }
 
-        return actionsList;
+        return list;
     };
 
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         Grading: {assignment.title}
@@ -231,7 +178,8 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    {/* ===== Statistics ===== */}
+
+                    {/* Statistics Cards */}
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-blue-600">{statistics.total_students}</div>
@@ -257,7 +205,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                         </div>
                     </div>
 
-                    {/* ===== Submissions Table ===== */}
+                    {/* Submissions Table */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="p-6">
@@ -274,10 +222,11 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            {/* ===== Grade Modal ===== */}
+            {/* Grade Modal */}
             <Modal
                 show={showGradeModal}
                 onClose={() => { setShowGradeModal(false); setSelectedSubmission(null); setErrors({}); }}
@@ -320,7 +269,6 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                         >
                             <option value="graded">Graded</option>
-                            <option value="reviewed">Reviewed</option>
                             <option value="returned_for_revision">Returned for Revision</option>
                         </select>
                         <InputError message={errors?.status} className="mt-2" />
@@ -337,7 +285,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                 </form>
             </Modal>
 
-            {/* ===== Mark Paper Modal ===== */}
+            {/* Mark Paper Modal */}
             <Modal
                 show={showPaperModal}
                 onClose={() => { setShowPaperModal(false); setSelectedStudent(null); setErrors({}); }}

@@ -68,9 +68,21 @@ export default function TeacherMonitoring({
     const columns = [
         { key: 'name', label: 'Teacher' },
         { key: 'grades', label: 'Grade Handled', render: (row) => row.grades?.join(', ') || 'None' },
-        { key: 'lessons_count', label: 'Lessons' },
-        { key: 'assignments_count', label: 'Assignments' },
-        { key: 'quizzes_count', label: 'Quizzes' },
+        {
+            key: 'lessons_count',
+            label: 'Lessons',
+            render: (row) => row.lessons_count ?? 0
+        },
+        {
+            key: 'assignments_count',
+            label: 'Assignments',
+            render: (row) => row.assignments_count ?? 0
+        },
+        {
+            key: 'quizzes_count',
+            label: 'Quizzes',
+            render: (row) => row.quizzes_count ?? 0
+        },
         { key: 'last_activity', label: 'Last Activity' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status?.toLowerCase().replace(' ', '_') || 'inactive'} /> },
     ];
@@ -92,7 +104,6 @@ export default function TeacherMonitoring({
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    {/* 🔧 FIX: Removed overflow-hidden from this container to allow dropdowns to overflow */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters */}

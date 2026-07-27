@@ -101,7 +101,8 @@ class AssignmentController extends Controller
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
-        $submissionMethods = ['digital', 'photo', 'paper'];
+        // ✅ Removed 'photo' from submission methods
+        $submissionMethods = ['digital', 'paper'];
 
         $lessons = Lesson::where('teacher_id', $user->id)
             ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
@@ -152,7 +153,7 @@ class AssignmentController extends Controller
             'due_date' => 'required|date',
             'due_time' => 'required',
             'submission_methods' => 'required|array',
-            'submission_methods.*' => 'in:digital,photo,paper',
+            'submission_methods.*' => 'in:digital,paper', // ✅ Removed 'photo'
             'status' => 'required|in:draft,published',
             'publish_date' => 'required|date',
         ]);
@@ -264,7 +265,8 @@ class AssignmentController extends Controller
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
-        $submissionMethods = ['digital', 'photo', 'paper'];
+        // ✅ Removed 'photo' from submission methods
+        $submissionMethods = ['digital', 'paper'];
 
         $lessons = Lesson::where('teacher_id', $user->id)
             ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
@@ -350,7 +352,7 @@ class AssignmentController extends Controller
             'due_date' => 'required|date',
             'due_time' => 'required',
             'submission_methods' => 'required|array',
-            'submission_methods.*' => 'in:digital,photo,paper',
+            'submission_methods.*' => 'in:digital,paper', // ✅ Removed 'photo'
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
             'deleted_resource_ids' => 'nullable|string',

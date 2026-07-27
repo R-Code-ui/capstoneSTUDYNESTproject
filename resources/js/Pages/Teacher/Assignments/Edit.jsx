@@ -433,7 +433,8 @@ export default function AssignmentsEdit({
                                             <InputError message={errors.total_points} className="mt-2" />
                                         </div>
                                         <div>
-                                            <InputLabel htmlFor="estimated_time" value="Est. Time (minutes)" />
+                                            {/* ✅ Changed label to include "(optional)" */}
+                                            <InputLabel htmlFor="estimated_time" value="Est. Time (minutes) (optional)" />
                                             <TextInput
                                                 id="estimated_time"
                                                 type="number"

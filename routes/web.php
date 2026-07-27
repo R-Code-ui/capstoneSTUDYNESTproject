@@ -133,8 +133,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/assignments/{assignment}/grade', [AssignmentGradingController::class, 'index'])->name('assignments.grade');
         Route::post('/assignments/{assignment}/grade/{submission}', [AssignmentGradingController::class, 'grade'])->name('assignments.grade.store');
         Route::post('/assignments/{assignment}/mark-paper/{studentId}', [AssignmentGradingController::class, 'markPaper'])->name('assignments.grade.mark-paper');
-        Route::get('/assignments/view-file/{submissionId}', [AssignmentGradingController::class, 'viewFile'])->name('assignments.view-file');
-        Route::get('/assignments/download-file/{submissionId}', [AssignmentGradingController::class, 'downloadFile'])->name('assignments.download-file');
+        Route::get('/assignments/view-file/{submissionId}/{index?}', [AssignmentGradingController::class, 'viewFile'])->name('assignments.view-file');
+        Route::get('/assignments/download-file/{submissionId}/{index?}', [AssignmentGradingController::class, 'downloadFile'])->name('assignments.download-file');
+        // NEW route for viewing all files of a submission
+        Route::get('/assignments/submission/{submission}/files', [AssignmentGradingController::class, 'showFiles'])->name('assignments.submission.files');
 
         // ===== Quizzes =====
         Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
@@ -229,7 +231,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/games/play/{result}', [StudentGameController::class, 'showPlay'])->name('games.play.show');
         Route::post('/games/submit/{result}', [StudentGameController::class, 'submitResult'])->name('games.submit-result');
         Route::get('/games/results/{result}', [StudentGameController::class, 'results'])->name('games.results');
-        // ✅ NEW route for saving progress
         Route::post('/games/save-progress/{result}', [StudentGameController::class, 'saveProgress'])
             ->name('games.save-progress');
 
