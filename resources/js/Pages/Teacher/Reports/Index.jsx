@@ -20,7 +20,7 @@ import {
 export default function ReportsIndex({
     assigned_grades,
     subjects,
-    trimesters,
+    terms,                // ✅ renamed from trimesters
     filters,
 }) {
     const [selectedReport, setSelectedReport] = useState(null);
@@ -28,8 +28,8 @@ export default function ReportsIndex({
     const [formData, setFormData] = useState({
         report_type: '',
         grade_level: filters?.grade_level || '',
-        subject: filters?.subject || '',
-        trimester: filters?.trimester || '',
+        subject:     filters?.subject || '',
+        term:        filters?.term || '',      // ✅ renamed
     });
 
     const reportTypes = [
@@ -75,9 +75,9 @@ export default function ReportsIndex({
         ...subjects.map((subject) => ({ value: subject, label: subject })),
     ];
 
-    const trimesterOptions = [
+    const termOptions = [               // ✅ renamed
         { value: '', label: 'All Terms' },
-        ...trimesters.map((t) => ({ value: t, label: t })),
+        ...terms.map((t) => ({ value: t, label: t })),
     ];
 
     const handleGeneratePdf = () => {
@@ -92,7 +92,7 @@ export default function ReportsIndex({
             report_type: formData.report_type,
             ...(formData.grade_level && { grade_level: formData.grade_level }),
             ...(formData.subject && { subject: formData.subject }),
-            ...(formData.trimester && { trimester: formData.trimester }),
+            ...(formData.term && { term: formData.term }),   // ✅
         });
 
         window.open(route('teacher.reports.pdf') + '?' + params.toString(), '_blank');
@@ -104,7 +104,7 @@ export default function ReportsIndex({
             report_type: selectedReport || '',
             grade_level: '',
             subject: '',
-            trimester: '',
+            term: '',
         });
     };
 
@@ -157,7 +157,6 @@ export default function ReportsIndex({
 
                     {/* Filters + Generate Button */}
                     <div className="mt-6">
-                        {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                             <div className="px-6 py-4 border-b border-gray-200">
                                 <h3 className="text-sm font-semibold text-gray-700">Report Filters</h3>
@@ -181,9 +180,9 @@ export default function ReportsIndex({
                                         size="md"
                                     />
                                     <FilterDropdown
-                                        options={trimesterOptions}
-                                        value={formData.trimester}
-                                        onChange={(val) => setFormData({ ...formData, trimester: val })}
+                                        options={termOptions}                // ✅ renamed
+                                        value={formData.term}               // ✅
+                                        onChange={(val) => setFormData({ ...formData, term: val })}
                                         placeholder="Term"
                                         label="Term"
                                         size="md"

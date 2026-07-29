@@ -51,6 +51,7 @@ export default function TeacherDashboard({
     messages = {
         unread_count: 0,
         latest: null,
+        recent: [],   // ✅ new array for recent messages list
     },
     assigned_grades = [],
     recent_announcements = [],
@@ -327,7 +328,7 @@ export default function TeacherDashboard({
                         </Card>
                     </div>
 
-                    {/* ===== Section 5: Recent Announcements (FROM PRINCIPAL) ===== */}
+                    {/* ===== Section 5: Recent Announcements ===== */}
                     <div className="mt-6">
                         <Card
                             title={
@@ -385,40 +386,56 @@ export default function TeacherDashboard({
                     {/* ===== Section 6: Recent Messages ===== */}
                     <div className="mt-6">
                         <Card title="Recent Messages">
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <EnvelopeIcon className="w-5 h-5 text-[#4ECDC4]" />
-                                        <span className="text-sm text-gray-600">
-                                            Unread Messages:
-                                        </span>
-                                        <span className="font-bold text-lg text-[#4ECDC4]">
-                                            {messages.unread_count}
-                                        </span>
-                                    </div>
-
-                                    {messages.latest && (
-                                        <div className="border-l border-gray-200 pl-4">
-                                            <div className="text-sm font-medium text-gray-800">
-                                                {messages.latest.from}
-                                            </div>
-                                            <div className="text-xs text-gray-600">
-                                                "{messages.latest.message}"
-                                            </div>
-                                            <div className="text-xs text-gray-400">
-                                                {messages.latest.date}
-                                            </div>
-                                        </div>
-                                    )}
+                            <div className="space-y-3">
+                                {/* Unread count */}
+                                <div className="flex items-center gap-2 mb-3">
+                                    <EnvelopeIcon className="w-5 h-5 text-[#4ECDC4]" />
+                                    <span className="text-sm text-gray-600">
+                                        Unread Messages:
+                                    </span>
+                                    <span className="font-bold text-lg text-[#4ECDC4]">
+                                        {messages.unread_count}
+                                    </span>
                                 </div>
 
-                                <Link
-                                    href={messagesRoute}
-                                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-                                >
-                                    <InboxIcon className="w-4 h-4" />
-                                    View Inbox
-                                </Link>
+                                {/* List of recent messages */}
+                                {messages.recent && messages.recent.length > 0 ? (
+                                    messages.recent.map((msg, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`p-3 bg-gray-50 rounded-lg border ${
+                                                msg.unread ? 'border-[#4ECDC4]' : 'border-gray-200'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <div className="text-sm font-medium text-gray-800">
+                                                        {msg.from}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        {msg.subject}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400 mt-1">
+                                                        "{msg.message}"
+                                                    </div>
+                                                </div>
+                                                <span className="text-xs text-gray-400">{msg.date}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500">No messages yet.</p>
+                                )}
+
+                                <div className="text-center pt-2">
+                                    <Link
+                                        href={messagesRoute}
+                                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                                    >
+                                        <InboxIcon className="w-4 h-4" />
+                                        View Inbox
+                                    </Link>
+                                </div>
                             </div>
                         </Card>
                     </div>

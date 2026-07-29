@@ -24,18 +24,20 @@ class MessageController extends Controller
         $search = $request->input('search');
         $studentId = $user->id;
 
-        // Subquery: latest message per conversation pair
+        // Subquery: latest message per conversation pair (filtered by visibility)
         $latestIds = DB::table('messages')
             ->selectRaw('LEAST(sender_id, receiver_id) AS person1, GREATEST(sender_id, receiver_id) AS person2, MAX(id) AS latest_id')
             ->where(function ($q) use ($studentId) {
                 $q->where('sender_id', $studentId)
                   ->orWhere('receiver_id', $studentId);
             })
+            ->whereNull('student_deleted_at')
             ->groupBy('person1', 'person2');
 
         $conversationsQuery = Message::joinSub($latestIds, 'lm', function ($join) {
                 $join->on('messages.id', '=', 'lm.latest_id');
             })
+            ->whereNull('messages.student_deleted_at')
             ->with(['sender:id,name,lrn,grade_level', 'receiver:id,name,lrn,grade_level'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -54,7 +56,10 @@ class MessageController extends Controller
             $unreadCount = Message::where(function ($q) use ($user, $teacherId) {
                     $q->where('sender_id', $teacherId)
                       ->where('receiver_id', $user->id);
-                })->where('status', 'unread')->count();
+                })
+                ->whereNull('student_deleted_at')
+                ->where('status', 'unread')
+                ->count();
 
             return [
                 'teacher_id'         => $teacherId,
@@ -70,11 +75,12 @@ class MessageController extends Controller
         });
 
         $totalUnread = Message::where('receiver_id', $user->id)
+            ->whereNull('student_deleted_at')
             ->where('status', 'unread')
             ->count();
 
         return Inertia::render('Student/Messages/Index', [
-            'conversations' => $conversations->items(),   // plain array
+            'conversations' => $conversations->items(),
             'unread_count'  => $totalUnread,
             'filters'       => ['search' => $search],
             'pagination'    => $paginator->toArray(),
@@ -162,18 +168,22 @@ class MessageController extends Controller
         $teacherId = $message->sender_id === $user->id ? $message->receiver_id : $message->sender_id;
         $teacher = User::select('id', 'name')->findOrFail($teacherId);
 
+        // ✅ Fixed: wrap both OR conditions in a single closure, then apply soft-delete null check
         $thread = Message::where(function ($q) use ($user, $teacherId) {
-                $q->where('sender_id', $user->id)->where('receiver_id', $teacherId);
+                $q->where(function ($sub) use ($user, $teacherId) {
+                    $sub->where('sender_id', $user->id)->where('receiver_id', $teacherId);
+                })->orWhere(function ($sub) use ($user, $teacherId) {
+                    $sub->where('sender_id', $teacherId)->where('receiver_id', $user->id);
+                });
             })
-            ->orWhere(function ($q) use ($user, $teacherId) {
-                $q->where('sender_id', $teacherId)->where('receiver_id', $user->id);
-            })
+            ->whereNull('student_deleted_at')
             ->orderBy('created_at', 'asc')
             ->get();
 
         // Mark everything the student received in this thread as read
         Message::where('sender_id', $teacherId)
             ->where('receiver_id', $user->id)
+            ->whereNull('student_deleted_at')
             ->where('status', 'unread')
             ->update(['status' => 'read']);
 
@@ -226,7 +236,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Delete a single message.
+     * Delete a single message (soft delete for student).
      */
     public function destroy(Message $message)
     {
@@ -237,14 +247,15 @@ class MessageController extends Controller
             abort(403);
         }
 
-        $message->delete();
+        // Soft delete – set student timestamp
+        $message->update(['student_deleted_at' => now()]);
 
-        return redirect()->route('student.messages.index')
-            ->with('success', 'Message deleted successfully.');
+        // Stay on the same conversation page
+        return redirect()->back()->with('success', 'Message deleted.');
     }
 
     /**
-     * ✅ NEW: Delete an entire conversation thread with a teacher.
+     * Delete an entire conversation thread with a teacher (soft delete for student).
      */
     public function destroyConversation(Request $request, $teacherId)
     {
@@ -258,7 +269,7 @@ class MessageController extends Controller
         })->orWhere(function ($q) use ($student, $teacherId) {
             $q->where('sender_id', $teacherId)
               ->where('receiver_id', $student->id);
-        })->delete();
+        })->update(['student_deleted_at' => now()]);
 
         return redirect()->route('student.messages.index')
             ->with('success', 'Conversation deleted successfully.');

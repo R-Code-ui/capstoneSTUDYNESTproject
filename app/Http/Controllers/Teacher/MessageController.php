@@ -25,19 +25,19 @@ class MessageController extends Controller
         $search = $request->input('search');
         $teacherId = $user->id;
 
-        // Subquery: get the latest message ID for each conversation pair
         $latestIds = DB::table('messages')
             ->selectRaw('LEAST(sender_id, receiver_id) AS person1, GREATEST(sender_id, receiver_id) AS person2, MAX(id) AS latest_id')
             ->where(function ($q) use ($teacherId) {
                 $q->where('sender_id', $teacherId)
                   ->orWhere('receiver_id', $teacherId);
             })
+            ->whereNull('teacher_deleted_at')
             ->groupBy('person1', 'person2');
 
-        // Join to get full latest message rows
         $conversationsQuery = Message::joinSub($latestIds, 'lm', function ($join) {
                 $join->on('messages.id', '=', 'lm.latest_id');
             })
+            ->whereNull('messages.teacher_deleted_at')
             ->with(['sender:id,name,lrn,grade_level', 'receiver:id,name,lrn,grade_level'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -51,7 +51,6 @@ class MessageController extends Controller
 
         $paginator = $conversationsQuery->paginate(10);
 
-        // Map the paginator's items into conversation cards
         $conversations = $paginator->through(function ($msg) use ($user) {
             $otherUser = $msg->sender_id === $user->id ? $msg->receiver : $msg->sender;
             $studentId = $otherUser->id;
@@ -59,7 +58,10 @@ class MessageController extends Controller
             $unreadCount = Message::where(function ($q) use ($user, $studentId) {
                     $q->where('sender_id', $studentId)
                       ->where('receiver_id', $user->id);
-                })->where('status', 'unread')->count();
+                })
+                ->whereNull('teacher_deleted_at')
+                ->where('status', 'unread')
+                ->count();
 
             return [
                 'student_id'        => $studentId,
@@ -77,11 +79,11 @@ class MessageController extends Controller
         });
 
         $totalUnread = Message::where('receiver_id', $user->id)
+            ->whereNull('teacher_deleted_at')
             ->where('status', 'unread')
             ->count();
 
         return Inertia::render('Teacher/Messages/Index', [
-            // ✅ Send the plain array, not the paginator object
             'conversations' => $conversations->items(),
             'unread_count'  => $totalUnread,
             'filters'       => ['search' => $search],
@@ -90,7 +92,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Show compose form.
+     * Show compose form with students grouped by assigned grade.
      */
     public function create()
     {
@@ -98,23 +100,59 @@ class MessageController extends Controller
 
         $teacher = auth()->user();
         $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->toArray();
+
+        // Fetch all students for assigned grades
         $students = User::role('student')
             ->whereIn('grade_level', $assignedGrades)
-            ->select('id', 'name', 'lrn', 'grade_level')
             ->orderBy('name')
-            ->get()
-            ->map(fn($s) => [
-                'id'          => $s->id,
-                'name'        => $s->name,
-                'lrn'         => $s->lrn,
-                'grade_level' => $s->grade_level,
-            ]);
+            ->get(['id', 'name', 'grade_level']);
+
+        // Group students by grade level
+        $studentsByGrade = [];
+        foreach ($students as $student) {
+            $grade = $student->grade_level;
+            if (!isset($studentsByGrade[$grade])) {
+                $studentsByGrade[$grade] = [];
+            }
+            $studentsByGrade[$grade][] = [
+                'id'          => $student->id,
+                'name'        => $student->name,
+                'grade_level' => $student->grade_level,
+            ];
+        }
 
         $categories = ['lesson', 'assignment', 'quiz', 'educational_game', 'general_academic_concern'];
 
         return Inertia::render('Teacher/Messages/Compose', [
-            'students'   => $students,
-            'categories' => $categories,
+            'assigned_grades'   => $assignedGrades,
+            'students_by_grade' => $studentsByGrade,
+            'categories'        => $categories,
+        ]);
+    }
+
+    /**
+     * Fetch students by specific grade (API endpoint) – kept for possible other use but no longer needed for compose.
+     */
+    public function getStudentsByGrade(Request $request)
+    {
+        Gate::authorize('message.send');
+
+        $gradeLevel = $request->input('grade_level');
+        $teacher = auth()->user();
+
+        $students = User::role('student')
+            ->where('grade_level', $gradeLevel)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'grade_level', 'student_id']);
+
+        return response()->json([
+            'students' => $students->map(function ($student) {
+                return [
+                    'id'          => $student->id,
+                    'name'        => $student->name,
+                    'grade_level' => $student->grade_level,
+                ];
+            }),
         ]);
     }
 
@@ -174,16 +212,19 @@ class MessageController extends Controller
         $student = User::select('id', 'name', 'lrn', 'grade_level')->findOrFail($studentId);
 
         $thread = Message::where(function ($q) use ($user, $studentId) {
-                $q->where('sender_id', $user->id)->where('receiver_id', $studentId);
+                $q->where(function ($sub) use ($user, $studentId) {
+                    $sub->where('sender_id', $user->id)->where('receiver_id', $studentId);
+                })->orWhere(function ($sub) use ($user, $studentId) {
+                    $sub->where('sender_id', $studentId)->where('receiver_id', $user->id);
+                });
             })
-            ->orWhere(function ($q) use ($user, $studentId) {
-                $q->where('sender_id', $studentId)->where('receiver_id', $user->id);
-            })
+            ->whereNull('teacher_deleted_at')
             ->orderBy('created_at', 'asc')
             ->get();
 
         Message::where('sender_id', $studentId)
             ->where('receiver_id', $user->id)
+            ->whereNull('teacher_deleted_at')
             ->where('status', 'unread')
             ->update(['status' => 'read']);
 
@@ -244,7 +285,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Delete a single message.
+     * Delete a single message (soft delete for teacher).
      */
     public function destroy(Message $message)
     {
@@ -255,14 +296,13 @@ class MessageController extends Controller
             abort(403);
         }
 
-        $message->delete();
+        $message->update(['teacher_deleted_at' => now()]);
 
-        return redirect()->route('teacher.messages.index')
-            ->with('success', 'Message deleted successfully.');
+        return redirect()->back()->with('success', 'Message deleted.');
     }
 
     /**
-     * Delete an entire conversation thread with a student.
+     * Delete an entire conversation thread with a student (soft delete for teacher).
      */
     public function destroyConversation(Request $request, $studentId)
     {
@@ -276,7 +316,7 @@ class MessageController extends Controller
         })->orWhere(function ($q) use ($teacher, $studentId) {
             $q->where('sender_id', $studentId)
               ->where('receiver_id', $teacher->id);
-        })->delete();
+        })->update(['teacher_deleted_at' => now()]);
 
         return redirect()->route('teacher.messages.index')
             ->with('success', 'Conversation deleted successfully.');

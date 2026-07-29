@@ -135,7 +135,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/assignments/{assignment}/mark-paper/{studentId}', [AssignmentGradingController::class, 'markPaper'])->name('assignments.grade.mark-paper');
         Route::get('/assignments/view-file/{submissionId}/{index?}', [AssignmentGradingController::class, 'viewFile'])->name('assignments.view-file');
         Route::get('/assignments/download-file/{submissionId}/{index?}', [AssignmentGradingController::class, 'downloadFile'])->name('assignments.download-file');
-        // NEW route for viewing all files of a submission
         Route::get('/assignments/submission/{submission}/files', [AssignmentGradingController::class, 'showFiles'])->name('assignments.submission.files');
 
         // ===== Quizzes =====
@@ -171,6 +170,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/create', [MessageController::class, 'create'])->name('messages.create');
         Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/api/students-by-grade', [MessageController::class, 'getStudentsByGrade'])->name('messages.students-by-grade');   // ✅ NEW ROUTE
         Route::get('/messages/{message}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{message}/reply', [MessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');

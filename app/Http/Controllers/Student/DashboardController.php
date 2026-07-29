@@ -38,11 +38,11 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($announcement) {
                 return [
-                    'id' => $announcement->id,
-                    'title' => $announcement->title,
-                    'content' => substr($announcement->content, 0, 100) . (strlen($announcement->content) > 100 ? '...' : ''),
+                    'id'        => $announcement->id,
+                    'title'     => $announcement->title,
+                    'content'   => substr($announcement->content, 0, 100) . (strlen($announcement->content) > 100 ? '...' : ''),
                     'posted_by' => $announcement->user->name ?? 'Unknown',
-                    'date' => $announcement->created_at->diffForHumans(),
+                    'date'      => $announcement->created_at->diffForHumans(),
                 ];
             });
 
@@ -54,11 +54,11 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($lesson) {
                 return [
-                    'id' => $lesson->id,
-                    'title' => $lesson->lesson_title,
-                    'subject' => $lesson->subject,
+                    'id'          => $lesson->id,
+                    'title'       => $lesson->lesson_title,
+                    'subject'     => $lesson->subject,
                     'grade_level' => $lesson->grade_level,
-                    'date' => $lesson->created_at->format('M d, Y'),
+                    'date'        => $lesson->created_at->format('M d, Y'),
                 ];
             });
 
@@ -75,11 +75,11 @@ class DashboardController extends Controller
                     ->first();
 
                 return [
-                    'id' => $assignment->id,
-                    'title' => $assignment->assignment_title,
-                    'subject' => $assignment->subject,
+                    'id'       => $assignment->id,
+                    'title'    => $assignment->assignment_title,
+                    'subject'  => $assignment->subject,
                     'due_date' => $assignment->due_date->format('M d, Y'),
-                    'status' => $submission ? $submission->status : 'not_submitted',
+                    'status'   => $submission ? $submission->status : 'not_submitted',
                 ];
             });
 
@@ -96,12 +96,12 @@ class DashboardController extends Controller
                     ->first();
 
                 return [
-                    'id' => $quiz->id,
-                    'title' => $quiz->quiz_title,
-                    'subject' => $quiz->subject,
+                    'id'        => $quiz->id,
+                    'title'     => $quiz->quiz_title,
+                    'subject'   => $quiz->subject,
                     'questions' => $quiz->total_questions,
-                    'status' => $attempt ? 'completed' : 'pending',
-                    'score' => $attempt ? $attempt->score : null,
+                    'status'    => $attempt ? 'completed' : 'pending',
+                    'score'     => $attempt ? $attempt->score : null,
                 ];
             });
 
@@ -117,11 +117,11 @@ class DashboardController extends Controller
                     ->first();
 
                 return [
-                    'id' => $game->id,
-                    'title' => $game->game_title,
+                    'id'        => $game->id,
+                    'title'     => $game->game_title,
                     'game_type' => $game->game_type,
-                    'status' => $result ? $result->status : 'assigned',
-                    'score' => $result && $result->status === 'completed' ? $result->score : null,
+                    'status'    => $result ? $result->status : 'assigned',
+                    'score'     => $result && $result->status === 'completed' ? $result->score : null,
                 ];
             });
 
@@ -130,21 +130,31 @@ class DashboardController extends Controller
             ->where('status', 'published')
             ->count();
 
-        $completedLessons = $user->lessons()->where('status', 'published')->count();
+        // ✅ Use completedLessons() (pivot) instead of lessons()
+        $completedLessons = $user->completedLessons()
+            ->whereIn('lesson_id', Lesson::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id'))
+            ->count();
 
         $totalAssignments = Assignment::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->count();
 
+        $assignmentIds = Assignment::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id');
+
+        // ✅ Include multiple relevant statuses
         $submittedAssignments = AssignmentSubmission::where('student_id', $user->id)
-            ->where('status', 'submitted')
+            ->whereIn('assignment_id', $assignmentIds)
+            ->whereIn('status', ['submitted', 'late_submission', 'graded', 'reviewed'])
             ->count();
 
         $totalQuizzes = Quiz::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->count();
 
+        $quizIds = Quiz::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id');
+
         $completedQuizzes = QuizAttempt::where('student_id', $user->id)
+            ->whereIn('quiz_id', $quizIds)
             ->where('status', 'completed')
             ->count();
 
@@ -152,12 +162,16 @@ class DashboardController extends Controller
             ->where('status', 'published')
             ->count();
 
+        $gameIds = Game::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id');
+
         $completedGames = GameResult::where('student_id', $user->id)
+            ->whereIn('game_id', $gameIds)
             ->where('status', 'completed')
             ->count();
 
         // Quiz average
         $quizAttempts = QuizAttempt::where('student_id', $user->id)
+            ->whereIn('quiz_id', $quizIds)
             ->where('status', 'completed')
             ->get();
 
@@ -166,37 +180,37 @@ class DashboardController extends Controller
         $progressSummary = [
             'lessons' => [
                 'completed' => $completedLessons,
-                'total' => $totalLessons,
+                'total'     => $totalLessons,
             ],
             'assignments' => [
                 'submitted' => $submittedAssignments,
-                'total' => $totalAssignments,
+                'total'     => $totalAssignments,
             ],
             'quizzes' => [
                 'completed' => $completedQuizzes,
-                'total' => $totalQuizzes,
-                'average' => $quizAverage,
+                'total'     => $totalQuizzes,
+                'average'   => $quizAverage,
             ],
             'games' => [
                 'completed' => $completedGames,
-                'total' => $totalGames,
+                'total'     => $totalGames,
             ],
         ];
 
         // ===== Unread Messages Count =====
         $unreadMessagesCount = Message::where('receiver_id', $user->id)
             ->where('status', 'unread')
-            ->count();
+            ->count();   // ✅ removed visibleToStudent
 
         return Inertia::render('Student/Dashboard', [
-            'grade_level' => $gradeLevel,
+            'grade_level'          => $gradeLevel,
             'recent_announcements' => $recentAnnouncements,
-            'recent_lessons' => $recentLessons,
+            'recent_lessons'       => $recentLessons,
             'upcoming_assignments' => $upcomingAssignments,
-            'available_quizzes' => $availableQuizzes,
-            'assigned_games' => $assignedGames,
-            'progress_summary' => $progressSummary,
-            'unread_messages' => $unreadMessagesCount,
+            'available_quizzes'    => $availableQuizzes,
+            'assigned_games'       => $assignedGames,
+            'progress_summary'     => $progressSummary,
+            'unread_messages'      => $unreadMessagesCount,
         ]);
     }
 }

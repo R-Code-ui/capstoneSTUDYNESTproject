@@ -1,6 +1,5 @@
 import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import SecondaryButton from '@/Components/SecondaryButton';
 import {
     MapPinIcon,
@@ -55,7 +54,6 @@ export default function AnnouncementsShow({ announcement }) {
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         {announcement.title}
@@ -125,14 +123,6 @@ export default function AnnouncementsShow({ announcement }) {
                                         {announcement.content}
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Footer Actions */}
-                            <div className="pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-end">
-                                <SecondaryButton onClick={() => router.visit(route('student.announcements.index'))}>
-                                    <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                                    Back to Announcements
-                                </SecondaryButton>
                             </div>
                         </div>
                     </div>

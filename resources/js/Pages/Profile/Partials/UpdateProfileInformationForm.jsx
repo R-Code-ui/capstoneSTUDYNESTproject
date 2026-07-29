@@ -2,14 +2,10 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 
-export default function UpdateProfileInformation({
-    mustVerifyEmail,
-    status,
-    className = '',
-}) {
+export default function UpdateProfileInformationForm({ mustVerifyEmail, status }) {
     const user = usePage().props.auth.user;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =
@@ -20,12 +16,11 @@ export default function UpdateProfileInformation({
 
     const submit = (e) => {
         e.preventDefault();
-
         patch(route('profile.update'));
     };
 
     return (
-        <section className={className}>
+        <section>
             <header>
                 <h2 className="text-lg font-medium text-gray-900">
                     Profile Information
@@ -53,21 +48,12 @@ export default function UpdateProfileInformation({
                     <InputError className="mt-2" message={errors.name} />
                 </div>
 
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
-                    />
-
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
+                {/* Hidden Email Input - Sends data to backend but not displayed in UI */}
+                <input
+                    type="hidden"
+                    name="email"
+                    value={data.email}
+                />
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
@@ -84,9 +70,10 @@ export default function UpdateProfileInformation({
                         </p>
 
                         {status === 'verification-link-sent' && (
-                            <div className="mt-2 text-sm font-medium text-green-600">
-                                A new verification link has been sent to your
-                                email address.
+                            <div className="mt-2 rounded-md bg-green-50 p-4">
+                                <div className="text-sm font-medium text-green-800">
+                                    A new verification link has been sent to your email address.
+                                </div>
                             </div>
                         )}
                     </div>
@@ -102,9 +89,7 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">
-                            Saved.
-                        </p>
+                        <p className="text-sm text-gray-600">Saved.</p>
                     </Transition>
                 </div>
             </form>

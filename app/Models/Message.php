@@ -9,11 +9,6 @@ class Message extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'sender_id',
         'receiver_id',
@@ -21,21 +16,38 @@ class Message extends Model
         'category',
         'message',
         'status',
+        'teacher_deleted_at',
+        'student_deleted_at',
     ];
 
-    /**
-     * Get the sender of this message.
-     */
+    protected $casts = [
+        'teacher_deleted_at' => 'datetime',
+        'student_deleted_at' => 'datetime',
+    ];
+
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
     }
 
-    /**
-     * Get the receiver of this message.
-     */
     public function receiver()
     {
         return $this->belongsTo(User::class, 'receiver_id');
+    }
+
+    /**
+     * Scope messages visible to teacher (not deleted by teacher).
+     */
+    public function scopeVisibleToTeacher($query)
+    {
+        return $query->whereNull('teacher_deleted_at');
+    }
+
+    /**
+     * Scope messages visible to student (not deleted by student).
+     */
+    public function scopeVisibleToStudent($query)
+    {
+        return $query->whereNull('student_deleted_at');
     }
 }

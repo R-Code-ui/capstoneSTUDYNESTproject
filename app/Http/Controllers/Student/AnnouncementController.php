@@ -36,7 +36,7 @@ class AnnouncementController extends Controller
                 return $query->where('category', $category);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // ✅ PAGINATION ADDED
+            ->paginate(10);
 
         // Get read status for each announcement
         $readAnnouncementIds = AnnouncementView::where('student_id', $user->id)
@@ -67,7 +67,7 @@ class AnnouncementController extends Controller
                 'search' => $search,
                 'category' => $categoryFilter,
             ],
-            'pagination' => $announcements->toArray(), // ✅ PAGINATION DATA
+            'pagination' => $announcements->toArray(),
         ]);
     }
 
@@ -118,7 +118,7 @@ class AnnouncementController extends Controller
                 'priority' => $announcement->priority,
                 'is_pinned' => $announcement->is_pinned,
                 'publish_date' => $announcement->publish_date,
-                'expiration_date' => $announcement->expiration_date,
+                'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('M d, Y') : null,
                 'created_at' => $announcement->created_at->format('M d, Y'),
             ],
         ]);

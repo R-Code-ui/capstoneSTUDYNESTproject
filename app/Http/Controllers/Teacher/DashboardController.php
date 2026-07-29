@@ -9,18 +9,18 @@ use App\Models\Assignment;
 use App\Models\Quiz;
 use App\Models\Game;
 use App\Models\Message;
-use App\Models\Announcement; // ✅ ADD THIS
+use App\Models\Announcement;
 use App\Models\AssignmentSubmission;
 use App\Models\QuizAttempt;
+use App\Models\ActivityLog;
+use App\Models\GameResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
-    /**
-     * Display the teacher dashboard.
-     */
     public function index()
     {
         $user = auth()->user();
@@ -34,6 +34,7 @@ class DashboardController extends Controller
             ->get();
 
         $totalStudents = $students->count();
+        $studentIds = $students->pluck('id');
 
         // ===== Section 1: Classroom Overview =====
         $totalLessons = Lesson::where('teacher_id', $user->id)->count();
@@ -55,7 +56,9 @@ class DashboardController extends Controller
             if ($publishedLessons > 0) {
                 $completedLessons = 0;
                 foreach ($students as $student) {
-                    $completedLessons += $student->lessons()->where('status', 'published')->count();
+                    $completedLessons += $student->completedLessons()
+                        ->whereIn('lesson_id', Lesson::where('teacher_id', $user->id)->pluck('id'))
+                        ->count();
                 }
                 $lessonCompletionRate = round(($completedLessons / ($publishedLessons * $totalStudents)) * 100);
             }
@@ -65,35 +68,46 @@ class DashboardController extends Controller
                 ->where('status', 'published')
                 ->count();
             if ($publishedAssignments > 0) {
-                $submittedAssignments = AssignmentSubmission::whereIn('student_id', $students->pluck('id'))
-                    ->where('status', 'submitted')
+                $submittedAssignments = AssignmentSubmission::whereIn('student_id', $studentIds)
+                    ->whereIn('assignment_id', Assignment::where('teacher_id', $user->id)->pluck('id'))
+                    ->whereIn('status', ['submitted', 'late_submission', 'graded'])
                     ->count();
                 $assignmentCompletionRate = round(($submittedAssignments / ($publishedAssignments * $totalStudents)) * 100);
             }
 
-            // Quiz average
-            $quizAttempts = QuizAttempt::whereIn('student_id', $students->pluck('id'))
+            // Quiz average (only for teacher's own quizzes)
+            $teacherQuizIds = Quiz::where('teacher_id', $user->id)->pluck('id');
+            $quizAttempts = QuizAttempt::whereIn('student_id', $studentIds)
+                ->whereIn('quiz_id', $teacherQuizIds)
                 ->where('status', 'completed')
                 ->get();
             if ($quizAttempts->count() > 0) {
                 $averageQuizScore = round($quizAttempts->avg('score'));
             }
 
-            // Game participation (placeholder - will be implemented with game tracking)
-            $gameParticipationRate = rand(70, 95);
+            // Game participation rate (based on actual game results)
+            $teacherGameIds = Game::where('teacher_id', $user->id)->pluck('id');
+            $distinctPlayers = GameResult::whereIn('game_id', $teacherGameIds)
+                ->whereIn('student_id', $studentIds)
+                ->distinct('student_id')
+                ->count('student_id');
+            $gameParticipationRate = round(($distinctPlayers / $totalStudents) * 100);
         }
 
         // ===== Section 3: Students Requiring Attention =====
         $studentsRequiringAttention = collect();
+        $teacherPublishedAssignments = Assignment::where('teacher_id', $user->id)
+            ->where('status', 'published')
+            ->get();
+        $teacherPublishedLessonIds = Lesson::where('teacher_id', $user->id)
+            ->where('status', 'published')
+            ->pluck('id');
 
         foreach ($students as $student) {
             $concerns = [];
 
-            // Check for missing assignments
-            $publishedAssignments = Assignment::where('teacher_id', $user->id)
-                ->where('status', 'published')
-                ->get();
-            foreach ($publishedAssignments as $assignment) {
+            // Check for missing assignments (only teacher's own assignments)
+            foreach ($teacherPublishedAssignments as $assignment) {
                 $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
                     ->where('student_id', $student->id)
                     ->first();
@@ -103,8 +117,9 @@ class DashboardController extends Controller
                 }
             }
 
-            // Check for low quiz scores
+            // Check for low quiz scores (only teacher's own quizzes)
             $quizAttempts = QuizAttempt::where('student_id', $student->id)
+                ->whereIn('quiz_id', $teacherQuizIds)
                 ->where('status', 'completed')
                 ->get();
             if ($quizAttempts->count() > 0) {
@@ -114,12 +129,11 @@ class DashboardController extends Controller
                 }
             }
 
-            // Check for incomplete lessons
-            $publishedLessons = Lesson::where('teacher_id', $user->id)
-                ->where('status', 'published')
+            // Check for incomplete lessons (using completedLessons pivot)
+            $completedLessons = $student->completedLessons()
+                ->whereIn('lesson_id', $teacherPublishedLessonIds)
                 ->count();
-            $completedLessons = $student->lessons()->where('status', 'published')->count();
-            if ($publishedLessons > 0 && $completedLessons < $publishedLessons * 0.6) {
+            if (count($teacherPublishedLessonIds) > 0 && $completedLessons < count($teacherPublishedLessonIds) * 0.6) {
                 $concerns[] = 'Incomplete lessons';
             }
 
@@ -131,10 +145,9 @@ class DashboardController extends Controller
                 ]);
             }
         }
-
         $studentsRequiringAttention = $studentsRequiringAttention->take(5);
 
-        // ===== Section 4: Upcoming Deadlines =====
+        // ===== Section 4: Upcoming Deadlines (only assignments) =====
         $upcomingDeadlines = Assignment::where('teacher_id', $user->id)
             ->where('status', 'published')
             ->where('due_date', '>=', now())
@@ -145,120 +158,111 @@ class DashboardController extends Controller
                 return [
                     'id' => $assignment->id,
                     'title' => $assignment->assignment_title,
+                    'type' => 'assignment',
                     'due_date' => $assignment->due_date->format('M d'),
                     'days_left' => $assignment->due_date->diffInDays(now()),
                 ];
             });
 
-        // ===== Section 5: Recent Activity =====
-        $recentLessons = Lesson::where('teacher_id', $user->id)
+        // ===== Section 5: Recent Activity (from ActivityLog) =====
+        $recentActivity = ActivityLog::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->limit(1)
+            ->limit(5)
             ->get()
-            ->map(function ($lesson) {
+            ->map(function ($log) {
+                $typeMap = [
+                    'lesson'     => 'lesson',
+                    'assignment' => 'assignment',
+                    'quiz'       => 'quiz',
+                    'game'       => 'game',
+                    'message'    => 'message',
+                ];
+                $type = 'other';
+                foreach ($typeMap as $keyword => $mappedType) {
+                    if (stripos($log->related_module, $keyword) !== false) {
+                        $type = $mappedType;
+                        break;
+                    }
+                }
                 return [
-                    'type' => 'lesson',
-                    'title' => $lesson->lesson_title,
-                    'date' => $lesson->created_at->diffForHumans(),
+                    'type'  => $type,
+                    'title' => $log->activity_description,
+                    'date'  => $log->created_at->diffForHumans(),
                 ];
             });
-
-        $recentAssignments = Assignment::where('teacher_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(1)
-            ->get()
-            ->map(function ($assignment) {
-                return [
-                    'type' => 'assignment',
-                    'title' => $assignment->assignment_title,
-                    'date' => $assignment->created_at->diffForHumans(),
-                ];
-            });
-
-        $recentQuizzes = Quiz::where('teacher_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(1)
-            ->get()
-            ->map(function ($quiz) {
-                return [
-                    'type' => 'quiz',
-                    'title' => $quiz->quiz_title,
-                    'date' => $quiz->created_at->diffForHumans(),
-                ];
-            });
-
-        $recentGames = Game::where('teacher_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(1)
-            ->get()
-            ->map(function ($game) {
-                return [
-                    'type' => 'game',
-                    'title' => $game->game_title,
-                    'date' => $game->created_at->diffForHumans(),
-                ];
-            });
-
-        $recentActivity = $recentLessons
-            ->concat($recentAssignments)
-            ->concat($recentQuizzes)
-            ->concat($recentGames)
-            ->take(4);
 
         // ===== Section 6: Recent Messages =====
         $unreadMessages = Message::where('receiver_id', $user->id)
             ->where('status', 'unread')
-            ->count();
+            ->count();   // ✅ removed visibleToTeacher
 
-        $latestMessage = Message::where('receiver_id', $user->id)
-            ->with('sender')
+        $recentMessages = Message::where(function ($query) use ($user) {
+            $query->where('sender_id', $user->id)
+                  ->orWhere('receiver_id', $user->id);
+        })
+            ->with('sender', 'receiver')   // ✅ removed visibleToTeacher
             ->orderBy('created_at', 'desc')
-            ->first();
+            ->limit(5)
+            ->get()
+            ->map(function ($msg) use ($user) {
+                return [
+                    'id'      => $msg->id,
+                    'from'    => $msg->sender_id === $user->id ? 'You' : $msg->sender->name,
+                    'subject' => $msg->subject,
+                    'message' => Str::limit($msg->message, 50),
+                    'date'    => $msg->created_at->diffForHumans(),
+                    'unread'  => $msg->receiver_id === $user->id && $msg->status === 'unread',
+                ];
+            });
 
-        // ===== ✅ Section 7: Recent Announcements (FROM PRINCIPAL) =====
-        $recentAnnouncements = Announcement::where('user_role', 'principal')
-            ->where('status', 'published')
-            ->where('target_audience', 'all_users')
+        // ===== Section 7: Recent Announcements =====
+        $recentAnnouncements = Announcement::where('status', 'published')
+            ->where(function ($query) use ($assignedGrades) {
+                $query->whereIn('target_audience', $assignedGrades)
+                      ->orWhere('target_audience', 'all_users');
+            })
+            ->with('user')
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get()
             ->map(function ($announcement) {
                 return [
-                    'id' => $announcement->id,
-                    'title' => $announcement->title,
-                    'content' => substr($announcement->content, 0, 100) . (strlen($announcement->content) > 100 ? '...' : ''),
-                    'posted_by' => 'Principal',
-                    'date' => $announcement->created_at->diffForHumans(),
+                    'id'        => $announcement->id,
+                    'title'     => $announcement->title,
+                    'content'   => Str::limit($announcement->content, 100),
+                    'posted_by' => $announcement->user->name ?? 'Unknown',
+                    'date'      => $announcement->created_at->diffForHumans(),
                 ];
             });
 
         return Inertia::render('Teacher/Dashboard', [
-            'assigned_grades' => $assignedGrades,
-            'stats' => [
-                'total_students' => $totalStudents,
-                'total_lessons' => $totalLessons,
+            'assigned_grades'                => $assignedGrades,
+            'stats'                          => [
+                'total_students'    => $totalStudents,
+                'total_lessons'     => $totalLessons,
                 'total_assignments' => $totalAssignments,
-                'total_quizzes' => $totalQuizzes,
-                'total_games' => $totalGames,
+                'total_quizzes'     => $totalQuizzes,
+                'total_games'       => $totalGames,
             ],
-            'participation' => [
-                'lesson_completion_rate' => $lessonCompletionRate,
+            'participation'                  => [
+                'lesson_completion_rate'     => $lessonCompletionRate,
                 'assignment_completion_rate' => $assignmentCompletionRate,
-                'average_quiz_score' => $averageQuizScore,
-                'game_participation_rate' => $gameParticipationRate,
+                'average_quiz_score'         => $averageQuizScore,
+                'game_participation_rate'    => $gameParticipationRate,
             ],
-            'students_requiring_attention' => $studentsRequiringAttention,
-            'upcoming_deadlines' => $upcomingDeadlines,
-            'recent_activity' => $recentActivity,
-            'messages' => [
+            'students_requiring_attention'   => $studentsRequiringAttention,
+            'upcoming_deadlines'             => $upcomingDeadlines,
+            'recent_activity'                => $recentActivity,
+            'messages'                       => [
                 'unread_count' => $unreadMessages,
-                'latest' => $latestMessage ? [
-                    'from' => $latestMessage->sender->name,
-                    'message' => substr($latestMessage->message, 0, 50) . (strlen($latestMessage->message) > 50 ? '...' : ''),
-                    'date' => $latestMessage->created_at->diffForHumans(),
+                'latest'       => $recentMessages->first() ? [
+                    'from'    => $recentMessages->first()['from'],
+                    'message' => $recentMessages->first()['message'],
+                    'date'    => $recentMessages->first()['date'],
                 ] : null,
+                'recent'       => $recentMessages,
             ],
-            'recent_announcements' => $recentAnnouncements, // ✅ ADDED
+            'recent_announcements'           => $recentAnnouncements,
         ]);
     }
 }
