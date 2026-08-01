@@ -11,16 +11,11 @@ use App\Models\ActivityLog;
 
 class GameController extends Controller
 {
-    /**
-     * Fixed catalog of interactive games per grade/type.
-     * IMPORTANT: these exact strings must match the keys in
-     * resources/js/GameEngines/gameDefinitions.js character-for-character.
-     */
     private function gamesByGrade(): array
     {
         return [
             'Grade 4' => [
-                'literacy' => ['Word Builder', 'Sentence Scramble', 'Rhyme Match', 'Letter Hunt'],
+                'literacy' => ['Word Builder', 'Sentence Scramble', 'Rhyme Match', 'Alphabetical Order'],
                 'numeracy' => ['Balloon Pop Math', 'Sorting Baskets', 'Coin Counter', 'Skip Counting Path'],
             ],
             'Grade 5' => [
@@ -28,15 +23,12 @@ class GameController extends Controller
                 'numeracy' => ['Fraction Pizza', 'Number Line Runner', 'Area Blocks', 'Decimal Number Line'],
             ],
             'Grade 6' => [
-                'literacy' => ['Clue Detective', 'Word Web Builder', 'Sequence the Story', 'Idiom Match'],
-                'numeracy' => ['Balance Scale', 'Graph Builder', 'Coordinate Plane Treasure Hunt', 'Percent Bar Builder'],
+                'literacy' => ['Homophone Match', 'Prefix Power', 'Sequence the Story', 'Idiom Match'],
+                'numeracy' => ['Balance Scale', 'Multiplication Frenzy', 'Coordinate Plane Treasure Hunt', 'Division Dash'],
             ],
         ];
     }
 
-    /**
-     * Display a listing of games.
-     */
     public function index(Request $request)
     {
         Gate::authorize('viewAny', Game::class);
@@ -65,13 +57,12 @@ class GameController extends Controller
             ->paginate(10);
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'published'];      // ✅ 'archived' removed
         $gameTypes = ['literacy', 'numeracy'];
 
         return Inertia::render('Teacher/Games/Index', [
             'games' => $games->map(function ($game) {
-                $resultsCount = $game->results()->count();
-                $completedCount = $game->results()->where('status', 'completed')->count();
+                $participantsCount = $game->results()->count();   // ✅ single number
 
                 return [
                     'id' => $game->id,
@@ -81,7 +72,7 @@ class GameController extends Controller
                     'max_attempts' => $game->max_attempts,
                     'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                     'status' => $game->status,
-                    'participants' => $completedCount . '/' . $resultsCount,
+                    'participants' => $participantsCount,
                     'created_at' => $game->created_at->format('Y-m-d'),
                 ];
             }),
@@ -98,9 +89,6 @@ class GameController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new game assignment.
-     */
     public function create()
     {
         Gate::authorize('create', Game::class);
@@ -119,9 +107,6 @@ class GameController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created game assignment.
-     */
     public function store(Request $request)
     {
         Gate::authorize('create', Game::class);
@@ -140,7 +125,7 @@ class GameController extends Controller
 
         $game = Game::create([
             'teacher_id' => auth()->id(),
-            'max_attempts' => $validated['max_attempts'] ?? 1,
+            'max_attempts' => $validated['max_attempts'] ?? 5,
             'publish_date' => now()->format('Y-m-d'),
             ...$validated,
         ]);
@@ -157,9 +142,6 @@ class GameController extends Controller
             ->with('success', 'Game assigned successfully!');
     }
 
-    /**
-     * Display the specified game.
-     */
     public function show(Game $game)
     {
         Gate::authorize('view', $game);
@@ -195,9 +177,6 @@ class GameController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified game.
-     */
     public function edit(Game $game)
     {
         Gate::authorize('update', $game);
@@ -231,9 +210,6 @@ class GameController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified game.
-     */
     public function update(Request $request, Game $game)
     {
         Gate::authorize('update', $game);
@@ -251,7 +227,7 @@ class GameController extends Controller
         $validated['game_data'] = json_encode($validated['game_data']);
 
         $game->update([
-            'max_attempts' => $validated['max_attempts'] ?? 1,
+            'max_attempts' => $validated['max_attempts'] ?? 5,
             ...$validated,
         ]);
 
@@ -267,9 +243,6 @@ class GameController extends Controller
             ->with('success', 'Game updated successfully!');
     }
 
-    /**
-     * Remove the specified game.
-     */
     public function destroy(Game $game)
     {
         Gate::authorize('delete', $game);
@@ -289,9 +262,6 @@ class GameController extends Controller
             ->with('success', 'Game deleted successfully!');
     }
 
-    /**
-     * Publish a game.
-     */
     public function publish(Game $game)
     {
         Gate::authorize('update', $game);

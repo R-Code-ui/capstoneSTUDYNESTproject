@@ -53,8 +53,10 @@ export default function BalloonPopMath({ content, onComplete, onExit, onProgress
     }, [roundIndex]);
 
     const handleTap = (balloon) => {
-        if (balloon.popped) return;
+        if (balloon.popped || finishedRef.current) return;
+
         setBalloons((prev) => prev.map((b) => (b.id === balloon.id ? { ...b, popped: true } : b)));
+
         if (balloon.isTarget) {
             setCorrectTaps((c) => c + 1);
         } else {

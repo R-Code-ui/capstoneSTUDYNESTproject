@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
@@ -15,7 +14,6 @@ import {
     PhotoIcon,
     PaperClipIcon,
     XMarkIcon,
-    PlusIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AssignmentsCreate({
@@ -111,7 +109,16 @@ export default function AssignmentsCreate({
         const errors = [];
         const validFiles = [];
 
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        const allowedTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/jpg',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+            'application/vnd.ms-powerpoint', // older .ppt
+        ];
+
         const maxSize = 2 * 1024 * 1024;
         const maxFiles = 5;
 
@@ -124,15 +131,13 @@ export default function AssignmentsCreate({
 
         files.forEach((file) => {
             if (!allowedTypes.includes(file.type)) {
-                errors.push(`"${file.name}" is not allowed. Please upload PDF, DOCX, JPG, JPEG, or PNG files.`);
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, DOCX, or PPTX files.`);
                 return;
             }
-
             if (file.size > maxSize) {
                 errors.push(`"${file.name}" exceeds the 2MB limit.`);
                 return;
             }
-
             validFiles.push(file);
         });
 
@@ -170,6 +175,12 @@ export default function AssignmentsCreate({
         if (['jpg', 'jpeg', 'png'].includes(ext)) {
             return <PhotoIcon className="w-5 h-5 text-emerald-500" />;
         }
+        if (['doc', 'docx'].includes(ext)) {
+            return <DocumentIcon className="w-5 h-5 text-blue-500" />;
+        }
+        if (['ppt', 'pptx'].includes(ext)) {
+            return <DocumentIcon className="w-5 h-5 text-orange-500" />;
+        }
         return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
     };
 
@@ -177,7 +188,8 @@ export default function AssignmentsCreate({
         const ext = fileName.split('.').pop().toLowerCase();
         if (['pdf'].includes(ext)) return 'PDF Module';
         if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
-        if (['docx'].includes(ext)) return 'Word Document';
+        if (['doc', 'docx'].includes(ext)) return 'Word Document';
+        if (['ppt', 'pptx'].includes(ext)) return 'PowerPoint';
         return 'Worksheet';
     };
 
@@ -399,7 +411,6 @@ export default function AssignmentsCreate({
                                             <InputError message={errors.total_points} className="mt-2" />
                                         </div>
                                         <div>
-                                            {/* ✅ Changed label to include "(optional)" */}
                                             <InputLabel htmlFor="estimated_time" value="Est. Time (minutes) (optional)" />
                                             <TextInput
                                                 id="estimated_time"
@@ -489,7 +500,7 @@ export default function AssignmentsCreate({
                                         multiple
                                         onChange={handleFileChange}
                                         className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        accept=".pdf,.docx,.jpg,.jpeg,.png"
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
@@ -523,7 +534,7 @@ export default function AssignmentsCreate({
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, DOCX, JPG, JPEG, PNG (Max 2MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX, PPTX (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>

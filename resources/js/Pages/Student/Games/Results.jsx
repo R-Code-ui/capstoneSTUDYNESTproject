@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
@@ -70,7 +69,6 @@ export default function GamesResults({ result, game, can_play_again }) {
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         Game Results: {game.title}
@@ -111,10 +109,6 @@ export default function GamesResults({ result, game, can_play_again }) {
                                 points
                             </div>
 
-                            <div className="mt-4 text-sm text-gray-500">
-                                Attempt {result.attempt_number} • Completed {result.completed_at}
-                            </div>
-
                             <div className={`mt-4 inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${getResultBadgeClass()}`}>
                                 {getResultMessage()}
                             </div>
@@ -123,9 +117,6 @@ export default function GamesResults({ result, game, can_play_again }) {
 
                     {/* ===== Actions ===== */}
                     <div className="mt-6 flex flex-wrap justify-center gap-3">
-                        <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
-                            Back to Games
-                        </SecondaryButton>
                         {can_play_again && (
                             <PrimaryButton onClick={handlePlayAgain} disabled={isLoading}>
                                 <ArrowPathIcon className="w-4 h-4 mr-1" />

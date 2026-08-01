@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\AnnouncementView;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -107,6 +108,15 @@ class AnnouncementController extends Controller
         // Increment view count
         $announcement->increment('view_count');
 
+        // ✅ Log: student viewed announcement
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'view',
+            'activity_description'=> 'Viewed announcement: "' . $announcement->title . '"',
+            'related_module'      => 'Announcement Module',
+        ]);
+
         return Inertia::render('Student/Announcements/Show', [
             'announcement' => [
                 'id' => $announcement->id,
@@ -141,6 +151,15 @@ class AnnouncementController extends Controller
                 'viewed_at' => now(),
             ]
         );
+
+        // ✅ Log: student marked announcement as read
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'read',
+            'activity_description'=> 'Marked announcement as read: "' . $announcement->title . '"',
+            'related_module'      => 'Announcement Module',
+        ]);
 
         return redirect()->back()->with('success', 'Announcement marked as read.');
     }

@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { DndContext, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import GameShell from './GameShell';
 
-function DraggableWeight({ id, value }) {
+function DraggableWeight({ id, value, onClick }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -16,6 +16,7 @@ function DraggableWeight({ id, value }) {
             style={style}
             {...listeners}
             {...attributes}
+            onClick={onClick}
             className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-indigo-500 text-white font-black text-lg shadow-lg border-b-4 border-indigo-700 cursor-grab active:cursor-grabbing active:scale-95 touch-none select-none ${isDragging ? 'opacity-50' : 'opacity-100'}`}
         >
             {value}
@@ -44,7 +45,6 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
         useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
     );
 
-    // Notify parent of progress change
     const updateProgress = useCallback((newState) => {
         if (onProgress) {
             onProgress({
@@ -68,7 +68,7 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
             updateProgress({ roundIndex: next, correctCount: newCorrect, overshoots: newOvershoots });
         } else {
             const rawScore = Math.round((newCorrect / rounds.length) * 100);
-            const finalScore = Math.max(0, rawScore - newOvershoots * 5);
+            const finalScore = Math.max(0, rawScore - newOvershoots * 1);   // penalty: -1 per overshoot (silent)
             onComplete(finalScore);
         }
     };
@@ -77,7 +77,13 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
         const { active, over } = event;
         if (!over || over.id !== 'right-pan' || status !== 'playing') return;
 
-        const tileIdx = bank.findIndex((t) => t.key === active.id);
+        placeWeight(active.id);
+    };
+
+    const placeWeight = (weightId) => {
+        if (status !== 'playing') return;
+
+        const tileIdx = bank.findIndex((t) => t.key === weightId);
         if (tileIdx === -1) return;
 
         const tile = bank[tileIdx];
@@ -90,20 +96,16 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
             setStatus('balanced');
             setTimeout(() => advanceRound(true), 900);
         } else if (newSum > round.leftValue) {
+            // Overshoot – immediately advance with penalty (no retry)
             setStatus('tooHeavy');
             setOvershoots((prev) => {
                 const newVal = prev + 1;
                 updateProgress({ roundIndex, correctCount, overshoots: newVal });
                 return newVal;
             });
+            // Advance after a short delay (shows feedback)
+            setTimeout(() => advanceRound(false), 1200);
         }
-    };
-
-    const handleResetPan = () => {
-        if (status !== 'tooHeavy') return;
-        setBank([...bank, ...placed]);
-        setPlaced([]);
-        setStatus('playing');
     };
 
     return (
@@ -118,7 +120,7 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
                     <div className="flex flex-col items-center gap-8 mb-8">
                         <div className="flex items-end justify-center gap-8 w-full max-w-sm">
                             <div className="flex flex-col items-center">
-                                <div className="w-28 h-28 rounded-3xl bg-amber-400 shadow-xl flex items-center justify-center text-4xl font-black text-white border-b-8 border-amber-600 animate-pulse">
+                                <div className="w-28 h-28 rounded-3xl bg-amber-400 shadow-xl flex items-center justify-center text-4xl font-black text-white border-b-8 border-amber-600">
                                     {round.leftValue}
                                 </div>
                                 <span className="text-xs font-bold text-amber-600 mt-3 uppercase tracking-widest">Target</span>
@@ -129,14 +131,18 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
                             <div className="flex flex-col items-center">
                                 <div
                                     ref={setNodeRef}
-                                    className={`w-28 h-28 rounded-3xl border-4 border-dashed flex flex-wrap items-center justify-center gap-2 p-3 shadow-lg ${status === 'balanced' ? 'border-green-500 bg-green-100'
+                                    className={`w-28 h-28 rounded-3xl border-4 border-dashed flex flex-wrap items-center justify-center gap-2 p-3 shadow-lg ${
+                                        status === 'balanced' ? 'border-green-500 bg-green-100'
                                         : status === 'tooHeavy' ? 'border-red-500 bg-red-100'
-                                            : isOver ? 'border-indigo-500 bg-indigo-50'
-                                                : 'border-indigo-200 bg-white'}
-                                    `}
+                                        : isOver ? 'border-indigo-500 bg-indigo-50'
+                                        : 'border-indigo-200 bg-white'
+                                    }`}
                                 >
                                     {placed.map((w) => (
-                                        <div key={w.key} className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-500 text-white font-bold text-xs shadow">
+                                        <div
+                                            key={w.key}
+                                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-500 text-white font-bold text-xs shadow"
+                                        >
                                             {w.value}
                                         </div>
                                     ))}
@@ -149,10 +155,17 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
                     </div>
 
                     <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-white shadow-sm">
-                        <p className="text-center text-sm font-bold text-gray-400 mb-4 uppercase">Drag weights to the scale</p>
+                        <p className="text-center text-sm font-bold text-gray-400 mb-4 uppercase">
+                            Drag or tap weights to add them to the scale
+                        </p>
                         <div className="flex flex-wrap gap-3 justify-center min-h-[4rem]">
                             {bank.map((tile) => (
-                                <DraggableWeight key={tile.key} id={tile.key} value={tile.value} />
+                                <DraggableWeight
+                                    key={tile.key}
+                                    id={tile.key}
+                                    value={tile.value}
+                                    onClick={() => placeWeight(tile.key)}
+                                />
                             ))}
                         </div>
                     </div>
@@ -166,15 +179,8 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
                     )}
 
                     {status === 'tooHeavy' && (
-                        <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in">
-                            <div className="text-xl font-black text-red-600">Too heavy!</div>
-                            <button
-                                type="button"
-                                onClick={handleResetPan}
-                                className="px-6 py-3 rounded-full bg-red-600 text-white font-bold shadow-lg active:scale-95"
-                            >
-                                Reset Pan
-                            </button>
+                        <div className="text-xl font-black text-red-600 animate-in fade-in zoom-in">
+                            Too heavy!
                         </div>
                     )}
                 </div>

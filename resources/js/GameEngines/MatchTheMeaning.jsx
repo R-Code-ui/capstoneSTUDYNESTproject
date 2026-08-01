@@ -91,6 +91,9 @@ export default function MatchTheMeaning({ content, onComplete, onExit, onProgres
                         </div>
                     </div>
                 </DndContext>
+                <p className="text-xs text-gray-400 mt-6 text-center uppercase tracking-widest font-bold">
+                    Tap or drag words to match them with the correct meaning
+                </p>
             </div>
         </GameShell>
     );

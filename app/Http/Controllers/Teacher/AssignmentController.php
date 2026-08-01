@@ -43,7 +43,7 @@ class AssignmentController extends Controller
                 return $query->where('assignment_type', $type);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // ✅ FIXED: Changed ->get() to ->paginate(10)
+            ->paginate(10);
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
 
@@ -79,7 +79,7 @@ class AssignmentController extends Controller
                 'grade_level' => $gradeFilter,
                 'assignment_type' => $typeFilter,
             ],
-            'pagination' => $assignments->toArray(), // ✅ FIXED: Added pagination data
+            'pagination' => $assignments->toArray(),
         ]);
     }
 
@@ -97,11 +97,10 @@ class AssignmentController extends Controller
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
-        $statuses = ['draft', 'published'];
+        $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
-        // ✅ Removed 'photo' from submission methods
         $submissionMethods = ['digital', 'paper'];
 
         $lessons = Lesson::where('teacher_id', $user->id)
@@ -153,8 +152,8 @@ class AssignmentController extends Controller
             'due_date' => 'required|date',
             'due_time' => 'required',
             'submission_methods' => 'required|array',
-            'submission_methods.*' => 'in:digital,paper', // ✅ Removed 'photo'
-            'status' => 'required|in:draft,published',
+            'submission_methods.*' => 'in:digital,paper',
+            'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
         ]);
 
@@ -265,7 +264,6 @@ class AssignmentController extends Controller
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
-        // ✅ Removed 'photo' from submission methods
         $submissionMethods = ['digital', 'paper'];
 
         $lessons = Lesson::where('teacher_id', $user->id)
@@ -352,7 +350,7 @@ class AssignmentController extends Controller
             'due_date' => 'required|date',
             'due_time' => 'required',
             'submission_methods' => 'required|array',
-            'submission_methods.*' => 'in:digital,paper', // ✅ Removed 'photo'
+            'submission_methods.*' => 'in:digital,paper',
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
             'deleted_resource_ids' => 'nullable|string',
@@ -520,6 +518,7 @@ class AssignmentController extends Controller
 
     /**
      * Determine resource type based on file.
+     * Maps PDF -> 'pdf_module', images -> 'image', everything else (including PPTX, DOCX, etc.) -> 'worksheet'.
      */
     private function determineResourceType(\Illuminate\Http\UploadedFile $file): string
     {
@@ -531,6 +530,7 @@ class AssignmentController extends Controller
             return 'image';
         }
 
+        // All other types (Word documents, PowerPoint presentations, etc.) are stored as 'worksheet'
         return 'worksheet';
     }
 }

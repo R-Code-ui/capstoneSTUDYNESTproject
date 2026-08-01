@@ -1,6 +1,5 @@
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -16,19 +15,17 @@ import {
     DocumentTextIcon,
     ChartBarIcon,
     PuzzlePieceIcon,
+    LinkIcon,
 } from '@heroicons/react/24/outline';
 
 export default function LessonsShow({ lesson }) {
     const getResourceIcon = (type) => {
         switch (type) {
-            case 'pdf_module':
-                return <DocumentIcon className="w-6 h-6 text-red-500" />;
-            case 'image':
-                return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
-            case 'worksheet':
-                return <DocumentTextIcon className="w-6 h-6 text-blue-500" />;
-            default:
-                return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
+            case 'pdf_module': return <DocumentIcon className="w-6 h-6 text-red-500" />;
+            case 'image': return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
+            case 'worksheet': return <DocumentTextIcon className="w-6 h-6 text-blue-500" />;
+            case 'url': return <LinkIcon className="w-6 h-6 text-purple-500" />;
+            default: return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
         }
     };
 
@@ -37,21 +34,23 @@ export default function LessonsShow({ lesson }) {
             pdf_module: 'PDF Module',
             worksheet: 'Worksheet',
             image: 'Image',
+            url: 'External Link',
         };
         return labels[type] || type;
     };
 
     const formatFileSize = (bytes) => {
-        if (!bytes) return 'Unknown size';
+        if (!bytes) return '';
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
+    const isUrlResource = (type) => type === 'url';
+
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to make justify-between work
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         {lesson.lesson_title}
@@ -77,7 +76,7 @@ export default function LessonsShow({ lesson }) {
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
 
-                    {/* ===== Basic Information ===== */}
+                    {/* Basic Information */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -117,7 +116,7 @@ export default function LessonsShow({ lesson }) {
                         </div>
                     </div>
 
-                    {/* ===== BOW Reference ===== */}
+                    {/* BOW Reference */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-200">
@@ -142,16 +141,14 @@ export default function LessonsShow({ lesson }) {
                         </div>
                     </div>
 
-                    {/* ===== Lesson Content ===== */}
+                    {/* Lesson Content */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-200">
                                 <h3 className="text-sm font-semibold text-gray-700">Lesson Description</h3>
                             </div>
                             <div className="p-6">
-                                <div className="text-gray-700 whitespace-pre-wrap">
-                                    {lesson.lesson_description}
-                                </div>
+                                <div className="text-gray-700 whitespace-pre-wrap">{lesson.lesson_description}</div>
                             </div>
                         </div>
                     </div>
@@ -176,15 +173,13 @@ export default function LessonsShow({ lesson }) {
                                     <h3 className="text-sm font-semibold text-gray-700">Key Takeaways</h3>
                                 </div>
                                 <div className="p-6">
-                                    <div className="text-gray-700 whitespace-pre-wrap">
-                                        {lesson.key_takeaways}
-                                    </div>
+                                    <div className="text-gray-700 whitespace-pre-wrap">{lesson.key_takeaways}</div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* ===== Learning Resources ===== */}
+                    {/* Learning Resources */}
                     {lesson.resources && lesson.resources.length > 0 && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -203,19 +198,36 @@ export default function LessonsShow({ lesson }) {
                                                     <div className="font-medium text-gray-800">
                                                         {resource.name}
                                                     </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {getResourceLabel(resource.type)} • {formatFileSize(resource.size)}
-                                                    </div>
+                                                    {!isUrlResource(resource.type) && (
+                                                        <div className="text-sm text-gray-500">
+                                                            {getResourceLabel(resource.type)} • {formatFileSize(resource.size)}
+                                                        </div>
+                                                    )}
+                                                    {isUrlResource(resource.type) && (
+                                                        <div className="text-sm text-gray-500">External Link</div>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2">
-                                                <a
-                                                    href={route('teacher.lessons.download-resource', resource.id)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                                >
-                                                    <ArrowDownTrayIcon className="w-4 h-4" />
-                                                    Download
-                                                </a>
+                                            <div className="flex-shrink-0">
+                                                {isUrlResource(resource.type) ? (
+                                                    <a
+                                                        href={resource.path}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
+                                                    >
+                                                        <LinkIcon className="w-4 h-4" />
+                                                        Open Link
+                                                    </a>
+                                                ) : (
+                                                    <a
+                                                        href={route('teacher.lessons.download-resource', resource.id)}
+                                                        className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                    >
+                                                        <ArrowDownTrayIcon className="w-4 h-4" />
+                                                        Download
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -224,7 +236,7 @@ export default function LessonsShow({ lesson }) {
                         </div>
                     )}
 
-                    {/* ===== Related Activities ===== */}
+                    {/* Related Activities */}
                     {(lesson.related_assignment_id || lesson.related_quiz_id || lesson.related_game_id) && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

@@ -1,27 +1,5 @@
 import { useState, useCallback } from 'react';
-import { DndContext, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import GameShell from './GameShell';
-
-function DraggableCoin({ id, value }) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
-    const style = {
-        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-        zIndex: isDragging ? 50 : 1,
-    };
-
-    return (
-        <button
-            type="button"
-            ref={setNodeRef}
-            style={style}
-            {...listeners}
-            {...attributes}
-            className={`w-16 h-16 flex items-center justify-center rounded-full bg-yellow-400 text-yellow-900 font-black text-sm shadow-lg border-b-4 border-yellow-600 cursor-grab active:cursor-grabbing active:scale-95 touch-none select-none ${isDragging ? 'opacity-50' : 'opacity-100'}`}
-        >
-            ₱{value}
-        </button>
-    );
-}
 
 export default function CoinCounter({ content, onComplete, onExit, onProgress, initialState }) {
     const rounds = content.rounds;
@@ -33,16 +11,10 @@ export default function CoinCounter({ content, onComplete, onExit, onProgress, i
         rounds[initialState?.roundIndex ?? 0].coins.map((v, i) => ({ key: `c-${i}-${v}`, value: v }))
     );
     const [status, setStatus] = useState('playing');
+    const [history, setHistory] = useState([]);
 
     const round = rounds[roundIndex];
     const jarTotal = placed.reduce((sum, c) => sum + c.value, 0);
-
-    const { setNodeRef, isOver } = useDroppable({ id: 'coin-jar', disabled: status !== 'playing' });
-
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
-    );
 
     const updateProgress = useCallback((newState) => {
         if (onProgress) {
@@ -71,11 +43,10 @@ export default function CoinCounter({ content, onComplete, onExit, onProgress, i
         }
     };
 
-    const handleDragEnd = (event) => {
-        const { active, over } = event;
-        if (!over || over.id !== 'coin-jar' || status !== 'playing') return;
+    const placeCoin = (coinId) => {
+        if (status !== 'playing') return;
 
-        const tileIdx = bank.findIndex((t) => t.key === active.id);
+        const tileIdx = bank.findIndex((t) => t.key === coinId);
         if (tileIdx === -1) return;
 
         const coin = bank[tileIdx];
@@ -83,6 +54,7 @@ export default function CoinCounter({ content, onComplete, onExit, onProgress, i
         const newPlaced = [...placed, coin];
         setPlaced(newPlaced);
         setBank(bank.filter((_, i) => i !== tileIdx));
+        setHistory((prev) => [...prev, coin.key]);
 
         if (newTotal === round.target) {
             setStatus('filled');
@@ -94,6 +66,21 @@ export default function CoinCounter({ content, onComplete, onExit, onProgress, i
                 updateProgress({ roundIndex, correctCount, overshoots: newVal });
                 return newVal;
             });
+        }
+    };
+
+    const undoLastCoin = () => {
+        if (history.length === 0) return;
+        const lastCoinKey = history[history.length - 1];
+        const tileIdx = placed.findIndex((c) => c.key === lastCoinKey);
+        if (tileIdx === -1) return;
+
+        const coin = placed[tileIdx];
+        setPlaced((prev) => prev.filter((_, i) => i !== tileIdx));
+        setBank((prev) => [...prev, coin]);
+        setHistory((prev) => prev.slice(0, -1));
+        if (status === 'tooMuch' || status === 'filled') {
+            setStatus('playing');
         }
     };
 
@@ -111,71 +98,80 @@ export default function CoinCounter({ content, onComplete, onExit, onProgress, i
             roundLabel={`Round ${roundIndex + 1} of ${rounds.length}`}
             onExit={onExit}
         >
-            <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-6 rounded-3xl border border-amber-100 shadow-inner">
-                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="flex flex-col items-center gap-8 mb-8">
-                        <div className="flex items-end justify-center gap-8 w-full max-w-sm">
-                            <div className="flex flex-col items-center">
-                                <div className="w-28 h-28 rounded-3xl bg-orange-400 shadow-xl flex items-center justify-center text-3xl font-black text-white border-b-8 border-orange-600 animate-pulse">
-                                    ₱{round.target}
-                                </div>
-                                <span className="text-xs font-bold text-orange-600 mt-3 uppercase tracking-widest">Target</span>
+            <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-3xl border border-amber-100 shadow-inner">
+                <div className="flex flex-col items-center gap-4">
+                    {/* Target and jar row */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
+                        <div className="flex items-center gap-3">
+                            <div className="w-20 h-20 rounded-3xl bg-orange-400 shadow-xl flex items-center justify-center text-2xl font-black text-white border-b-4 border-orange-600">
+                                ₱{round.target}
                             </div>
+                            <span className="text-xs font-bold text-orange-600 uppercase">Target</span>
+                        </div>
 
-                            <div className="text-4xl pb-8">🏺</div>
-
-                            <div className="flex flex-col items-center">
-                                <div
-                                    ref={setNodeRef}
-                                    className={`w-28 h-28 rounded-3xl border-4 border-dashed flex flex-wrap items-center justify-center gap-1 p-3 shadow-lg
-                                        ${status === 'filled' ? 'border-green-500 bg-green-100'
-                                            : status === 'tooMuch' ? 'border-red-500 bg-red-100'
-                                            : isOver ? 'border-amber-500 bg-amber-50'
-                                            : 'border-amber-200 bg-white'}
-                                    `}
-                                >
-                                    {placed.map((c) => (
-                                        <div key={c.key} className="w-7 h-7 flex items-center justify-center rounded-full bg-yellow-400 text-yellow-900 font-bold text-[10px] shadow">
-                                            ₱{c.value}
-                                        </div>
-                                    ))}
-                                </div>
-                                <span className={`text-xs font-bold mt-3 uppercase tracking-widest ${jarTotal > round.target ? 'text-red-500' : 'text-amber-500'}`}>
-                                    Total: ₱{jarTotal}
-                                </span>
+                        <div className="flex flex-col items-center w-full max-w-sm">
+                            <div
+                                className={`relative w-full h-40 rounded-[2rem] border-4 border-dashed flex flex-wrap content-center items-center justify-center gap-2 p-4 shadow-xl
+                                    ${status === 'filled' ? 'border-green-500 bg-green-100'
+                                        : status === 'tooMuch' ? 'border-red-500 bg-red-100'
+                                        : 'border-amber-300 bg-white'}
+                                `}
+                            >
+                                <div className="pointer-events-none absolute left-4 right-4 top-3 h-4 rounded-full border-4 border-amber-200 bg-amber-50" />
+                                {placed.length === 0 && (
+                                    <div className="pointer-events-none text-center text-amber-600 text-xs font-bold uppercase">Tap coins to add</div>
+                                )}
+                                {placed.map((c) => (
+                                    <div key={c.key} className="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-400 text-yellow-900 font-black text-xs shadow border-b-2 border-yellow-600">
+                                        ₱{c.value}
+                                    </div>
+                                ))}
                             </div>
+                            <span className={`text-xs font-bold mt-1 uppercase ${jarTotal > round.target ? 'text-red-500' : 'text-amber-500'}`}>
+                                Total: ₱{jarTotal}
+                            </span>
                         </div>
                     </div>
 
-                    <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-white shadow-sm">
-                        <p className="text-center text-sm font-bold text-gray-400 mb-4 uppercase">Drag coins into the jar</p>
-                        <div className="flex flex-wrap gap-3 justify-center min-h-[4rem]">
+                    {/* Coins bank */}
+                    <div className="bg-white/60 p-3 rounded-2xl w-full">
+                        <p className="text-center text-xs font-bold text-gray-500 mb-2 uppercase">
+                            Tap a coin to add it to the jar
+                        </p>
+                        <div className="flex flex-wrap gap-2 justify-center min-h-[3rem]">
                             {bank.map((coin) => (
-                                <DraggableCoin key={coin.key} id={coin.key} value={coin.value} />
+                                <button
+                                    key={coin.key}
+                                    type="button"
+                                    onClick={() => placeCoin(coin.key)}
+                                    className="w-12 h-12 flex items-center justify-center rounded-full bg-yellow-400 text-yellow-900 font-black text-xs shadow border-b-2 border-yellow-600 active:scale-95"
+                                >
+                                    ₱{coin.value}
+                                </button>
                             ))}
                         </div>
                     </div>
-                </DndContext>
+                </div>
 
-                <div className="h-20 mt-6 flex justify-center items-center">
-                    {status === 'filled' && (
-                        <div className="text-2xl font-black text-green-600 animate-bounce flex items-center gap-2">
-                            <span>✓</span> Exact Amount!
-                        </div>
-                    )}
-
+                {/* Action buttons */}
+                <div className="flex flex-col items-center gap-2 mt-3">
                     {status === 'tooMuch' && (
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="text-xl font-black text-red-600">Too much!</div>
-                            <button
-                                type="button"
-                                onClick={handleResetJar}
-                                className="px-6 py-3 rounded-full bg-red-600 text-white font-bold shadow-lg active:scale-95"
-                            >
-                                Reset Jar
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={handleResetJar}
+                            className="px-5 py-2 rounded-full bg-red-600 text-white font-bold shadow active:scale-95"
+                        >
+                            Reset Jar
+                        </button>
                     )}
+                    <button
+                        type="button"
+                        onClick={undoLastCoin}
+                        disabled={history.length === 0}
+                        className="px-5 py-2 rounded-full bg-white text-amber-700 font-bold border border-amber-200 shadow active:scale-95 disabled:opacity-40"
+                    >
+                        Undo Last Coin
+                    </button>
                 </div>
             </div>
         </GameShell>

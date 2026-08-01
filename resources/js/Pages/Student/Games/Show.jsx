@@ -25,6 +25,11 @@ export default function GamesShow({
 
     const definition = gameDefinitions[game.title];
     const friendlyDescription = definition?.description || game.instructions;
+    const difficultyLabel = {
+        guided: 'Guided',
+        standard: 'Standard',
+        challenge: 'Challenge',
+    }[game.difficulty] || 'Standard';
 
     const getTypeIcon = (type) => {
         return type === 'literacy' ? (
@@ -87,6 +92,9 @@ export default function GamesShow({
                                 </span>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     {getTypeLabel(game.game_type)}
+                                </span>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+                                    {difficultyLabel} level
                                 </span>
                                 <span className="text-sm text-gray-500 flex items-center gap-1">
                                     <UserIcon className="w-4 h-4" />

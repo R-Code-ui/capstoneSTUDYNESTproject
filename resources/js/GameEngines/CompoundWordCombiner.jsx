@@ -56,6 +56,8 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
     const [wrongTarget, setWrongTarget] = useState(null);
     const [attempts, setAttempts] = useState(initialState?.attempts ?? 0);
     const [lastCombined, setLastCombined] = useState(null);
+    const [selectedWord, setSelectedWord] = useState(null);
+    const [history, setHistory] = useState([]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -79,8 +81,10 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
         setAttempts(newAttempts);
 
         if (pair && pair.match === targetWord) {
+            setHistory((prev) => [...prev, word]);
             const newMatched = [...matchedWords, word];
             setMatchedWords(newMatched);
+            setSelectedWord(null);
             setLastCombined(`${word}${targetWord}`);
             setTimeout(() => setLastCombined(null), 1200);
             updateProgress({ matchedWords: newMatched, attempts: newAttempts });
@@ -91,9 +95,51 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
             }
         } else {
             setWrongTarget(targetWord);
+            setSelectedWord(null);
             setTimeout(() => setWrongTarget(null), 500);
             updateProgress({ matchedWords, attempts: newAttempts });
         }
+    };
+
+    const handleSelectWord = (word) => {
+        if (matchedWords.includes(word)) return;
+        setSelectedWord(selectedWord === word ? null : word);
+    };
+
+    const handleSelectTarget = (targetWord) => {
+        if (!selectedWord) return;
+        const pair = pairs.find((p) => p.word === selectedWord);
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+
+        if (pair && pair.match === targetWord) {
+            setHistory((prev) => [...prev, selectedWord]);
+            const newMatched = [...matchedWords, selectedWord];
+            setMatchedWords(newMatched);
+            setSelectedWord(null);
+            setLastCombined(`${selectedWord}${targetWord}`);
+            setTimeout(() => setLastCombined(null), 1200);
+            updateProgress({ matchedWords: newMatched, attempts: newAttempts });
+
+            if (newMatched.length === pairs.length) {
+                const finalScore = Math.round((pairs.length / newAttempts) * 100);
+                setTimeout(() => onComplete(Math.min(100, finalScore)), 700);
+            }
+        } else {
+            setWrongTarget(targetWord);
+            setSelectedWord(null);
+            setTimeout(() => setWrongTarget(null), 500);
+            updateProgress({ matchedWords, attempts: newAttempts });
+        }
+    };
+
+    const undoLastMatch = () => {
+        if (history.length === 0) return;
+        const lastWord = history[history.length - 1];
+        setMatchedWords((prev) => prev.filter((w) => w !== lastWord));
+        setHistory((prev) => prev.slice(0, -1));
+        setWrongTarget(null);
+        setSelectedWord(null);
     };
 
     return (
@@ -108,6 +154,8 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
                                     id={`word-${p.word}`}
                                     word={p.word}
                                     matched={matchedWords.includes(p.word)}
+                                    selected={selectedWord === p.word}
+                                    onClick={() => handleSelectWord(p.word)}
                                 />
                             ))}
                         </div>
@@ -121,6 +169,8 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
                                         word={w}
                                         matched={!!matchedPair}
                                         wrong={wrongTarget === w}
+                                        selected={selectedWord !== null}
+                                        onClick={() => handleSelectTarget(w)}
                                     />
                                 );
                             })}
@@ -134,9 +184,19 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
                     </div>
                 )}
 
-                <p className="text-xs text-gray-400 mt-6 text-center uppercase tracking-widest font-bold">
-                    Drag each word onto its matching half
-                </p>
+                <div className="flex flex-col items-center gap-4 mt-6">
+                    <button
+                        type="button"
+                        onClick={undoLastMatch}
+                        disabled={history.length === 0}
+                        className="px-6 py-3 rounded-full bg-white text-violet-700 font-black border border-violet-200 shadow-sm hover:bg-violet-50 disabled:opacity-40"
+                    >
+                        Undo Last Match
+                    </button>
+                    <p className="text-xs text-gray-400 uppercase tracking-widest font-bold text-center">
+                        Tap a word, then tap its matching half, or drag to match.
+                    </p>
+                </div>
             </div>
         </GameShell>
     );

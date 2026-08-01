@@ -50,6 +50,11 @@ export default function SkipCountingPath({ content, onComplete, onExit, onProgre
         }
     };
 
+    const undoLastTap = () => {
+        if (feedback || foundCount === 0) return;
+        setFoundCount((prev) => Math.max(0, prev - 1));
+    };
+
     const foundSequence = round.path.slice(0, foundCount).map((idx) => round.cells[idx]);
 
     return (
@@ -100,6 +105,17 @@ export default function SkipCountingPath({ content, onComplete, onExit, onProgre
                                 </button>
                             );
                         })}
+                    </div>
+
+                    <div className="flex items-center justify-center gap-4">
+                        <button
+                            type="button"
+                            onClick={undoLastTap}
+                            disabled={foundCount === 0 || !!feedback}
+                            className="px-6 py-3 rounded-full bg-white text-sky-700 font-black border border-sky-200 shadow-sm hover:bg-sky-50 disabled:opacity-40"
+                        >
+                            Undo
+                        </button>
                     </div>
 
                     {feedback === 'correct' && (

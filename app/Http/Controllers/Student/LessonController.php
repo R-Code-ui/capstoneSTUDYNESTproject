@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\LessonResource;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -73,6 +74,15 @@ class LessonController extends Controller
         // Determine if lesson is completed (using the many‑to‑many relationship)
         $isCompleted = $user->completedLessons()->where('lesson_id', $lesson->id)->exists();
 
+        // ✅ Log: student viewed lesson
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'view',
+            'activity_description'=> 'Viewed lesson: "' . $lesson->lesson_title . '"',
+            'related_module'      => 'Lesson Module',
+        ]);
+
         return Inertia::render('Student/Lessons/Show', [
             'lesson' => [
                 'id' => $lesson->id,
@@ -81,7 +91,7 @@ class LessonController extends Controller
                 'description' => $lesson->lesson_description,
                 'content' => $lesson->lesson_content,
                 'teacher' => $lesson->teacher->name ?? 'Unknown',
-                'publish_date' => $lesson->publish_date ? $lesson->publish_date->format('Y-m-d') : '',   // ✅ clean date
+                'publish_date' => $lesson->publish_date ? $lesson->publish_date->format('Y-m-d') : '',
                 'is_completed' => $isCompleted,
                 'resources' => $lesson->resources->map(function ($resource) {
                     return [
@@ -122,19 +132,33 @@ class LessonController extends Controller
             'completed_at' => now(),
         ]]);
 
+        // ✅ Log: student completed lesson
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'complete',
+            'activity_description'=> 'Completed lesson: "' . $lesson->lesson_title . '"',
+            'related_module'      => 'Lesson Module',
+        ]);
+
         return redirect()->back()->with('success', 'Lesson marked as completed!');
     }
 
     /**
-     * Download a lesson resource.
+     * Download a lesson resource or redirect if URL.
      */
     public function downloadResource($id)
     {
         $resource = LessonResource::findOrFail($id);
-        $lesson = $resource->lesson;
+        $lesson   = $resource->lesson;
 
         $user = auth()->user();
         Gate::authorize('view', $lesson);
+
+        // ✅ If resource is a URL, redirect
+        if ($resource->resource_type === 'url') {
+            return redirect()->away($resource->file_path);
+        }
 
         $filePath = storage_path('app/public/' . $resource->file_path);
 

@@ -17,9 +17,6 @@ use App\Models\ActivityLog;
 
 class LessonController extends Controller
 {
-    /**
-     * Display a listing of lessons.
-     */
     public function index(Request $request)
     {
         Gate::authorize('viewAny', Lesson::class);
@@ -46,7 +43,7 @@ class LessonController extends Controller
                 return $query->where('trimester', $trimester);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // ✅ FIXED: Changed ->get() to ->paginate(10)
+            ->paginate(10);
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
@@ -78,13 +75,10 @@ class LessonController extends Controller
                 'grade_level' => $gradeFilter,
                 'trimester' => $trimesterFilter,
             ],
-            'pagination' => $lessons->toArray(), // ✅ FIXED: Added pagination data
+            'pagination' => $lessons->toArray(),
         ]);
     }
 
-    /**
-     * Show the form for creating a new lesson.
-     */
     public function create()
     {
         Gate::authorize('create', Lesson::class);
@@ -94,31 +88,19 @@ class LessonController extends Controller
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
-        $statuses = ['draft', 'published'];
+        $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
 
-        // Get related activities
         $assignments = Assignment::where('teacher_id', $user->id)->get()->map(function ($assignment) {
-            return [
-                'id' => $assignment->id,
-                'title' => $assignment->assignment_title,
-            ];
+            return ['id' => $assignment->id, 'title' => $assignment->assignment_title];
         });
-
         $quizzes = Quiz::where('teacher_id', $user->id)->get()->map(function ($quiz) {
-            return [
-                'id' => $quiz->id,
-                'title' => $quiz->quiz_title,
-            ];
+            return ['id' => $quiz->id, 'title' => $quiz->quiz_title];
         });
-
         $games = Game::where('teacher_id', $user->id)->get()->map(function ($game) {
-            return [
-                'id' => $game->id,
-                'title' => $game->game_title,
-            ];
+            return ['id' => $game->id, 'title' => $game->game_title];
         });
 
         return Inertia::render('Teacher/Lessons/Create', [
@@ -134,9 +116,6 @@ class LessonController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created lesson.
-     */
     public function store(Request $request)
     {
         Gate::authorize('create', Lesson::class);
@@ -157,8 +136,9 @@ class LessonController extends Controller
             'related_assignment_id' => 'nullable|exists:assignments,id',
             'related_quiz_id' => 'nullable|exists:quizzes,id',
             'related_game_id' => 'nullable|exists:games,id',
-            'status' => 'required|in:draft,published',
+            'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
+            'resource_url' => 'nullable|url',
         ]);
 
         $lesson = Lesson::create([
@@ -167,11 +147,11 @@ class LessonController extends Controller
         ]);
 
         ActivityLog::create([
-            'user_id'             => auth()->id(),
-            'user_role'           => 'teacher',
-            'activity_type'       => 'create',
-            'activity_description'=> 'Created lesson "' . $lesson->lesson_title . '"',
-            'related_module'      => 'Lesson Module',
+            'user_id' => auth()->id(),
+            'user_role' => 'teacher',
+            'activity_type' => 'create',
+            'activity_description' => 'Created lesson "' . $lesson->lesson_title . '"',
+            'related_module' => 'Lesson Module',
         ]);
 
         if ($request->hasFile('resources')) {
@@ -184,9 +164,7 @@ class LessonController extends Controller
             }
 
             foreach ($files as $resource) {
-                if ($resource->getSize() > 10 * 1024 * 1024) {
-                    continue;
-                }
+                if ($resource->getSize() > 10 * 1024 * 1024) continue;
 
                 $path = $resource->store('lesson-resources/' . $lesson->id, 'public');
                 LessonResource::create([
@@ -200,17 +178,24 @@ class LessonController extends Controller
             }
         }
 
+        if (!empty($validated['resource_url'])) {
+            LessonResource::create([
+                'lesson_id' => $lesson->id,
+                'resource_type' => 'url',
+                'file_name' => 'External Link',
+                'file_path' => $validated['resource_url'],
+                'file_size' => 0,
+                'mime_type' => 'url',
+            ]);
+        }
+
         return redirect()->route('teacher.lessons.index')
             ->with('success', 'Lesson created successfully!');
     }
 
-    /**
-     * Display the specified lesson.
-     */
     public function show(Lesson $lesson)
     {
         Gate::authorize('view', $lesson);
-
         $lesson->load('resources');
 
         return Inertia::render('Teacher/Lessons/Show', [
@@ -244,22 +229,16 @@ class LessonController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified lesson.
-     */
     public function edit(Lesson $lesson)
     {
         Gate::authorize('update', $lesson);
-
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
         $statuses = ['draft', 'published', 'archived'];
-        $weeks = array_map(function ($i) {
-            return 'Week ' . $i;
-        }, range(1, 12));
+        $weeks = array_map(function ($i) { return 'Week ' . $i; }, range(1, 12));
 
         $lesson->load('resources');
 
@@ -302,9 +281,6 @@ class LessonController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified lesson.
-     */
     public function update(Request $request, Lesson $lesson)
     {
         Gate::authorize('update', $lesson);
@@ -328,6 +304,7 @@ class LessonController extends Controller
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
             'deleted_resource_ids' => 'nullable|string',
+            'resource_url' => 'nullable|url',
         ]);
 
         $lesson->update($validated);
@@ -342,7 +319,7 @@ class LessonController extends Controller
                     ->get();
 
                 foreach ($resourcesToDelete as $resource) {
-                    if (Storage::disk('public')->exists($resource->file_path)) {
+                    if ($resource->resource_type !== 'url' && Storage::disk('public')->exists($resource->file_path)) {
                         Storage::disk('public')->delete($resource->file_path);
                     }
                     $resource->delete();
@@ -351,17 +328,18 @@ class LessonController extends Controller
         }
 
         ActivityLog::create([
-            'user_id'             => auth()->id(),
-            'user_role'           => 'teacher',
-            'activity_type'       => 'update',
-            'activity_description'=> 'Updated lesson "' . $lesson->lesson_title . '"',
-            'related_module'      => 'Lesson Module',
+            'user_id' => auth()->id(),
+            'user_role' => 'teacher',
+            'activity_type' => 'update',
+            'activity_description' => 'Updated lesson "' . $lesson->lesson_title . '"',
+            'related_module' => 'Lesson Module',
         ]);
 
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
-
-            $currentResourceCount = $lesson->resources()->count();
+            $currentResourceCount = $lesson->resources()
+                ->where('resource_type', '!=', 'url')
+                ->count();
             $maxNewFiles = 5 - $currentResourceCount;
 
             if (count($files) > $maxNewFiles) {
@@ -371,9 +349,7 @@ class LessonController extends Controller
             }
 
             foreach ($files as $resource) {
-                if ($resource->getSize() > 10 * 1024 * 1024) {
-                    continue;
-                }
+                if ($resource->getSize() > 10 * 1024 * 1024) continue;
 
                 $path = $resource->store('lesson-resources/' . $lesson->id, 'public');
                 LessonResource::create([
@@ -387,121 +363,107 @@ class LessonController extends Controller
             }
         }
 
+        // ✅ Handle URL resource – only act if the field was explicitly sent
+        if ($request->has('resource_url')) {
+            LessonResource::where('lesson_id', $lesson->id)
+                ->where('resource_type', 'url')
+                ->delete();
+
+            if (!empty($validated['resource_url'])) {
+                LessonResource::create([
+                    'lesson_id' => $lesson->id,
+                    'resource_type' => 'url',
+                    'file_name' => 'External Link',
+                    'file_path' => $validated['resource_url'],
+                    'file_size' => 0,
+                    'mime_type' => 'url',
+                ]);
+            }
+        }
+
         return redirect()->route('teacher.lessons.index')
             ->with('success', 'Lesson updated successfully!');
     }
 
-    /**
-     * Remove the specified lesson.
-     */
     public function destroy(Lesson $lesson)
     {
         Gate::authorize('delete', $lesson);
 
         foreach ($lesson->resources as $resource) {
-            if (Storage::disk('public')->exists($resource->file_path)) {
+            if ($resource->resource_type !== 'url' && Storage::disk('public')->exists($resource->file_path)) {
                 Storage::disk('public')->delete($resource->file_path);
             }
             $resource->delete();
         }
-
         $lesson->delete();
 
         ActivityLog::create([
-            'user_id'             => auth()->id(),
-            'user_role'           => 'teacher',
-            'activity_type'       => 'delete',
-            'activity_description'=> 'Deleted lesson "' . $lesson->lesson_title . '"',
-            'related_module'      => 'Lesson Module',
+            'user_id' => auth()->id(),
+            'user_role' => 'teacher',
+            'activity_type' => 'delete',
+            'activity_description' => 'Deleted lesson "' . $lesson->lesson_title . '"',
+            'related_module' => 'Lesson Module',
         ]);
 
-        return redirect()->route('teacher.lessons.index')
-            ->with('success', 'Lesson deleted successfully!');
+        return redirect()->route('teacher.lessons.index')->with('success', 'Lesson deleted successfully!');
     }
 
-    /**
-     * Publish a lesson.
-     */
     public function publish(Lesson $lesson)
     {
         Gate::authorize('update', $lesson);
-
-        $lesson->update([
-            'status' => 'published',
-            'publish_date' => now()->format('Y-m-d'),
-        ]);
+        $lesson->update(['status' => 'published', 'publish_date' => now()->format('Y-m-d')]);
 
         ActivityLog::create([
-            'user_id'             => auth()->id(),
-            'user_role'           => 'teacher',
-            'activity_type'       => 'publish',
-            'activity_description'=> 'Published lesson "' . $lesson->lesson_title . '"',
-            'related_module'      => 'Lesson Module',
+            'user_id' => auth()->id(),
+            'user_role' => 'teacher',
+            'activity_type' => 'publish',
+            'activity_description' => 'Published lesson "' . $lesson->lesson_title . '"',
+            'related_module' => 'Lesson Module',
         ]);
 
-        return redirect()->route('teacher.lessons.index')
-            ->with('success', 'Lesson published successfully!');
+        return redirect()->route('teacher.lessons.index')->with('success', 'Lesson published successfully!');
     }
 
-    /**
-     * Archive a lesson.
-     */
     public function archive(Lesson $lesson)
     {
         Gate::authorize('update', $lesson);
-
         $lesson->update(['status' => 'archived']);
 
         ActivityLog::create([
-            'user_id'             => auth()->id(),
-            'user_role'           => 'teacher',
-            'activity_type'       => 'archive',
-            'activity_description'=> 'Archived lesson "' . $lesson->lesson_title . '"',
-            'related_module'      => 'Lesson Module',
+            'user_id' => auth()->id(),
+            'user_role' => 'teacher',
+            'activity_type' => 'archive',
+            'activity_description' => 'Archived lesson "' . $lesson->lesson_title . '"',
+            'related_module' => 'Lesson Module',
         ]);
 
-        return redirect()->route('teacher.lessons.index')
-            ->with('success', 'Lesson archived successfully!');
+        return redirect()->route('teacher.lessons.index')->with('success', 'Lesson archived successfully!');
     }
 
-    /**
-     * Download a lesson resource.
-     */
     public function downloadResource($resourceId)
     {
         $resource = LessonResource::findOrFail($resourceId);
-
-        $lesson = $resource->lesson;
-        if (!$lesson) {
-            abort(404, 'Resource not associated with any lesson.');
-        }
+        $lesson   = $resource->lesson;
+        if (!$lesson) abort(404, 'Resource not associated with any lesson.');
 
         Gate::authorize('view', $lesson);
 
-        $filePath = storage_path('app/public/' . $resource->file_path);
-
-        if (!file_exists($filePath)) {
-            abort(404, 'File not found.');
+        if ($resource->resource_type === 'url') {
+            return redirect()->away($resource->file_path);
         }
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+        if (!file_exists($filePath)) abort(404, 'File not found.');
 
         return response()->download($filePath, $resource->file_name);
     }
 
-    /**
-     * Determine resource type based on file.
-     */
     private function determineResourceType(\Illuminate\Http\UploadedFile $file): string
     {
         $mimeType = $file->getMimeType();
-
-        if (str_contains($mimeType, 'pdf')) {
-            return 'pdf_module';
-        } elseif (str_contains($mimeType, 'image')) {
-            return 'image';
-        } elseif (str_contains($mimeType, 'word') || str_contains($mimeType, 'document')) {
-            return 'worksheet';
-        }
-
+        if (str_contains($mimeType, 'pdf')) return 'pdf_module';
+        if (str_contains($mimeType, 'image')) return 'image';
+        if (str_contains($mimeType, 'word') || str_contains($mimeType, 'document')) return 'worksheet';
         return 'worksheet';
     }
 }

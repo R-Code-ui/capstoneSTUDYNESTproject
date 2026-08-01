@@ -13,7 +13,7 @@ function buildBank(letters) {
     }));
 }
 
-function DraggableTile({ id, letter }) {
+function DraggableTile({ id, letter, onClick }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -26,6 +26,7 @@ function DraggableTile({ id, letter }) {
             style={style}
             {...listeners}
             {...attributes}
+            onClick={onClick}
             className="w-14 h-14 flex items-center justify-center rounded-2xl bg-indigo-500 shadow-[0_4px_0_rgb(67,56,202)] text-white text-2xl font-black cursor-grab active:cursor-grabbing hover:bg-indigo-600 touch-none select-none"
         >
             {letter}
@@ -101,6 +102,26 @@ export default function WordBuilder({ content, onComplete, onExit, onProgress, i
         }
     };
 
+    const handlePlaceTile = (tileKey) => {
+        if (feedback) return;
+
+        const tileIdx = bank.findIndex((t) => t.key === tileKey);
+        if (tileIdx === -1) return;
+
+        const letter = bank[tileIdx].letter;
+        const nextEmpty = slots.findIndex((slot) => slot === null);
+        if (nextEmpty === -1) return;
+
+        const newSlots = [...slots];
+        newSlots[nextEmpty] = letter;
+        setSlots(newSlots);
+        setBank(bank.filter((_, i) => i !== tileIdx));
+
+        if (newSlots.every((s) => s !== null)) {
+            checkRound(newSlots);
+        }
+    };
+
     const handleRemove = (slotIdx) => {
         if (feedback) return;
         const letter = slots[slotIdx];
@@ -140,6 +161,7 @@ export default function WordBuilder({ content, onComplete, onExit, onProgress, i
                     {round.image}
                 </div>
 
+                <p className="text-center text-sm text-indigo-500 font-medium">Tap a letter to add it to the word, or drag to place it.</p>
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                     <div className="flex gap-3 justify-center flex-wrap">
                         {slots.map((letter, i) => (
@@ -150,7 +172,7 @@ export default function WordBuilder({ content, onComplete, onExit, onProgress, i
                     <div className="w-full border-t border-indigo-100 pt-6">
                         <div className="flex flex-wrap gap-3 justify-center min-h-[4rem]">
                             {bank.map((tile) => (
-                                <DraggableTile key={tile.key} id={tile.key} letter={tile.letter} />
+                                <DraggableTile key={tile.key} id={tile.key} letter={tile.letter} onClick={() => handlePlaceTile(tile.key)} />
                             ))}
                         </div>
                     </div>

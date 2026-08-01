@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
@@ -15,7 +14,6 @@ import {
     PhotoIcon,
     PaperClipIcon,
     XMarkIcon,
-    PlusIcon,
 } from '@heroicons/react/24/outline';
 
 export default function LessonsEdit({
@@ -29,7 +27,12 @@ export default function LessonsEdit({
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileErrors, setFileErrors] = useState([]);
-    const [existingResources, setExistingResources] = useState(lesson.resources || []);
+
+    // Existing file resources (ignore any 'url' resources if present)
+    const initialResources = lesson.resources || [];
+    const existingFileResources = initialResources.filter(r => r.type !== 'url');
+
+    const [existingResources, setExistingResources] = useState(existingFileResources);
     const [deletedResourceIds, setDeletedResourceIds] = useState([]);
 
     const { data, setData, errors, put } = useForm({
@@ -63,9 +66,7 @@ export default function LessonsEdit({
         const formData = new FormData();
         Object.keys(data).forEach((key) => {
             if (key === 'resources') {
-                data.resources.forEach((file) => {
-                    formData.append('resources[]', file);
-                });
+                data.resources.forEach((file) => formData.append('resources[]', file));
             } else if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
                 formData.append(key, data[key]);
             }
@@ -93,11 +94,11 @@ export default function LessonsEdit({
             'image/jpg',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         ];
 
         const maxSize = 2 * 1024 * 1024;
         const maxFiles = 5;
-
         const currentTotal = existingResources.length + data.resources.length;
 
         if (files.length + currentTotal > maxFiles) {
@@ -109,7 +110,7 @@ export default function LessonsEdit({
 
         files.forEach((file) => {
             if (!allowedTypes.includes(file.type)) {
-                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, or DOCX files.`);
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, DOCX, or PPTX files.`);
                 return;
             }
             if (file.size > maxSize) {
@@ -143,15 +144,10 @@ export default function LessonsEdit({
 
     const getFileIcon = (fileName) => {
         const ext = fileName.split('.').pop().toLowerCase();
-        if (['pdf'].includes(ext)) {
-            return <DocumentIcon className="w-5 h-5 text-red-500" />;
-        }
-        if (['jpg', 'jpeg', 'png'].includes(ext)) {
-            return <PhotoIcon className="w-5 h-5 text-emerald-500" />;
-        }
-        if (['doc', 'docx'].includes(ext)) {
-            return <DocumentIcon className="w-5 h-5 text-blue-500" />;
-        }
+        if (['pdf'].includes(ext)) return <DocumentIcon className="w-5 h-5 text-red-500" />;
+        if (['jpg', 'jpeg', 'png'].includes(ext)) return <PhotoIcon className="w-5 h-5 text-emerald-500" />;
+        if (['doc', 'docx'].includes(ext)) return <DocumentIcon className="w-5 h-5 text-blue-500" />;
+        if (['ppt', 'pptx'].includes(ext)) return <DocumentIcon className="w-5 h-5 text-orange-500" />;
         return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
     };
 
@@ -160,6 +156,7 @@ export default function LessonsEdit({
         if (['pdf'].includes(ext)) return 'PDF Module';
         if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
         if (['doc', 'docx'].includes(ext)) return 'Worksheet';
+        if (['ppt', 'pptx'].includes(ext)) return 'PowerPoint';
         return 'Worksheet';
     };
 
@@ -366,10 +363,10 @@ export default function LessonsEdit({
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
 
-                                {/* Existing Resources */}
+                                {/* Existing File Resources */}
                                 {existingResources.length > 0 && (
                                     <div className="mb-4">
-                                        <p className="text-sm font-medium text-gray-700 mb-2">Current Resources:</p>
+                                        <p className="text-sm font-medium text-gray-700 mb-2">Current Files:</p>
                                         <div className="space-y-1">
                                             {existingResources.map((resource) => (
                                                 <div key={resource.id} className="flex items-center justify-between text-sm text-gray-600 p-2 bg-gray-50 rounded-lg border border-gray-100">
@@ -390,21 +387,21 @@ export default function LessonsEdit({
                                             ))}
                                         </div>
                                         <p className="text-xs text-gray-500 mt-1">
-                                            Total: {existingResources.length} of 5 files
+                                            Files: {existingResources.length} of 5
                                         </p>
                                     </div>
                                 )}
 
-                                {/* New Resources Upload */}
-                                <div>
-                                    <InputLabel htmlFor="resources" value="Add New Resources (Max 5 files, 2MB each)" />
+                                {/* New Files Upload */}
+                                <div className="mb-4">
+                                    <InputLabel htmlFor="resources" value="Add New Files (Max 5 files total, 2MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
                                         multiple
                                         onChange={handleFileChange}
                                         className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
@@ -438,7 +435,7 @@ export default function LessonsEdit({
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX (Max 2MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX, PPTX (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>

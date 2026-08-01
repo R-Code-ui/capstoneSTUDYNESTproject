@@ -11,6 +11,7 @@ import {
     ArrowLeftIcon,
     PencilSquareIcon,
     ChartBarIcon,
+    EyeIcon,
 } from '@heroicons/react/24/outline';
 
 export default function GamesShow({ game }) {
@@ -23,7 +24,7 @@ export default function GamesShow({ game }) {
         return statusMap[status] || status;
     };
 
-    // 🔧 FIX: Added truncation to student_name column
+    // Results table columns
     const resultsColumns = [
         {
             key: 'student_name',
@@ -63,12 +64,12 @@ export default function GamesShow({ game }) {
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         {game.game_title}
                     </span>
                     <div className="flex flex-wrap gap-2">
+                        {/* View Game button removed */}
                         <Link href={route('teacher.games.results', game.id)}>
                             <SecondaryButton>
                                 <ChartBarIcon className="w-4 h-4 mr-1" />

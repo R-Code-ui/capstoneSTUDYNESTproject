@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -148,6 +149,15 @@ class MessageController extends Controller
             'status'      => 'unread',
         ]);
 
+        // ✅ Log: student sent a message
+        ActivityLog::create([
+            'user_id'             => $student->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'send',
+            'activity_description'=> 'Sent a message to teacher: "' . $teacher->name . '"',
+            'related_module'      => 'Message Module',
+        ]);
+
         return redirect()->route('student.messages.show', $message->id)
             ->with('success', 'Your question has been sent to the teacher!');
     }
@@ -230,6 +240,15 @@ class MessageController extends Controller
         ]);
 
         $message->update(['status' => 'replied']);
+
+        // ✅ Log: student replied to a message
+        ActivityLog::create([
+            'user_id'             => $user->id,
+            'user_role'           => 'student',
+            'activity_type'       => 'send',
+            'activity_description'=> 'Replied to message from teacher',
+            'related_module'      => 'Message Module',
+        ]);
 
         return redirect()->route('student.messages.show', $reply->id)
             ->with('success', 'Your reply has been sent!');

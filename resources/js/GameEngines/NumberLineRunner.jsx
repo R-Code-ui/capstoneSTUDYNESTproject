@@ -23,7 +23,11 @@ export default function NumberLineRunner({ content, onComplete, onExit, onProgre
     const handleSelect = (num) => {
         if (feedback) return;
         setSelected(num);
-        const isCorrect = num === round.answer;
+    };
+
+    const handleSubmit = () => {
+        if (selected === null || feedback) return;
+        const isCorrect = selected === round.answer;
         const newCorrect = correctCount + (isCorrect ? 1 : 0);
         setFeedback(isCorrect ? 'correct' : 'incorrect');
 
@@ -40,6 +44,11 @@ export default function NumberLineRunner({ content, onComplete, onExit, onProgre
                 onComplete(finalScore);
             }
         }, 900);
+    };
+
+    const handleClearSelection = () => {
+        if (feedback) return;
+        setSelected(null);
     };
 
     return (
@@ -64,6 +73,7 @@ export default function NumberLineRunner({ content, onComplete, onExit, onProgre
                             let stateStyle = "bg-white border-blue-200 text-blue-900 hover:border-blue-400";
 
                             if (isStart) stateStyle = "bg-blue-500 border-blue-600 text-white shadow-blue-200";
+                            if (isSelected && !feedback) stateStyle = "bg-cyan-100 border-cyan-500 text-cyan-900";
                             if (isSelected && feedback === 'correct') stateStyle = "bg-green-500 border-green-600 text-white";
                             if (isSelected && feedback === 'incorrect') stateStyle = "bg-red-500 border-red-600 text-white";
                             if (isCorrectAnswer && !isSelected) stateStyle = "bg-green-100 border-green-400 text-green-700";
@@ -77,6 +87,17 @@ export default function NumberLineRunner({ content, onComplete, onExit, onProgre
                         })}
                     </div>
                 </div>
+
+                {!feedback && selected !== null && (
+                    <div className="flex items-center justify-center gap-4">
+                        <button type="button" onClick={handleSubmit} className="px-6 py-3 rounded-full bg-blue-600 text-white font-black shadow-lg hover:bg-blue-700">
+                            Submit
+                        </button>
+                        <button type="button" onClick={handleClearSelection} className="px-6 py-3 rounded-full bg-white text-blue-700 font-black border border-blue-200 shadow-sm hover:bg-blue-50">
+                            Undo
+                        </button>
+                    </div>
+                )}
 
                 <div className="h-10 flex items-center justify-center">
                     {feedback && (

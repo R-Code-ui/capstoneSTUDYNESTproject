@@ -25,7 +25,7 @@ export default function GamesCreate({
         game_title: '',
         game_type: 'literacy',
         game_data: {},
-        max_attempts: 1,
+        max_attempts: 5,            // ✅ default changed to 5
         due_date: '',
         status: 'draft',
     });
@@ -57,6 +57,7 @@ export default function GamesCreate({
             title: gameTitle,
             type: selectedType,
             grade: selectedGrade,
+            difficulty: 'standard',
             instructions: `Play the ${gameTitle} game. Follow the instructions to complete the activity.`,
         });
     };
@@ -198,7 +199,22 @@ export default function GamesCreate({
                                 <h4 className="font-medium text-gray-800 mb-4">Game Settings</h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <InputLabel htmlFor="max_attempts" value="Max Attempts" />
+                                        <InputLabel htmlFor="difficulty" value="Difficulty" />
+                                        <select
+                                            id="difficulty"
+                                            value={data.game_data?.difficulty || 'standard'}
+                                            onChange={(e) => setData('game_data', { ...data.game_data, difficulty: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
+                                            disabled={!data.game_title}
+                                        >
+                                            <option value="guided">Guided — fewer questions</option>
+                                            <option value="standard">Standard — grade-level practice</option>
+                                            <option value="challenge">Challenge — more questions</option>
+                                        </select>
+                                        <p className="mt-1 text-xs text-gray-500">The game stays aligned to the selected grade.</p>
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="max_attempts" value="Max Attempts (5 Maximum)" />  {/* ✅ updated label */}
                                         <TextInput
                                             id="max_attempts"
                                             type="number"

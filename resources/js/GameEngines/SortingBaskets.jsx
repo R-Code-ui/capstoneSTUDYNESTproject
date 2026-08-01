@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { DndContext, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import GameShell from './GameShell';
 
-function DraggableItem({ id, value, placed }) {
+function DraggableItem({ id, value, placed, onClick, selected }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: !!placed });
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -16,8 +16,10 @@ function DraggableItem({ id, value, placed }) {
             style={style}
             {...listeners}
             {...attributes}
-            className={`w-16 h-16 flex items-center justify-center rounded-2xl bg-orange-400 text-white text-xl font-black shadow-[0_4px_0_rgb(194,65,12)] hover:bg-orange-500 touch-none select-none
+            onClick={onClick}
+            className={`w-16 h-16 flex items-center justify-center rounded-2xl bg-orange-400 text-white text-xl font-black shadow-[0_4px_0_rgb(194,65,12)] touch-none select-none
                 ${placed ? 'opacity-0' : 'opacity-100'}
+                ${selected ? 'ring-2 ring-indigo-300' : ''}
             `}
         >
             {value}
@@ -25,23 +27,24 @@ function DraggableItem({ id, value, placed }) {
     );
 }
 
-function Basket({ id, label, count }) {
+function Basket({ id, label, count, onClick, active }) {
     const { setNodeRef, isOver } = useDroppable({ id });
     return (
-        <div
+        <button
+            type="button"
             ref={setNodeRef}
+            onClick={onClick}
+            disabled={!onClick}
             className={`flex-1 min-h-[160px] rounded-3xl border-4 border-dashed flex flex-col items-center justify-center gap-3
-                ${isOver
-                    ? 'border-indigo-400 bg-indigo-50 shadow-xl'
-                    : 'border-indigo-200 bg-white shadow-md'
-                }
+                ${onClick ? 'cursor-pointer' : 'cursor-default'}
+                ${isOver || active ? 'border-indigo-400 bg-indigo-50' : 'border-indigo-200 bg-white'}
             `}
         >
             <span className="text-xl font-black text-indigo-900">{label}</span>
             <div className="bg-indigo-100 px-4 py-1 rounded-full text-sm font-bold text-indigo-600">
                 {count} items
             </div>
-        </div>
+        </button>
     );
 }
 
@@ -57,6 +60,7 @@ export default function SortingBaskets({ content, onComplete, onExit, onProgress
         }));
     });
     const [finished, setFinished] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -94,6 +98,34 @@ export default function SortingBaskets({ content, onComplete, onExit, onProgress
             updateProgress(updated);
             return updated;
         });
+        setSelectedItem(null);
+    };
+
+    const placeItem = (itemId, basketLabel) => {
+        if (finished || !itemId) return;
+
+        setItems((prev) => {
+            const updated = prev.map((it) =>
+                it.id === itemId ? { ...it, placed: basketLabel } : it
+            );
+            const allPlaced = updated.every((it) => it.placed !== null);
+            if (allPlaced) {
+                const correct = updated.filter((it) => it.placed === it.type).length;
+                const finalScore = Math.round((correct / updated.length) * 100);
+                setFinished(true);
+                setTimeout(() => onComplete(finalScore), 600);
+            }
+            updateProgress(updated);
+            return updated;
+        });
+        setSelectedItem(null);
+    };
+
+    const handleSelectItem = (itemId) => {
+        if (finished) return;
+        const item = items.find((it) => it.id === itemId);
+        if (!item || item.placed !== null) return;
+        setSelectedItem((prev) => (prev === itemId ? null : itemId));
     };
 
     return (
@@ -102,13 +134,21 @@ export default function SortingBaskets({ content, onComplete, onExit, onProgress
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                     <div className="flex flex-wrap gap-4 justify-center min-h-[5rem] p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
                         {items.filter((i) => !i.placed).map((it) => (
-                            <DraggableItem key={it.id} id={it.id} value={it.value} placed={it.placed} />
+                            <DraggableItem
+                                key={it.id}
+                                id={it.id}
+                                value={it.value}
+                                placed={it.placed}
+                                selected={selectedItem === it.id}
+                                onClick={() => handleSelectItem(it.id)}
+                            />
                         ))}
                     </div>
                     <div className="flex gap-6">
-                        <Basket id="basket-A" label={round.basketA} count={basketACount} />
-                        <Basket id="basket-B" label={round.basketB} count={basketBCount} />
+                        <Basket id="basket-A" label={round.basketA} count={basketACount} onClick={() => selectedItem && placeItem(selectedItem, round.basketA)} active={selectedItem !== null} />
+                        <Basket id="basket-B" label={round.basketB} count={basketBCount} onClick={() => selectedItem && placeItem(selectedItem, round.basketB)} active={selectedItem !== null} />
                     </div>
+                    <p className="text-center text-sm text-slate-500 font-medium uppercase tracking-widest">Tap an item, then tap a basket to sort it, or drag to sort.</p>
                 </DndContext>
                 {finished && (
                     <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-200">

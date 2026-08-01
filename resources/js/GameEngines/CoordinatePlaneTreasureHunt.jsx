@@ -34,8 +34,11 @@ export default function CoordinatePlaneTreasureHunt({ content, onComplete, onExi
     const handlePointClick = (px, py) => {
         if (feedback) return;
         setSelected({ x: px, y: py });
+    };
 
-        const isCorrect = px === round.x && py === round.y;
+    const handleSubmit = () => {
+        if (!selected || feedback) return;
+        const isCorrect = selected.x === round.x && selected.y === round.y;
         const newCorrect = correctCount + (isCorrect ? 1 : 0);
         setFeedback(isCorrect ? 'correct' : 'incorrect');
 
@@ -52,6 +55,11 @@ export default function CoordinatePlaneTreasureHunt({ content, onComplete, onExi
                 onComplete(finalScore);
             }
         }, 900);
+    };
+
+    const handleClearSelection = () => {
+        if (feedback) return;
+        setSelected(null);
     };
 
     return (
@@ -111,6 +119,25 @@ export default function CoordinatePlaneTreasureHunt({ content, onComplete, onExi
                             })
                         )}
                     </svg>
+
+                    {!feedback && selected && (
+                        <div className="flex items-center justify-center gap-4">
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                className="px-6 py-3 rounded-full bg-teal-600 text-white font-black shadow-lg hover:bg-teal-700"
+                            >
+                                Submit
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleClearSelection}
+                                className="px-6 py-3 rounded-full bg-white text-teal-700 font-black border border-teal-200 shadow-sm hover:bg-teal-50"
+                            >
+                                Undo
+                            </button>
+                        </div>
+                    )}
 
                     {feedback && (
                         <div className={`text-xl font-black ${feedback === 'correct' ? 'text-green-600' : 'text-red-600'}`}>

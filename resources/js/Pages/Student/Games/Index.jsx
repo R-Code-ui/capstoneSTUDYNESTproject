@@ -6,6 +6,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Pagination from '@/Components/Pagination';
+import { getGameArt } from '@/GameEngines/gameArt';
 import {
     BookOpenIcon,
     CalculatorIcon,
@@ -174,12 +175,21 @@ export default function GamesIndex({
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {games.map((game, index) => {
                                             const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
+                                            const art = getGameArt(game.title, game.game_type);
                                             return (
                                                 <div
                                                     key={game.id}
                                                     className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
                                                 >
                                                     <div className="p-6">
+                                                        <div className={`relative mb-4 h-24 overflow-hidden rounded-2xl bg-gradient-to-br ${art.theme} p-4 shadow-inner`}>
+                                                            <div className="absolute -right-4 -top-7 text-8xl opacity-25 rotate-12" aria-hidden="true">{art.icon}</div>
+                                                            <div className="absolute -bottom-6 left-10 h-16 w-16 rounded-full bg-white/15" aria-hidden="true" />
+                                                            <div className="relative flex h-full items-end gap-3">
+                                                                <span className="text-4xl drop-shadow-sm" aria-hidden="true">{art.icon}</span>
+                                                                <span className="mb-1 text-sm font-black uppercase tracking-wider text-white">{art.label}</span>
+                                                            </div>
+                                                        </div>
                                                         <div className="flex flex-wrap items-start justify-between gap-2">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm">

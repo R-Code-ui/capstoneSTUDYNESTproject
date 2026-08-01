@@ -18,9 +18,12 @@ export default function AnalogySolver({ content, onComplete, onExit, onProgress,
 
     const handlePick = (option) => {
         if (feedback) return;
-
         setSelected(option);
-        const isCorrect = option === round.correct;
+    };
+
+    const handleSubmit = () => {
+        if (!selected || feedback) return;
+        const isCorrect = selected === round.correct;
         const newCorrect = correctCount + (isCorrect ? 1 : 0);
         setFeedback(isCorrect ? 'correct' : 'incorrect');
 
@@ -37,6 +40,11 @@ export default function AnalogySolver({ content, onComplete, onExit, onProgress,
                 onComplete(finalScore);
             }
         }, 900);
+    };
+
+    const handleClearSelection = () => {
+        if (feedback) return;
+        setSelected(null);
     };
 
     return (
@@ -65,9 +73,10 @@ export default function AnalogySolver({ content, onComplete, onExit, onProgress,
                                     onClick={() => handlePick(opt)}
                                     disabled={!!feedback}
                                     className={`px-4 py-4 rounded-2xl font-black text-lg shadow-lg border-b-4 active:scale-95 transition
+                                        ${isSelected && !feedback ? 'bg-cyan-100 border-cyan-500 text-cyan-900' : ''}
                                         ${showCorrect ? 'bg-green-400 border-green-600 text-white' : ''}
                                         ${showWrongSelected ? 'bg-red-400 border-red-600 text-white' : ''}
-                                        ${!feedback ? 'bg-white border-cyan-200 text-gray-700 hover:border-cyan-400' : ''}
+                                        ${!feedback && !isSelected ? 'bg-white border-cyan-200 text-gray-700 hover:border-cyan-400' : ''}
                                         ${feedback && !showCorrect && !showWrongSelected ? 'bg-white border-gray-100 text-gray-300' : ''}
                                     `}
                                 >
@@ -76,6 +85,25 @@ export default function AnalogySolver({ content, onComplete, onExit, onProgress,
                             );
                         })}
                     </div>
+
+                    {!feedback && selected && (
+                        <div className="flex items-center justify-center gap-4 mt-4">
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                className="px-6 py-3 rounded-full bg-cyan-600 text-white font-black shadow-lg hover:bg-cyan-700"
+                            >
+                                Submit
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleClearSelection}
+                                className="px-6 py-3 rounded-full bg-white text-cyan-700 font-black border border-cyan-200 shadow-sm hover:bg-cyan-50"
+                            >
+                                Undo
+                            </button>
+                        </div>
+                    )}
 
                     {feedback && (
                         <div className={`text-xl font-black ${feedback === 'correct' ? 'text-green-600' : 'text-red-600'}`}>

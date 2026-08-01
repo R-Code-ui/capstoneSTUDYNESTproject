@@ -126,7 +126,7 @@ export default function IdiomMatch({ content, onComplete, onExit, onProgress, in
                 </DndContext>
 
                 <p className="text-xs text-gray-400 mt-6 text-center uppercase tracking-widest font-bold">
-                    Drag each idiom to its true meaning
+                    Tap or drag each idiom to its true meaning
                 </p>
             </div>
         </GameShell>

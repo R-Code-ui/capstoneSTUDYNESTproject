@@ -6,7 +6,7 @@ function shuffle(arr) {
     return [...arr].sort(() => Math.random() - 0.5);
 }
 
-function DraggableWord({ id, word, used }) {
+function DraggableWord({ id, word, used, onClick }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: used });
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -21,6 +21,7 @@ function DraggableWord({ id, word, used }) {
             {...listeners}
             {...attributes}
             disabled={used}
+            onClick={() => !used && onClick?.(word)}
             className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-[0_4px_0_rgb(67,56,202)] touch-none select-none
                 ${used
                     ? 'opacity-20 cursor-default'
@@ -102,6 +103,31 @@ export default function StoryFillIn({ content, onComplete, onExit, onProgress, i
         }
     };
 
+    const handleSelectWord = (selectedWord) => {
+        const nextBlank = filledBlanks.findIndex((b) => b === null);
+        if (nextBlank === -1) return;
+
+        if (blanks[nextBlank] === selectedWord) {
+            const newFilled = [...filledBlanks];
+            newFilled[nextBlank] = selectedWord;
+            const newUsed = [...usedWords, selectedWord];
+            setFilledBlanks(newFilled);
+            setUsedWords(newUsed);
+            updateProgress({ filledBlanks: newFilled, usedWords: newUsed, wrongAttempts });
+
+            if (newFilled.every((b) => b !== null)) {
+                const finalScore = Math.max(0, 100 - wrongAttempts * 10);
+                setTimeout(() => onComplete(finalScore), 500);
+            }
+        } else {
+            const newWrongAttempts = wrongAttempts + 1;
+            setWrongAttempts(newWrongAttempts);
+            setWrongBlank(nextBlank);
+            updateProgress({ filledBlanks, usedWords, wrongAttempts: newWrongAttempts });
+            setTimeout(() => setWrongBlank(null), 500);
+        }
+    };
+
     const parts = paragraph.split(/\{(\d+)\}/);
 
     return (
@@ -126,6 +152,7 @@ export default function StoryFillIn({ content, onComplete, onExit, onProgress, i
                     </div>
                     <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 shadow-inner">
                         <p className="text-center text-indigo-400 font-bold mb-4 uppercase tracking-wider text-sm">Word Bank</p>
+                        <p className="text-center text-sm text-indigo-500 mb-4">Tap a word to fill the next blank, or drag it into the right space.</p>
                         <div className="flex flex-wrap gap-3 justify-center">
                             {bankOrder.map((word) => (
                                 <DraggableWord
@@ -133,6 +160,7 @@ export default function StoryFillIn({ content, onComplete, onExit, onProgress, i
                                     id={`word-${word}`}
                                     word={word}
                                     used={usedWords.includes(word)}
+                                    onClick={handleSelectWord}
                                 />
                             ))}
                         </div>

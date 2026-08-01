@@ -18,12 +18,40 @@ class GameController extends Controller
     public function index(Request $request)
     {
         $student = auth()->user();
+        $search = $request->input('search');
+        $gameType = $request->input('game_type');
+        $statusFilter = $request->input('status'); // 'assigned', 'started', 'completed'
 
-        $games = Game::where('grade_level', $student->grade_level)
+        $gamesQuery = Game::where('grade_level', $student->grade_level)
             ->where('status', 'published')
             ->with('results')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->when($search, function ($query, $search) {
+                return $query->where('game_title', 'like', "%{$search}%");
+            })
+            ->when($gameType, function ($query, $gameType) {
+                return $query->where('game_type', $gameType);
+            });
+
+        // Status filter
+        if ($statusFilter) {
+            if ($statusFilter === 'assigned') {
+                $gamesQuery->whereDoesntHave('results', function ($q) use ($student) {
+                    $q->where('student_id', $student->id);
+                });
+            } elseif ($statusFilter === 'started') {
+                $gamesQuery->whereHas('results', function ($q) use ($student) {
+                    $q->where('student_id', $student->id)
+                      ->where('status', '!=', 'completed');
+                });
+            } elseif ($statusFilter === 'completed') {
+                $gamesQuery->whereHas('results', function ($q) use ($student) {
+                    $q->where('student_id', $student->id)
+                      ->where('status', 'completed');
+                });
+            }
+        }
+
+        $games = $gamesQuery->orderBy('created_at', 'desc')->paginate(10);
 
         return Inertia::render('Student/Games/Index', [
             'games' => $games->map(function ($game) use ($student) {
@@ -32,7 +60,6 @@ class GameController extends Controller
                 $highestScore = $results->where('status', 'completed')->max('score') ?? 0;
                 $attemptsRemaining = max(0, $game->max_attempts - $results->count());
 
-                // Determine status for the card
                 $hasStarted = $results->where('status', '!=', 'completed')->first();
                 if ($hasStarted) {
                     $status = 'started';
@@ -42,7 +69,6 @@ class GameController extends Controller
                     $status = 'assigned';
                 }
 
-                // Latest completed attempt (for "View Results" link)
                 $latestCompleted = $results->where('status', 'completed')->sortByDesc('completed_at')->first();
 
                 return [
@@ -60,9 +86,9 @@ class GameController extends Controller
                 ];
             }),
             'filters' => [
-                'search' => $request->input('search'),
-                'game_type' => $request->input('game_type'),
-                'status' => $request->input('status'),
+                'search' => $search,
+                'game_type' => $gameType,
+                'status' => $statusFilter,
             ],
             'pagination' => $games->toArray(),
         ]);
@@ -92,7 +118,6 @@ class GameController extends Controller
             $gameData = json_decode($gameData, true);
         }
 
-        // Latest completed attempt (for "View Results" link at the top)
         $latestCompleted = $completedResults->sortByDesc('completed_at')->first();
 
         return Inertia::render('Student/Games/Show', [
@@ -105,6 +130,7 @@ class GameController extends Controller
                 'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                 'teacher' => $game->teacher->name,
                 'instructions' => $gameData['instructions'] ?? 'Play and do your best!',
+                'difficulty' => $gameData['difficulty'] ?? 'standard',
             ],
             'can_play' => $canPlay,
             'attempts_remaining' => $attemptsRemaining,
@@ -163,6 +189,11 @@ class GameController extends Controller
 
         $game = $result->game;
 
+        $gameData = $game->game_data;
+        if (is_string($gameData)) {
+            $gameData = json_decode($gameData, true);
+        }
+
         return Inertia::render('Student/Games/Play', [
             'result' => [
                 'id' => $result->id,
@@ -171,6 +202,10 @@ class GameController extends Controller
             'game' => [
                 'id' => $game->id,
                 'title' => $game->game_title,
+                'grade_level' => $game->grade_level,
+                'settings' => [
+                    'difficulty' => $gameData['difficulty'] ?? 'standard'
+                ],
             ],
         ]);
     }
@@ -180,7 +215,6 @@ class GameController extends Controller
      */
     public function saveProgress(Request $request, GameResult $result)
     {
-        // ✅ Fix: use direct ownership check instead of a missing policy
         if ($result->student_id !== auth()->id()) {
             abort(403);
         }
@@ -255,6 +289,7 @@ class GameController extends Controller
             'game' => [
                 'id' => $game->id,
                 'title' => $game->game_title,
+                'game_type' => $game->game_type,
             ],
             'statistics' => [
                 'average_score' => round($averageScore, 2),

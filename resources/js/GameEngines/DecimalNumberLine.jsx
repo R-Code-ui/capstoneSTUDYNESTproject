@@ -25,7 +25,11 @@ export default function DecimalNumberLine({ content, onComplete, onExit, onProgr
     const handleSelect = (num) => {
         if (feedback) return;
         setSelected(num);
-        const isCorrect = Math.abs(num - round.answer) < 0.01;
+    };
+
+    const handleSubmit = () => {
+        if (selected === null || feedback) return;
+        const isCorrect = Math.abs(selected - round.answer) < 0.01;
         const newCorrect = correctCount + (isCorrect ? 1 : 0);
         setFeedback(isCorrect ? 'correct' : 'incorrect');
 
@@ -42,6 +46,11 @@ export default function DecimalNumberLine({ content, onComplete, onExit, onProgr
                 onComplete(finalScore);
             }
         }, 900);
+    };
+
+    const handleClearSelection = () => {
+        if (feedback) return;
+        setSelected(null);
     };
 
     return (
@@ -78,6 +87,7 @@ export default function DecimalNumberLine({ content, onComplete, onExit, onProgr
                                         disabled={!!feedback}
                                         className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-black border-2 shadow transition
                                             ${isStart ? 'border-fuchsia-400 bg-fuchsia-100' : 'border-gray-200 bg-white'}
+                                            ${isSelected && !feedback ? 'bg-fuchsia-100 border-fuchsia-500 text-fuchsia-900' : ''}
                                             ${isSelected && feedback === 'correct' ? 'bg-green-500 text-white border-green-500' : ''}
                                             ${isSelected && feedback === 'incorrect' ? 'bg-red-500 text-white border-red-500' : ''}
                                             ${isCorrectAnswer && !isSelected ? 'border-green-500 bg-green-100' : ''}
@@ -90,6 +100,17 @@ export default function DecimalNumberLine({ content, onComplete, onExit, onProgr
                             })}
                         </div>
                     </div>
+
+                    {!feedback && selected !== null && (
+                        <div className="flex items-center justify-center gap-4">
+                            <button type="button" onClick={handleSubmit} className="px-6 py-3 rounded-full bg-fuchsia-600 text-white font-black shadow-lg hover:bg-fuchsia-700">
+                                Submit
+                            </button>
+                            <button type="button" onClick={handleClearSelection} className="px-6 py-3 rounded-full bg-white text-fuchsia-700 font-black border border-fuchsia-200 shadow-sm hover:bg-fuchsia-50">
+                                Undo
+                            </button>
+                        </div>
+                    )}
 
                     {feedback && (
                         <div className={`text-xl font-black ${feedback === 'correct' ? 'text-green-600' : 'text-red-600'}`}>

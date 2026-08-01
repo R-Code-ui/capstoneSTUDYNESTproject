@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
@@ -30,6 +29,7 @@ export default function LessonsCreate({
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileErrors, setFileErrors] = useState([]);
+
     const { data, setData, errors, post } = useForm({
         grade_level: '',
         subject: '',
@@ -86,6 +86,7 @@ export default function LessonsCreate({
             'image/jpg',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         ];
 
         const maxSize = 2 * 1024 * 1024;
@@ -100,7 +101,7 @@ export default function LessonsCreate({
 
         files.forEach((file) => {
             if (!allowedTypes.includes(file.type)) {
-                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, or DOCX files.`);
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, DOCX, or PPTX files.`);
                 return;
             }
             if (file.size > maxSize) {
@@ -138,6 +139,9 @@ export default function LessonsCreate({
         if (['doc', 'docx'].includes(ext)) {
             return <DocumentIcon className="w-5 h-5 text-blue-500" />;
         }
+        if (['ppt', 'pptx'].includes(ext)) {
+            return <DocumentIcon className="w-5 h-5 text-orange-500" />;
+        }
         return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
     };
 
@@ -146,6 +150,7 @@ export default function LessonsCreate({
         if (['pdf'].includes(ext)) return 'PDF Module';
         if (['jpg', 'jpeg', 'png'].includes(ext)) return 'Image';
         if (['doc', 'docx'].includes(ext)) return 'Worksheet';
+        if (['ppt', 'pptx'].includes(ext)) return 'PowerPoint';
         return 'Worksheet';
     };
 
@@ -356,7 +361,7 @@ export default function LessonsCreate({
                                         multiple
                                         onChange={handleFileChange}
                                         className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
@@ -390,7 +395,7 @@ export default function LessonsCreate({
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX (Max 2MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX, PPTX (Max 2MB per file, Max 5 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>

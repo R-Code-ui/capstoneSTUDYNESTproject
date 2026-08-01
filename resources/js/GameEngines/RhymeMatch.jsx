@@ -18,9 +18,14 @@ export default function RhymeMatch({ content, onComplete, onExit, onProgress, in
 
     const handlePick = (option) => {
         if (feedback) return;
-
         setSelected(option.word);
-        const isCorrect = option.isRhyme;
+    };
+
+    const handleSubmit = () => {
+        if (!selected || feedback) return;
+
+        const option = round.options.find((opt) => opt.word === selected);
+        const isCorrect = option?.isRhyme;
         const newCorrect = correctCount + (isCorrect ? 1 : 0);
         setFeedback(isCorrect ? 'correct' : 'incorrect');
 
@@ -37,6 +42,11 @@ export default function RhymeMatch({ content, onComplete, onExit, onProgress, in
                 onComplete(finalScore);
             }
         }, 800);
+    };
+
+    const handleClearSelection = () => {
+        if (feedback) return;
+        setSelected(null);
     };
 
     return (
@@ -66,9 +76,10 @@ export default function RhymeMatch({ content, onComplete, onExit, onProgress, in
                                     onClick={() => handlePick(opt)}
                                     disabled={!!feedback}
                                     className={`px-4 py-4 rounded-2xl font-black text-lg uppercase shadow-lg border-b-4 active:scale-95 transition
+                                        ${isSelected && !feedback ? 'bg-rose-100 border-rose-500 text-rose-900' : ''}
                                         ${showCorrect ? 'bg-green-400 border-green-600 text-white' : ''}
                                         ${showWrongSelected ? 'bg-red-400 border-red-600 text-white' : ''}
-                                        ${!feedback ? 'bg-white border-rose-200 text-gray-700 hover:border-rose-400' : ''}
+                                        ${!feedback && !isSelected ? 'bg-white border-rose-200 text-gray-700 hover:border-rose-400' : ''}
                                         ${feedback && !showCorrect && !showWrongSelected ? 'bg-white border-gray-100 text-gray-300' : ''}
                                     `}
                                 >
@@ -77,6 +88,25 @@ export default function RhymeMatch({ content, onComplete, onExit, onProgress, in
                             );
                         })}
                     </div>
+
+                    {!feedback && selected && (
+                        <div className="flex items-center justify-center gap-4 mt-4">
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                className="px-6 py-3 rounded-full bg-rose-600 text-white font-black shadow-lg hover:bg-rose-700"
+                            >
+                                Submit
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleClearSelection}
+                                className="px-6 py-3 rounded-full bg-white text-rose-700 font-black border border-rose-200 shadow-sm hover:bg-rose-50"
+                            >
+                                Undo
+                            </button>
+                        </div>
+                    )}
 
                     {feedback && (
                         <div className={`text-xl font-black ${feedback === 'correct' ? 'text-green-600' : 'text-red-600'}`}>
