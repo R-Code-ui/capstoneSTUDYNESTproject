@@ -150,17 +150,26 @@ class DashboardController extends Controller
         // ===== Section 4: Upcoming Deadlines (only assignments) =====
         $upcomingDeadlines = Assignment::where('teacher_id', $user->id)
             ->where('status', 'published')
-            ->where('due_date', '>=', now())
+            ->where('due_date', '>=', now()->startOfDay())
             ->orderBy('due_date', 'asc')
             ->limit(5)
             ->get()
             ->map(function ($assignment) {
+                $now = now()->startOfDay();
+                $dueDate = $assignment->due_date->startOfDay();
+                $daysLeft = (int) $now->diffInDays($dueDate, false); // negative if past, but filtered out
+
+                // Ensure non-negative (shouldn't happen, but just in case)
+                if ($daysLeft < 0) {
+                    $daysLeft = 0;
+                }
+
                 return [
                     'id' => $assignment->id,
                     'title' => $assignment->assignment_title,
                     'type' => 'assignment',
                     'due_date' => $assignment->due_date->format('M d'),
-                    'days_left' => $assignment->due_date->diffInDays(now()),
+                    'days_left' => $daysLeft,
                 ];
             });
 
@@ -200,7 +209,7 @@ class DashboardController extends Controller
             $query->where('sender_id', $user->id)
                   ->orWhere('receiver_id', $user->id);
         })
-            ->with('sender', 'receiver')   // ✅ removed visibleToTeacher
+            ->with('sender', 'receiver')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()

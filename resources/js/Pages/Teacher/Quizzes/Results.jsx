@@ -8,7 +8,6 @@ import SecondaryButton from '@/Components/SecondaryButton';
 // Heroicons
 import {
     ArrowLeftIcon,
-    EyeIcon,
     ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 
@@ -27,7 +26,7 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
         return statusMap[status] || status;
     };
 
-    // 🔧 FIX: Added truncation to student_name and lrn columns
+    // Table columns – removed "Attempt" column and "Actions" column
     const columns = [
         {
             key: 'student_name',
@@ -53,15 +52,6 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
             render: (row) => row.score !== null ? `${row.score}/${row.total_questions}` : '---',
         },
         {
-            key: 'attempt_number',
-            label: 'Attempt',
-            render: (row) => (
-                <div className="max-w-[60px] truncate" title={row.attempt_number}>
-                    {row.attempt_number}
-                </div>
-            ),
-        },
-        {
             key: 'status',
             label: 'Status',
             render: (row) => <StatusBadge status={getStatusBadge(row.status)} />,
@@ -70,19 +60,6 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
             key: 'completed_at',
             label: 'Completed',
             render: (row) => row.completed_at || '---',
-        },
-    ];
-
-    const actions = (row) => [
-        {
-            label: 'View Details',
-            icon: <EyeIcon className="w-4 h-4" />,
-            color: 'primary',
-            onClick: () => {
-                if (row.attempt_id) {
-                    router.visit(route('teacher.quizzes.attempt-details', [quiz.id, row.attempt_id]));
-                }
-            },
         },
     ];
 
@@ -97,7 +74,6 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         Results: {quiz.title}
@@ -119,15 +95,12 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    {/* ===== Statistics ===== */}
+
+                    {/* ===== Statistics Cards - First Row ===== */}
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-blue-600">{statistics.total_students}</div>
                             <div className="text-sm font-medium text-gray-500">Total Students</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-emerald-600">{statistics.total_attempts}</div>
-                            <div className="text-sm font-medium text-gray-500">Total Attempts</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-purple-600">{statistics.average_score}</div>
@@ -137,9 +110,13 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                             <div className="text-2xl font-bold text-indigo-600">{statistics.passing_rate}%</div>
                             <div className="text-sm font-medium text-gray-500">Passing Rate</div>
                         </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-teal-600">{statistics.completion_rate}%</div>
+                            <div className="text-sm font-medium text-gray-500">Completion Rate</div>
+                        </div>
                     </div>
 
-                    {/* ===== More Statistics ===== */}
+                    {/* ===== Statistics Cards - Second Row ===== */}
                     <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-amber-600">{statistics.highest_score}</div>
@@ -150,12 +127,12 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                             <div className="text-sm font-medium text-gray-500">Lowest Score</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-teal-600">{statistics.completion_rate}%</div>
-                            <div className="text-sm font-medium text-gray-500">Completion Rate</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-gray-600">{statistics.max_possible_score}</div>
                             <div className="text-sm font-medium text-gray-500">Max Possible Score</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-emerald-600">{statistics.passed_count || 0}</div>
+                            <div className="text-sm font-medium text-gray-500">Passed</div>
                         </div>
                     </div>
 
@@ -189,17 +166,16 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                         </div>
                     )}
 
-                    {/* ===== Attempts Table ===== */}
+                    {/* ===== Student Informations Table ===== */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-200">
-                                <h3 className="text-sm font-semibold text-gray-700">Student Attempts</h3>
+                                <h3 className="text-sm font-semibold text-gray-700">Student Informations</h3>
                             </div>
                             <div className="p-6">
                                 <Table
                                     columns={columns}
                                     rows={attempts}
-                                    actions={actions}
                                     emptyMessage="No attempts found."
                                     hoverable
                                     striped

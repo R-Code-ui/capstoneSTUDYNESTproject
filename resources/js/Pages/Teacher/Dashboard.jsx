@@ -289,7 +289,9 @@ export default function TeacherDashboard({
                                                 </div>
                                             </div>
                                             <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
-                                                {deadline.days_left} day{deadline.days_left > 1 ? 's' : ''} left
+                                                {deadline.days_left === 0
+                                                    ? 'Today'
+                                                    : `${deadline.days_left} day${deadline.days_left > 1 ? 's' : ''} left`}
                                             </span>
                                         </div>
                                     ))}

@@ -26,7 +26,6 @@ export default function QuizzesShow({ quiz }) {
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         {quiz.quiz_title}
@@ -82,10 +81,7 @@ export default function QuizzesShow({ quiz }) {
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Questions</div>
                                     <div className="font-medium text-gray-800">{quiz.total_questions}</div>
                                 </div>
-                                <div>
-                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Attempts Allowed</div>
-                                    <div className="font-medium text-gray-800">{quiz.attempts_allowed}</div>
-                                </div>
+                                {/* ❌ Removed Attempts Allowed */}
                                 {quiz.time_limit && (
                                     <div>
                                         <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Time Limit</div>

@@ -112,7 +112,7 @@ export default function AnnouncementsIndex({
         { value: 'principal', label: 'Principal' },
     ];
 
-    // 🔧 FIX: Added truncation to columns that may overflow
+    // 🔧 FIX: Columns with truncation
     const columns = [
         {
             key: 'title',
@@ -196,45 +196,94 @@ export default function AnnouncementsIndex({
                 </div>
             ),
         },
-    ];
+        // 🔧 FIX: Custom Actions column with horizontal buttons
+        {
+            key: 'actions',
+            label: 'Actions',
+            render: (row) => {
+                const actionButtons = [];
 
-    const actions = (row) => [
-        {
-            label: 'View',
-            icon: <EyeIcon className="w-4 h-4" />,
-            color: 'primary',
-            onClick: () => router.visit(route('teacher.announcements.show', row.id)),
-        },
-        {
-            label: 'Edit',
-            icon: <PencilSquareIcon className="w-4 h-4" />,
-            color: 'primary',
-            onClick: () => router.visit(route('teacher.announcements.edit', row.id)),
-        },
-        ...(row.status === 'draft' ? [{
-            label: 'Publish',
-            icon: <CheckCircleIcon className="w-4 h-4" />,
-            color: 'success',
-            onClick: () => handlePublish(row),
-        }] : []),
-        ...(row.status !== 'archived' ? [{
-            label: 'Archive',
-            icon: <ArchiveBoxIcon className="w-4 h-4" />,
-            color: 'warning',
-            onClick: () => handleArchive(row),
-        }] : []),
-        {
-            label: 'Delete',
-            icon: <TrashIcon className="w-4 h-4" />,
-            color: 'danger',
-            onClick: () => handleDelete(row),
-        },
+                // View
+                actionButtons.push(
+                    <button
+                        key="view"
+                        onClick={() => router.visit(route('teacher.announcements.show', row.id))}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                        title="View"
+                    >
+                        <EyeIcon className="w-3.5 h-3.5" />
+                        View
+                    </button>
+                );
+
+                // Edit
+                actionButtons.push(
+                    <button
+                        key="edit"
+                        onClick={() => router.visit(route('teacher.announcements.edit', row.id))}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                        title="Edit"
+                    >
+                        <PencilSquareIcon className="w-3.5 h-3.5" />
+                        Edit
+                    </button>
+                );
+
+                // Publish (only if draft)
+                if (row.status === 'draft') {
+                    actionButtons.push(
+                        <button
+                            key="publish"
+                            onClick={() => handlePublish(row)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
+                            title="Publish"
+                        >
+                            <CheckCircleIcon className="w-3.5 h-3.5" />
+                            Publish
+                        </button>
+                    );
+                }
+
+                // Archive (only if not archived)
+                if (row.status !== 'archived') {
+                    actionButtons.push(
+                        <button
+                            key="archive"
+                            onClick={() => handleArchive(row)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            title="Archive"
+                        >
+                            <ArchiveBoxIcon className="w-3.5 h-3.5" />
+                            Archive
+                        </button>
+                    );
+                }
+
+                // Delete
+                actionButtons.push(
+                    <button
+                        key="delete"
+                        onClick={() => handleDelete(row)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                        title="Delete"
+                    >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        Delete
+                    </button>
+                );
+
+                return (
+                    <div className="flex flex-nowrap items-center gap-1">
+                        {actionButtons}
+                    </div>
+                );
+            }
+        }
     ];
 
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">My Announcements</span>
                     <PrimaryButton onClick={() => router.visit(route('teacher.announcements.create'))}>
@@ -248,7 +297,6 @@ export default function AnnouncementsIndex({
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters */}
@@ -305,7 +353,6 @@ export default function AnnouncementsIndex({
                                 <Table
                                     columns={columns}
                                     rows={announcements}
-                                    actions={actions}
                                     emptyMessage="No announcements found. Create your first announcement!"
                                     hoverable
                                     striped

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import Table, { StatusBadge } from '@/Components/Table';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
@@ -140,15 +139,7 @@ export default function QuizzesIndex({
                 </div>
             ),
         },
-        {
-            key: 'attempts',
-            label: 'Attempts',
-            render: (row) => (
-                <div className="max-w-[60px] truncate" title={row.attempts}>
-                    {row.attempts}
-                </div>
-            ),
-        },
+        // ❌ REMOVED "Attempts" column entirely
         {
             key: 'status',
             label: 'Status',
