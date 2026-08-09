@@ -19,67 +19,88 @@ class QuizResultsController extends Controller
     {
         Gate::authorize('quiz.view');
 
-        // Get all attempts for this quiz
-        $attempts = QuizAttempt::where('quiz_id', $quiz->id)
+        // Get all attempts for this quiz, ordered by earliest first (to identify the first attempt)
+        $allAttempts = QuizAttempt::where('quiz_id', $quiz->id)
             ->with('student')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('attempt_number', 'asc')   // or created_at
             ->get();
+
+        // Group by student
+        $grouped = $allAttempts->groupBy('student_id');
 
         // Get all students assigned to this grade level
         $students = User::role('student')
             ->where('grade_level', $quiz->grade_level)
             ->get();
 
-        // Merge to show all students (including those who haven't attempted)
-        $allStudents = $students->map(function ($student) use ($attempts) {
-            $attempt = $attempts->firstWhere('student_id', $student->id);
+        $officialScores = [];   // for statistics
+        $allStudents = $students->map(function ($student) use ($grouped, &$officialScores) {
+            $studentAttempts = $grouped->get($student->id, collect());
+            $firstAttempt = $studentAttempts->first(); // earliest attempt
+            $completedCount = $studentAttempts->where('status', 'completed')->count();
+            $practiceAttempts = $firstAttempt ? max(0, $completedCount - 1) : 0;
+
+            $score = $firstAttempt?->score;
+            $totalQuestions = $firstAttempt?->total_questions;
+            $status = $firstAttempt?->status ?? 'not_started';
+            $attemptId = $firstAttempt?->id;
+
+            // only use official (first attempt) scores for statistics
+            if ($firstAttempt && $firstAttempt->status === 'completed') {
+                $officialScores[] = $score;
+            }
 
             return [
-                'student_id' => $student->id,
-                'student_name' => $student->name,
-                'lrn' => $student->lrn,
-                'attempt_id' => $attempt ? $attempt->id : null,
-                'attempt_number' => $attempt ? $attempt->attempt_number : null,
-                'score' => $attempt ? $attempt->score : null,
-                'total_questions' => $attempt ? $attempt->total_questions : null,
-                'status' => $attempt ? $attempt->status : 'not_started',
-                // ✅ FIX: Format completed_at date for display
-                'completed_at' => $attempt && $attempt->completed_at ? $attempt->completed_at->format('Y-m-d H:i') : null,
+                'student_id'      => $student->id,
+                'student_name'    => $student->name,
+                'lrn'             => $student->lrn,
+                'attempt_id'      => $attemptId,
+                'score'           => $score,                   // official (first attempt) score
+                'total_questions' => $totalQuestions,
+                'status'          => $status,
+                'practice_attempts'=> $practiceAttempts,
+                'completed_at'    => $firstAttempt && $firstAttempt->completed_at
+                                       ? $firstAttempt->completed_at->format('Y-m-d H:i')
+                                       : null,
             ];
         });
 
-        // Calculate statistics
-        $completedAttempts = $attempts->where('status', 'completed');
-        $totalAttempts = $completedAttempts->count();
+        // Recalculate statistics based on official scores only
+        $totalStudents = $students->count();
+        $officialScoresCollection = collect($officialScores);
+        $totalOfficial = $officialScoresCollection->count();
 
-        $scores = $completedAttempts->pluck('score')->toArray();
-        $maxScore = $quiz->total_questions;
+        $passingScore = $quiz->passing_score ?? 75;
+        $passedCount = $officialScoresCollection->filter(function ($score) use ($quiz, $passingScore) {
+            $percentage = ($score / $quiz->total_questions) * 100;
+            return $percentage >= $passingScore;
+        })->count();
 
         $statistics = [
-            'total_students' => $students->count(),
-            'total_attempts' => $totalAttempts,
-            'average_score' => $totalAttempts > 0 ? round($completedAttempts->avg('score')) : 0,
-            'highest_score' => $totalAttempts > 0 ? max($scores) : 0,
-            'lowest_score' => $totalAttempts > 0 ? min($scores) : 0,
-            'passing_rate' => $this->calculatePassingRate($completedAttempts, $quiz->passing_score ?? 75),
-            'completion_rate' => $students->count() > 0 ? round(($totalAttempts / $students->count()) * 100) : 0,
-            'max_possible_score' => $maxScore,
+            'total_students'      => $totalStudents,
+            'average_score'       => $totalOfficial > 0 ? round($officialScoresCollection->avg()) : 0,
+            'highest_score'       => $totalOfficial > 0 ? $officialScoresCollection->max() : 0,
+            'lowest_score'        => $totalOfficial > 0 ? $officialScoresCollection->min() : 0,
+            'passing_rate'        => $totalOfficial > 0 ? round(($passedCount / $totalOfficial) * 100) : 0,
+            'completion_rate'     => $totalStudents > 0 ? round(($totalOfficial / $totalStudents) * 100) : 0,
+            'max_possible_score'  => $quiz->total_questions,
+            'passed_count'        => $passedCount,
         ];
 
-        // Score distribution
-        $distribution = $this->getScoreDistribution($scores, $maxScore);
+        // Score distribution (based on official scores)
+        $distribution = $this->getScoreDistribution($officialScores, $quiz->total_questions);
 
         return Inertia::render('Teacher/Quizzes/Results', [
             'quiz' => [
-                'id' => $quiz->id,
-                'title' => $quiz->quiz_title,
-                'subject' => $quiz->subject,
-                'grade_level' => $quiz->grade_level,
+                'id'              => $quiz->id,
+                'title'           => $quiz->quiz_title,
+                'subject'         => $quiz->subject,
+                'grade_level'     => $quiz->grade_level,
                 'total_questions' => $quiz->total_questions,
-                'passing_score' => $quiz->passing_score ?? 75,
+                'passing_score'   => $passingScore,
             ],
-            'attempts' => $allStudents,
-            'statistics' => $statistics,
+            'attempts'     => $allStudents,
+            'statistics'   => $statistics,
             'distribution' => $distribution,
         ]);
     }
@@ -130,34 +151,34 @@ class QuizResultsController extends Controller
 
             return [
                 'question_number' => $question->question_number,
-                'question_text' => $question->question_text,
-                'question_type' => $question->question_type,
-                'choices' => $question->question_type === 'multiple_choice' ? [
+                'question_text'   => $question->question_text,
+                'question_type'   => $question->question_type,
+                'choices'         => $question->question_type === 'multiple_choice' ? [
                     'A' => $question->choice_a,
                     'B' => $question->choice_b,
                     'C' => $question->choice_c,
                     'D' => $question->choice_d,
                 ] : null,
-                'user_answer' => $userAnswer,
-                'correct_answer' => $question->correct_answer,
-                'is_correct' => $isCorrect,
+                'user_answer'     => $userAnswer,
+                'correct_answer'  => $question->correct_answer,
+                'is_correct'      => $isCorrect,
             ];
         });
 
         return Inertia::render('Teacher/Quizzes/AttemptDetails', [
             'attempt' => [
-                'id' => $attempt->id,
-                'student_name' => $attempt->student->name,
-                'student_lrn' => $attempt->student->lrn,
-                'score' => $attempt->score,
-                'total_questions' => $attempt->total_questions,
+                'id'             => $attempt->id,
+                'student_name'   => $attempt->student->name,
+                'student_lrn'    => $attempt->student->lrn,
+                'score'          => $attempt->score,
+                'total_questions'=> $attempt->total_questions,
                 'attempt_number' => $attempt->attempt_number,
-                'status' => $attempt->status,
-                'completed_at' => $attempt->completed_at ? $attempt->completed_at->format('Y-m-d H:i') : null,
-                'quiz_id' => $quiz->id,
+                'status'         => $attempt->status,
+                'completed_at'   => $attempt->completed_at ? $attempt->completed_at->format('Y-m-d H:i') : null,
+                'quiz_id'        => $quiz->id,
             ],
-            'questions' => $questionResults,
-            'quiz_title' => $quiz->quiz_title,
+            'questions'   => $questionResults,
+            'quiz_title'  => $quiz->quiz_title,
         ]);
     }
 
@@ -227,10 +248,10 @@ class QuizResultsController extends Controller
         }
 
         $ranges = [
-            '0-20%' => 0,
-            '21-40%' => 0,
-            '41-60%' => 0,
-            '61-80%' => 0,
+            '0-20%'   => 0,
+            '21-40%'  => 0,
+            '41-60%'  => 0,
+            '61-80%'  => 0,
             '81-100%' => 0,
         ];
 

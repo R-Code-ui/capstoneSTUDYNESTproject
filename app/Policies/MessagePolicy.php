@@ -21,7 +21,8 @@ class MessagePolicy
     public function view(User $user, Message $message): bool
     {
         return $user->hasPermissionTo('message.view')
-            && ($user->id === $message->sender_id || $user->id === $message->receiver_id);
+            && $this->isParticipant($user, $message)
+            && $this->canAccessCounterparty($user, $message);
     }
 
     /**
@@ -38,6 +39,41 @@ class MessagePolicy
     public function delete(User $user, Message $message): bool
     {
         return $user->hasPermissionTo('message.delete')
-            && ($user->id === $message->sender_id || $user->id === $message->receiver_id);
+            && $message->sender_id === $user->id
+            && $this->canAccessCounterparty($user, $message);
+    }
+
+    private function isParticipant(User $user, Message $message): bool
+    {
+        return $user->id === $message->sender_id || $user->id === $message->receiver_id;
+    }
+
+    private function canAccessCounterparty(User $user, Message $message): bool
+    {
+        $counterpartyId = $message->sender_id === $user->id
+            ? $message->receiver_id
+            : $message->sender_id;
+
+        $counterparty = User::find($counterpartyId);
+
+        if (!$counterparty) {
+            return false;
+        }
+
+        if ($user->isTeacher()) {
+            return $counterparty->isStudent()
+                && $user->gradeAssignments()
+                    ->where('grade_level', $counterparty->grade_level)
+                    ->exists();
+        }
+
+        if ($user->isStudent()) {
+            return $counterparty->isTeacher()
+                && $counterparty->gradeAssignments()
+                    ->where('grade_level', $user->grade_level)
+                    ->exists();
+        }
+
+        return false;
     }
 }

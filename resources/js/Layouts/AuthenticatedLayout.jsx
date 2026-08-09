@@ -48,6 +48,7 @@ export default function AuthenticatedLayout({ header, children }) {
             if (logs) links.push({ href: logs, label: 'Activity Logs' });
         } else if (userRole === 'teacher') {
             const dashboard = safeRoute('teacher.dashboard');
+            const students = safeRoute('teacher.students.index');
             const lessons = safeRoute('teacher.lessons.index');
             const assignments = safeRoute('teacher.assignments.index');
             const quizzes = safeRoute('teacher.quizzes.index');
@@ -58,6 +59,7 @@ export default function AuthenticatedLayout({ header, children }) {
             const reports = safeRoute('teacher.reports.index');
 
             if (dashboard) links.push({ href: dashboard, label: 'Dashboard' });
+            if (students) links.push({ href: students, label: 'User Management' });
             if (lessons) links.push({ href: lessons, label: 'Lessons' });
             if (assignments) links.push({ href: assignments, label: 'Assignments' });
             if (quizzes) links.push({ href: quizzes, label: 'Quizzes' });
@@ -205,6 +207,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="space-y-1">
+                            {/* Profile Settings visible for all users */}
                             <ResponsiveNavLink href={route('profile.edit')}>
                                 Profile Settings
                             </ResponsiveNavLink>
@@ -219,7 +222,6 @@ export default function AuthenticatedLayout({ header, children }) {
                 <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-slate-50">
                     {/* ===== TOP HEADER BAR (Clean, Light) ===== */}
                     <header className="hidden md:flex h-16 items-center justify-between px-8 bg-white border-b border-slate-200 shadow-sm">
-                        {/* 🔧 FIX: Removed the header text entirely - no "Dashboard" text here */}
                         <div className="text-lg font-bold text-slate-800">
                             {/* Empty - no header text displayed */}
                         </div>
@@ -251,6 +253,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </Dropdown.Trigger>
 
                                 <Dropdown.Content align="right" width="48">
+                                    {/* Profile Settings visible for all users */}
                                     <Dropdown.Link href={route('profile.edit')}>
                                         Profile Settings
                                     </Dropdown.Link>

@@ -210,7 +210,8 @@ export default function AssignmentsIndex({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex flex-wrap gap-3">
+                                {/* 🔧 FIX: Added items-center to align filters and button vertically */}
+                                <div className="flex flex-wrap gap-3 items-center">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
@@ -235,7 +236,11 @@ export default function AssignmentsIndex({
                                         size="md"
                                         className="w-40"
                                     />
-                                    <PrimaryButton onClick={() => router.visit(route('teacher.assignments.create'))}>
+                                    {/* 🔧 FIX: Added py-2 and whitespace-nowrap to match filter height */}
+                                    <PrimaryButton
+                                        onClick={() => router.visit(route('teacher.assignments.create'))}
+                                        className="py-2 whitespace-nowrap"
+                                    >
                                         <PlusIcon className="w-4 h-4 mr-1" />
                                         Create Assignment
                                     </PrimaryButton>

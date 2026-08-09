@@ -16,7 +16,7 @@ class GameController extends Controller
         return [
             'Grade 4' => [
                 'literacy' => ['Word Builder', 'Sentence Scramble', 'Rhyme Match', 'Alphabetical Order'],
-                'numeracy' => ['Balloon Pop Math', 'Sorting Baskets', 'Coin Counter', 'Skip Counting Path'],
+                'numeracy' => ['Balloon Pop Math', 'Sorting Baskets', 'Coin Counter', 'Rounding Rocket'],   // ✅ Replaced Skip Counting Path
             ],
             'Grade 5' => [
                 'literacy' => ['Match the Meaning', 'Story Fill-In', 'Compound Word Combiner', 'Analogy Solver'],

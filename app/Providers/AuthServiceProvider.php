@@ -9,6 +9,8 @@ use App\Models\Quiz;
 use App\Models\Announcement;
 use App\Models\Game;
 use App\Models\ActivityLog; // ✅ ADD THIS
+use App\Models\Message;
+use App\Models\MessageGroup;
 use App\Policies\UserPolicy;
 use App\Policies\LessonPolicy;
 use App\Policies\AssignmentPolicy;
@@ -16,6 +18,8 @@ use App\Policies\QuizPolicy;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\GamePolicy;
 use App\Policies\ActivityLogPolicy; // ✅ ADD THIS
+use App\Policies\MessagePolicy;
+use App\Policies\MessageGroupPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -34,6 +38,8 @@ class AuthServiceProvider extends ServiceProvider
         Announcement::class => AnnouncementPolicy::class,
         Game::class => GamePolicy::class,
         ActivityLog::class => ActivityLogPolicy::class, // ✅ ADD THIS
+        Message::class => MessagePolicy::class,
+        MessageGroup::class => MessageGroupPolicy::class,
     ];
 
     /**

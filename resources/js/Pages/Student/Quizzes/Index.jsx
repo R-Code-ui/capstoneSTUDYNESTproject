@@ -9,12 +9,9 @@ import Pagination from '@/Components/Pagination';
 
 import {
     ChartBarIcon,
-    UserIcon,
     ClockIcon,
     DocumentTextIcon,
-    MagnifyingGlassIcon,
     CheckCircleIcon,
-    XCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // Soft gradient combinations for cards
@@ -119,7 +116,6 @@ export default function QuizzesIndex({
 
             <div className="py-4">
                 <div className="mx-auto max-w-7xl">
-                    {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters */}
@@ -175,6 +171,7 @@ export default function QuizzesIndex({
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {quizzes.map((quiz, index) => {
                                             const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
+                                            const hasRemainingAttempts = quiz.attempts_used < quiz.attempts_allowed;
                                             return (
                                                 <div
                                                     key={quiz.id}
@@ -217,7 +214,7 @@ export default function QuizzesIndex({
                                                             </div>
                                                             <div>
                                                                 <span className="text-gray-600">Attempts:</span>
-                                                                <span className="ml-1 font-medium text-gray-800">{quiz.attempt_number}/{quiz.attempts_allowed}</span>
+                                                                <span className="ml-1 font-medium text-gray-800">{quiz.attempts_used}/{quiz.attempts_allowed}</span>
                                                             </div>
                                                         </div>
 
@@ -230,7 +227,8 @@ export default function QuizzesIndex({
                                                             </div>
                                                         )}
 
-                                                        <div className="mt-4">
+                                                        <div className="mt-4 space-y-2">
+                                                            {/* Main action button */}
                                                             <Link
                                                                 href={
                                                                     quiz.status === 'completed' && quiz.latest_attempt_id
@@ -256,6 +254,17 @@ export default function QuizzesIndex({
                                                                     </>
                                                                 )}
                                                             </Link>
+
+                                                            {/* ✅ Practice button – shown when quiz completed and attempts remain */}
+                                                            {quiz.status === 'completed' && hasRemainingAttempts && (
+                                                                <Link
+                                                                    href={route('student.quizzes.show', quiz.id)}
+                                                                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors w-full shadow-sm"
+                                                                >
+                                                                    <DocumentTextIcon className="w-4 h-4 mr-1" />
+                                                                    Practice
+                                                                </Link>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

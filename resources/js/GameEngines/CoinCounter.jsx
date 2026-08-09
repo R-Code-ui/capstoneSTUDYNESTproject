@@ -3,12 +3,19 @@ import GameShell from './GameShell';
 
 export default function CoinCounter({ content, onComplete, onExit, onProgress, initialState }) {
     const rounds = content.rounds;
-    const [roundIndex, setRoundIndex] = useState(initialState?.roundIndex ?? 0);
+
+    // Helper: filter out any coin that matches the target value
+    const getAvailableCoins = (round) => round.coins.filter(v => v !== round.target);
+
+    const initialRoundIndex = initialState?.roundIndex ?? 0;
+    const initialRound = rounds[initialRoundIndex];
+
+    const [roundIndex, setRoundIndex] = useState(initialRoundIndex);
     const [correctCount, setCorrectCount] = useState(initialState?.correctCount ?? 0);
     const [overshoots, setOvershoots] = useState(initialState?.overshoots ?? 0);
     const [placed, setPlaced] = useState([]);
     const [bank, setBank] = useState(() =>
-        rounds[initialState?.roundIndex ?? 0].coins.map((v, i) => ({ key: `c-${i}-${v}`, value: v }))
+        getAvailableCoins(initialRound).map((v, i) => ({ key: `c-${i}-${v}`, value: v }))
     );
     const [status, setStatus] = useState('playing');
     const [history, setHistory] = useState([]);
@@ -30,10 +37,11 @@ export default function CoinCounter({ content, onComplete, onExit, onProgress, i
         const newCorrect = correctCount + (wasCorrect ? 1 : 0);
         if (roundIndex + 1 < rounds.length) {
             const next = roundIndex + 1;
+            const nextRound = rounds[next];
             setCorrectCount(newCorrect);
             setRoundIndex(next);
             setPlaced([]);
-            setBank(rounds[next].coins.map((v, i) => ({ key: `c-${i}-${v}-${next}`, value: v })));
+            setBank(getAvailableCoins(nextRound).map((v, i) => ({ key: `c-${i}-${v}-${next}`, value: v })));
             setStatus('playing');
             updateProgress({ roundIndex: next, correctCount: newCorrect, overshoots });
         } else {

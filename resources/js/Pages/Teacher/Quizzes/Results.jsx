@@ -26,7 +26,7 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
         return statusMap[status] || status;
     };
 
-    // Table columns – removed "Attempt" column and "Actions" column
+    // Table columns – show official score and practice attempts
     const columns = [
         {
             key: 'student_name',
@@ -48,8 +48,17 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
         },
         {
             key: 'score',
-            label: 'Score',
+            label: 'Official Score',
             render: (row) => row.score !== null ? `${row.score}/${row.total_questions}` : '---',
+        },
+        {
+            key: 'practice_attempts',
+            label: 'Practice Attempts',
+            render: (row) => (
+                <div className="max-w-[80px] truncate" title={row.practice_attempts}>
+                    {row.practice_attempts ?? 0}
+                </div>
+            ),
         },
         {
             key: 'status',

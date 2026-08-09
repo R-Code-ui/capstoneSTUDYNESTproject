@@ -191,7 +191,7 @@ export default function PrincipalAnnouncements({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex gap-3">
+                                <div className="flex gap-3 items-center">
                                     <FilterDropdown
                                         options={categoryOptions}
                                         value={categoryFilter}
@@ -208,7 +208,11 @@ export default function PrincipalAnnouncements({
                                         size="md"
                                         className="w-48"
                                     />
-                                    <PrimaryButton onClick={() => { setSelectedAnnouncement(null); setShowCreateModal(true); }}>
+                                    {/* 🔧 FIX: Button now matches filter height with py-2 and whitespace-nowrap */}
+                                    <PrimaryButton
+                                        onClick={() => { setSelectedAnnouncement(null); setShowCreateModal(true); }}
+                                        className="py-2 whitespace-nowrap"
+                                    >
                                         + Create Announcement
                                     </PrimaryButton>
                                 </div>

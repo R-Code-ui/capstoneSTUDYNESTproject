@@ -184,6 +184,22 @@ class User extends Authenticatable
         return $this->hasMany(Message::class, 'receiver_id');
     }
 
+    public function ownedMessageGroups()
+    {
+        return $this->hasMany(MessageGroup::class, 'teacher_id');
+    }
+
+    public function messageGroups()
+    {
+        return $this->belongsToMany(MessageGroup::class, 'message_group_members')
+            ->withTimestamps();
+    }
+
+    public function groupMessages()
+    {
+        return $this->hasMany(GroupMessage::class, 'sender_id');
+    }
+
     /**
      * Assignment submissions by student
      */

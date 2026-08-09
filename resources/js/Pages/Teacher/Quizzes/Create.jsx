@@ -19,6 +19,7 @@ export default function QuizzesCreate({
     statuses,
     weeks,
     related_lessons,
+    default_attempts_allowed = 1,   // ✅ new prop
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [questions, setQuestions] = useState([
@@ -46,6 +47,7 @@ export default function QuizzesCreate({
         total_questions: 1,
         time_limit: '',
         passing_score: '',
+        attempts_allowed: default_attempts_allowed,   // ✅ new field
         shuffle_questions: false,
         status: 'draft',
         publish_date: new Date().toISOString().split('T')[0],
@@ -438,6 +440,21 @@ export default function QuizzesCreate({
                                             max="100"
                                         />
                                         <InputError message={errors.passing_score} className="mt-2" />
+                                    </div>
+                                    {/* ✅ NEW: Attempts Allowed */}
+                                    <div>
+                                        <InputLabel htmlFor="attempts_allowed" value="Attempts Allowed (including practice)" />
+                                        <TextInput
+                                            id="attempts_allowed"
+                                            type="number"
+                                            value={data.attempts_allowed}
+                                            onChange={(e) => setData('attempts_allowed', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            min="1"
+                                            max="10"
+                                            required
+                                        />
+                                        <InputError message={errors.attempts_allowed} className="mt-2" />
                                     </div>
                                     <div>
                                         <InputLabel htmlFor="shuffle_questions" value="Shuffle Questions" />

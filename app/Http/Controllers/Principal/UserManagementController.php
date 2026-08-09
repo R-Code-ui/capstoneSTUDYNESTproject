@@ -10,21 +10,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
     /**
-     * Display a listing of teachers and students.
+     * Display a listing of teachers.
      */
     public function index(Request $request)
     {
         Gate::authorize('user.manage');
 
         $search = $request->input('search');
-        $roleFilter = $request->input('role');
         $gradeFilter = $request->input('grade_level');
-        $genderFilter = $request->input('gender');
 
         // ===== TEACHERS QUERY WITH PAGINATION =====
         $teachersQuery = User::role('teacher')
@@ -46,22 +43,6 @@ class UserManagementController extends Controller
             $teacher->load('gradeAssignments');
         });
 
-        // ===== STUDENTS QUERY WITH PAGINATION =====
-        $studentsQuery = User::role('student')
-            ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('lrn', 'like', "%{$search}%");
-            })
-            ->when($gradeFilter, function ($query, $grade) {
-                return $query->where('grade_level', $grade);
-            })
-            ->when($genderFilter, function ($query, $gender) {
-                return $query->where('gender', $gender);
-            })
-            ->orderBy('created_at', 'desc');
-
-        $students = $studentsQuery->paginate(10);
-
         $gradeLevels = ['Grade 4', 'Grade 5', 'Grade 6'];
 
         return Inertia::render('Principal/UserManagement', [
@@ -75,26 +56,12 @@ class UserManagementController extends Controller
                     'created_at' => $teacher->created_at->format('Y-m-d'),
                 ];
             }),
-            'students' => $students->map(function ($student) {
-                return [
-                    'id' => $student->id,
-                    'name' => $student->name,
-                    'lrn' => $student->lrn,
-                    'grade_level' => $student->grade_level,
-                    'gender' => $student->gender,
-                    'is_active' => $student->is_active,
-                    'created_at' => $student->created_at->format('Y-m-d'),
-                ];
-            }),
             'grade_levels' => $gradeLevels,
             'filters' => [
                 'search' => $search,
-                'role' => $roleFilter,
                 'grade_level' => $gradeFilter,
-                'gender' => $genderFilter,
             ],
             'teachers_pagination' => $teachers->toArray(),
-            'students_pagination' => $students->toArray(),
         ]);
     }
 
@@ -134,36 +101,6 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Store a newly created student.
-     */
-    public function storeStudent(Request $request)
-    {
-        Gate::authorize('student.manage');
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'lrn' => 'required|string|unique:users,lrn',
-            'grade_level' => 'required|in:Grade 4,Grade 5,Grade 6',
-            'gender' => 'required|in:male,female',
-            'email' => 'nullable|email|unique:users,email',
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'lrn' => $validated['lrn'],
-            'grade_level' => $validated['grade_level'],
-            'gender' => $validated['gender'],
-            'email' => $validated['email'] ?? $validated['lrn'] . '@studynest.local',
-            'password' => Hash::make('Student123'),
-            'is_active' => true,
-        ]);
-
-        $user->assignRole('student');
-
-        return redirect()->back()->with('success', 'Student created successfully!');
-    }
-
-    /**
      * Update a teacher.
      */
     public function updateTeacher(Request $request, $id)
@@ -195,34 +132,6 @@ class UserManagementController extends Controller
         }
 
         return redirect()->back()->with('success', 'Teacher updated successfully!');
-    }
-
-    /**
-     * Update a student.
-     */
-    public function updateStudent(Request $request, $id)
-    {
-        Gate::authorize('student.manage');
-
-        $user = User::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'lrn' => ['required', 'string', Rule::unique('users', 'lrn')->ignore($user->id)],
-            'grade_level' => 'required|in:Grade 4,Grade 5,Grade 6',
-            'gender' => 'required|in:male,female',
-            'is_active' => 'boolean',
-        ]);
-
-        $user->update([
-            'name' => $validated['name'],
-            'lrn' => $validated['lrn'],
-            'grade_level' => $validated['grade_level'],
-            'gender' => $validated['gender'],
-            'is_active' => $validated['is_active'] ?? $user->is_active,
-        ]);
-
-        return redirect()->back()->with('success', 'Student updated successfully!');
     }
 
     /**
@@ -272,7 +181,7 @@ class UserManagementController extends Controller
     }
 
     /**
-     * ✅ NEW: Permanently delete a user.
+     * Permanently delete a user.
      */
     public function destroy($id)
     {

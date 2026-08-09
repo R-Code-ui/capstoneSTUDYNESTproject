@@ -36,6 +36,7 @@ export default function QuizzesEdit({
         total_questions: quiz.total_questions || 1,
         time_limit: quiz.time_limit || '',
         passing_score: quiz.passing_score || '',
+        attempts_allowed: quiz.attempts_allowed || 1,   // ✅ pre‑fill
         shuffle_questions: quiz.shuffle_questions || false,
         status: quiz.status || 'draft',
         publish_date: quiz.publish_date || new Date().toISOString().split('T')[0],
@@ -422,6 +423,21 @@ export default function QuizzesEdit({
                                             max="100"
                                         />
                                         <InputError message={errors.passing_score} className="mt-2" />
+                                    </div>
+                                    {/* ✅ NEW: Attempts Allowed */}
+                                    <div>
+                                        <InputLabel htmlFor="attempts_allowed" value="Attempts Allowed (including practice)" />
+                                        <TextInput
+                                            id="attempts_allowed"
+                                            type="number"
+                                            value={data.attempts_allowed}
+                                            onChange={(e) => setData('attempts_allowed', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            min="1"
+                                            max="10"
+                                            required
+                                        />
+                                        <InputError message={errors.attempts_allowed} className="mt-2" />
                                     </div>
                                     <div>
                                         <InputLabel htmlFor="shuffle_questions" value="Shuffle Questions" />

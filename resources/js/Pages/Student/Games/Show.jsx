@@ -26,10 +26,10 @@ export default function GamesShow({
     const definition = gameDefinitions[game.title];
     const friendlyDescription = definition?.description || game.instructions;
     const difficultyLabel = {
-        guided: 'Guided',
-        standard: 'Standard',
-        challenge: 'Challenge',
-    }[game.difficulty] || 'Standard';
+        guided: 'Easy',
+        standard: 'Average',
+        challenge: 'Difficult',
+    }[game.difficulty] || 'Average';
 
     const getTypeIcon = (type) => {
         return type === 'literacy' ? (
@@ -57,7 +57,6 @@ export default function GamesShow({
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         {game.title}

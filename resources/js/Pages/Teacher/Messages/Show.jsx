@@ -52,7 +52,7 @@ export default function MessagesShow({ student, messages }) {
     };
 
     const handleDeleteMessage = (messageId) => {
-        if (confirm('Delete this message?')) {
+        if (confirm('Remove this message from your messages? The student will still see it.')) {
             router.delete(route('teacher.messages.destroy', messageId), {
                 preserveScroll: true,
             });
@@ -98,7 +98,7 @@ export default function MessagesShow({ student, messages }) {
                                                     type="button"
                                                     onClick={() => handleDeleteMessage(msg.id)}
                                                     className="hidden group-hover:flex absolute -right-1 top-0 text-gray-300 hover:text-red-500"
-                                                    title="Delete message"
+                                                    title="Remove message from your messages"
                                                 >
                                                     <TrashIcon className="w-3.5 h-3.5" />
                                                 </button>

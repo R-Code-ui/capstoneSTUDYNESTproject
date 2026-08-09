@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Message;
+use App\Models\MessageGroup;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,17 +20,23 @@ class MessageController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('message.view');
+        Gate::authorize('viewAny', Message::class);
 
         $user = auth()->user();
         $search = $request->input('search');
         $teacherId = $user->id;
+        $studentIds = User::role('student')
+            ->whereIn('grade_level', $user->gradeAssignments()->pluck('grade_level'))
+            ->pluck('id');
 
         $latestIds = DB::table('messages')
             ->selectRaw('LEAST(sender_id, receiver_id) AS person1, GREATEST(sender_id, receiver_id) AS person2, MAX(id) AS latest_id')
-            ->where(function ($q) use ($teacherId) {
-                $q->where('sender_id', $teacherId)
-                  ->orWhere('receiver_id', $teacherId);
+            ->where(function ($q) use ($teacherId, $studentIds) {
+                $q->where(function ($sub) use ($teacherId, $studentIds) {
+                    $sub->where('sender_id', $teacherId)->whereIn('receiver_id', $studentIds);
+                })->orWhere(function ($sub) use ($teacherId, $studentIds) {
+                    $sub->where('receiver_id', $teacherId)->whereIn('sender_id', $studentIds);
+                });
             })
             ->whereNull('teacher_deleted_at')
             ->groupBy('person1', 'person2');
@@ -79,15 +86,33 @@ class MessageController extends Controller
         });
 
         $totalUnread = Message::where('receiver_id', $user->id)
+            ->whereIn('sender_id', $studentIds)
             ->whereNull('teacher_deleted_at')
             ->where('status', 'unread')
             ->count();
+
+        $groups = MessageGroup::where('teacher_id', $user->id)
+            ->withCount('members')
+            ->with(['subject:id,name,grade_level', 'latestMessage.sender:id,name'])
+            ->latest()
+            ->get()
+            ->map(fn ($group) => [
+                'id' => $group->id,
+                'name' => $group->name,
+                'description' => $group->description,
+                'is_archived' => $group->is_archived,
+                'members_count' => $group->members_count,
+                'subject' => $group->subject,
+                'last_message' => $group->latestMessage?->body,
+                'last_message_time' => $group->latestMessage?->created_at?->diffForHumans(),
+            ]);
 
         return Inertia::render('Teacher/Messages/Index', [
             'conversations' => $conversations->items(),
             'unread_count'  => $totalUnread,
             'filters'       => ['search' => $search],
             'pagination'    => $paginator->toArray(),
+            'groups'         => $groups,
         ]);
     }
 
@@ -96,7 +121,7 @@ class MessageController extends Controller
      */
     public function create()
     {
-        Gate::authorize('message.send');
+        Gate::authorize('create', Message::class);
 
         $teacher = auth()->user();
         $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->toArray();
@@ -135,10 +160,16 @@ class MessageController extends Controller
      */
     public function getStudentsByGrade(Request $request)
     {
-        Gate::authorize('message.send');
+        Gate::authorize('create', Message::class);
 
         $gradeLevel = $request->input('grade_level');
         $teacher = auth()->user();
+
+        abort_unless(
+            $teacher->gradeAssignments()->where('grade_level', $gradeLevel)->exists(),
+            403,
+            'You are not assigned to this grade level.'
+        );
 
         $students = User::role('student')
             ->where('grade_level', $gradeLevel)
@@ -161,7 +192,7 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
-        Gate::authorize('message.send');
+        Gate::authorize('create', Message::class);
 
         $validated = $request->validate([
             'receiver_id' => 'required|exists:users,id',
@@ -200,13 +231,9 @@ class MessageController extends Controller
      */
     public function show(Message $message)
     {
-        Gate::authorize('message.view');
+        Gate::authorize('view', $message);
 
         $user = auth()->user();
-
-        if ($message->receiver_id !== $user->id && $message->sender_id !== $user->id) {
-            abort(403);
-        }
 
         $studentId = $message->sender_id === $user->id ? $message->receiver_id : $message->sender_id;
         $student = User::select('id', 'name', 'lrn', 'grade_level')->findOrFail($studentId);
@@ -251,7 +278,8 @@ class MessageController extends Controller
      */
     public function reply(Request $request, Message $message)
     {
-        Gate::authorize('message.send');
+        Gate::authorize('create', Message::class);
+        Gate::authorize('view', $message);
 
         if ($message->receiver_id !== auth()->id()) {
             abort(403);
@@ -289,12 +317,7 @@ class MessageController extends Controller
      */
     public function destroy(Message $message)
     {
-        Gate::authorize('message.delete');
-
-        $user = auth()->user();
-        if ($message->sender_id !== $user->id && $message->receiver_id !== $user->id) {
-            abort(403);
-        }
+        Gate::authorize('delete', $message);
 
         $message->update(['teacher_deleted_at' => now()]);
 
@@ -309,6 +332,13 @@ class MessageController extends Controller
         Gate::authorize('message.delete');
 
         $teacher = auth()->user();
+        $student = User::role('student')->findOrFail($studentId);
+
+        abort_unless(
+            $teacher->gradeAssignments()->where('grade_level', $student->grade_level)->exists(),
+            403,
+            'You can only manage students in your assigned grades.'
+        );
 
         Message::where(function ($q) use ($teacher, $studentId) {
             $q->where('sender_id', $teacher->id)

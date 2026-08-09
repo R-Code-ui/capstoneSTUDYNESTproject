@@ -7,9 +7,10 @@ import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Pagination from '@/Components/Pagination';
 import ConversationListItem from '@/Components/ConversationListItem';
+import MessageGroupList from '@/Components/MessageGroupList';
 import { PlusIcon, ChatBubbleLeftRightIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-export default function MessagesIndex({ conversations, unread_count, filters, pagination }) {
+export default function MessagesIndex({ conversations, unread_count, filters, pagination, groups = [] }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
     };
 
     const handleDeleteConversation = (studentId, studentName) => {
-        if (!confirm(`Delete the entire conversation with ${studentName}? This action cannot be undone.`)) {
+        if (!confirm(`Remove the conversation with ${studentName} from your messages? The student will still see it.`)) {
             return;
         }
         router.delete(route('teacher.messages.destroy-conversation', studentId), {
@@ -72,6 +73,10 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                 />
                             </div>
 
+                            <MessageGroupList groups={groups} routeName="teacher.messages.groups.show" canCreate />
+
+                            <h2 className="mb-3 text-sm font-bold tracking-wide text-slate-500 uppercase">Direct Messages</h2>
+
                             {isLoading && <LoadingSpinner overlay size="lg" />}
 
                             {conversations.length === 0 ? (
@@ -102,7 +107,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                                     handleDeleteConversation(conv.student_id, conv.name);
                                                 }}
                                                 className="ml-2 p-2 text-gray-400 hover:text-red-600 transition-colors"
-                                                title="Delete conversation"
+                                                title="Remove conversation from your messages"
                                             >
                                                 <TrashIcon className="w-4 h-4" />
                                             </button>

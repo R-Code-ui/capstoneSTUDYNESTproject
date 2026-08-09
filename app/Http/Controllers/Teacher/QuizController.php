@@ -114,6 +114,7 @@ class QuizController extends Controller
             'statuses' => $statuses,
             'weeks' => $weeks,
             'related_lessons' => $lessons,
+            'default_attempts_allowed' => 1,   // ✅ passed to frontend for default value
         ]);
     }
 
@@ -136,13 +137,12 @@ class QuizController extends Controller
             'total_questions' => 'required|integer|min:1',
             'time_limit' => 'nullable|integer|min:1',
             'passing_score' => 'nullable|integer|min:0|max:100',
-            // attempts_allowed removed from validation – always 1
+            'attempts_allowed' => 'required|integer|min:1|max:10',   // ✅ allow up to 10 practice attempts
             'shuffle_questions' => 'boolean',
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
-            // questions.*.question_type removed – enforced by quiz type
             'questions.*.choice_a' => 'nullable|string',
             'questions.*.choice_b' => 'nullable|string',
             'questions.*.choice_c' => 'nullable|string',
@@ -154,7 +154,7 @@ class QuizController extends Controller
         $quiz = Quiz::create([
             'teacher_id' => auth()->id(),
             'total_questions' => count($validated['questions']),
-            'attempts_allowed' => 1,                         // hard‑coded to 1
+            'attempts_allowed' => $validated['attempts_allowed'],   // ✅ use user input
             'shuffle_questions' => $validated['shuffle_questions'] ?? false,
             ...$validated,
         ]);
@@ -172,7 +172,7 @@ class QuizController extends Controller
                 'quiz_id' => $quiz->id,
                 'question_number' => $index + 1,
                 'question_text' => $questionData['question_text'],
-                'question_type' => $quiz->quiz_type,   // force quiz type
+                'question_type' => $quiz->quiz_type,
                 'choice_a' => $questionData['choice_a'] ?? null,
                 'choice_b' => $questionData['choice_b'] ?? null,
                 'choice_c' => $questionData['choice_c'] ?? null,
@@ -321,14 +321,13 @@ class QuizController extends Controller
             'total_questions' => 'required|integer|min:1',
             'time_limit' => 'nullable|integer|min:1',
             'passing_score' => 'nullable|integer|min:0|max:100',
-            // attempts_allowed removed from validation – always 1
+            'attempts_allowed' => 'required|integer|min:1|max:10',   // ✅ allow up to 10
             'shuffle_questions' => 'boolean',
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
             'questions' => 'required|array|min:1',
             'questions.*.id' => 'nullable|exists:quiz_questions,id',
             'questions.*.question_text' => 'required|string',
-            // questions.*.question_type removed – enforced by quiz type
             'questions.*.choice_a' => 'nullable|string',
             'questions.*.choice_b' => 'nullable|string',
             'questions.*.choice_c' => 'nullable|string',
@@ -339,7 +338,7 @@ class QuizController extends Controller
 
         $quiz->update([
             'total_questions' => count($validated['questions']),
-            'attempts_allowed' => 1,                         // hard‑coded to 1
+            'attempts_allowed' => $validated['attempts_allowed'],   // ✅ use input
             'shuffle_questions' => $validated['shuffle_questions'] ?? false,
             ...$validated,
         ]);
@@ -359,7 +358,7 @@ class QuizController extends Controller
                 'quiz_id' => $quiz->id,
                 'question_number' => $index + 1,
                 'question_text' => $questionData['question_text'],
-                'question_type' => $quiz->quiz_type,   // force quiz type
+                'question_type' => $quiz->quiz_type,
                 'choice_a' => $questionData['choice_a'] ?? null,
                 'choice_b' => $questionData['choice_b'] ?? null,
                 'choice_c' => $questionData['choice_c'] ?? null,

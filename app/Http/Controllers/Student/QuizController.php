@@ -55,31 +55,49 @@ class QuizController extends Controller
 
         return Inertia::render('Student/Quizzes/Index', [
             'quizzes' => $quizzes->map(function ($quiz) use ($user) {
-                $attempt = QuizAttempt::where('quiz_id', $quiz->id)
+                // Count all attempts (including started, completed, etc.)
+                $attemptsCount = QuizAttempt::where('quiz_id', $quiz->id)
                     ->where('student_id', $user->id)
+                    ->count();
+
+                // Get the first completed attempt for official score (if any)
+                $firstCompleted = QuizAttempt::where('quiz_id', $quiz->id)
+                    ->where('student_id', $user->id)
+                    ->where('status', 'completed')
+                    ->orderBy('attempt_number', 'asc')
                     ->first();
 
+                // Overall status for the card
+                $latestAttempt = QuizAttempt::where('quiz_id', $quiz->id)
+                    ->where('student_id', $user->id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                $status = 'not_started';
+                if ($latestAttempt) {
+                    $status = $latestAttempt->status === 'completed' ? 'completed' : 'started';
+                }
+
                 return [
-                    'id' => $quiz->id,
-                    'title' => $quiz->quiz_title,
-                    'subject' => $quiz->subject,
-                    'type' => $quiz->quiz_type,
-                    'questions' => $quiz->total_questions,
-                    'time_limit' => $quiz->time_limit,
-                    'passing_score' => $quiz->passing_score,
+                    'id'               => $quiz->id,
+                    'title'            => $quiz->quiz_title,
+                    'subject'          => $quiz->subject,
+                    'type'             => $quiz->quiz_type,
+                    'questions'        => $quiz->total_questions,
+                    'time_limit'       => $quiz->time_limit,
+                    'passing_score'    => $quiz->passing_score,
                     'attempts_allowed' => $quiz->attempts_allowed,
-                    'status' => $attempt ? $attempt->status : 'not_started',
-                    'score' => $attempt && $attempt->status === 'completed' ? $attempt->score : null,
-                    'attempt_number' => $attempt ? $attempt->attempt_number : 0,
-                    // ✅ New: pass the latest completed attempt ID
-                    'latest_attempt_id' => ($attempt && $attempt->status === 'completed') ? $attempt->id : null,
+                    'status'           => $status,
+                    'score'            => $firstCompleted ? $firstCompleted->score : null,
+                    'attempts_used'    => $attemptsCount,                      // ✅ accurate count
+                    'latest_attempt_id'=> ($firstCompleted) ? $firstCompleted->id : null,
                 ];
             }),
             'subjects' => $subjects,
-            'filters' => [
-                'search' => $search,
+            'filters'  => [
+                'search'  => $search,
                 'subject' => $subjectFilter,
-                'status' => $statusFilter,
+                'status'  => $statusFilter,
             ],
             'pagination' => $quizzes->toArray(),
         ]);
@@ -101,6 +119,11 @@ class QuizController extends Controller
             ->orderBy('attempt_number', 'desc')
             ->first();
 
+        // Total attempts made (including in-progress)
+        $attemptsUsed = QuizAttempt::where('quiz_id', $quiz->id)
+            ->where('student_id', $user->id)
+            ->count();
+
         $canTake = true;
         if ($attempt) {
             if ($attempt->status === 'completed') {
@@ -118,20 +141,21 @@ class QuizController extends Controller
 
         return Inertia::render('Student/Quizzes/Show', [
             'quiz' => [
-                'id' => $quiz->id,
-                'title' => $quiz->quiz_title,
-                'subject' => $quiz->subject,
-                'type' => $quiz->quiz_type,
-                'questions' => $quiz->total_questions,
-                'time_limit' => $quiz->time_limit,
-                'passing_score' => $quiz->passing_score,
+                'id'               => $quiz->id,
+                'title'            => $quiz->quiz_title,
+                'subject'          => $quiz->subject,
+                'type'             => $quiz->quiz_type,
+                'questions'        => $quiz->total_questions,
+                'time_limit'       => $quiz->time_limit,
+                'passing_score'    => $quiz->passing_score,
                 'attempts_allowed' => $quiz->attempts_allowed,
-                'teacher' => $quiz->teacher->name ?? 'Unknown',
-                'instructions' => 'Read each question carefully before selecting your answer.',
+                'attempts_used'    => $attemptsUsed,         // ✅ accurate count
+                'teacher'          => $quiz->teacher->name ?? 'Unknown',
+                'instructions'     => 'Read each question carefully before selecting your answer.',
             ],
             'can_take' => $canTake,
             'current_attempt' => $attempt && $attempt->status === 'started' ? [
-                'id' => $attempt->id,
+                'id'             => $attempt->id,
                 'attempt_number' => $attempt->attempt_number,
             ] : null,
         ]);
@@ -169,13 +193,13 @@ class QuizController extends Controller
         $attemptNumber = $completedAttempts + 1;
 
         $attempt = QuizAttempt::create([
-            'quiz_id' => $quiz->id,
-            'student_id' => $user->id,
+            'quiz_id'        => $quiz->id,
+            'student_id'     => $user->id,
             'attempt_number' => $attemptNumber,
-            'score' => 0,
-            'total_questions' => $quiz->total_questions,
-            'answers' => json_encode([]),
-            'status' => 'started',
+            'score'          => 0,
+            'total_questions'=> $quiz->total_questions,
+            'answers'        => json_encode([]),
+            'status'         => 'started',
         ]);
 
         ActivityLog::create([
@@ -206,21 +230,21 @@ class QuizController extends Controller
 
         return Inertia::render('Student/Quizzes/Take', [
             'attempt' => [
-                'id' => $attempt->id,
+                'id'             => $attempt->id,
                 'attempt_number' => $attempt->attempt_number,
-                'time_limit' => $quiz->time_limit,
+                'time_limit'     => $quiz->time_limit,
             ],
             'quiz' => [
-                'id' => $quiz->id,
-                'title' => $quiz->quiz_title,
+                'id'              => $quiz->id,
+                'title'           => $quiz->quiz_title,
                 'total_questions' => $quiz->total_questions,
             ],
             'questions' => $questions->map(function ($question) use ($answers) {
                 return [
-                    'id' => $question->id,
-                    'number' => $question->question_number,
-                    'text' => $question->question_text,
-                    'type' => $question->question_type,
+                    'id'      => $question->id,
+                    'number'  => $question->question_number,
+                    'text'    => $question->question_text,
+                    'type'    => $question->question_type,
                     'choices' => $question->question_type === 'multiple_choice' ? [
                         'A' => $question->choice_a,
                         'B' => $question->choice_b,
@@ -288,11 +312,11 @@ class QuizController extends Controller
         }
 
         $attempt->update([
-            'answers' => json_encode($answers),
-            'score' => $score,
+            'answers'         => json_encode($answers),
+            'score'           => $score,
             'total_questions' => $totalQuestions,
-            'completed_at' => now(),
-            'status' => 'completed',
+            'completed_at'    => now(),
+            'status'          => 'completed',
         ]);
 
         ActivityLog::create([
@@ -352,27 +376,27 @@ class QuizController extends Controller
             }
 
             return [
-                'number' => $question->question_number,
-                'text' => $question->question_text,
-                'user_answer' => $userAnswer,
+                'number'         => $question->question_number,
+                'text'           => $question->question_text,
+                'user_answer'    => $userAnswer,
                 'correct_answer' => $question->correct_answer,
-                'is_correct' => $isCorrect,
+                'is_correct'     => $isCorrect,
             ];
         });
 
         return Inertia::render('Student/Quizzes/Results', [
             'attempt' => [
-                'id' => $attempt->id,
+                'id'             => $attempt->id,
                 'attempt_number' => $attempt->attempt_number,
-                'score' => $score,
-                'total' => $total,
-                'percentage' => $percentage,
-                'passed' => $passed,
-                'completed_at' => $attempt->completed_at->format('M d, Y H:i'),
+                'score'          => $score,
+                'total'          => $total,
+                'percentage'     => $percentage,
+                'passed'         => $passed,
+                'completed_at'   => $attempt->completed_at->format('M d, Y H:i'),
             ],
             'quiz' => [
-                'id' => $quiz->id,
-                'title' => $quiz->quiz_title,
+                'id'            => $quiz->id,
+                'title'         => $quiz->quiz_title,
                 'passing_score' => $passingScore,
             ],
             'questions' => $questionResults,

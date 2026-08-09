@@ -139,7 +139,6 @@ export default function QuizzesIndex({
                 </div>
             ),
         },
-        // ❌ REMOVED "Attempts" column entirely
         {
             key: 'status',
             label: 'Status',
@@ -201,7 +200,8 @@ export default function QuizzesIndex({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex flex-wrap gap-3">
+                                {/* 🔧 FIX: Added items-center to align filters and button vertically */}
+                                <div className="flex flex-wrap gap-3 items-center">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
@@ -226,7 +226,11 @@ export default function QuizzesIndex({
                                         size="md"
                                         className="w-40"
                                     />
-                                    <PrimaryButton onClick={() => router.visit(route('teacher.quizzes.create'))}>
+                                    {/* 🔧 FIX: Added py-2 and whitespace-nowrap to match filter height */}
+                                    <PrimaryButton
+                                        onClick={() => router.visit(route('teacher.quizzes.create'))}
+                                        className="py-2 whitespace-nowrap"
+                                    >
                                         <PlusIcon className="w-4 h-4 mr-1" />
                                         Create Quiz
                                     </PrimaryButton>

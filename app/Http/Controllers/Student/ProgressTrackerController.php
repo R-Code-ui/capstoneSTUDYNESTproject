@@ -19,7 +19,7 @@ class ProgressTrackerController extends Controller
     /**
      * Display the progress tracker.
      */
-    public function index(Request $request) // ✅ Added Request parameter for pagination
+    public function index(Request $request)
     {
         $user = auth()->user();
         $gradeLevel = $user->grade_level;
@@ -31,7 +31,6 @@ class ProgressTrackerController extends Controller
             ->where('status', 'published')
             ->count();
 
-        // ✅ FIX: Use completedLessons() relationship instead of lessons()
         $completedLessons = $user->completedLessons()
             ->where('status', 'published')
             ->count();
@@ -45,20 +44,23 @@ class ProgressTrackerController extends Controller
             ->whereIn('status', ['submitted', 'reviewed', 'graded'])
             ->count();
 
-        // Quizzes
-        $totalQuizzes = Quiz::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
-            ->count();
+        // Quizzes – official stats from first attempts only
+        $quizIds = Quiz::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id');
+        $totalQuizzes = count($quizIds);
 
-        $completedQuizzes = QuizAttempt::where('student_id', $user->id)
+        // Get all completed attempts, ordered so first attempt comes first
+        $completedAttempts = QuizAttempt::where('student_id', $user->id)
+            ->whereIn('quiz_id', $quizIds)
             ->where('status', 'completed')
-            ->count();
-
-        $quizAttempts = QuizAttempt::where('student_id', $user->id)
-            ->where('status', 'completed')
+            ->orderBy('quiz_id')
+            ->orderBy('attempt_number', 'asc')
             ->get();
 
-        $quizAverage = $quizAttempts->count() > 0 ? round($quizAttempts->avg('score')) : 0;
+        // Unique by quiz_id gives the first attempt for each quiz
+        $firstAttempts = $completedAttempts->unique('quiz_id');
+
+        $completedQuizzes = $firstAttempts->count();
+        $quizAverage = $completedQuizzes > 0 ? round($firstAttempts->avg('score')) : 0;
 
         // Games
         $totalGames = Game::where('grade_level', $gradeLevel)
@@ -115,7 +117,7 @@ class ProgressTrackerController extends Controller
 
         $pendingActivities = $pendingActivities->concat($pendingAssignments);
 
-        // Pending Quizzes
+        // Pending Quizzes (no completed first attempt)
         $pendingQuizzes = Quiz::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->whereDoesntHave('attempts', function ($query) use ($user) {
@@ -220,7 +222,7 @@ class ProgressTrackerController extends Controller
                     'percentage' => $totalGames > 0 ? round(($completedGames / $totalGames) * 100) : 0,
                 ],
             ],
-            'pending_activities' => $paginatedPending, // ✅ PAGINATED DATA
+            'pending_activities' => $paginatedPending,
             'participation_rate' => $participationRate,
             'pending_count' => $pendingActivities->count(),
             'pagination' => [
@@ -228,7 +230,7 @@ class ProgressTrackerController extends Controller
                 'per_page' => $perPage,
                 'total' => $pendingActivities->count(),
                 'last_page' => ceil($pendingActivities->count() / $perPage),
-            ], // ✅ PAGINATION DATA
+            ],
         ]);
     }
 }

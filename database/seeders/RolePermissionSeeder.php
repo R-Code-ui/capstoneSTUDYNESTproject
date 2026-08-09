@@ -49,6 +49,10 @@ class RolePermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'message.view']);
         Permission::firstOrCreate(['name' => 'message.send']);
         Permission::firstOrCreate(['name' => 'message.delete']);
+        Permission::firstOrCreate(['name' => 'message.group.view']);
+        Permission::firstOrCreate(['name' => 'message.group.create']);
+        Permission::firstOrCreate(['name' => 'message.group.manage']);
+        Permission::firstOrCreate(['name' => 'message.group.send']);
 
         Permission::firstOrCreate(['name' => 'progress.view']);
 
@@ -64,6 +68,7 @@ class RolePermissionSeeder extends Seeder
             'user.manage', 'teacher.manage', 'student.manage',
             'log.view',
             'message.view', 'message.send', 'message.delete',
+            'message.group.view', 'message.group.create', 'message.group.manage', 'message.group.send',
             'progress.view',
         ]);
 
@@ -76,7 +81,9 @@ class RolePermissionSeeder extends Seeder
             'game.view', 'game.create', 'game.edit', 'game.delete',
             'report.view',
             'message.view', 'message.send', 'message.delete',
+            'message.group.view', 'message.group.create', 'message.group.manage', 'message.group.send',
             'progress.view',
+            'student.manage', // ✅ Added so teacher can manage students
         ]);
 
         $studentRole = Role::firstOrCreate(['name' => 'student']);
@@ -89,6 +96,8 @@ class RolePermissionSeeder extends Seeder
             'message.view',
             'message.send',
             'message.delete', // ✅ added so students can delete their own messages
+            'message.group.view',
+            'message.group.send',
         ]);
 
         $this->command->info('✅ Roles and permissions seeded successfully!');

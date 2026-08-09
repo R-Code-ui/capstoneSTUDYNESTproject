@@ -38,22 +38,13 @@ class TeacherMonitoringController extends Controller
                     $q->where('grade_level', $grade);
                 });
             })
-            ->paginate(10); // ✅ PAGINATION ADDED
+            ->paginate(10);
 
         $teacherData = $teachers->map(function ($teacher) {
-            $lastActivity = $teacher->last_login_at;
             $isActive = $teacher->is_active;
 
-            $status = 'Inactive';
-            if (!$isActive) {
-                $status = 'Inactive';
-            } elseif ($lastActivity && $lastActivity->diffInDays(now()) <= 7) {
-                $status = 'Active';
-            } elseif ($lastActivity && $lastActivity->diffInDays(now()) <= 14) {
-                $status = 'Moderately Active';
-            } else {
-                $status = 'Inactive';
-            }
+            // ✅ Simple, accurate status: Active = account enabled, Inactive = archived
+            $status = $isActive ? 'Active' : 'Inactive';
 
             $lessonsCount = $teacher->lessons()->count();
             $assignmentsCount = $teacher->assignments()->count();
@@ -89,7 +80,7 @@ class TeacherMonitoringController extends Controller
             $recentActivities = $recentLessons->concat($recentAssignments)->concat($recentQuizzes)
                 ->sortByDesc('date')->take(5)->values();
 
-            $students = User::role('student')->where('grade_level', $teacher->gradeAssignments->pluck('grade_level')->toArray())->get();
+            $students = User::role('student')->whereIn('grade_level', $teacher->gradeAssignments->pluck('grade_level')->toArray())->get();
             $totalStudents = $students->count();
 
             $lessonCompletionRate = 0;
@@ -113,6 +104,7 @@ class TeacherMonitoringController extends Controller
                 $totalQuizzes = $teacher->quizzes()->where('status', 'published')->count();
                 $quizParticipationRate = $totalQuizzes > 0 ? round(($quizAttempts / ($totalQuizzes * $totalStudents)) * 100) : 0;
 
+                // Game participation is not yet implemented in your system – keep as random placeholder or remove
                 $gameParticipationRate = rand(70, 95);
             }
 
@@ -125,7 +117,7 @@ class TeacherMonitoringController extends Controller
                 'assignments_count' => $assignmentsCount,
                 'quizzes_count' => $quizzesCount,
                 'announcements_count' => $announcementsCount,
-                'last_activity' => $lastActivity ? $lastActivity->diffForHumans() : 'Never',
+                'last_activity' => $teacher->last_login_at ? $teacher->last_login_at->diffForHumans() : 'Never',
                 'status' => $status,
                 'is_active' => $isActive,
                 'recent_activities' => $recentActivities,
@@ -146,7 +138,8 @@ class TeacherMonitoringController extends Controller
         }
 
         $gradeLevels = ['Grade 4', 'Grade 5', 'Grade 6'];
-        $statusOptions = ['Active', 'Moderately Active', 'Inactive'];
+        // Simplified status options matching the new logic
+        $statusOptions = ['Active', 'Inactive'];
 
         return Inertia::render('Principal/TeacherMonitoring', [
             'teachers' => $teacherData->values(),
@@ -157,7 +150,7 @@ class TeacherMonitoringController extends Controller
                 'grade_level' => $gradeFilter,
                 'status' => $statusFilter,
             ],
-            'pagination' => $teachers->toArray(), // ✅ PAGINATION DATA
+            'pagination' => $teachers->toArray(),
         ]);
     }
 
@@ -170,19 +163,8 @@ class TeacherMonitoringController extends Controller
 
         $teacher = User::role('teacher')->with('gradeAssignments')->findOrFail($id);
 
-        $lastActivity = $teacher->last_login_at;
         $isActive = $teacher->is_active;
-
-        $status = 'Inactive';
-        if (!$isActive) {
-            $status = 'Inactive';
-        } elseif ($lastActivity && $lastActivity->diffInDays(now()) <= 7) {
-            $status = 'Active';
-        } elseif ($lastActivity && $lastActivity->diffInDays(now()) <= 14) {
-            $status = 'Moderately Active';
-        } else {
-            $status = 'Inactive';
-        }
+        $status = $isActive ? 'Active' : 'Inactive';
 
         $lessons = $teacher->lessons()->orderBy('created_at', 'desc')->get();
         $assignments = $teacher->assignments()->orderBy('created_at', 'desc')->get();

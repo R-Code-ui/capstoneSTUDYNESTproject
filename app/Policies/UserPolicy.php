@@ -11,12 +11,10 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        // Principal can view all users
         if ($user->hasRole('principal')) {
             return true;
         }
 
-        // Teachers can view students in their assigned grades
         if ($user->hasRole('teacher')) {
             return $user->hasPermissionTo('user.manage');
         }
@@ -29,27 +27,22 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        // Principal can view any user
         if ($user->hasRole('principal')) {
             return true;
         }
 
-        // Teachers can view students in their assigned grades
         if ($user->hasRole('teacher')) {
             $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
 
-            // If viewing a student, check if they're in the teacher's assigned grades
             if ($model->hasRole('student')) {
                 return in_array($model->grade_level, $assignedGrades);
             }
 
-            // Teachers can view other teachers (for monitoring)
             if ($model->hasRole('teacher')) {
                 return true;
             }
         }
 
-        // Users can view their own profile
         if ($user->id === $model->id) {
             return true;
         }
@@ -58,11 +51,10 @@ class UserPolicy
     }
 
     /**
-     * Determine if the user can create a user (teacher/student).
+     * Determine if the user can create a user.
      */
     public function create(User $user): bool
     {
-        // Only principal can create users
         return $user->hasRole('principal') && $user->hasPermissionTo('user.manage');
     }
 
@@ -71,9 +63,14 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        // Principal can update any user
         if ($user->hasRole('principal')) {
             return true;
+        }
+
+        // Teacher can update students in their assigned grades (handled in controller)
+        if ($user->hasRole('teacher') && $model->hasRole('student')) {
+            $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+            return in_array($model->grade_level, $assignedGrades) && $user->hasPermissionTo('student.manage');
         }
 
         // Users can update their own profile
@@ -89,8 +86,18 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-        // Only principal can delete/archive users
-        return $user->hasRole('principal') && $user->hasPermissionTo('user.manage');
+        // Principal can delete any user
+        if ($user->hasRole('principal')) {
+            return $user->hasPermissionTo('user.manage');
+        }
+
+        // Teacher can archive/delete students in their assigned grades
+        if ($user->hasRole('teacher') && $model->hasRole('student')) {
+            $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+            return in_array($model->grade_level, $assignedGrades) && $user->hasPermissionTo('student.manage');
+        }
+
+        return false;
     }
 
     /**
@@ -106,7 +113,17 @@ class UserPolicy
      */
     public function manageStudents(User $user): bool
     {
-        return $user->hasRole('principal') && $user->hasPermissionTo('student.manage');
+        // Principal with student.manage permission
+        if ($user->hasRole('principal')) {
+            return $user->hasPermissionTo('student.manage');
+        }
+
+        // Teacher with student.manage permission
+        if ($user->hasRole('teacher')) {
+            return $user->hasPermissionTo('student.manage');
+        }
+
+        return false;
     }
 
     /**
@@ -117,6 +134,12 @@ class UserPolicy
         // Principal can reset any user's password
         if ($user->hasRole('principal')) {
             return true;
+        }
+
+        // Teacher can reset student passwords in their assigned grades
+        if ($user->hasRole('teacher') && $model->hasRole('student')) {
+            $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+            return in_array($model->grade_level, $assignedGrades) && $user->hasPermissionTo('student.manage');
         }
 
         // Users can reset their own password (via profile)
@@ -132,8 +155,18 @@ class UserPolicy
      */
     public function archive(User $user, User $model): bool
     {
-        // Only principal can archive users
-        return $user->hasRole('principal') && $user->hasPermissionTo('user.manage');
+        // Principal can archive any user
+        if ($user->hasRole('principal')) {
+            return $user->hasPermissionTo('user.manage');
+        }
+
+        // Teacher can archive students in their assigned grades
+        if ($user->hasRole('teacher') && $model->hasRole('student')) {
+            $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+            return in_array($model->grade_level, $assignedGrades) && $user->hasPermissionTo('student.manage');
+        }
+
+        return false;
     }
 
     /**
@@ -141,7 +174,6 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        // Only principal can restore users
-        return $user->hasRole('principal') && $user->hasPermissionTo('user.manage');
+        return $this->archive($user, $model);
     }
 }

@@ -9,7 +9,6 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import {
     CheckCircleIcon,
     XCircleIcon,
-    ChartBarIcon,
     ArrowLeftIcon,
     DocumentTextIcon,
 } from '@heroicons/react/24/outline';
@@ -18,11 +17,11 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
     const [showAnswers, setShowAnswers] = useState(false);
     const passed = attempt.passed;
     const percentage = attempt.percentage;
+    const canRetry = attempt.attempt_number < quiz.attempts_allowed;
 
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         Quiz Results: {quiz.title}
@@ -152,11 +151,9 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                     )}
 
                     {/* ===== Actions ===== */}
-                    <div className="mt-6 flex flex-wrap justify-center gap-3">
-                        <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
-                            Back to Quizzes
-                        </SecondaryButton>
-                        {attempt.attempt_number < quiz.attempts_allowed && !passed && (
+                    <div className="mt-6 flex justify-center gap-3">
+                        {/* ✅ Only one back button here – header already has one, so we removed the duplicate */}
+                        {canRetry && (
                             <PrimaryButton onClick={() => router.post(route('student.quizzes.start', quiz.id))}>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                 Retry Quiz

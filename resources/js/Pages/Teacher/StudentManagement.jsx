@@ -13,14 +13,19 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PasswordInput from '@/Components/PasswordInput';
 
-export default function UserManagement({
-    teachers,
-    grade_levels,
+export default function StudentManagement({
+    students,
+    assigned_grades,
+    status_options = [],
+    sort_options = [],
     filters,
-    teachers_pagination,
+    pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
+    const [genderFilter, setGenderFilter] = useState(filters?.gender || '');
+    const [statusFilter, setStatusFilter] = useState(filters?.status || '');
+    const [sort, setSort] = useState(filters?.sort || 'name_asc');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
@@ -30,43 +35,64 @@ export default function UserManagement({
 
     const { errors } = usePage().props;
 
-    const handleSearch = (value) => {
-        setSearch(value);
+    const applyFilters = (additional = {}) => {
         setIsLoading(true);
-        router.visit(route('principal.users.index'), {
-            data: { search: value, grade_level: gradeFilter },
+        router.visit(route('teacher.students.index'), {
+            data: {
+                search,
+                grade_level: gradeFilter,
+                gender: genderFilter,
+                status: statusFilter,
+                sort,
+                ...additional,
+            },
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
+    };
+
+    const handleSearch = (value) => {
+        setSearch(value);
+        applyFilters({ search: value });
     };
 
     const handleGradeFilterChange = (value) => {
         setGradeFilter(value);
-        setIsLoading(true);
-        router.visit(route('principal.users.index'), {
-            data: { search, grade_level: value },
-            preserveState: true,
-            onFinish: () => setIsLoading(false),
-        });
+        applyFilters({ grade_level: value });
+    };
+
+    const handleGenderFilterChange = (value) => {
+        setGenderFilter(value);
+        applyFilters({ gender: value });
+    };
+
+    const handleStatusFilterChange = (value) => {
+        setStatusFilter(value);
+        applyFilters({ status: value });
+    };
+
+    const handleSortChange = (value) => {
+        setSort(value);
+        applyFilters({ sort: value });
     };
 
     const handleArchive = (user) => {
         if (confirm(`Are you sure you want to archive ${user.name}?`)) {
-            router.delete(route('principal.users.archive', user.id), {
+            router.delete(route('teacher.students.archive', user.id), {
                 preserveState: true,
             });
         }
     };
 
     const handleRestore = (user) => {
-        router.post(route('principal.users.restore', user.id), {}, {
+        router.post(route('teacher.students.restore', user.id), {}, {
             preserveState: true,
         });
     };
 
     const handleDelete = (user) => {
         if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
-            router.delete(route('principal.users.destroy', user.id), {
+            router.delete(route('teacher.students.destroy', user.id), {
                 preserveState: true,
             });
         }
@@ -74,13 +100,24 @@ export default function UserManagement({
 
     const gradeOptions = [
         { value: '', label: 'All Grades' },
-        ...grade_levels.map((grade) => ({ value: grade, label: grade })),
+        ...assigned_grades.map((grade) => ({ value: grade, label: grade })),
     ];
 
-    const teacherColumns = [
+    const genderOptions = [
+        { value: '', label: 'All Genders' },
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
+    ];
+
+    const studentColumns = [
         { key: 'name', label: 'Name' },
-        { key: 'teacher_id', label: 'Teacher ID' },
-        { key: 'grade_assignments', label: 'Assigned Grades', render: (row) => row.grade_assignments?.join(', ') || 'None' },
+        { key: 'lrn', label: 'Student ID' },
+        { key: 'grade_level', label: 'Grade Level' },
+        {
+            key: 'gender',
+            label: 'Gender',
+            render: (row) => row.gender ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1) : '—'
+        },
         { key: 'is_active', label: 'Status', render: (row) => <StatusBadge status={row.is_active ? 'active' : 'inactive'} /> },
         { key: 'created_at', label: 'Date Created' },
     ];
@@ -115,7 +152,7 @@ export default function UserManagement({
         </svg>
     );
 
-    const teacherActions = (row) => [
+    const studentActions = (row) => [
         { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
         { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
         ...(row.is_active
@@ -127,9 +164,9 @@ export default function UserManagement({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-bold text-gray-800">User Management</h2>}
+            header={<h2 className="text-xl font-bold text-gray-800">Student Management</h2>}
         >
-            <Head title="User Management" />
+            <Head title="Student Management" />
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -141,7 +178,7 @@ export default function UserManagement({
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
-                                        placeholder="Search teachers..."
+                                        placeholder="Search students..."
                                         size="md"
                                     />
                                 </div>
@@ -154,11 +191,35 @@ export default function UserManagement({
                                         size="md"
                                         className="w-36"
                                     />
+                                    <FilterDropdown
+                                        options={genderOptions}
+                                        value={genderFilter}
+                                        onChange={handleGenderFilterChange}
+                                        placeholder="Gender"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={status_options}
+                                        value={statusFilter}
+                                        onChange={handleStatusFilterChange}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={sort_options}
+                                        value={sort}
+                                        onChange={handleSortChange}
+                                        placeholder="Sort by"
+                                        size="md"
+                                        className="w-40"
+                                    />
                                     <PrimaryButton
                                         onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}
                                         className="py-2 whitespace-nowrap"
                                     >
-                                        + Add Teacher
+                                        + Add Student
                                     </PrimaryButton>
                                 </div>
                             </div>
@@ -169,13 +230,13 @@ export default function UserManagement({
                             {/* Table */}
                             <div className="mt-6">
                                 <Table
-                                    columns={teacherColumns}
-                                    rows={teachers}
-                                    actions={teacherActions}
-                                    emptyMessage="No teachers found."
+                                    columns={studentColumns}
+                                    rows={students}
+                                    actions={studentActions}
+                                    emptyMessage="No students found."
                                     hoverable
                                     striped
-                                    pagination={teachers_pagination}
+                                    pagination={pagination}
                                 />
                             </div>
                         </div>
@@ -187,7 +248,7 @@ export default function UserManagement({
             <Modal
                 show={showCreateModal || showEditModal}
                 onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}
-                title={showCreateModal ? 'Add Teacher' : 'Edit Teacher'}
+                title={showCreateModal ? 'Add Student' : 'Edit Student'}
                 size="lg"
             >
                 <form
@@ -196,8 +257,6 @@ export default function UserManagement({
                         const form = e.target;
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
-                        const gradeLevels = formData.getAll('grade_levels[]');
-                        data.grade_levels = gradeLevels.length ? gradeLevels : [];
 
                         const handleSuccess = () => {
                             setShowCreateModal(false);
@@ -206,8 +265,8 @@ export default function UserManagement({
                         };
 
                         const url = showCreateModal
-                            ? route('principal.users.store.teacher')
-                            : route('principal.users.update.teacher', selectedUser?.id);
+                            ? route('teacher.students.store')
+                            : route('teacher.students.update', selectedUser?.id);
                         const method = showCreateModal ? 'post' : 'put';
                         router[method](url, data, {
                             preserveState: true,
@@ -218,46 +277,101 @@ export default function UserManagement({
                 >
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />
 
+                    {/* First Name */}
                     <div>
-                        <InputLabel htmlFor="name" value="Full Name" />
+                        <InputLabel htmlFor="first_name" value="First Name" />
                         <TextInput
-                            id="name"
-                            name="name"
-                            defaultValue={selectedUser?.name || ''}
+                            id="first_name"
+                            name="first_name"
+                            defaultValue={selectedUser?.name ? selectedUser.name.split(' ')[0] : ''}
                             className="mt-1 block w-full"
                             required
                         />
-                        <InputError message={errors?.name} className="mt-2" />
+                        <InputError message={errors?.first_name} className="mt-2" />
                     </div>
 
+                    {/* Last Name */}
                     <div>
-                        <InputLabel htmlFor="teacher_id" value="Teacher ID" />
+                        <InputLabel htmlFor="last_name" value="Last Name" />
                         <TextInput
-                            id="teacher_id"
-                            name="teacher_id"
-                            defaultValue={selectedUser?.teacher_id || ''}
+                            id="last_name"
+                            name="last_name"
+                            defaultValue={selectedUser?.name ? selectedUser.name.split(' ').slice(-1)[0] : ''}
                             className="mt-1 block w-full"
                             required
                         />
-                        <InputError message={errors?.teacher_id} className="mt-2" />
+                        <InputError message={errors?.last_name} className="mt-2" />
                     </div>
 
+                    {/* Middle Name */}
                     <div>
-                        <InputLabel htmlFor="grade_levels" value="Assigned Grades" />
-                        <div className="mt-2 space-y-2">
-                            {grade_levels.map((grade) => (
-                                <label key={grade} className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        name="grade_levels[]"
-                                        value={grade}
-                                        defaultChecked={selectedUser?.grade_assignments?.includes(grade)}
-                                    />
-                                    <span className="text-sm text-gray-700">{grade}</span>
-                                </label>
+                        <InputLabel htmlFor="middle_name" value="Middle Name (Optional)" />
+                        <TextInput
+                            id="middle_name"
+                            name="middle_name"
+                            defaultValue={selectedUser?.name && selectedUser.name.split(' ').length > 2 ? selectedUser.name.split(' ').slice(1, -1).join(' ') : ''}
+                            className="mt-1 block w-full"
+                        />
+                        <InputError message={errors?.middle_name} className="mt-2" />
+                    </div>
+
+                    {/* Student ID */}
+                    <div>
+                        <InputLabel htmlFor="lrn" value="Student ID" />
+                        <TextInput
+                            id="lrn"
+                            name="lrn"
+                            defaultValue={selectedUser?.lrn || ''}
+                            className="mt-1 block w-full"
+                            required
+                        />
+                        <InputError message={errors?.lrn} className="mt-2" />
+                    </div>
+
+                    {/* Grade Level */}
+                    <div>
+                        <InputLabel htmlFor="grade_level" value="Grade Level" />
+                        <select
+                            id="grade_level"
+                            name="grade_level"
+                            defaultValue={selectedUser?.grade_level || ''}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
+                            required
+                        >
+                            <option value="">Select Grade Level</option>
+                            {assigned_grades.map((grade) => (
+                                <option key={grade} value={grade}>{grade}</option>
                             ))}
+                        </select>
+                        <InputError message={errors?.grade_level} className="mt-2" />
+                    </div>
+
+                    {/* Gender */}
+                    <div>
+                        <InputLabel value="Gender" required />
+                        <div className="mt-2 flex gap-6">
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="gender"
+                                    value="male"
+                                    defaultChecked={selectedUser?.gender === 'male'}
+                                    className="rounded border-gray-300 text-gray-600 shadow-sm focus:ring-blue-600"
+                                />
+                                <span className="text-sm text-gray-700">Male</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="gender"
+                                    value="female"
+                                    defaultChecked={selectedUser?.gender === 'female'}
+                                    className="rounded border-gray-300 text-gray-600 shadow-sm focus:ring-blue-600"
+                                />
+                                <span className="text-sm text-gray-700">Female</span>
+                            </label>
                         </div>
-                        <InputError message={errors?.grade_levels} className="mt-2" />
+                        <InputError message={errors?.gender} className="mt-2" />
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -286,7 +400,7 @@ export default function UserManagement({
                         const data = Object.fromEntries(formData.entries());
                         data.new_password = password;
 
-                        router.put(route('principal.users.reset-password', selectedUser?.id), data, {
+                        router.put(route('teacher.students.reset-password', selectedUser?.id), data, {
                             preserveState: true,
                             onSuccess: () => {
                                 setShowResetModal(false);

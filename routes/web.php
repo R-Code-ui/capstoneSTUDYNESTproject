@@ -16,9 +16,11 @@ use App\Http\Controllers\Teacher\QuizResultsController;
 use App\Http\Controllers\Teacher\GameController;
 use App\Http\Controllers\Teacher\GameResultsController;
 use App\Http\Controllers\Teacher\MessageController;
+use App\Http\Controllers\Teacher\MessageGroupController as TeacherMessageGroupController;
 use App\Http\Controllers\Teacher\ProgressTrackingController;
 use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementController;
 use App\Http\Controllers\Teacher\ReportController as TeacherReportController;
+use App\Http\Controllers\Teacher\StudentManagementController;   // ✅ New import for teacher student management
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\LessonController as StudentLessonController;
 use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
@@ -26,6 +28,7 @@ use App\Http\Controllers\Student\QuizController as StudentQuizController;
 use App\Http\Controllers\Student\GameController as StudentGameController;
 use App\Http\Controllers\Student\ProgressTrackerController;
 use App\Http\Controllers\Student\MessageController as StudentMessageController;
+use App\Http\Controllers\Student\MessageGroupController as StudentMessageGroupController;
 use App\Http\Controllers\Student\AnnouncementController as StudentAnnouncementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -71,11 +74,10 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+        // User Management – Teachers only (student routes removed)
         Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
         Route::post('/users/teacher', [UserManagementController::class, 'storeTeacher'])->name('users.store.teacher');
-        Route::post('/users/student', [UserManagementController::class, 'storeStudent'])->name('users.store.student');
         Route::put('/users/teacher/{id}', [UserManagementController::class, 'updateTeacher'])->name('users.update.teacher');
-        Route::put('/users/student/{id}', [UserManagementController::class, 'updateStudent'])->name('users.update.student');
         Route::put('/users/reset-password/{id}', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
         Route::delete('/users/archive/{id}', [UserManagementController::class, 'archive'])->name('users.archive');
         Route::post('/users/restore/{id}', [UserManagementController::class, 'restore'])->name('users.restore');
@@ -170,7 +172,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/create', [MessageController::class, 'create'])->name('messages.create');
         Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
-        Route::get('/messages/api/students-by-grade', [MessageController::class, 'getStudentsByGrade'])->name('messages.students-by-grade');   // ✅ NEW ROUTE
+        Route::get('/messages/api/students-by-grade', [MessageController::class, 'getStudentsByGrade'])->name('messages.students-by-grade');
+        Route::get('/messages/groups/create', [TeacherMessageGroupController::class, 'create'])->name('messages.groups.create');
+        Route::post('/messages/groups', [TeacherMessageGroupController::class, 'store'])->name('messages.groups.store');
+        Route::get('/messages/groups/{messageGroup}/edit', [TeacherMessageGroupController::class, 'edit'])->name('messages.groups.edit');
+        Route::put('/messages/groups/{messageGroup}', [TeacherMessageGroupController::class, 'update'])->name('messages.groups.update');
+        Route::post('/messages/groups/{messageGroup}/send', [TeacherMessageGroupController::class, 'send'])->name('messages.groups.send');
+        Route::delete('/messages/groups/{messageGroup}/members/{user}', [TeacherMessageGroupController::class, 'removeMember'])->name('messages.groups.members.remove');
+        Route::post('/messages/groups/{messageGroup}/archive', [TeacherMessageGroupController::class, 'archive'])->name('messages.groups.archive');
+        Route::post('/messages/groups/{messageGroup}/restore', [TeacherMessageGroupController::class, 'restore'])->name('messages.groups.restore');
+        Route::delete('/messages/groups/{messageGroup}', [TeacherMessageGroupController::class, 'destroy'])->name('messages.groups.destroy');
+        Route::get('/messages/groups/{messageGroup}', [TeacherMessageGroupController::class, 'show'])->name('messages.groups.show');
         Route::get('/messages/{message}', [MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{message}/reply', [MessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
@@ -196,6 +208,15 @@ Route::middleware('auth')->group(function () {
         // ===== Reports =====
         Route::get('/reports', [TeacherReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [TeacherReportController::class, 'generatePdf'])->name('reports.pdf');
+
+        // ===== Student Management (Teacher) =====
+        Route::get('/students', [StudentManagementController::class, 'index'])->name('students.index');
+        Route::post('/students', [StudentManagementController::class, 'store'])->name('students.store');
+        Route::put('/students/{id}', [StudentManagementController::class, 'update'])->name('students.update');
+        Route::put('/students/reset-password/{id}', [StudentManagementController::class, 'resetPassword'])->name('students.reset-password');
+        Route::delete('/students/archive/{id}', [StudentManagementController::class, 'archive'])->name('students.archive');
+        Route::post('/students/restore/{id}', [StudentManagementController::class, 'restore'])->name('students.restore');
+        Route::delete('/students/{id}', [StudentManagementController::class, 'destroy'])->name('students.destroy');
     });
 
     // ===========================================================
@@ -241,6 +262,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', [StudentMessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/create', [StudentMessageController::class, 'create'])->name('messages.create');
         Route::post('/messages', [StudentMessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/groups/{messageGroup}', [StudentMessageGroupController::class, 'show'])->name('messages.groups.show');
+        Route::post('/messages/groups/{messageGroup}/send', [StudentMessageGroupController::class, 'send'])->name('messages.groups.send');
         Route::get('/messages/{message}', [StudentMessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{message}/reply', [StudentMessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{message}', [StudentMessageController::class, 'destroy'])->name('messages.destroy');

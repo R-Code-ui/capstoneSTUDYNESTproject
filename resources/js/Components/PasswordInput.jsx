@@ -40,15 +40,15 @@ export default function PasswordInput({
                     className={`
                         block w-full rounded-md border-gray-300 shadow-sm
                         focus:border-blue-500 focus:ring-blue-500
-                        dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200
-                        ${error ? 'border-red-500 dark:border-red-400' : ''}
+                        bg-white dark:bg-white text-gray-900
+                        ${error ? 'border-red-500' : ''}
                         pr-10
                     `}
                 />
                 <button
                     type="button"
                     onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                     tabIndex="-1"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >

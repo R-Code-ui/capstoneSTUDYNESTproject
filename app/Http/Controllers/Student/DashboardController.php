@@ -90,9 +90,10 @@ class DashboardController extends Controller
             ->limit(3)
             ->get()
             ->map(function ($quiz) use ($user) {
-                $attempt = QuizAttempt::where('quiz_id', $quiz->id)
+                // Fetch the FIRST attempt (official)
+                $firstAttempt = QuizAttempt::where('quiz_id', $quiz->id)
                     ->where('student_id', $user->id)
-                    ->where('status', 'completed')
+                    ->orderBy('attempt_number', 'asc')
                     ->first();
 
                 return [
@@ -100,8 +101,8 @@ class DashboardController extends Controller
                     'title'     => $quiz->quiz_title,
                     'subject'   => $quiz->subject,
                     'questions' => $quiz->total_questions,
-                    'status'    => $attempt ? 'completed' : 'pending',
-                    'score'     => $attempt ? $attempt->score : null,
+                    'status'    => $firstAttempt && $firstAttempt->status === 'completed' ? 'completed' : 'pending',
+                    'score'     => $firstAttempt ? $firstAttempt->score : null,
                 ];
             });
 
@@ -130,7 +131,6 @@ class DashboardController extends Controller
             ->where('status', 'published')
             ->count();
 
-        // ✅ Use completedLessons() (pivot) instead of lessons()
         $completedLessons = $user->completedLessons()
             ->whereIn('lesson_id', Lesson::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id'))
             ->count();
@@ -141,7 +141,6 @@ class DashboardController extends Controller
 
         $assignmentIds = Assignment::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id');
 
-        // ✅ Include multiple relevant statuses
         $submittedAssignments = AssignmentSubmission::where('student_id', $user->id)
             ->whereIn('assignment_id', $assignmentIds)
             ->whereIn('status', ['submitted', 'late_submission', 'graded', 'reviewed'])
@@ -153,9 +152,14 @@ class DashboardController extends Controller
 
         $quizIds = Quiz::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id');
 
+        // ✅ Official completion: count only the FIRST attempt per quiz
         $completedQuizzes = QuizAttempt::where('student_id', $user->id)
             ->whereIn('quiz_id', $quizIds)
             ->where('status', 'completed')
+            ->orderBy('quiz_id')
+            ->orderBy('attempt_number', 'asc')
+            ->get()
+            ->unique('quiz_id')
             ->count();
 
         $totalGames = Game::where('grade_level', $gradeLevel)
@@ -169,13 +173,16 @@ class DashboardController extends Controller
             ->where('status', 'completed')
             ->count();
 
-        // Quiz average
-        $quizAttempts = QuizAttempt::where('student_id', $user->id)
+        // Quiz average – only first attempts
+        $firstAttempts = QuizAttempt::where('student_id', $user->id)
             ->whereIn('quiz_id', $quizIds)
             ->where('status', 'completed')
-            ->get();
+            ->orderBy('quiz_id')
+            ->orderBy('attempt_number', 'asc')
+            ->get()
+            ->unique('quiz_id');
 
-        $quizAverage = $quizAttempts->count() > 0 ? round($quizAttempts->avg('score')) : 0;
+        $quizAverage = $firstAttempts->count() > 0 ? round($firstAttempts->avg('score')) : 0;
 
         $progressSummary = [
             'lessons' => [
@@ -200,7 +207,7 @@ class DashboardController extends Controller
         // ===== Unread Messages Count =====
         $unreadMessagesCount = Message::where('receiver_id', $user->id)
             ->where('status', 'unread')
-            ->count();   // ✅ removed visibleToStudent
+            ->count();
 
         return Inertia::render('Student/Dashboard', [
             'grade_level'          => $gradeLevel,

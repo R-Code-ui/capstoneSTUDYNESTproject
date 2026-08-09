@@ -7,6 +7,7 @@ const ART_BY_GAME = {
     'Sorting Baskets': { icon: '\u{1F9FA}', label: 'Sort it out', theme: 'from-amber-500 to-orange-500' },
     'Coin Counter': { icon: '\u{1FA99}', label: 'Coin challenge', theme: 'from-yellow-500 to-amber-500' },
     'Skip Counting Path': { icon: '\u{1FAA8}', label: 'Number trail', theme: 'from-lime-500 to-green-500' },
+    'Rounding Rocket': { icon: '\u{1F680}', label: 'Rocket round', theme: 'from-indigo-500 to-purple-500' },   // ✅ New game
     'Match the Meaning': { icon: '\u{1F4DA}', label: 'Word match', theme: 'from-indigo-500 to-violet-500' },
     'Story Fill-In': { icon: '\u{1F4DD}', label: 'Story studio', theme: 'from-purple-500 to-pink-500' },
     'Fraction Pizza': { icon: '\u{1F355}', label: 'Pizza fractions', theme: 'from-orange-500 to-red-500' },
