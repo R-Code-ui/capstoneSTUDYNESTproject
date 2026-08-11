@@ -21,6 +21,7 @@ use App\Http\Controllers\Teacher\ProgressTrackingController;
 use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementController;
 use App\Http\Controllers\Teacher\ReportController as TeacherReportController;
 use App\Http\Controllers\Teacher\StudentManagementController;   // ✅ New import for teacher student management
+use App\Http\Controllers\Teacher\StudentActivityLogController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\LessonController as StudentLessonController;
 use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
@@ -119,6 +120,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/lessons/{lesson}/publish', [LessonController::class, 'publish'])->name('lessons.publish');
         Route::post('/lessons/{lesson}/archive', [LessonController::class, 'archive'])->name('lessons.archive');
         Route::get('/lessons/download-resource/{resource}', [LessonController::class, 'downloadResource'])->name('lessons.download-resource');
+        Route::get('/lessons/view-resource/{resource}', [LessonController::class, 'viewResource'])->name('lessons.view-resource');
 
         // ===== Assignments =====
         Route::get('/assignments', [AssignmentController::class, 'index'])->name('assignments.index');
@@ -130,6 +132,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/assignments/{assignment}', [AssignmentController::class, 'destroy'])->name('assignments.destroy');
         Route::post('/assignments/{assignment}/publish', [AssignmentController::class, 'publish'])->name('assignments.publish');
         Route::get('/assignments/download-resource/{resource}', [AssignmentController::class, 'downloadResource'])->name('assignments.download-resource');
+        Route::get('/assignments/view-resource/{resource}', [AssignmentController::class, 'viewResource'])->name('assignments.view-resource');
 
         // ===== Assignment Grading =====
         Route::get('/assignments/{assignment}/grade', [AssignmentGradingController::class, 'index'])->name('assignments.grade');
@@ -209,6 +212,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports', [TeacherReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [TeacherReportController::class, 'generatePdf'])->name('reports.pdf');
 
+        // ===== Student Activity Logs =====
+        Route::get('/activity-logs', [StudentActivityLogController::class, 'index'])->name('activity-logs.index');
+
         // ===== Student Management (Teacher) =====
         Route::get('/students', [StudentManagementController::class, 'index'])->name('students.index');
         Route::post('/students', [StudentManagementController::class, 'store'])->name('students.store');
@@ -230,12 +236,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/lessons/{lesson}', [StudentLessonController::class, 'show'])->name('lessons.show');
         Route::post('/lessons/{lesson}/complete', [StudentLessonController::class, 'complete'])->name('lessons.complete');
         Route::get('/lessons/download-resource/{id}', [StudentLessonController::class, 'downloadResource'])->name('lessons.download-resource');
+        Route::get('/lessons/view-resource/{id}', [StudentLessonController::class, 'viewResource'])->name('lessons.view-resource');
 
         // ===== Assignments =====
         Route::get('/assignments', [StudentAssignmentController::class, 'index'])->name('assignments.index');
         Route::get('/assignments/{assignment}', [StudentAssignmentController::class, 'show'])->name('assignments.show');
         Route::post('/assignments/{assignment}/submit', [StudentAssignmentController::class, 'submit'])->name('assignments.submit');
         Route::get('/assignments/download-resource/{id}', [StudentAssignmentController::class, 'downloadResource'])->name('assignments.download-resource');
+        Route::get('/assignments/view-resource/{id}', [StudentAssignmentController::class, 'viewResource'])->name('assignments.view-resource');
 
         // ===== Quizzes =====
         Route::get('/quizzes', [StudentQuizController::class, 'index'])->name('quizzes.index');

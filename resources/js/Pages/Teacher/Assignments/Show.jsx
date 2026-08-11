@@ -14,6 +14,7 @@ import {
     PencilSquareIcon,
     ClipboardDocumentListIcon,
     ArrowDownTrayIcon,
+    VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AssignmentsShow({ assignment }) {
@@ -25,6 +26,8 @@ export default function AssignmentsShow({ assignment }) {
                 return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
             case 'worksheet':
                 return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
+            case 'video':
+                return <VideoCameraIcon className="w-6 h-6 text-indigo-500" />;
             default:
                 return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
         }
@@ -35,6 +38,7 @@ export default function AssignmentsShow({ assignment }) {
             pdf_module: 'PDF Module',
             worksheet: 'Worksheet',
             image: 'Image',
+            video: 'Video',
         };
         return labels[type] || type;
     };
@@ -192,6 +196,9 @@ export default function AssignmentsShow({ assignment }) {
                                                     </div>
                                                 </div>
                                             </div>
+                                            {resource.type === 'video' && (
+                                                <video controls preload="metadata" className="w-full sm:w-64 rounded-md bg-black" src={route('teacher.assignments.view-resource', resource.id)} />
+                                            )}
                                             <div className="flex gap-2">
                                                 <a
                                                     href={route('teacher.assignments.download-resource', resource.id)}

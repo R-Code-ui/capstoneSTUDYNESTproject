@@ -51,8 +51,8 @@ class UpdateAssignmentRequest extends FormRequest
             'publish_date' => 'required|date',
 
             // ===== Resources =====
-            'resources' => 'nullable|array|max:5',
-            'resources.*' => 'file|mimes:pdf,docx,jpg,jpeg,png|max:2048', // 2MB
+            'resources' => 'nullable|array|max:4',
+            'resources.*' => 'file|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4|max:102400',
 
             // ✅ FIX: Add deleted_resource_ids validation
             'deleted_resource_ids' => 'nullable|string',
@@ -105,9 +105,9 @@ class UpdateAssignmentRequest extends FormRequest
             'publish_date.date' => 'Please enter a valid date.',
 
             // Resources
-            'resources.max' => 'You can only upload a maximum of 5 resources.',
-            'resources.*.mimes' => 'Only PDF, DOCX, JPG, JPEG, and PNG files are allowed.',
-            'resources.*.max' => 'Each file must not exceed 2MB.',
+            'resources.max' => 'You can only upload a maximum of 4 resources.',
+            'resources.*.mimes' => 'Only PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG, and MP4 files are allowed.',
+            'resources.*.max' => 'Each file must not exceed 100MB.',
         ];
     }
 

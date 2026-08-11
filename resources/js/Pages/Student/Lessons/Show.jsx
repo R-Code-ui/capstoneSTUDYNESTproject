@@ -20,6 +20,8 @@ import {
     PuzzlePieceIcon,
     LinkIcon,
     ArrowDownTrayIcon,
+    EyeIcon,
+    VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 export default function LessonsShow({ lesson, related_activities }) {
@@ -31,6 +33,7 @@ export default function LessonsShow({ lesson, related_activities }) {
             case 'image': return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
             case 'worksheet': return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
             case 'url': return <LinkIcon className="w-6 h-6 text-purple-500" />;
+            case 'video': return <VideoCameraIcon className="w-6 h-6 text-indigo-500" />;
             default: return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
         }
     };
@@ -41,11 +44,13 @@ export default function LessonsShow({ lesson, related_activities }) {
             worksheet: 'Worksheet',
             image: 'Image',
             url: 'External Link',
+            video: 'Video',
         };
         return labels[type] || type;
     };
 
     const isUrlResource = (type) => type === 'url';
+    const isVideoResource = (type) => type === 'video';
 
     const handleMarkComplete = () => {
         if (confirm('Mark this lesson as completed?')) {
@@ -59,6 +64,10 @@ export default function LessonsShow({ lesson, related_activities }) {
 
     const handleDownload = (resourceId) => {
         window.open(route('student.lessons.download-resource', resourceId), '_blank');
+    };
+
+    const handleView = (resourceId) => {
+        window.open(route('student.lessons.view-resource', resourceId), '_blank');
     };
 
     const comingSoon = (e) => {
@@ -177,7 +186,19 @@ export default function LessonsShow({ lesson, related_activities }) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            {isUrlResource(resource.type) ? (
+                                            {isVideoResource(resource.type) ? (
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
+                                                    <video controls preload="metadata" className="w-full sm:w-64 rounded-md bg-black" src={route('student.lessons.view-resource', resource.id)} />
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => handleView(resource.id)} className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
+                                                            <EyeIcon className="w-4 h-4" /> View
+                                                        </button>
+                                                        <button onClick={() => handleDownload(resource.id)} className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                                                            <ArrowDownTrayIcon className="w-4 h-4" /> Download
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : isUrlResource(resource.type) ? (
                                                 <a
                                                     href={resource.path}
                                                     target="_blank"
@@ -188,13 +209,22 @@ export default function LessonsShow({ lesson, related_activities }) {
                                                     Open Link
                                                 </a>
                                             ) : (
-                                                <button
-                                                    onClick={() => handleDownload(resource.id)}
-                                                    className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shrink-0"
-                                                >
-                                                    <ArrowDownTrayIcon className="w-4 h-4" />
-                                                    Download
-                                                </button>
+                                                <div className="flex gap-2 shrink-0">
+                                                    <button
+                                                        onClick={() => handleView(resource.id)}
+                                                        className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
+                                                    >
+                                                        <EyeIcon className="w-4 h-4" />
+                                                        View
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDownload(resource.id)}
+                                                        className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                    >
+                                                        <ArrowDownTrayIcon className="w-4 h-4" />
+                                                        Download
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     ))}

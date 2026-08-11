@@ -55,6 +55,7 @@ class RolePermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'message.group.send']);
 
         Permission::firstOrCreate(['name' => 'progress.view']);
+        Permission::firstOrCreate(['name' => 'student.activity.view']);
 
         // ========== CREATE ROLES & ASSIGN PERMISSIONS ==========
         $principalRole = Role::firstOrCreate(['name' => 'principal']);
@@ -70,6 +71,7 @@ class RolePermissionSeeder extends Seeder
             'message.view', 'message.send', 'message.delete',
             'message.group.view', 'message.group.create', 'message.group.manage', 'message.group.send',
             'progress.view',
+            'student.activity.view',
         ]);
 
         $teacherRole = Role::firstOrCreate(['name' => 'teacher']);
@@ -83,6 +85,7 @@ class RolePermissionSeeder extends Seeder
             'message.view', 'message.send', 'message.delete',
             'message.group.view', 'message.group.create', 'message.group.manage', 'message.group.send',
             'progress.view',
+            'student.activity.view',
             'student.manage', // ✅ Added so teacher can manage students
         ]);
 

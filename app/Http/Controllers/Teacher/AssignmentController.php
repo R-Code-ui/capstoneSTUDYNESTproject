@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\AssignmentResource;
 use App\Models\Lesson;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -151,13 +152,26 @@ class AssignmentController extends Controller
             'allow_late_submission' => 'boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
+            'resource_url' => 'nullable|url|max:2048',
             'submission_methods' => 'required|array',
             'submission_methods.*' => 'in:digital,paper',
+            'resources' => 'nullable|array|max:4',
+            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
         ]);
 
+        unset($validated['resources']);
+
+        if (Carbon::parse($validated['due_date'] . ' ' . $validated['due_time'])->lte(now())) {
+            return redirect()->back()
+                ->withErrors(['due_date' => 'The due date and time must be in the future.'])
+                ->withInput();
+        }
+
+        $resourceUrl = $validated['resource_url'] ?? null;
         $validated['submission_methods'] = json_encode($validated['submission_methods']);
+        unset($validated['resource_url'], $validated['deleted_resource_ids']);
 
         $assignment = Assignment::create([
             'teacher_id' => auth()->id(),
@@ -175,17 +189,13 @@ class AssignmentController extends Controller
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
-            if (count($files) > 5) {
+            if (count($files) > 4) {
                 return redirect()->back()
-                    ->withErrors(['resources' => 'You can only upload a maximum of 5 files.'])
+                    ->withErrors(['resources' => 'You can only upload a maximum of 4 files.'])
                     ->withInput();
             }
 
             foreach ($files as $resource) {
-                if ($resource->getSize() > 10 * 1024 * 1024) {
-                    continue;
-                }
-
                 $path = $resource->store('assignment-resources/' . $assignment->id, 'public');
 
                 AssignmentResource::create([
@@ -197,6 +207,17 @@ class AssignmentController extends Controller
                     'mime_type' => $resource->getMimeType(),
                 ]);
             }
+        }
+
+        if (!empty($resourceUrl)) {
+            AssignmentResource::create([
+                'assignment_id' => $assignment->id,
+                'resource_type' => 'url',
+                'file_name' => 'External Link',
+                'file_path' => $resourceUrl,
+                'file_size' => 0,
+                'mime_type' => 'url',
+            ]);
         }
 
         return redirect()->route('teacher.assignments.index')
@@ -240,6 +261,8 @@ class AssignmentController extends Controller
                         'type' => $resource->resource_type,
                         'name' => $resource->file_name,
                         'path' => $resource->file_path,
+                        'size' => $resource->file_size,
+                        'mime' => $resource->mime_type,
                     ];
                 }),
             ],
@@ -312,6 +335,8 @@ class AssignmentController extends Controller
                         'type' => $resource->resource_type,
                         'name' => $resource->file_name,
                         'path' => $resource->file_path,
+                        'size' => $resource->file_size,
+                        'mime' => $resource->mime_type,
                     ];
                 }),
             ],
@@ -349,19 +374,33 @@ class AssignmentController extends Controller
             'allow_late_submission' => 'boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
+            'resource_url' => 'nullable|url|max:2048',
             'submission_methods' => 'required|array',
             'submission_methods.*' => 'in:digital,paper',
+            'resources' => 'nullable|array|max:4',
+            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
             'deleted_resource_ids' => 'nullable|string',
         ]);
 
+        unset($validated['resources']);
+
+        if (Carbon::parse($validated['due_date'] . ' ' . $validated['due_time'])->lte(now())) {
+            return redirect()->back()
+                ->withErrors(['due_date' => 'The due date and time must be in the future.'])
+                ->withInput();
+        }
+
+        $resourceUrl = $validated['resource_url'] ?? null;
+        $deletedResourceIds = $validated['deleted_resource_ids'] ?? null;
         $validated['submission_methods'] = json_encode($validated['submission_methods']);
+        unset($validated['resource_url'], $validated['deleted_resource_ids']);
 
         $assignment->update($validated);
 
-        if (!empty($validated['deleted_resource_ids'])) {
-            $deletedIds = explode(',', $validated['deleted_resource_ids']);
+        if (!empty($deletedResourceIds)) {
+            $deletedIds = explode(',', $deletedResourceIds);
             $deletedIds = array_filter($deletedIds);
 
             if (!empty($deletedIds)) {
@@ -389,8 +428,10 @@ class AssignmentController extends Controller
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
-            $currentResourceCount = $assignment->resources()->count();
-            $maxNewFiles = 5 - $currentResourceCount;
+            $currentResourceCount = $assignment->resources()
+                ->where('resource_type', '!=', 'url')
+                ->count();
+            $maxNewFiles = 4 - $currentResourceCount;
 
             if (count($files) > $maxNewFiles) {
                 return redirect()->back()
@@ -399,10 +440,6 @@ class AssignmentController extends Controller
             }
 
             foreach ($files as $resource) {
-                if ($resource->getSize() > 10 * 1024 * 1024) {
-                    continue;
-                }
-
                 $path = $resource->store('assignment-resources/' . $assignment->id, 'public');
 
                 AssignmentResource::create([
@@ -412,6 +449,21 @@ class AssignmentController extends Controller
                     'file_path' => $path,
                     'file_size' => $resource->getSize(),
                     'mime_type' => $resource->getMimeType(),
+                ]);
+            }
+        }
+
+        if ($request->has('resource_url')) {
+            $assignment->resources()->where('resource_type', 'url')->delete();
+
+            if (!empty($resourceUrl)) {
+                AssignmentResource::create([
+                    'assignment_id' => $assignment->id,
+                    'resource_type' => 'url',
+                    'file_name' => 'External Link',
+                    'file_path' => $resourceUrl,
+                    'file_size' => 0,
+                    'mime_type' => 'url',
                 ]);
             }
         }
@@ -516,6 +568,22 @@ class AssignmentController extends Controller
         return response()->download($filePath, $resource->file_name);
     }
 
+    public function viewResource($resourceId)
+    {
+        $resource = AssignmentResource::findOrFail($resourceId);
+        $assignment = $resource->assignment;
+        if (!$assignment) abort(404, 'Resource not associated with any assignment.');
+
+        Gate::authorize('view', $assignment);
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+        if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        return response()->file($filePath, [
+            'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),
+        ]);
+    }
+
     /**
      * Determine resource type based on file.
      * Maps PDF -> 'pdf_module', images -> 'image', everything else (including PPTX, DOCX, etc.) -> 'worksheet'.
@@ -523,6 +591,10 @@ class AssignmentController extends Controller
     private function determineResourceType(\Illuminate\Http\UploadedFile $file): string
     {
         $mimeType = $file->getMimeType();
+
+        if (str_starts_with($mimeType, 'video/')) {
+            return 'video';
+        }
 
         if (str_contains($mimeType, 'pdf')) {
             return 'pdf_module';

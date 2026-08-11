@@ -48,6 +48,7 @@ export default function AssignmentsCreate({
         submission_methods: [],
         status: 'draft',
         publish_date: new Date().toISOString().split('T')[0],
+        resource_url: '',
         resources: [],
         bow_code: '',
         learning_competency: '',
@@ -76,6 +77,11 @@ export default function AssignmentsCreate({
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const dueDateTime = new Date(`${data.due_date}T${data.due_time}`);
+        if (!data.due_date || !data.due_time || dueDateTime <= new Date()) {
+            alert('The due date and time must be in the future.');
+            return;
+        }
         setIsSubmitting(true);
 
         const formData = new FormData();
@@ -117,10 +123,11 @@ export default function AssignmentsCreate({
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
             'application/vnd.ms-powerpoint', // older .ppt
+            'video/mp4',
         ];
 
-        const maxSize = 2 * 1024 * 1024;
-        const maxFiles = 5;
+        const maxSize = 100 * 1024 * 1024;
+        const maxFiles = 4;
 
         if (files.length + data.resources.length > maxFiles) {
             errors.push(`You can only upload a maximum of ${maxFiles} files.`);
@@ -131,11 +138,11 @@ export default function AssignmentsCreate({
 
         files.forEach((file) => {
             if (!allowedTypes.includes(file.type)) {
-                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, DOCX, or PPTX files.`);
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, DOC, DOCX, PPT, PPTX, or MP4 files.`);
                 return;
             }
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 2MB limit.`);
+                errors.push(`"${file.name}" exceeds the 100MB limit.`);
                 return;
             }
             validFiles.push(file);
@@ -444,6 +451,7 @@ export default function AssignmentsCreate({
                                                 type="date"
                                                 value={data.due_date}
                                                 onChange={(e) => setData('due_date', e.target.value)}
+                                                min={new Date().toLocaleDateString('en-CA')}
                                                 className="mt-1 block w-full"
                                                 required
                                             />
@@ -492,15 +500,20 @@ export default function AssignmentsCreate({
                             {/* ===== Section 5: Learning Resources ===== */}
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
+                                <div className="mb-4">
+                                    <InputLabel htmlFor="resource_url" value="External Assignment URL (Optional)" />
+                                    <TextInput id="resource_url" type="url" value={data.resource_url} onChange={(e) => setData('resource_url', e.target.value)} className="mt-1 block w-full" placeholder="https://example.com/assignment" />
+                                    <InputError message={errors.resource_url} className="mt-2" />
+                                </div>
                                 <div>
-                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 5 files, 2MB each)" />
+                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 4 files, 100MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
                                         multiple
                                         onChange={handleFileChange}
                                         className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx"
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.mp4"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
@@ -529,12 +542,12 @@ export default function AssignmentsCreate({
                                                 </div>
                                             ))}
                                             <p className="text-xs text-gray-500">
-                                                Total: {data.resources.length} of 5 files
+                                                Total: {data.resources.length} of 4 files
                                             </p>
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX, PPTX (Max 2MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPTX, MP4 (Max 100MB per file, Max 4 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>

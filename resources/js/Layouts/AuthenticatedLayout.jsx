@@ -57,6 +57,7 @@ export default function AuthenticatedLayout({ header, children }) {
             const messages = safeRoute('teacher.messages.index');
             const progress = safeRoute('teacher.progress.index');
             const reports = safeRoute('teacher.reports.index');
+            const activityLogs = safeRoute('teacher.activity-logs.index');
 
             if (dashboard) links.push({ href: dashboard, label: 'Dashboard' });
             if (students) links.push({ href: students, label: 'User Management' });
@@ -68,6 +69,7 @@ export default function AuthenticatedLayout({ header, children }) {
             if (messages) links.push({ href: messages, label: 'Messages' });
             if (progress) links.push({ href: progress, label: 'Progress' });
             if (reports) links.push({ href: reports, label: 'Reports' });
+            if (activityLogs) links.push({ href: activityLogs, label: 'Activity Logs' });
         } else if (userRole === 'student') {
             const dashboard = safeRoute('student.dashboard');
             const lessons = safeRoute('student.lessons.index');

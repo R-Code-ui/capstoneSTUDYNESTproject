@@ -160,7 +160,12 @@ class AssignmentGradingController extends Controller
         Gate::authorize('update', $submission->assignment);
 
         $file = $this->getFileFromSubmission($submission, $index);
-        return response()->file(storage_path('app/public/' . $file['path']));
+        $filePath = storage_path('app/public/' . $file['path']);
+        if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        return response()->file($filePath, [
+            'Content-Type' => $file['mime'] ?? mime_content_type($filePath),
+        ]);
     }
 
     /**

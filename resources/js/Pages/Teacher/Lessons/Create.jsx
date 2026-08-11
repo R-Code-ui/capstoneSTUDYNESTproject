@@ -48,6 +48,7 @@ export default function LessonsCreate({
         related_game_id: '',
         status: 'draft',
         publish_date: new Date().toISOString().split('T')[0],
+        resource_url: '',
         resources: [],
     });
 
@@ -86,11 +87,13 @@ export default function LessonsCreate({
             'image/jpg',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-powerpoint',
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'video/mp4',
         ];
 
-        const maxSize = 2 * 1024 * 1024;
-        const maxFiles = 5;
+        const maxSize = 100 * 1024 * 1024;
+        const maxFiles = 4;
 
         if (files.length + data.resources.length > maxFiles) {
             errors.push(`You can only upload a maximum of ${maxFiles} files.`);
@@ -101,11 +104,11 @@ export default function LessonsCreate({
 
         files.forEach((file) => {
             if (!allowedTypes.includes(file.type)) {
-                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, PNG, DOC, DOCX, or PPTX files.`);
+                errors.push(`"${file.name}" is not allowed. Please upload PDF, JPG, JPEG, DOC, DOCX, PPT, PPTX, or MP4 files.`);
                 return;
             }
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 2MB limit.`);
+                errors.push(`"${file.name}" exceeds the 100MB limit.`);
                 return;
             }
             validFiles.push(file);
@@ -353,15 +356,20 @@ export default function LessonsCreate({
                             {/* ===== Section 4: Learning Resources ===== */}
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
+                                <div className="mb-4">
+                                    <InputLabel htmlFor="resource_url" value="External Lesson URL (Optional)" />
+                                    <TextInput id="resource_url" type="url" value={data.resource_url} onChange={(e) => setData('resource_url', e.target.value)} className="mt-1 block w-full" placeholder="https://example.com/lesson" />
+                                    <InputError message={errors.resource_url} className="mt-2" />
+                                </div>
                                 <div>
-                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 5 files, 2MB each)" />
+                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 4 files, 100MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
                                         multiple
                                         onChange={handleFileChange}
                                         className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx,.mp4"
                                     />
                                     {fileErrors.length > 0 && (
                                         <div className="mt-2 space-y-1">
@@ -390,12 +398,12 @@ export default function LessonsCreate({
                                                 </div>
                                             ))}
                                             <p className="text-xs text-gray-500">
-                                                Total: {data.resources.length} of 5 files
+                                                Total: {data.resources.length} of 4 files
                                             </p>
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, PNG, DOC, DOCX, PPTX (Max 2MB per file, Max 5 files total)
+                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPT, PPTX, MP4 (Max 100MB per file, Max 4 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>

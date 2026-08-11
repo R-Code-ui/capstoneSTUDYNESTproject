@@ -109,20 +109,20 @@ export default function ActivityLogs({
                             <div className="text-xs font-medium text-gray-500">Teacher Logins</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.lesson_uploads}</div>
-                            <div className="text-xs font-medium text-gray-500">Lesson Uploads</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.lesson_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Lesson Activities</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.assignments_created}</div>
-                            <div className="text-xs font-medium text-gray-500">Assignments Created</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.assignment_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Assignment Activities</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.quiz_attempts}</div>
-                            <div className="text-xs font-medium text-gray-500">Quiz Attempts</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.quiz_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Quiz Activities</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.student_submissions}</div>
-                            <div className="text-xs font-medium text-gray-500">Student Submissions</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.other_teacher_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Other Teacher Activities</div>
                         </div>
                     </div>
 

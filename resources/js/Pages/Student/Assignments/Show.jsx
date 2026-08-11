@@ -21,6 +21,8 @@ import {
     PaperClipIcon,
     ArrowDownTrayIcon,
     CloudArrowUpIcon,
+    VideoCameraIcon,
+    EyeIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AssignmentsShow({ assignment, resources, submission }) {
@@ -35,14 +37,18 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
         const files = Array.from(e.target.files);
         const errorsList = [];
         const validFiles = [];
-        const maxFiles = 5;
-        const maxSize = 2 * 1024 * 1024;
+        const maxFiles = 4;
+        const maxSize = 100 * 1024 * 1024;
         const allowedTypes = [
             'application/pdf',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
             'image/jpeg',
             'image/png',
             'image/jpg',
+            'video/mp4',
         ];
 
         if (files.length + selectedFiles.length > maxFiles) {
@@ -54,11 +60,11 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
         files.forEach((file) => {
             if (!allowedTypes.includes(file.type)) {
-                errorsList.push(`"${file.name}" is not allowed. Allowed types: PDF, DOCX, JPG, JPEG, PNG.`);
+                errorsList.push(`"${file.name}" is not allowed. Allowed types: PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG, MP4.`);
                 return;
             }
             if (file.size > maxSize) {
-                errorsList.push(`"${file.name}" exceeds the 2MB limit.`);
+                errorsList.push(`"${file.name}" exceeds the 100MB limit.`);
                 return;
             }
             validFiles.push(file);
@@ -133,12 +139,13 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
             case 'pdf_module': return <DocumentIcon className="w-6 h-6 text-red-500" />;
             case 'image': return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
             case 'worksheet': return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
+            case 'video': return <VideoCameraIcon className="w-6 h-6 text-indigo-500" />;
             default: return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
         }
     };
 
     const getResourceLabel = (type) => {
-        const labels = { pdf_module: 'PDF Module', worksheet: 'Worksheet', image: 'Image' };
+        const labels = { pdf_module: 'PDF Module', worksheet: 'Worksheet', image: 'Image', video: 'Video' };
         return labels[type] || type;
     };
 
@@ -161,6 +168,10 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
     const handleDownload = (resourceId) => {
         window.open(route('student.assignments.download-resource', resourceId), '_blank');
+    };
+
+    const handleView = (resourceId) => {
+        window.open(route('student.assignments.view-resource', resourceId), '_blank');
     };
 
     const availableMethods = assignment.submission_methods?.filter((m) => m !== 'photo') || [];
@@ -262,9 +273,23 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                                     <div className="text-sm text-gray-500">{getResourceLabel(resource.type)}</div>
                                                 </div>
                                             </div>
-                                            <button onClick={() => handleDownload(resource.id)} className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shrink-0">
-                                                <ArrowDownTrayIcon className="w-4 h-4" /> Download
-                                            </button>
+                                            {resource.type === 'video' && (
+                                                <video controls preload="metadata" className="w-full sm:w-64 rounded-md bg-black" src={route('student.assignments.view-resource', resource.id)} />
+                                            )}
+                                            {resource.type === 'url' ? (
+                                                <a href={resource.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors shrink-0">
+                                                    Open Link
+                                                </a>
+                                            ) : (
+                                                <div className="flex gap-2 shrink-0">
+                                                    <button onClick={() => handleView(resource.id)} className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
+                                                        <EyeIcon className="w-4 h-4" /> View
+                                                    </button>
+                                                    <button onClick={() => handleDownload(resource.id)} className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                                                        <ArrowDownTrayIcon className="w-4 h-4" /> Download
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -349,10 +374,10 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
                                         {selectedMethod === 'digital' && (
                                             <div>
-                                                <InputLabel htmlFor="files" value="Select Files (Max 5 files, 2MB each)" required />
+                                                <InputLabel htmlFor="files" value="Select Files (Max 4 files, 100MB each)" required />
                                                 <input id="files" type="file" multiple onChange={handleFileChange}
                                                     className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" />
+                                                    accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.mp4" />
                                                 {fileErrors.length > 0 && (
                                                     <div className="mt-2 space-y-1">
                                                         {fileErrors.map((error, idx) => <p key={idx} className="text-sm text-red-600">{error}</p>)}
@@ -372,10 +397,10 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                                                 </button>
                                                             </div>
                                                         ))}
-                                                        <p className="text-xs text-gray-500">{selectedFiles.length} of 5 files selected</p>
+                                                        <p className="text-xs text-gray-500">{selectedFiles.length} of 4 files selected</p>
                                                     </div>
                                                 )}
-                                                <p className="mt-1 text-xs text-gray-500">Accepted: PDF, DOCX, JPG, JPEG, PNG (Max 2MB per file)</p>
+                                                <p className="mt-1 text-xs text-gray-500">Accepted: PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG, MP4 (Max 100MB per file)</p>
                                                 {formErrors.files && <InputError message={formErrors.files} className="mt-2" />}
                                             </div>
                                         )}

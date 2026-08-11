@@ -99,6 +99,8 @@ class LessonController extends Controller
                         'type' => $resource->resource_type,
                         'name' => $resource->file_name,
                         'path' => $resource->file_path,
+                        'size' => $resource->file_size,
+                        'mime' => $resource->mime_type,
                     ];
                 }),
             ],
@@ -167,5 +169,24 @@ class LessonController extends Controller
         }
 
         return response()->download($filePath, $resource->file_name);
+    }
+
+    public function viewResource($id)
+    {
+        $resource = LessonResource::findOrFail($id);
+        $lesson = $resource->lesson;
+
+        Gate::authorize('view', $lesson);
+
+        if ($resource->resource_type === 'url') {
+            return redirect()->away($resource->file_path);
+        }
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+        if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        return response()->file($filePath, [
+            'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),
+        ]);
     }
 }

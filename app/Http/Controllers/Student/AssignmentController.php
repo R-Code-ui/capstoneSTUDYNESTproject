@@ -90,6 +90,8 @@ class AssignmentController extends Controller
                 'type' => $resource->resource_type,
                 'name' => $resource->file_name,
                 'path' => $resource->file_path,
+                'size' => $resource->file_size,
+                'mime' => $resource->mime_type,
             ];
         });
 
@@ -135,8 +137,8 @@ class AssignmentController extends Controller
 
         $validated = $request->validate([
             'submission_method' => 'required|in:digital,paper',
-            'files'             => 'nullable|array|max:5',
-            'files.*'           => 'file|max:2048|mimes:pdf,docx,jpg,jpeg,png',
+            'files'             => 'nullable|array|max:4',
+            'files.*'           => 'file|max:102400|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4',
         ]);
 
         // Check existing submission
@@ -227,5 +229,21 @@ class AssignmentController extends Controller
         }
 
         return response()->download($filePath, $resource->file_name);
+    }
+
+    public function viewResource($id)
+    {
+        $resource = AssignmentResource::findOrFail($id);
+        $assignment = $resource->assignment;
+        $user = auth()->user();
+
+        if ($assignment->grade_level !== $user->grade_level) abort(403);
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+        if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        return response()->file($filePath, [
+            'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),
+        ]);
     }
 }

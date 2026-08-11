@@ -9,6 +9,7 @@ import {
     PaperClipIcon,
     ArrowDownTrayIcon,
     EyeIcon,
+    VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 export default function SubmissionFiles({ submission, assignment, student }) {
@@ -18,6 +19,7 @@ export default function SubmissionFiles({ submission, assignment, student }) {
     const getIcon = (mime) => {
         if (!mime) return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
         if (mime.startsWith('image/')) return <PhotoIcon className="w-5 h-5 text-emerald-500" />;
+        if (mime.startsWith('video/')) return <VideoCameraIcon className="w-5 h-5 text-indigo-500" />;
         if (mime === 'application/pdf') return <DocumentIcon className="w-5 h-5 text-red-500" />;
         return <PaperClipIcon className="w-5 h-5 text-blue-500" />;
     };
@@ -99,6 +101,14 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                                     </div>
                                                 </div>
                                             </div>
+                                            {file.mime?.startsWith('video/') && (
+                                                <video
+                                                    controls
+                                                    preload="metadata"
+                                                    className="w-full sm:w-64 rounded-md bg-black"
+                                                    src={route('teacher.assignments.view-file', { submissionId: submission.id, index: idx })}
+                                                />
+                                            )}
                                             <div className="flex gap-2 shrink-0">
                                                 <button
                                                     onClick={() => viewFile(file, idx)}

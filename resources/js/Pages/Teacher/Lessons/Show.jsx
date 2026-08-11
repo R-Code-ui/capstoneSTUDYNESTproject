@@ -16,6 +16,7 @@ import {
     ChartBarIcon,
     PuzzlePieceIcon,
     LinkIcon,
+    VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 export default function LessonsShow({ lesson }) {
@@ -25,6 +26,7 @@ export default function LessonsShow({ lesson }) {
             case 'image': return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
             case 'worksheet': return <DocumentTextIcon className="w-6 h-6 text-blue-500" />;
             case 'url': return <LinkIcon className="w-6 h-6 text-purple-500" />;
+            case 'video': return <VideoCameraIcon className="w-6 h-6 text-indigo-500" />;
             default: return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
         }
     };
@@ -35,6 +37,7 @@ export default function LessonsShow({ lesson }) {
             worksheet: 'Worksheet',
             image: 'Image',
             url: 'External Link',
+            video: 'Video',
         };
         return labels[type] || type;
     };
@@ -47,6 +50,7 @@ export default function LessonsShow({ lesson }) {
     };
 
     const isUrlResource = (type) => type === 'url';
+    const isVideoResource = (type) => type === 'video';
 
     return (
         <AuthenticatedLayout
@@ -208,6 +212,9 @@ export default function LessonsShow({ lesson }) {
                                                     )}
                                                 </div>
                                             </div>
+                                            {isVideoResource(resource.type) && (
+                                                <video controls preload="metadata" className="w-full sm:w-64 rounded-md bg-black" src={route('teacher.lessons.view-resource', resource.id)} />
+                                            )}
                                             <div className="flex-shrink-0">
                                                 {isUrlResource(resource.type) ? (
                                                     <a

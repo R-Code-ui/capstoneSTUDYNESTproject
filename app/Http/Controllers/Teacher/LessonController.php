@@ -139,7 +139,11 @@ class LessonController extends Controller
             'status' => 'required|in:draft,published,archived',
             'publish_date' => 'required|date',
             'resource_url' => 'nullable|url',
+            'resources' => 'nullable|array|max:4',
+            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
         ]);
+
+        unset($validated['resources']);
 
         $lesson = Lesson::create([
             'teacher_id' => auth()->id(),
@@ -157,15 +161,13 @@ class LessonController extends Controller
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
-            if (count($files) > 5) {
+            if (count($files) > 4) {
                 return redirect()->back()
-                    ->withErrors(['resources' => 'You can only upload a maximum of 5 files.'])
+                    ->withErrors(['resources' => 'You can only upload a maximum of 4 files.'])
                     ->withInput();
             }
 
             foreach ($files as $resource) {
-                if ($resource->getSize() > 10 * 1024 * 1024) continue;
-
                 $path = $resource->store('lesson-resources/' . $lesson->id, 'public');
                 LessonResource::create([
                     'lesson_id' => $lesson->id,
@@ -223,6 +225,7 @@ class LessonController extends Controller
                         'name' => $resource->file_name,
                         'path' => $resource->file_path,
                         'size' => $resource->file_size,
+                        'mime' => $resource->mime_type,
                     ];
                 }),
             ],
@@ -269,6 +272,7 @@ class LessonController extends Controller
                         'name' => $resource->file_name,
                         'path' => $resource->file_path,
                         'size' => $resource->file_size,
+                        'mime' => $resource->mime_type,
                     ];
                 }),
             ],
@@ -305,7 +309,11 @@ class LessonController extends Controller
             'publish_date' => 'required|date',
             'deleted_resource_ids' => 'nullable|string',
             'resource_url' => 'nullable|url',
+            'resources' => 'nullable|array|max:4',
+            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
         ]);
+
+        unset($validated['resources']);
 
         $lesson->update($validated);
 
@@ -340,7 +348,7 @@ class LessonController extends Controller
             $currentResourceCount = $lesson->resources()
                 ->where('resource_type', '!=', 'url')
                 ->count();
-            $maxNewFiles = 5 - $currentResourceCount;
+            $maxNewFiles = 4 - $currentResourceCount;
 
             if (count($files) > $maxNewFiles) {
                 return redirect()->back()
@@ -349,8 +357,6 @@ class LessonController extends Controller
             }
 
             foreach ($files as $resource) {
-                if ($resource->getSize() > 10 * 1024 * 1024) continue;
-
                 $path = $resource->store('lesson-resources/' . $lesson->id, 'public');
                 LessonResource::create([
                     'lesson_id' => $lesson->id,
@@ -458,9 +464,30 @@ class LessonController extends Controller
         return response()->download($filePath, $resource->file_name);
     }
 
+    public function viewResource($resourceId)
+    {
+        $resource = LessonResource::findOrFail($resourceId);
+        $lesson = $resource->lesson;
+        if (!$lesson) abort(404, 'Resource not associated with any lesson.');
+
+        Gate::authorize('view', $lesson);
+
+        if ($resource->resource_type === 'url') {
+            return redirect()->away($resource->file_path);
+        }
+
+        $filePath = storage_path('app/public/' . $resource->file_path);
+        if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        return response()->file($filePath, [
+            'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),
+        ]);
+    }
+
     private function determineResourceType(\Illuminate\Http\UploadedFile $file): string
     {
         $mimeType = $file->getMimeType();
+        if (str_starts_with($mimeType, 'video/')) return 'video';
         if (str_contains($mimeType, 'pdf')) return 'pdf_module';
         if (str_contains($mimeType, 'image')) return 'image';
         if (str_contains($mimeType, 'word') || str_contains($mimeType, 'document')) return 'worksheet';
