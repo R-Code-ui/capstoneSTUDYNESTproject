@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class QuizController extends Controller
 {
@@ -318,6 +319,8 @@ class QuizController extends Controller
             'completed_at'    => now(),
             'status'          => 'completed',
         ]);
+
+        app(StudyNestNotificationService::class)->quizCompleted($attempt);
 
         ActivityLog::create([
             'user_id'             => $user->id,

@@ -105,8 +105,16 @@ export default function ActivityLogs({
                     {/* ===== Activity Summary Cards ===== */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.teacher_logins}</div>
-                            <div className="text-xs font-medium text-gray-500">Teacher Logins</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.user_logins}</div>
+                            <div className="text-xs font-medium text-gray-500">User Logins</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.teacher_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Teacher Activities</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.student_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Student Activities</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-gray-800">{summary.lesson_activities}</div>
@@ -121,8 +129,12 @@ export default function ActivityLogs({
                             <div className="text-xs font-medium text-gray-500">Quiz Activities</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.other_teacher_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Other Teacher Activities</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.game_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Game Activities</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.other_user_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Other User Activities</div>
                         </div>
                     </div>
 

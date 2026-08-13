@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class GameController extends Controller
 {
@@ -130,6 +131,10 @@ class GameController extends Controller
             ...$validated,
         ]);
 
+        if ($game->status === 'published') {
+            app(StudyNestNotificationService::class)->gamePublished($game);
+        }
+
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -231,6 +236,10 @@ class GameController extends Controller
             ...$validated,
         ]);
 
+        if ($game->wasChanged('status') && $game->status === 'published') {
+            app(StudyNestNotificationService::class)->gamePublished($game);
+        }
+
         ActivityLog::create([
             'user_id'             => auth()->id(),
             'user_role'           => 'teacher',
@@ -270,6 +279,8 @@ class GameController extends Controller
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
         ]);
+
+        app(StudyNestNotificationService::class)->gamePublished($game);
 
         ActivityLog::create([
             'user_id'             => auth()->id(),

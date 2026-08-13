@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class LessonController extends Controller
 {
@@ -29,9 +32,11 @@ class LessonController extends Controller
 
         $lessons = Lesson::where('teacher_id', $user->id)
             ->when($search, function ($query, $search) {
-                return $query->where('lesson_title', 'like', "%{$search}%")
-                    ->orWhere('subject', 'like', "%{$search}%")
-                    ->orWhere('learning_competency', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('lesson_title', 'like', "%{$search}%")
+                        ->orWhere('subject', 'like', "%{$search}%")
+                        ->orWhere('learning_competency', 'like', "%{$search}%");
+                });
             })
             ->when($statusFilter, function ($query, $status) {
                 return $query->where('status', $status);
@@ -43,7 +48,8 @@ class LessonController extends Controller
                 return $query->where('trimester', $trimester);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
@@ -120,8 +126,10 @@ class LessonController extends Controller
     {
         Gate::authorize('create', Lesson::class);
 
+        $assignedGrades = auth()->user()->gradeAssignments()->pluck('grade_level')->all();
+
         $validated = $request->validate([
-            'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
+            'grade_level' => ['required', Rule::in($assignedGrades)],
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
             'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
             'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
@@ -137,14 +145,25 @@ class LessonController extends Controller
             'related_quiz_id' => 'nullable|exists:quizzes,id',
             'related_game_id' => 'nullable|exists:games,id',
             'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
+            'publish_date' => 'nullable|date',
             'resource_url' => 'nullable|url',
             'resources' => 'nullable|array|max:4',
             'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
         ]);
 
+        $this->validateLessonRelationships($validated);
+
+        if ($validated['status'] === 'published' && empty($validated['publish_date'])) {
+            return back()->withErrors(['publish_date' => 'A published lesson requires a publish date.'])->withInput();
+        }
+
+        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
+            return back()->withErrors(['publish_date' => 'A published lesson cannot have a future publish date.'])->withInput();
+        }
+
         unset($validated['resources']);
 
+        $validated['lesson_content'] = $this->sanitizeLessonContent($validated['lesson_content']);
         $lesson = Lesson::create([
             'teacher_id' => auth()->id(),
             ...$validated,
@@ -191,6 +210,10 @@ class LessonController extends Controller
             ]);
         }
 
+        if ($lesson->status === 'published') {
+            app(StudyNestNotificationService::class)->lessonPublished($lesson);
+        }
+
         return redirect()->route('teacher.lessons.index')
             ->with('success', 'Lesson created successfully!');
     }
@@ -198,7 +221,11 @@ class LessonController extends Controller
     public function show(Lesson $lesson)
     {
         Gate::authorize('view', $lesson);
-        $lesson->load('resources');
+        $lesson->load(['resources', 'students' => function ($query) use ($lesson) {
+            $query->role('student')
+                ->where('grade_level', $lesson->grade_level)
+                ->orderBy('name');
+        }]);
 
         return Inertia::render('Teacher/Lessons/Show', [
             'lesson' => [
@@ -213,7 +240,7 @@ class LessonController extends Controller
                 'bow_code' => $lesson->bow_code,
                 'lesson_title' => $lesson->lesson_title,
                 'lesson_description' => $lesson->lesson_description,
-                'lesson_content' => $lesson->lesson_content,
+                    'lesson_content' => $this->sanitizeLessonContent($lesson->lesson_content),
                 'key_takeaways' => $lesson->key_takeaways,
                 'status' => $lesson->status,
                 'publish_date' => $lesson->publish_date ? $lesson->publish_date->format('Y-m-d') : '',
@@ -229,6 +256,14 @@ class LessonController extends Controller
                     ];
                 }),
             ],
+            'completion_records' => $lesson->students->map(fn ($student) => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'grade_level' => $student->grade_level,
+                'completed_at' => $student->pivot->completed_at
+                    ? \Illuminate\Support\Carbon::parse($student->pivot->completed_at)->format('Y-m-d H:i')
+                    : null,
+            ])->values(),
         ]);
     }
 
@@ -290,7 +325,7 @@ class LessonController extends Controller
         Gate::authorize('update', $lesson);
 
         $validated = $request->validate([
-            'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
+            'grade_level' => ['required', Rule::in(auth()->user()->gradeAssignments()->pluck('grade_level')->all())],
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
             'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
             'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
@@ -306,16 +341,32 @@ class LessonController extends Controller
             'related_quiz_id' => 'nullable|exists:quizzes,id',
             'related_game_id' => 'nullable|exists:games,id',
             'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
+            'publish_date' => 'nullable|date',
             'deleted_resource_ids' => 'nullable|string',
             'resource_url' => 'nullable|url',
             'resources' => 'nullable|array|max:4',
             'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
         ]);
 
+        $this->validateLessonRelationships($validated);
+
+        if ($validated['status'] === 'published' && empty($validated['publish_date'])) {
+            return back()->withErrors(['publish_date' => 'A published lesson requires a publish date.'])->withInput();
+        }
+
+        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
+            return back()->withErrors(['publish_date' => 'A published lesson cannot have a future publish date.'])->withInput();
+        }
+
         unset($validated['resources']);
 
+        $validated['lesson_content'] = $this->sanitizeLessonContent($validated['lesson_content']);
+        $wasPublished = $lesson->status === 'published';
         $lesson->update($validated);
+
+        if (!$wasPublished && $lesson->status === 'published') {
+            app(StudyNestNotificationService::class)->lessonPublished($lesson);
+        }
 
         if (!empty($validated['deleted_resource_ids'])) {
             $deletedIds = explode(',', $validated['deleted_resource_ids']);
@@ -419,6 +470,8 @@ class LessonController extends Controller
         Gate::authorize('update', $lesson);
         $lesson->update(['status' => 'published', 'publish_date' => now()->format('Y-m-d')]);
 
+        app(StudyNestNotificationService::class)->lessonPublished($lesson);
+
         ActivityLog::create([
             'user_id' => auth()->id(),
             'user_role' => 'teacher',
@@ -492,5 +545,36 @@ class LessonController extends Controller
         if (str_contains($mimeType, 'image')) return 'image';
         if (str_contains($mimeType, 'word') || str_contains($mimeType, 'document')) return 'worksheet';
         return 'worksheet';
+    }
+
+    private function validateLessonRelationships(array $validated): void
+    {
+        foreach ([
+            'related_assignment_id' => Assignment::class,
+            'related_quiz_id' => Quiz::class,
+            'related_game_id' => Game::class,
+        ] as $field => $model) {
+            if (empty($validated[$field])) {
+                continue;
+            }
+
+            $valid = $model::whereKey($validated[$field])
+                ->where('teacher_id', auth()->id())
+                ->where('grade_level', $validated['grade_level'])
+                ->exists();
+
+            if (!$valid) {
+                throw ValidationException::withMessages([
+                    $field => 'The selected activity must belong to you and match the lesson grade level.',
+                ]);
+            }
+        }
+    }
+
+    private function sanitizeLessonContent(string $content): string
+    {
+        $content = strip_tags($content, '<p><br><strong><b><em><i><u><ul><ol><li><h1><h2><h3><blockquote>');
+
+        return preg_replace('/<([a-z0-9]+)\s+[^>]*>/i', '<$1>', $content) ?? '';
     }
 }

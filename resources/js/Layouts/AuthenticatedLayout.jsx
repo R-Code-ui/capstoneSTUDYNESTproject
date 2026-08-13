@@ -3,6 +3,7 @@ import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import Toast from '@/Components/Toast';
+import NotificationBell from '@/Components/NotificationBell';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -156,27 +157,30 @@ export default function AuthenticatedLayout({ header, children }) {
                         <span className="font-bold text-sm tracking-wide text-slate-800">STUDYNEST</span>
                     </Link>
 
-                    <button
-                        onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
-                        className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100 focus:outline-none transition-colors"
-                    >
-                        <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path
-                                className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                            <path
-                                className={showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <NotificationBell />
+                        <button
+                            onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
+                            className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100 focus:outline-none transition-colors"
+                        >
+                            <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path
+                                    className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
+                                <path
+                                    className={showingNavigationDropdown ? 'inline-flex' : 'hidden'}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {/* ===== MOBILE NAVIGATION DRAWER ===== */}
@@ -229,6 +233,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="flex items-center gap-4">
+                            <NotificationBell />
                             <Dropdown>
                                 <Dropdown.Trigger>
                                     <button

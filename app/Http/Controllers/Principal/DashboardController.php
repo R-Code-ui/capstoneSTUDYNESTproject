@@ -9,6 +9,7 @@ use App\Models\Assignment;
 use App\Models\Quiz;
 use App\Models\Announcement;
 use App\Models\TeacherGradeAssignment;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -41,6 +42,7 @@ class DashboardController extends Controller
                 'assignments_count' => $teacher->assignments()->count(),
                 'quizzes_count' => $teacher->quizzes()->count(),
                 'last_activity' => $teacher->last_login_at ? $teacher->last_login_at->diffForHumans() : 'Never',
+                'last_login_at' => $teacher->last_login_at,
                 'is_active' => $teacher->is_active,
             ];
         });
@@ -52,7 +54,7 @@ class DashboardController extends Controller
             $gradeStudents = $students->where('grade_level', $grade);
             $total = $gradeStudents->count();
             $active = $gradeStudents->filter(function ($student) {
-                return $student->assignmentSubmissions()->where('status', 'submitted')->count() > 0 ||
+                return $student->assignmentSubmissions()->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded'])->count() > 0 ||
                        $student->quizAttempts()->where('status', 'completed')->count() > 0;
             })->count();
 
@@ -71,37 +73,46 @@ class DashboardController extends Controller
 
         // Teachers Without Activity (no activity in last 7 days)
         $inactiveTeachers = $teacherActivity->filter(function ($teacher) {
-            return $teacher['last_activity'] === 'Never' || str_contains($teacher['last_activity'], 'week') || str_contains($teacher['last_activity'], 'month');
+            return $teacher['last_activity'] === 'Never' ||
+                ($teacher['last_login_at'] !== null && $teacher['last_login_at']->lt(now()->subDays(7)));
         })->count();
 
         // Recent Teacher Activities (Latest 10)
         $recentActivities = collect([]);
-        $allLessons = Lesson::with('teacher')->orderBy('created_at', 'desc')->limit(5)->get();
-        $allAssignments = Assignment::with('teacher')->orderBy('created_at', 'desc')->limit(5)->get();
-        $allQuizzes = Quiz::with('teacher')->orderBy('created_at', 'desc')->limit(5)->get();
+        // Fetch enough records from each type before merging, so one busy type
+        // cannot hide an item that belongs in the global latest-ten list.
+        $allLessons = Lesson::with('teacher')->orderBy('created_at', 'desc')->limit(10)->get();
+        $allAssignments = Assignment::with('teacher')->orderBy('created_at', 'desc')->limit(10)->get();
+        $allQuizzes = Quiz::with('teacher')->orderBy('created_at', 'desc')->limit(10)->get();
 
         $recentActivities = $allLessons->map(function ($lesson) {
             return [
                 'type' => 'lesson',
                 'teacher' => $lesson->teacher->name ?? 'Unknown',
-                'action' => 'published lesson: ' . $lesson->lesson_title,
+                'action' => ($lesson->status === 'published' ? 'published lesson: ' : $lesson->status . ' lesson: ') . $lesson->lesson_title,
                 'date' => $lesson->created_at->diffForHumans(),
+                'sort_timestamp' => $lesson->created_at->timestamp,
             ];
         })->concat($allAssignments->map(function ($assignment) {
             return [
                 'type' => 'assignment',
                 'teacher' => $assignment->teacher->name ?? 'Unknown',
-                'action' => 'created assignment: ' . $assignment->assignment_title,
+                'action' => ($assignment->status === 'published' ? 'published assignment: ' : $assignment->status . ' assignment: ') . $assignment->assignment_title,
                 'date' => $assignment->created_at->diffForHumans(),
+                'sort_timestamp' => $assignment->created_at->timestamp,
             ];
         }))->concat($allQuizzes->map(function ($quiz) {
             return [
                 'type' => 'quiz',
                 'teacher' => $quiz->teacher->name ?? 'Unknown',
-                'action' => 'created quiz: ' . $quiz->quiz_title,
+                'action' => ($quiz->status === 'published' ? 'published quiz: ' : $quiz->status . ' quiz: ') . $quiz->quiz_title,
                 'date' => $quiz->created_at->diffForHumans(),
+                'sort_timestamp' => $quiz->created_at->timestamp,
             ];
-        }))->sortByDesc('date')->take(10)->values();
+        }))->sortByDesc('sort_timestamp')->take(10)->map(function ($activity) {
+            unset($activity['sort_timestamp']);
+            return $activity;
+        })->values();
 
         // Recent Announcements (Latest 5)
         $recentAnnouncements = Announcement::with('user')
@@ -119,26 +130,45 @@ class DashboardController extends Controller
             });
 
         // Academic Summary
-        $totalStudentsCount = $totalStudents > 0 ? $totalStudents : 1;
-        $totalLessonsCount = $totalLessons > 0 ? $totalLessons : 1;
-
         $averageQuizScore = 0;
         $assignmentCompletionRate = 0;
         $lessonCompletionRate = 0;
 
-        // Calculate averages from existing data
-        $allQuizAttempts = \App\Models\QuizAttempt::all();
-        if ($allQuizAttempts->count() > 0) {
-            $averageQuizScore = round($allQuizAttempts->avg('score') ?? 0);
+        // Average only completed attempts, and convert raw points to percentages.
+        $completedQuizAttempts = \App\Models\QuizAttempt::where('status', 'completed')
+            ->get(['score', 'total_questions'])
+            ->filter(fn ($attempt) => $attempt->total_questions > 0);
+        if ($completedQuizAttempts->isNotEmpty()) {
+            $averageQuizScore = round($completedQuizAttempts->avg(
+                fn ($attempt) => ($attempt->score / $attempt->total_questions) * 100
+            ));
         }
 
         $allSubmissions = \App\Models\AssignmentSubmission::all();
-        $totalAssignmentsCount = $totalAssignments > 0 ? $totalAssignments : 1;
-        if ($allSubmissions->count() > 0) {
-            $assignmentCompletionRate = round(($allSubmissions->where('status', 'submitted')->count() / ($allSubmissions->count() + 1)) * 100);
+        $completedSubmissionStatuses = ['submitted', 'late_submission', 'reviewed', 'graded'];
+        if ($allSubmissions->isNotEmpty()) {
+            $assignmentCompletionRate = round(($allSubmissions->whereIn('status', $completedSubmissionStatuses)->count() / $allSubmissions->count()) * 100);
         }
 
-        $lessonCompletionRate = $totalLessonsCount > 0 ? round(($totalStudentsCount / ($totalLessonsCount + 1)) * 100) : 0;
+        // Count only lesson/student pairs that can actually be assigned together.
+        $publishedLessons = Lesson::where('status', 'published')->get(['id', 'grade_level']);
+        $lessonsByGrade = $publishedLessons->groupBy('grade_level');
+        $totalPossibleLessonCompletions = $lessonsByGrade->sum(function ($lessons, $grade) use ($students) {
+            return $lessons->count() * $students->where('grade_level', $grade)->count();
+        });
+
+        if ($totalPossibleLessonCompletions > 0) {
+            $completedLessonCompletions = DB::table('lesson_user')
+                ->join('lessons', 'lessons.id', '=', 'lesson_user.lesson_id')
+                ->join('users', 'users.id', '=', 'lesson_user.user_id')
+                ->where('lessons.status', 'published')
+                ->whereIn('lesson_user.user_id', $students->pluck('id'))
+                ->whereNotNull('lesson_user.completed_at')
+                ->whereColumn('users.grade_level', 'lessons.grade_level')
+                ->count();
+
+            $lessonCompletionRate = round(($completedLessonCompletions / $totalPossibleLessonCompletions) * 100);
+        }
 
         return Inertia::render('Principal/Dashboard', [
             'stats' => [

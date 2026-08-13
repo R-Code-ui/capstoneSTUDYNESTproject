@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class QuizController extends Controller
 {
@@ -158,6 +159,10 @@ class QuizController extends Controller
             'shuffle_questions' => $validated['shuffle_questions'] ?? false,
             ...$validated,
         ]);
+
+        if ($quiz->status === 'published') {
+            app(StudyNestNotificationService::class)->quizPublished($quiz);
+        }
 
         ActivityLog::create([
             'user_id'             => auth()->id(),
@@ -342,6 +347,10 @@ class QuizController extends Controller
             'shuffle_questions' => $validated['shuffle_questions'] ?? false,
             ...$validated,
         ]);
+
+        if ($quiz->wasChanged('status') && $quiz->status === 'published') {
+            app(StudyNestNotificationService::class)->quizPublished($quiz);
+        }
 
         ActivityLog::create([
             'user_id'             => auth()->id(),

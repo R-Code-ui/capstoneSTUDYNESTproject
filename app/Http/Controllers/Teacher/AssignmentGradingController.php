@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\User;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -86,6 +87,8 @@ class AssignmentGradingController extends Controller
             'graded_at'  => now(),
         ]);
 
+        app(StudyNestNotificationService::class)->assignmentGraded($submission);
+
         return redirect()->back()->with('success', 'Submission graded successfully!');
     }
 
@@ -117,6 +120,8 @@ class AssignmentGradingController extends Controller
                 'status'     => 'graded',
                 'graded_at'  => now(),
             ]);
+
+            app(StudyNestNotificationService::class)->assignmentGraded($submission);
         }
 
         return redirect()->back()->with('success', 'Paper submission marked successfully!');

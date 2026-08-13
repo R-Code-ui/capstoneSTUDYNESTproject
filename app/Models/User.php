@@ -62,9 +62,11 @@ class User extends Authenticatable
      */
     public static function findForLogin($username)
     {
-        return static::where('lrn', $username)
-            ->orWhere('teacher_id', $username)
-            ->orWhere('principal_id', $username)
+        return static::where(function ($query) use ($username) {
+            $query->where('lrn', $username)
+                ->orWhere('teacher_id', $username)
+                ->orWhere('principal_id', $username);
+        })
             ->where('is_active', true)
             ->first();
     }

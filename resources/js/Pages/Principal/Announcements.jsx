@@ -406,6 +406,7 @@ export default function PrincipalAnnouncements({
                                 name="expiration_date"
                                 type="date"
                                 defaultValue={selectedAnnouncement?.expiration_date || ''}
+                                min={selectedAnnouncement?.publish_date || new Date().toISOString().split('T')[0]}
                                 className="mt-1 block w-full"
                             />
                             <InputError message={errors?.expiration_date} className="mt-2" />

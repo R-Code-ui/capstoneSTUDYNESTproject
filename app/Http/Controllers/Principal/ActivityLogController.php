@@ -18,6 +18,14 @@ class ActivityLogController extends Controller
     {
         Gate::authorize('log.view');
 
+        $request->validate([
+            'activity_type' => 'nullable|string|in:All Activities,Teacher Activities,Student Activities,Lesson Activities,Assignment Activities,Quiz Activities,Game Activities,Announcement Activities,Message Activities,Login Activities',
+            'grade_level' => 'nullable|string|in:All Grades,Grade 4,Grade 5,Grade 6',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'search' => 'nullable|string|max:255',
+        ]);
+
         $activityType = $request->input('activity_type');
         $gradeLevel = $request->input('grade_level');
         $dateFrom = $request->input('date_from');
@@ -25,10 +33,13 @@ class ActivityLogController extends Controller
         $search = $request->input('search');
 
         $logs = ActivityLog::with('user')
-            ->where('user_role', 'teacher')
+            ->whereIn('user_role', ['teacher', 'student'])
+            ->where('user_id', '!=', auth()->id())
             ->when($activityType && $activityType !== 'All Activities', function ($query) use ($activityType) {
                 if ($activityType === 'Teacher Activities') {
                     return $query->where('user_role', 'teacher');
+                } elseif ($activityType === 'Student Activities') {
+                    return $query->where('user_role', 'student');
                 } elseif ($activityType === 'Login Activities') {
                     return $query->where('activity_type', 'login');
                 } elseif ($activityType === 'Lesson Activities') {
@@ -37,12 +48,23 @@ class ActivityLogController extends Controller
                     return $query->where('related_module', 'Assignment Module');
                 } elseif ($activityType === 'Quiz Activities') {
                     return $query->where('related_module', 'Quiz Module');
+                } elseif ($activityType === 'Game Activities') {
+                    return $query->where('related_module', 'Game Module');
+                } elseif ($activityType === 'Announcement Activities') {
+                    return $query->where('related_module', 'Announcement Module');
+                } elseif ($activityType === 'Message Activities') {
+                    return $query->where('related_module', 'Message Module');
                 }
                 return $query;
             })
             ->when($gradeLevel && $gradeLevel !== 'All Grades', function ($query) use ($gradeLevel) {
                 return $query->whereHas('user', function ($q) use ($gradeLevel) {
-                    $q->where('grade_level', $gradeLevel);
+                    $q->where(function ($q) use ($gradeLevel) {
+                        $q->where('grade_level', $gradeLevel)
+                            ->orWhereHas('gradeAssignments', function ($grades) use ($gradeLevel) {
+                                $grades->where('grade_level', $gradeLevel);
+                            });
+                    });
                 });
             })
             ->when($dateFrom, function ($query) use ($dateFrom) {
@@ -60,28 +82,36 @@ class ActivityLogController extends Controller
                     });
             })
             ->orderBy('created_at', 'desc')
+            ->withQueryString()
             ->paginate(10); // ✅ PAGINATION ADDED (replaced limit(100))
 
         // Activity Summary
-        $today = now()->startOfDay();
-        $todayLogs = ActivityLog::where('user_role', 'teacher')
-            ->whereDate('created_at', $today)
+        $todayLogs = ActivityLog::whereIn('user_role', ['teacher', 'student'])
+            ->where('user_id', '!=', auth()->id())
+            ->whereDate('created_at', today())
             ->get();
 
         $summary = [
-            'teacher_logins' => $todayLogs->where('user_role', 'teacher')->where('activity_type', 'login')->count(),
+            'user_logins' => $todayLogs->where('activity_type', 'login')->count(),
+            'teacher_activities' => $todayLogs->where('user_role', 'teacher')->count(),
+            'student_activities' => $todayLogs->where('user_role', 'student')->count(),
             'lesson_activities' => $todayLogs->where('related_module', 'Lesson Module')->count(),
             'assignment_activities' => $todayLogs->where('related_module', 'Assignment Module')->count(),
             'quiz_activities' => $todayLogs->where('related_module', 'Quiz Module')->count(),
-            'other_teacher_activities' => $todayLogs->whereNotIn('related_module', ['Lesson Module', 'Assignment Module', 'Quiz Module'])->count(),
+            'game_activities' => $todayLogs->where('related_module', 'Game Module')->count(),
+            'other_user_activities' => $todayLogs->whereNotIn('related_module', ['Lesson Module', 'Assignment Module', 'Quiz Module', 'Game Module'])->count(),
         ];
 
         $activityTypes = [
             'All Activities',
             'Teacher Activities',
+            'Student Activities',
             'Lesson Activities',
             'Assignment Activities',
             'Quiz Activities',
+            'Game Activities',
+            'Announcement Activities',
+            'Message Activities',
             'Login Activities',
         ];
 
@@ -92,7 +122,7 @@ class ActivityLogController extends Controller
                 return [
                     'id' => $log->id,
                     'date_time' => $log->created_at->format('M d, Y h:i A'),
-                    'user' => $log->user->name ?? 'Unknown',
+                    'user' => $log->user?->name ?? 'Unknown',
                     'role' => ucfirst($log->user_role),
                     'activity' => $log->activity_description,
                     'module' => $log->related_module,

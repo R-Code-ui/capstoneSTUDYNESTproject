@@ -17,9 +17,10 @@ import {
     PuzzlePieceIcon,
     LinkIcon,
     VideoCameraIcon,
+    EyeIcon,
 } from '@heroicons/react/24/outline';
 
-export default function LessonsShow({ lesson }) {
+export default function LessonsShow({ lesson, completion_records = [] }) {
     const getResourceIcon = (type) => {
         switch (type) {
             case 'pdf_module': return <DocumentIcon className="w-6 h-6 text-red-500" />;
@@ -51,6 +52,10 @@ export default function LessonsShow({ lesson }) {
 
     const isUrlResource = (type) => type === 'url';
     const isVideoResource = (type) => type === 'video';
+
+    const handleView = (resourceId) => {
+        window.open(route('teacher.lessons.view-resource', resourceId), '_blank');
+    };
 
     return (
         <AuthenticatedLayout
@@ -212,9 +217,6 @@ export default function LessonsShow({ lesson }) {
                                                     )}
                                                 </div>
                                             </div>
-                                            {isVideoResource(resource.type) && (
-                                                <video controls preload="metadata" className="w-full sm:w-64 rounded-md bg-black" src={route('teacher.lessons.view-resource', resource.id)} />
-                                            )}
                                             <div className="flex-shrink-0">
                                                 {isUrlResource(resource.type) ? (
                                                     <a
@@ -227,13 +229,14 @@ export default function LessonsShow({ lesson }) {
                                                         Open Link
                                                     </a>
                                                 ) : (
-                                                    <a
-                                                        href={route('teacher.lessons.download-resource', resource.id)}
-                                                        className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                                    >
-                                                        <ArrowDownTrayIcon className="w-4 h-4" />
-                                                        Download
-                                                    </a>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => handleView(resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
+                                                            <EyeIcon className="w-4 h-4" /> View
+                                                        </button>
+                                                        <a href={route('teacher.lessons.download-resource', resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                                                            <ArrowDownTrayIcon className="w-4 h-4" /> Download
+                                                        </a>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -242,6 +245,24 @@ export default function LessonsShow({ lesson }) {
                             </div>
                         </div>
                     )}
+
+                    <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-700">Student Completion Records</h3>
+                        </div>
+                        <div className="p-6">
+                            {completion_records.length === 0 ? (
+                                <p className="text-sm text-gray-500">No students have completed this lesson yet.</p>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full text-sm">
+                                        <thead><tr className="border-b text-left text-gray-500"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Grade Level</th><th className="py-2">Completed At</th></tr></thead>
+                                        <tbody>{completion_records.map((record) => <tr key={record.id} className="border-b last:border-0"><td className="py-3 pr-4 font-medium text-gray-800">{record.name}</td><td className="py-3 pr-4 text-gray-600">{record.grade_level}</td><td className="py-3 text-gray-600">{record.completed_at || 'N/A'}</td></tr>)}</tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Related Activities */}
                     {(lesson.related_assignment_id || lesson.related_quiz_id || lesson.related_game_id) && (

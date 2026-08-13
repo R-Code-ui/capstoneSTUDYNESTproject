@@ -18,7 +18,26 @@ class AnnouncementPolicy
 
         if ($user->hasRole('teacher')) {
             $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-            return in_array($announcement->target_audience, $assignedGrades) || $announcement->target_audience === 'all_users';
+            if ($announcement->user_id === $user->id) {
+                return true;
+            }
+
+            $gradeAudiences = array_merge(
+                $assignedGrades,
+                array_map(fn ($grade) => strtolower(str_replace(' ', '_', $grade)), $assignedGrades)
+            );
+
+            $today = now()->toDateString();
+
+            return $announcement->user_role === 'principal'
+                && $announcement->status === 'published'
+                && $announcement->publish_date
+                && $announcement->publish_date->toDateString() <= $today
+                && (!$announcement->expiration_date || $announcement->expiration_date->toDateString() >= $today)
+                && in_array($announcement->target_audience, array_merge(
+                    ['all_users', 'all_grades', 'teachers_only'],
+                    $gradeAudiences
+                ), true);
         }
 
         if ($user->hasRole('student')) {

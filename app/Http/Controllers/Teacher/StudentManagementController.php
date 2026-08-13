@@ -23,6 +23,14 @@ class StudentManagementController extends Controller
         $teacher = auth()->user();
         $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->toArray();
 
+        $request->validate([
+            'search' => 'nullable|string|max:255',
+            'grade_level' => ['nullable', Rule::in($assignedGrades)],
+            'gender' => 'nullable|in:male,female',
+            'status' => 'nullable|in:active,inactive',
+            'sort' => 'nullable|in:name_asc,name_desc,created_at_desc',
+        ]);
+
         $search = $request->input('search');
         $gradeFilter = $request->input('grade_level');
         $genderFilter = $request->input('gender');
@@ -32,8 +40,10 @@ class StudentManagementController extends Controller
         $studentsQuery = User::role('student')
             ->whereIn('grade_level', $assignedGrades)
             ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('lrn', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('lrn', 'like', "%{$search}%");
+                });
             })
             ->when($gradeFilter, function ($query, $grade) {
                 return $query->where('grade_level', $grade);
@@ -50,23 +60,29 @@ class StudentManagementController extends Controller
 
         // Sorting
         if ($sort === 'name_asc') {
-            $studentsQuery->orderBy('name', 'asc');
+            $studentsQuery->orderByRaw("LOWER(SUBSTRING_INDEX(TRIM(name), ' ', -1)) ASC")
+                ->orderBy('name', 'asc');
         } elseif ($sort === 'name_desc') {
-            $studentsQuery->orderBy('name', 'desc');
+            $studentsQuery->orderByRaw("LOWER(SUBSTRING_INDEX(TRIM(name), ' ', -1)) DESC")
+                ->orderBy('name', 'desc');
         } else {
             $studentsQuery->orderBy('created_at', 'desc');
         }
 
-        $students = $studentsQuery->paginate(10);
-
-        // Use teacher's assigned grades for dropdowns
-        $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->toArray();
+        $students = $studentsQuery->paginate(10)->withQueryString();
 
         return Inertia::render('Teacher/StudentManagement', [
             'students' => $students->map(function ($student) {
+                $nameParts = preg_split('/\s+/', trim($student->name), -1, PREG_SPLIT_NO_EMPTY);
+                $firstName = $nameParts[0] ?? '';
+                $lastName = count($nameParts) > 1 ? array_pop($nameParts) : '';
+
                 return [
                     'id' => $student->id,
                     'name' => $student->name,
+                    'first_name' => $firstName,
+                    'middle_name' => implode(' ', array_slice($nameParts, 1)),
+                    'last_name' => $lastName,
                     'lrn' => $student->lrn,
                     'grade_level' => $student->grade_level,
                     'gender' => $student->gender,
@@ -150,7 +166,7 @@ class StudentManagementController extends Controller
         $user = User::findOrFail($id);
 
         // Ensure student is in teacher's assigned grades
-        if (!in_array($user->grade_level, $assignedGrades)) {
+        if (!$user->hasRole('student') || !in_array($user->grade_level, $assignedGrades, true)) {
             abort(403, 'You can only manage students in your assigned grades.');
         }
 
@@ -193,7 +209,7 @@ class StudentManagementController extends Controller
 
         $user = User::findOrFail($id);
 
-        if (!in_array($user->grade_level, $assignedGrades)) {
+        if (!$user->hasRole('student') || !in_array($user->grade_level, $assignedGrades, true)) {
             abort(403);
         }
 
@@ -220,7 +236,7 @@ class StudentManagementController extends Controller
 
         $user = User::findOrFail($id);
 
-        if (!in_array($user->grade_level, $assignedGrades)) {
+        if (!$user->hasRole('student') || !in_array($user->grade_level, $assignedGrades, true)) {
             abort(403);
         }
 
@@ -241,7 +257,7 @@ class StudentManagementController extends Controller
 
         $user = User::findOrFail($id);
 
-        if (!in_array($user->grade_level, $assignedGrades)) {
+        if (!$user->hasRole('student') || !in_array($user->grade_level, $assignedGrades, true)) {
             abort(403);
         }
 
@@ -262,7 +278,7 @@ class StudentManagementController extends Controller
 
         $user = User::findOrFail($id);
 
-        if (!in_array($user->grade_level, $assignedGrades)) {
+        if (!$user->hasRole('student') || !in_array($user->grade_level, $assignedGrades, true)) {
             abort(403);
         }
 

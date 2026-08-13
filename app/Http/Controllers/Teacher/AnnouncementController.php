@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class AnnouncementController extends Controller
 {
@@ -25,22 +26,35 @@ class AnnouncementController extends Controller
         $categoryFilter = $request->input('category');
         $statusFilter = $request->input('status');
         $gradeFilter = $request->input('grade_level');
+        $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+        $gradeAudiences = array_merge(
+            $assignedGrades,
+            array_map(fn ($grade) => strtolower(str_replace(' ', '_', $grade)), $assignedGrades)
+        );
+        $today = now()->toDateString();
         $authorFilter = $request->input('author'); // ✅ ADDED
 
         // ✅ FIX: Get teacher's own announcements + principal's school-wide announcements
-        $announcements = Announcement::where(function ($query) use ($user) {
-                // Teacher's own announcements
-                $query->where('user_id', $user->id)
-                      ->where('user_role', 'teacher');
-            })
-            ->orWhere(function ($query) {
-                // Principal's announcements (visible to all teachers)
-                $query->where('user_role', 'principal')
-                      ->where('target_audience', 'all_users');
+        $announcements = Announcement::where(function ($query) use ($user, $gradeAudiences, $today) {
+                $query->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id)
+                        ->where('user_role', 'teacher');
+                })->orWhere(function ($query) use ($gradeAudiences, $today) {
+                    $query->where('user_role', 'principal')
+                        ->whereIn('target_audience', array_merge(['all_users', 'all_grades', 'teachers_only'], $gradeAudiences))
+                        ->where('status', 'published')
+                        ->whereDate('publish_date', '<=', $today)
+                        ->where(function ($query) use ($today) {
+                            $query->whereNull('expiration_date')
+                                ->orWhereDate('expiration_date', '>=', $today);
+                        });
+                });
             })
             ->when($search, function ($query, $search) {
-                return $query->where('title', 'like', "%{$search}%")
-                    ->orWhere('content', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%");
+                });
             })
             ->when($categoryFilter, function ($query, $category) {
                 return $query->where('category', $category);
@@ -49,23 +63,24 @@ class AnnouncementController extends Controller
                 return $query->where('status', $status);
             })
             ->when($gradeFilter, function ($query, $grade) {
-                return $query->where('target_audience', $grade)
-                    ->orWhere('target_audience', 'all_users');
+                return $query->where(function ($query) use ($grade) {
+                    $query->where('target_audience', $grade)
+                        ->orWhere('target_audience', strtolower(str_replace(' ', '_', $grade)))
+                        ->orWhereIn('target_audience', ['all_users', 'all_grades']);
+                });
             })
             ->when($authorFilter, function ($query, $author) use ($user) {
                 if ($author === 'me') {
                     return $query->where('user_id', $user->id)
                         ->where('user_role', 'teacher');
                 } elseif ($author === 'principal') {
-                    return $query->where('user_role', 'principal')
-                        ->where('target_audience', 'all_users');
+                    return $query->where('user_role', 'principal');
                 }
                 return $query;
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10); // ✅ PAGINATION ADDED
 
-        $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $categories = ['General Announcement', 'Reminder', 'Quiz Schedule', 'Assignment Notice', 'Classroom Activity', 'Project Notice', 'Suspension Announcement'];
         $statuses = ['draft', 'published', 'archived'];
         $priorities = ['normal', 'important', 'urgent'];
@@ -167,6 +182,10 @@ class AnnouncementController extends Controller
             'activity_description'=> 'Created announcement "' . $announcement->title . '"',
             'related_module'      => 'Announcement Module',
         ]);
+
+        if ($announcement->status === 'published') {
+            app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        }
 
         return redirect()->route('teacher.announcements.index')
             ->with('success', 'Announcement created successfully!');
@@ -302,6 +321,8 @@ class AnnouncementController extends Controller
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
         ]);
+
+        app(StudyNestNotificationService::class)->announcementPublished($announcement);
 
         // Log publish
         ActivityLog::create([

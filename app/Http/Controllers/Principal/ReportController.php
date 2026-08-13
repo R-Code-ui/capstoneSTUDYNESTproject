@@ -12,6 +12,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\QuizAttempt;
 use App\Models\GameResult;
 use App\Models\ReportExport;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -76,10 +77,10 @@ class ReportController extends Controller
 
         $validated = $request->validate([
             'report_type' => 'required|in:teacher_activity,student_participation,school_summary',
-            'school_year' => 'nullable|string',
-            'grade_level' => 'nullable|string',
+            'school_year' => 'nullable|in:SY 2026-2027,SY 2027-2028',
+            'grade_level' => 'nullable|in:All Grades,Grade 4,Grade 5,Grade 6',
             'teacher_id'   => 'nullable|exists:users,id',
-            'trimester'    => 'nullable|string',
+            'trimester'    => 'nullable|in:All Terms,1st Term,2nd Term,3rd Term',
         ]);
 
         $reportType  = $validated['report_type'];
@@ -94,15 +95,15 @@ class ReportController extends Controller
         switch ($reportType) {
             case 'teacher_activity':
                 $reportTitle = 'Teacher Activity Report';
-                $reportData = $this->generateTeacherActivityReport($schoolYear, $gradeLevel, $trimester);
+                $reportData = $this->generateTeacherActivityReport($schoolYear, $gradeLevel, $trimester, $teacherId);
                 break;
             case 'student_participation':
                 $reportTitle = 'Student Participation Report';
-                $reportData = $this->generateStudentParticipationReport($schoolYear, $gradeLevel, $trimester);
+                $reportData = $this->generateStudentParticipationReport($schoolYear, $gradeLevel, $trimester, $teacherId);
                 break;
             case 'school_summary':
                 $reportTitle = 'School Activity Summary Report';
-                $reportData = $this->generateSchoolSummaryReport($schoolYear);
+                $reportData = $this->generateSchoolSummaryReport($schoolYear, $gradeLevel, $trimester, $teacherId);
                 break;
             default:
                 return redirect()->back()->with('error', 'Invalid report type.');
@@ -117,7 +118,10 @@ class ReportController extends Controller
             'generated_at' => now(),
             'file_path' => null,
             'file_name' => $reportTitle . '_' . now()->format('Y-m-d'),
+            'data' => $reportData,
         ]);
+
+        app(StudyNestNotificationService::class)->reportGenerated(auth()->user(), $reportTitle, $reportExport->id);
 
         session(['report_data_' . $reportExport->id => $reportData]);
 
@@ -133,9 +137,10 @@ class ReportController extends Controller
     /**
      * Generate Teacher Activity Report.
      */
-    private function generateTeacherActivityReport($schoolYear, $gradeLevel, $trimester)
+    private function generateTeacherActivityReport($schoolYear, $gradeLevel, $trimester, $teacherId = null)
     {
         $teachers = User::role('teacher')
+            ->when($teacherId, fn ($query) => $query->whereKey($teacherId))
             ->when($gradeLevel && $gradeLevel !== 'All Grades', function ($query) use ($gradeLevel) {
                 return $query->whereHas('gradeAssignments', function ($q) use ($gradeLevel) {
                     $q->where('grade_level', $gradeLevel);
@@ -143,11 +148,15 @@ class ReportController extends Controller
             })
             ->get();
 
-        $data = $teachers->map(function ($teacher) {
-            $lessons = $teacher->lessons()->count();
-            $assignments = $teacher->assignments()->count();
-            $quizzes = $teacher->quizzes()->count();
-            $announcements = $teacher->announcements()->count();
+        $data = $teachers->map(function ($teacher) use ($schoolYear, $gradeLevel, $trimester) {
+            $contentFilter = fn ($query) => $query->where('status', 'published')
+                ->where('school_year', $schoolYear)
+                ->when($gradeLevel && $gradeLevel !== 'All Grades', fn ($q) => $q->where('grade_level', $gradeLevel))
+                ->when($trimester && $trimester !== 'All Terms', fn ($q) => $q->where('trimester', $trimester));
+            $lessons = $contentFilter($teacher->lessons())->count();
+            $assignments = $contentFilter($teacher->assignments())->count();
+            $quizzes = $contentFilter($teacher->quizzes())->count();
+            $announcements = $teacher->announcements()->where('status', 'published')->count();
 
             return [
                 'teacher'       => $teacher->name,
@@ -186,9 +195,10 @@ class ReportController extends Controller
     /**
      * Generate Student Participation Report.
      */
-    private function generateStudentParticipationReport($schoolYear, $gradeLevel, $trimester)
+    private function generateStudentParticipationReport($schoolYear, $gradeLevel, $trimester, $teacherId = null)
     {
         $students = User::role('student')
+            ->where('is_active', true)
             ->when($gradeLevel && $gradeLevel !== 'All Grades', function ($query) use ($gradeLevel) {
                 return $query->where('grade_level', $gradeLevel);
             })
@@ -203,15 +213,41 @@ class ReportController extends Controller
             $submittedAssignments = 0;
             $completedQuizzes = 0;
 
-            foreach ($gradeStudents as $student) {
-                $completedLessons += $student->lessons()->where('status', 'published')->count();
-                $submittedAssignments += AssignmentSubmission::where('student_id', $student->id)->where('status', 'submitted')->count();
-                $completedQuizzes += QuizAttempt::where('student_id', $student->id)->where('status', 'completed')->count();
+            $lessonQuery = Lesson::where('grade_level', $grade)->where('status', 'published')->where('school_year', $schoolYear);
+            $assignmentQuery = Assignment::where('grade_level', $grade)->where('status', 'published')->where('school_year', $schoolYear);
+            $quizQuery = Quiz::where('grade_level', $grade)->where('status', 'published')->where('school_year', $schoolYear);
+
+            if ($trimester && $trimester !== 'All Terms') {
+                $lessonQuery->where('trimester', $trimester);
+                $assignmentQuery->where('trimester', $trimester);
+                $quizQuery->where('trimester', $trimester);
+            }
+            if ($teacherId) {
+                $lessonQuery->where('teacher_id', $teacherId);
+                $assignmentQuery->where('teacher_id', $teacherId);
+                $quizQuery->where('teacher_id', $teacherId);
             }
 
-            $totalLessons = Lesson::where('grade_level', $grade)->where('status', 'published')->count();
-            $totalAssignments = Assignment::where('grade_level', $grade)->where('status', 'published')->count();
-            $totalQuizzes = Quiz::where('grade_level', $grade)->where('status', 'published')->count();
+            $lessonIds = $lessonQuery->pluck('id');
+            $assignmentIds = $assignmentQuery->pluck('id');
+            $quizIds = $quizQuery->pluck('id');
+            $studentIds = $gradeStudents->pluck('id');
+
+            foreach ($gradeStudents as $student) {
+                $completedLessons += $student->completedLessons()->whereIn('lesson_id', $lessonIds)->count();
+            }
+            $submittedAssignments = AssignmentSubmission::whereIn('student_id', $studentIds)
+                ->whereIn('assignment_id', $assignmentIds)
+                ->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded'])
+                ->count();
+            $completedQuizzes = QuizAttempt::whereIn('student_id', $studentIds)
+                ->whereIn('quiz_id', $quizIds)
+                ->where('status', 'completed')
+                ->count();
+
+            $totalLessons = $lessonIds->count();
+            $totalAssignments = $assignmentIds->count();
+            $totalQuizzes = $quizIds->count();
 
             return [
                 'grade'                 => $grade,
@@ -222,9 +258,27 @@ class ReportController extends Controller
             ];
         })->values();
 
-        $allParticipants = $students->filter(function ($student) {
-            return $student->assignmentSubmissions()->where('status', 'submitted')->count() > 0 ||
-                $student->quizAttempts()->where('status', 'completed')->count() > 0;
+        $allParticipants = $students->filter(function ($student) use ($schoolYear, $trimester, $teacherId) {
+            $assignmentIds = Assignment::where('status', 'published')
+                ->where('school_year', $schoolYear)
+                ->when($trimester && $trimester !== 'All Terms', fn ($q) => $q->where('trimester', $trimester))
+                ->when($teacherId, fn ($q) => $q->where('teacher_id', $teacherId))
+                ->where('grade_level', $student->grade_level)
+                ->pluck('id');
+            $quizIds = Quiz::where('status', 'published')
+                ->where('school_year', $schoolYear)
+                ->when($trimester && $trimester !== 'All Terms', fn ($q) => $q->where('trimester', $trimester))
+                ->when($teacherId, fn ($q) => $q->where('teacher_id', $teacherId))
+                ->where('grade_level', $student->grade_level)
+                ->pluck('id');
+
+            return AssignmentSubmission::where('student_id', $student->id)
+                ->whereIn('assignment_id', $assignmentIds)
+                ->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded'])
+                ->exists() || QuizAttempt::where('student_id', $student->id)
+                ->whereIn('quiz_id', $quizIds)
+                ->where('status', 'completed')
+                ->exists();
         });
 
         $highest = $participationData->sortByDesc('assignment_completion')->first();
@@ -245,14 +299,27 @@ class ReportController extends Controller
     /**
      * Generate School Summary Report.
      */
-    private function generateSchoolSummaryReport($schoolYear)
+    private function generateSchoolSummaryReport($schoolYear, $gradeLevel = null, $trimester = null, $teacherId = null)
     {
-        $totalTeachers = User::role('teacher')->count();
-        $totalStudents = User::role('student')->count();
-        $totalLessons = Lesson::count();
-        $totalAssignments = Assignment::count();
-        $totalQuizzes = Quiz::count();
-        $totalAnnouncements = Announcement::count();
+        $totalTeachers = User::role('teacher')
+            ->when($teacherId, fn ($query) => $query->whereKey($teacherId))
+            ->when($gradeLevel && $gradeLevel !== 'All Grades', fn ($query) => $query->whereHas('gradeAssignments', fn ($q) => $q->where('grade_level', $gradeLevel)))
+            ->count();
+        $totalStudents = User::role('student')->where('is_active', true)
+            ->when($gradeLevel && $gradeLevel !== 'All Grades', fn ($query) => $query->where('grade_level', $gradeLevel))
+            ->count();
+        $contentFilter = fn ($query) => $query->where('status', 'published')
+            ->where('school_year', $schoolYear)
+            ->when($gradeLevel && $gradeLevel !== 'All Grades', fn ($q) => $q->where('grade_level', $gradeLevel))
+            ->when($teacherId, fn ($q) => $q->where('teacher_id', $teacherId))
+            ->when($trimester && $trimester !== 'All Terms', fn ($q) => $q->where('trimester', $trimester));
+        $totalLessons = $contentFilter(Lesson::query())->count();
+        $totalAssignments = $contentFilter(Assignment::query())->count();
+        $totalQuizzes = $contentFilter(Quiz::query())->count();
+        $totalAnnouncements = Announcement::where('status', 'published')
+            ->whereDate('publish_date', '<=', now()->toDateString())
+            ->where(fn ($q) => $q->whereNull('expiration_date')->orWhereDate('expiration_date', '>=', now()->toDateString()))
+            ->count();
 
         return [
             'data' => [],
@@ -276,9 +343,9 @@ class ReportController extends Controller
     {
         Gate::authorize('report.view');
 
-        $report = ReportExport::findOrFail($reportId);
+        $report = ReportExport::where('user_id', auth()->id())->findOrFail($reportId);
 
-        $reportData = session('report_data_' . $reportId);
+        $reportData = $report->data ?? session('report_data_' . $reportId);
 
         if (!$reportData) {
             return redirect()->back()->with('error', 'Report data not found. Please generate the report again.');
@@ -316,9 +383,9 @@ class ReportController extends Controller
     {
         Gate::authorize('report.view');
 
-        $report = ReportExport::findOrFail($reportId);
+        $report = ReportExport::where('user_id', auth()->id())->findOrFail($reportId);
 
-        $reportData = session('report_data_' . $reportId);
+        $reportData = $report->data ?? session('report_data_' . $reportId);
 
         if (!$reportData) {
             return redirect()->route('principal.reports.index')

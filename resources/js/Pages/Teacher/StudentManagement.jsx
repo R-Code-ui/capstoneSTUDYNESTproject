@@ -110,8 +110,10 @@ export default function StudentManagement({
     ];
 
     const studentColumns = [
-        { key: 'name', label: 'Name' },
         { key: 'lrn', label: 'Student ID' },
+        { key: 'last_name', label: 'Last Name' },
+        { key: 'first_name', label: 'First Name' },
+        { key: 'middle_name', label: 'Middle Name' },
         { key: 'grade_level', label: 'Grade Level' },
         {
             key: 'gender',
@@ -283,7 +285,7 @@ export default function StudentManagement({
                         <TextInput
                             id="first_name"
                             name="first_name"
-                            defaultValue={selectedUser?.name ? selectedUser.name.split(' ')[0] : ''}
+                            defaultValue={selectedUser?.first_name || ''}
                             className="mt-1 block w-full"
                             required
                         />
@@ -296,7 +298,7 @@ export default function StudentManagement({
                         <TextInput
                             id="last_name"
                             name="last_name"
-                            defaultValue={selectedUser?.name ? selectedUser.name.split(' ').slice(-1)[0] : ''}
+                            defaultValue={selectedUser?.last_name || ''}
                             className="mt-1 block w-full"
                             required
                         />
@@ -309,7 +311,7 @@ export default function StudentManagement({
                         <TextInput
                             id="middle_name"
                             name="middle_name"
-                            defaultValue={selectedUser?.name && selectedUser.name.split(' ').length > 2 ? selectedUser.name.split(' ').slice(1, -1).join(' ') : ''}
+                            defaultValue={selectedUser?.middle_name || ''}
                             className="mt-1 block w-full"
                         />
                         <InputError message={errors?.middle_name} className="mt-2" />

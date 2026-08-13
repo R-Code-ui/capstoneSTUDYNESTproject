@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Principal;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\TeacherGradeAssignment;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -26,8 +28,10 @@ class UserManagementController extends Controller
         // ===== TEACHERS QUERY WITH PAGINATION =====
         $teachersQuery = User::role('teacher')
             ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('teacher_id', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('teacher_id', 'like', "%{$search}%");
+                });
             })
             ->when($gradeFilter, function ($query, $grade) {
                 return $query->whereHas('gradeAssignments', function ($q) use ($grade) {
@@ -76,26 +80,32 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'teacher_id' => 'required|string|unique:users,teacher_id',
             'grade_levels' => 'required|array',
-            'grade_levels.*' => 'in:Grade 4,Grade 5,Grade 6',
+            'grade_levels.*' => ['in:Grade 4,Grade 5,Grade 6', 'distinct'],
             'email' => 'nullable|email|unique:users,email',
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'teacher_id' => $validated['teacher_id'],
-            'email' => $validated['email'] ?? $validated['teacher_id'] . '@studynest.local',
-            'password' => Hash::make('Teacher123'),
-            'is_active' => true,
-        ]);
-
-        $user->assignRole('teacher');
-
-        foreach ($validated['grade_levels'] as $grade) {
-            TeacherGradeAssignment::create([
-                'teacher_id' => $user->id,
-                'grade_level' => $grade,
+        $user = DB::transaction(function () use ($validated) {
+            $user = User::create([
+                'name' => $validated['name'],
+                'teacher_id' => $validated['teacher_id'],
+                'email' => $validated['email'] ?? $validated['teacher_id'] . '@studynest.local',
+                'password' => Hash::make('Teacher123'),
+                'is_active' => true,
             ]);
-        }
+
+            $user->assignRole('teacher');
+
+            foreach ($validated['grade_levels'] as $grade) {
+                TeacherGradeAssignment::create([
+                    'teacher_id' => $user->id,
+                    'grade_level' => $grade,
+                ]);
+            }
+
+            return $user;
+        });
+
+        app(StudyNestNotificationService::class)->userCreated($user, auth()->user());
 
         return redirect()->back()->with('success', 'Teacher created successfully!');
     }
@@ -107,29 +117,31 @@ class UserManagementController extends Controller
     {
         Gate::authorize('teacher.manage');
 
-        $user = User::findOrFail($id);
+        $user = User::role('teacher')->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'teacher_id' => ['required', 'string', Rule::unique('users', 'teacher_id')->ignore($user->id)],
             'grade_levels' => 'required|array',
-            'grade_levels.*' => 'in:Grade 4,Grade 5,Grade 6',
+            'grade_levels.*' => ['in:Grade 4,Grade 5,Grade 6', 'distinct'],
             'is_active' => 'boolean',
         ]);
 
-        $user->update([
-            'name' => $validated['name'],
-            'teacher_id' => $validated['teacher_id'],
-            'is_active' => $validated['is_active'] ?? $user->is_active,
-        ]);
-
-        TeacherGradeAssignment::where('teacher_id', $user->id)->delete();
-        foreach ($validated['grade_levels'] as $grade) {
-            TeacherGradeAssignment::create([
-                'teacher_id' => $user->id,
-                'grade_level' => $grade,
+        DB::transaction(function () use ($user, $validated) {
+            $user->update([
+                'name' => $validated['name'],
+                'teacher_id' => $validated['teacher_id'],
+                'is_active' => $validated['is_active'] ?? $user->is_active,
             ]);
-        }
+
+            TeacherGradeAssignment::where('teacher_id', $user->id)->delete();
+            foreach ($validated['grade_levels'] as $grade) {
+                TeacherGradeAssignment::create([
+                    'teacher_id' => $user->id,
+                    'grade_level' => $grade,
+                ]);
+            }
+        });
 
         return redirect()->back()->with('success', 'Teacher updated successfully!');
     }
@@ -141,7 +153,7 @@ class UserManagementController extends Controller
     {
         Gate::authorize('user.manage');
 
-        $user = User::findOrFail($id);
+        $user = User::role('teacher')->findOrFail($id);
 
         $validated = $request->validate([
             'new_password' => 'required|string|min:8',
@@ -161,8 +173,9 @@ class UserManagementController extends Controller
     {
         Gate::authorize('user.manage');
 
-        $user = User::findOrFail($id);
+        $user = User::role('teacher')->findOrFail($id);
         $user->update(['is_active' => false]);
+        app(StudyNestNotificationService::class)->userStatusChanged($user, 'archived', auth()->user());
 
         return redirect()->back()->with('success', 'User archived successfully!');
     }
@@ -174,8 +187,9 @@ class UserManagementController extends Controller
     {
         Gate::authorize('user.manage');
 
-        $user = User::findOrFail($id);
+        $user = User::role('teacher')->findOrFail($id);
         $user->update(['is_active' => true]);
+        app(StudyNestNotificationService::class)->userStatusChanged($user, 'restored', auth()->user());
 
         return redirect()->back()->with('success', 'User restored successfully!');
     }
@@ -187,7 +201,7 @@ class UserManagementController extends Controller
     {
         Gate::authorize('user.manage');
 
-        $user = User::findOrFail($id);
+        $user = User::role('teacher')->findOrFail($id);
 
         // Delete grade assignments if teacher
         if ($user->hasRole('teacher')) {

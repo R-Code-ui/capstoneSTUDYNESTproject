@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class MessageController extends Controller
 {
@@ -222,6 +223,8 @@ class MessageController extends Controller
             'related_module'       => 'Message Module',
         ]);
 
+        app(StudyNestNotificationService::class)->messageReceived($message);
+
         return redirect()->route('teacher.messages.show', $message->id)
             ->with('success', 'Message sent successfully!');
     }
@@ -307,6 +310,8 @@ class MessageController extends Controller
             'activity_description' => 'Replied to message from ' . $message->sender->name . ' ("' . $message->subject . '")',
             'related_module'       => 'Message Module',
         ]);
+
+        app(StudyNestNotificationService::class)->messageReceived($reply);
 
         return redirect()->route('teacher.messages.show', $reply->id)
             ->with('success', 'Reply sent successfully!');

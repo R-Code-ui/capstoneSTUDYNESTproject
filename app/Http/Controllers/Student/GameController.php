@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class GameController extends Controller
 {
@@ -226,6 +227,8 @@ class GameController extends Controller
         $result->update([
             'progress_data' => $validated['progress'],
         ]);
+
+        app(StudyNestNotificationService::class)->gameCompleted($result);
 
         return redirect()->route('student.games.index')
             ->with('success', 'Progress saved. You can resume later!');

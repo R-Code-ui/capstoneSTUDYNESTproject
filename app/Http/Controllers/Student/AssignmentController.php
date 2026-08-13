@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class AssignmentController extends Controller
 {
@@ -191,7 +192,7 @@ class AssignmentController extends Controller
         }
 
         // Create single submission record
-        AssignmentSubmission::create([
+        $submission = AssignmentSubmission::create([
             'assignment_id'    => $assignment->id,
             'student_id'       => $user->id,
             'submission_method'=> $validated['submission_method'],
@@ -201,6 +202,8 @@ class AssignmentController extends Controller
             'status'           => $isLate ? 'late_submission' : 'submitted',
             'submitted_at'     => now(),
         ]);
+
+        app(StudyNestNotificationService::class)->assignmentSubmitted($submission);
 
         ActivityLog::create([
             'user_id'              => $user->id,

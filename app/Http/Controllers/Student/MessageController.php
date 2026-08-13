@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -185,6 +186,8 @@ class MessageController extends Controller
             'related_module'      => 'Message Module',
         ]);
 
+        app(StudyNestNotificationService::class)->messageReceived($message);
+
         return redirect()->route('student.messages.show', $message->id)
             ->with('success', 'Your question has been sent to the teacher!');
     }
@@ -273,6 +276,8 @@ class MessageController extends Controller
             'activity_description'=> 'Replied to message from teacher',
             'related_module'      => 'Message Module',
         ]);
+
+        app(StudyNestNotificationService::class)->messageReceived($reply);
 
         return redirect()->route('student.messages.show', $reply->id)
             ->with('success', 'Your reply has been sent!');

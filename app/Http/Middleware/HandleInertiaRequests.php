@@ -7,32 +7,32 @@ use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that is loaded on the first page visit.
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determine the current asset version.
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user() ? $request->user()->load('roles') : null, // ✅ FIXED: Load roles
+                'user' => $request->user() ? $request->user()->load('roles') : null,
+                'notifications' => fn () => $request->user() ? [
+                    'unread_count' => $request->user()->unreadNotifications()->count(),
+                    'items' => $request->user()->notifications()->latest()->limit(5)->get()->map(fn ($notification) => [
+                        'id' => $notification->id,
+                        'title' => data_get($notification->data, 'title', 'Notification'),
+                        'message' => data_get($notification->data, 'message', ''),
+                        'priority' => data_get($notification->data, 'priority', 'normal'),
+                        'icon' => data_get($notification->data, 'icon', 'bell'),
+                        'url' => data_get($notification->data, 'url'),
+                        'read_at' => $notification->read_at?->toISOString(),
+                        'created_at' => $notification->created_at?->diffForHumans(),
+                    ]),
+                ] : ['unread_count' => 0, 'items' => []],
             ],
         ];
     }

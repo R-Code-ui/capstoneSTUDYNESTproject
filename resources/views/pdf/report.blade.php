@@ -55,8 +55,30 @@
             flex-wrap: wrap;
             gap: 20px;
         }
+        .meta-bar:not(.meta-bar-clean) {
+            display: none;
+        }
         .meta-bar span {
             font-weight: 500;
+        }
+        /* Keep PDF metadata ASCII-only; DomPDF's default fonts do not render emoji. */
+        .meta-bar span {
+            font-size: 0;
+        }
+        .meta-bar span::before {
+            font-size: 11px;
+        }
+        .meta-bar span:nth-child(1)::before {
+            content: "Grade: ";
+        }
+        .meta-bar span:nth-child(2)::before {
+            content: "Subject: ";
+        }
+        .meta-bar span:nth-child(3)::before {
+            content: "Term: ";
+        }
+        .meta-bar span strong {
+            font-size: 11px;
         }
 
         /* ---- Summary Section ---- */
@@ -179,6 +201,18 @@
         <div class="generated-info">
             Generated: {{ $generated_at }}
         </div>
+    </div>
+
+    <div class="meta-bar meta-bar-clean">
+        @if($report->grade_level)
+            <span>Grade: <strong>{{ $report->grade_level }}</strong></span>
+        @endif
+        @if($report->subject)
+            <span>Subject: <strong>{{ $report->subject }}</strong></span>
+        @endif
+        @if($report->trimester)
+            <span>Term: <strong>{{ $report->trimester }}</strong></span>
+        @endif
     </div>
 
     <!-- Meta Filters -->

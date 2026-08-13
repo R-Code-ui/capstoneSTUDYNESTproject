@@ -12,6 +12,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\QuizAttempt;
 use App\Models\GameResult;
 use App\Models\ReportExport;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -100,7 +101,7 @@ class ReportController extends Controller
         }
 
         // Save export record
-        ReportExport::create([
+        $reportExport = ReportExport::create([
             'user_id'      => $user->id,
             'report_type'  => $reportTitle,
             'grade_level'  => $gradeLevel,
@@ -110,6 +111,8 @@ class ReportController extends Controller
             'file_path'    => null,
             'file_name'    => $reportTitle . '_' . now()->format('Y-m-d') . '.pdf',
         ]);
+
+        app(StudyNestNotificationService::class)->reportGenerated($user, $reportTitle, $reportExport->id);
 
         // Load PDF view
         $pdf = Pdf::loadView('pdf.teacher-report', [

@@ -22,16 +22,26 @@ class AnnouncementController extends Controller
 
         $search = $request->input('search');
         $categoryFilter = $request->input('category');
+        $today = now()->toDateString();
+        $gradeAudience = strtolower(str_replace(' ', '_', (string) $gradeLevel));
 
         $announcements = Announcement::where('status', 'published')
-            ->where(function ($query) use ($gradeLevel) {
+            ->whereDate('publish_date', '<=', $today)
+            ->where(function ($query) use ($today) {
+                $query->whereNull('expiration_date')
+                    ->orWhereDate('expiration_date', '>=', $today);
+            })
+            ->where(function ($query) use ($gradeLevel, $gradeAudience) {
                 $query->where('target_audience', 'all_users')
                     ->orWhere('target_audience', 'all_grades')
-                    ->orWhere('target_audience', $gradeLevel);
+                    ->orWhere('target_audience', $gradeLevel)
+                    ->orWhere('target_audience', $gradeAudience);
             })
             ->when($search, function ($query, $search) {
-                return $query->where('title', 'like', "%{$search}%")
-                    ->orWhere('content', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%");
+                });
             })
             ->when($categoryFilter, function ($query, $category) {
                 return $query->where('category', $category);
@@ -78,13 +88,23 @@ class AnnouncementController extends Controller
     public function show(Announcement $announcement)
     {
         $user = auth()->user();
+        $today = now()->toDateString();
+        $gradeAudience = strtolower(str_replace(' ', '_', (string) $user->grade_level));
 
         // Check if student can view this announcement
         $canView = false;
-        if ($announcement->status === 'published') {
-            if ($announcement->target_audience === 'all_users' ||
-                $announcement->target_audience === 'all_grades' ||
-                $announcement->target_audience === $user->grade_level) {
+        if (
+            $announcement->status === 'published' &&
+            $announcement->publish_date &&
+            $announcement->publish_date->toDateString() <= $today &&
+            (!$announcement->expiration_date || $announcement->expiration_date->toDateString() >= $today)
+        ) {
+            if (in_array($announcement->target_audience, [
+                'all_users',
+                'all_grades',
+                $user->grade_level,
+                $gradeAudience,
+            ], true)) {
                 $canView = true;
             }
         }

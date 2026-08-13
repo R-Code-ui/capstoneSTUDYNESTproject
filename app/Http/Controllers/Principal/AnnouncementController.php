@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Principal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -24,8 +25,10 @@ class AnnouncementController extends Controller
         $announcements = Announcement::with('user')
             ->where('user_role', 'principal')
             ->when($search, function ($query, $search) {
-                return $query->where('title', 'like', "%{$search}%")
-                    ->orWhere('content', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%");
+                });
             })
             ->when($categoryFilter, function ($query, $category) {
                 return $query->where('category', $category);
@@ -54,7 +57,9 @@ class AnnouncementController extends Controller
                     'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : null,
                     'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : null,
                     'view_count' => $announcement->view_count,
-                    'created_at' => $announcement->created_at->diffForHumans(),
+                    'created_at' => $announcement->publish_date
+                        ? $announcement->publish_date->diffForHumans()
+                        : $announcement->created_at->diffForHumans(),
                     'posted_by' => $announcement->user->name ?? 'Unknown',
                 ];
             }),
@@ -79,7 +84,7 @@ class AnnouncementController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string',
+            'category' => 'required|in:Reminder,Event Announcement,Class Suspension,Emergency Notice,Academic Notice,School Activity',
             'content' => 'required|string',
             'target_audience' => 'required|in:all_users,all_grades,grade_4,grade_5,grade_6,teachers_only',
             'priority' => 'required|in:normal,important,urgent',
@@ -89,7 +94,19 @@ class AnnouncementController extends Controller
             'expiration_date' => 'nullable|date|after:publish_date',
         ]);
 
-        Announcement::create([
+        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
+            return back()->withErrors(['publish_date' => 'A published announcement cannot have a future publish date.'])->withInput();
+        }
+
+        if (
+            $validated['status'] === 'published' &&
+            !empty($validated['expiration_date']) &&
+            $validated['expiration_date'] < now()->toDateString()
+        ) {
+            return back()->withErrors(['expiration_date' => 'A published announcement cannot already be expired.'])->withInput();
+        }
+
+        $announcement = Announcement::create([
             'user_id' => auth()->id(),
             'user_role' => 'principal',
             'title' => $validated['title'],
@@ -104,6 +121,10 @@ class AnnouncementController extends Controller
             'view_count' => 0,
         ]);
 
+        if ($this->isCurrentlyVisible($announcement)) {
+            app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        }
+
         return redirect()->back()->with('success', 'Announcement created successfully!');
     }
 
@@ -114,11 +135,12 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('announcement.edit');
 
-        $announcement = Announcement::findOrFail($id);
+        $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
+        $wasPublished = $announcement->status === 'published';
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string',
+            'category' => 'required|in:Reminder,Event Announcement,Class Suspension,Emergency Notice,Academic Notice,School Activity',
             'content' => 'required|string',
             'target_audience' => 'required|in:all_users,all_grades,grade_4,grade_5,grade_6,teachers_only',
             'priority' => 'required|in:normal,important,urgent',
@@ -127,6 +149,18 @@ class AnnouncementController extends Controller
             'publish_date' => 'required|date',
             'expiration_date' => 'nullable|date|after:publish_date',
         ]);
+
+        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
+            return back()->withErrors(['publish_date' => 'A published announcement cannot have a future publish date.'])->withInput();
+        }
+
+        if (
+            $validated['status'] === 'published' &&
+            !empty($validated['expiration_date']) &&
+            $validated['expiration_date'] < now()->toDateString()
+        ) {
+            return back()->withErrors(['expiration_date' => 'A published announcement cannot already be expired.'])->withInput();
+        }
 
         $announcement->update([
             'title' => $validated['title'],
@@ -140,6 +174,21 @@ class AnnouncementController extends Controller
             'expiration_date' => $validated['expiration_date'] ?? null,
         ]);
 
+        if ($this->isCurrentlyVisible($announcement) && (
+            !$wasPublished ||
+            $announcement->wasChanged([
+                'title',
+                'content',
+                'target_audience',
+                'priority',
+                'status',
+                'publish_date',
+                'expiration_date',
+            ])
+        )) {
+            app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        }
+
         return redirect()->back()->with('success', 'Announcement updated successfully!');
     }
 
@@ -150,7 +199,7 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('announcement.delete');
 
-        $announcement = Announcement::findOrFail($id);
+        $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
         $announcement->delete();
 
         return redirect()->back()->with('success', 'Announcement deleted successfully!');
@@ -163,7 +212,7 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('announcement.edit');
 
-        $announcement = Announcement::findOrFail($id);
+        $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
         $announcement->update(['status' => 'archived']);
 
         return redirect()->back()->with('success', 'Announcement archived successfully!');
@@ -176,12 +225,26 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('announcement.edit');
 
-        $announcement = Announcement::findOrFail($id);
+        $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
         $announcement->update([
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
         ]);
 
+        if ($this->isCurrentlyVisible($announcement)) {
+            app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        }
+
         return redirect()->back()->with('success', 'Announcement published successfully!');
+    }
+
+    private function isCurrentlyVisible(Announcement $announcement): bool
+    {
+        $today = now()->toDateString();
+
+        return $announcement->status === 'published'
+            && $announcement->publish_date
+            && $announcement->publish_date->toDateString() <= $today
+            && (!$announcement->expiration_date || $announcement->expiration_date->toDateString() >= $today);
     }
 }

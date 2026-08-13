@@ -89,7 +89,7 @@ class LessonController extends Controller
                 'title' => $lesson->lesson_title,
                 'subject' => $lesson->subject,
                 'description' => $lesson->lesson_description,
-                'content' => $lesson->lesson_content,
+                    'content' => $this->sanitizeLessonContent($lesson->lesson_content),
                 'teacher' => $lesson->teacher->name ?? 'Unknown',
                 'publish_date' => $lesson->publish_date ? $lesson->publish_date->format('Y-m-d') : '',
                 'is_completed' => $isCompleted,
@@ -130,18 +130,24 @@ class LessonController extends Controller
 
         Gate::authorize('view', $lesson);
 
-        $user->completedLessons()->syncWithoutDetaching([$lesson->id => [
+        $alreadyCompleted = $user->completedLessons()->where('lesson_id', $lesson->id)->exists();
+
+        if (!$alreadyCompleted) {
+            $user->completedLessons()->syncWithoutDetaching([$lesson->id => [
             'completed_at' => now(),
-        ]]);
+            ]]);
+        }
 
         // ✅ Log: student completed lesson
-        ActivityLog::create([
+        if (!$alreadyCompleted) {
+            ActivityLog::create([
             'user_id'             => $user->id,
             'user_role'           => 'student',
             'activity_type'       => 'complete',
             'activity_description'=> 'Completed lesson: "' . $lesson->lesson_title . '"',
             'related_module'      => 'Lesson Module',
-        ]);
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Lesson marked as completed!');
     }
@@ -188,5 +194,12 @@ class LessonController extends Controller
         return response()->file($filePath, [
             'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),
         ]);
+    }
+
+    private function sanitizeLessonContent(string $content): string
+    {
+        $content = strip_tags($content, '<p><br><strong><b><em><i><u><ul><ol><li><h1><h2><h3><blockquote>');
+
+        return preg_replace('/<([a-z0-9]+)\s+[^>]*>/i', '<$1>', $content) ?? '';
     }
 }

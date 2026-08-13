@@ -23,6 +23,7 @@ class ReportExport extends Model
         'generated_at',
         'file_path',
         'file_name',
+        'data',
     ];
 
     /**
@@ -34,6 +35,7 @@ class ReportExport extends Model
     {
         return [
             'generated_at' => 'datetime',
+            'data' => 'array',
         ];
     }
 

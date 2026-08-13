@@ -46,16 +46,23 @@ class LoginRequest extends FormRequest
         $username = $this->input('username');
 
         // Try to find user by LRN (student), teacher_id, or principal_id
-        $user = User::where('lrn', $username)
-            ->orWhere('teacher_id', $username)
-            ->orWhere('principal_id', $username)
+        $user = User::where(function ($query) use ($username) {
+            $query->where('lrn', $username)
+                ->orWhere('teacher_id', $username)
+                ->orWhere('principal_id', $username);
+        })
+            ->where('is_active', true)
             ->first();
 
         // If user found, use their email for authentication (Laravel requires email or username field)
         // We'll use the email field internally but the user logs in with LRN/Teacher ID/Principal ID
         if ($user) {
             // Attempt login using the user's email and the provided password
-            if (!Auth::attempt(['email' => $user->email, 'password' => $this->input('password')], $this->boolean('remember'))) {
+            if (!Auth::attempt([
+                'email' => $user->email,
+                'password' => $this->input('password'),
+                'is_active' => true,
+            ], $this->boolean('remember'))) {
                 RateLimiter::hit($this->throttleKey());
 
                 throw ValidationException::withMessages([

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 
 class AssignmentController extends Controller
 {
@@ -185,6 +186,10 @@ class AssignmentController extends Controller
             'activity_description'=> 'Created assignment "' . $assignment->assignment_title . '"',
             'related_module'      => 'Assignment Module',
         ]);
+
+        if ($assignment->status === 'published') {
+            app(StudyNestNotificationService::class)->assignmentPublished($assignment);
+        }
 
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
@@ -511,6 +516,8 @@ class AssignmentController extends Controller
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
         ]);
+
+        app(StudyNestNotificationService::class)->assignmentPublished($assignment);
 
         ActivityLog::create([
             'user_id'             => auth()->id(),
