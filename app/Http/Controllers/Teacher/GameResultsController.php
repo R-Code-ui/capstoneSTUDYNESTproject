@@ -22,16 +22,25 @@ class GameResultsController extends Controller
         // Get all students for this grade level
         $students = User::role('student')
             ->where('grade_level', $game->grade_level)
+            ->where('is_active', true)
             ->get();
 
         // Get all results for this game
         $results = GameResult::where('game_id', $game->id)
             ->with('student')
+            ->orderByDesc('attempt_number')
+            ->orderByDesc('completed_at')
+            ->orderByDesc('created_at')
             ->get();
 
+        $resultsByStudent = $results->groupBy('student_id');
+
         // Merge to show all students (including those who haven't played)
-        $allStudents = $students->map(function ($student) use ($results) {
-            $result = $results->firstWhere('student_id', $student->id);
+        $allStudents = $students->map(function ($student) use ($resultsByStudent) {
+            $studentResults = $resultsByStudent->get($student->id, collect());
+            $result = $studentResults->where('status', 'completed')->first()
+                ?? $studentResults->where('status', 'started')->first()
+                ?? $studentResults->where('status', 'assigned')->first();
 
             return [
                 'student_id' => $student->id,
@@ -48,9 +57,15 @@ class GameResultsController extends Controller
         });
 
         // Calculate statistics
-        $completedResults = $results->where('status', 'completed');
-        $startedResults = $results->where('status', 'started');
-        $assignedResults = $results->where('status', 'assigned');
+        $officialResults = $students->mapWithKeys(function ($student) use ($resultsByStudent) {
+            $studentResults = $resultsByStudent->get($student->id, collect());
+            return [$student->id => $studentResults->where('status', 'completed')->first()
+                ?? $studentResults->where('status', 'started')->first()
+                ?? $studentResults->where('status', 'assigned')->first()];
+        })->filter();
+        $completedResults = $officialResults->where('status', 'completed');
+        $startedResults = $officialResults->where('status', 'started');
+        $assignedResults = $officialResults->where('status', 'assigned');
 
         $statistics = [
             'total_students' => $students->count(),
@@ -82,28 +97,42 @@ class GameResultsController extends Controller
     {
         Gate::authorize('view', $game);
 
+        $students = User::role('student')
+            ->where('grade_level', $game->grade_level)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
         $results = GameResult::where('game_id', $game->id)
             ->with('student')
-            ->get();
+            ->orderByDesc('attempt_number')
+            ->orderByDesc('completed_at')
+            ->orderByDesc('created_at')
+            ->get()
+            ->groupBy('student_id');
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="game_results_' . $game->id . '.csv"',
         ];
 
-        $callback = function () use ($results, $game) {
+        $callback = function () use ($results, $students) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Student', 'LRN', 'Score', 'Attempt', 'Status', 'Started At', 'Completed At']);
 
-            foreach ($results as $result) {
+            foreach ($students as $student) {
+                $studentResults = $results->get($student->id, collect());
+                $result = $studentResults->where('status', 'completed')->first()
+                    ?? $studentResults->where('status', 'started')->first()
+                    ?? $studentResults->where('status', 'assigned')->first();
+
                 fputcsv($file, [
-                    $result->student->name,
-                    $result->student->lrn,
-                    $result->score ?? 'N/A',
-                    $result->attempt_number,
-                    $result->status,
-                    $result->started_at ? $result->started_at->format('Y-m-d H:i') : '',
-                    $result->completed_at ? $result->completed_at->format('Y-m-d H:i') : '',
+                    $student->name,
+                    $student->lrn,
+                    $result?->score ?? 'N/A',
+                    $result?->attempt_number ?? '',
+                    $result?->status ?? 'assigned',
+                    $result?->started_at?->format('Y-m-d H:i') ?? '',
+                    $result?->completed_at?->format('Y-m-d H:i') ?? '',
                 ]);
             }
 

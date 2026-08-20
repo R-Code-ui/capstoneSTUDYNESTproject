@@ -114,7 +114,69 @@ export default function ProgressTracker({
         >
             <Head title="My Progress" />
 
-            <div className="py-12">
+            <div className="student-progress-page py-12">
+                <style>{`
+                    .student-progress-page .progress-overall-card,
+                    .student-progress-page .progress-pending-panel {
+                        color: #1e293b;
+                    }
+                    .student-progress-page .progress-color-card,
+                    .student-progress-page .progress-pending-card {
+                        color: #1e293b;
+                    }
+                    .student-progress-page .progress-color-card .text-gray-800,
+                    .student-progress-page .progress-color-card .text-gray-700,
+                    .student-progress-page .progress-color-card .text-gray-600,
+                    .student-progress-page .progress-pending-card .text-gray-800,
+                    .student-progress-page .progress-pending-card .text-gray-700,
+                    .student-progress-page .progress-pending-card .text-gray-600 {
+                        color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-overall-card,
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-panel {
+                        background: #0f172a !important;
+                        border-color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-overall-card .text-gray-800,
+                    .studynest-layout.theme-dark .student-progress-page .progress-overall-card .text-gray-600,
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-panel .text-gray-800,
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-panel .text-gray-700,
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-panel .text-gray-500 {
+                        color: #cbd5e1 !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="0"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="0"] {
+                        background: linear-gradient(135deg, #dbeafe, #fce7f3) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="1"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="1"] {
+                        background: linear-gradient(135deg, #ffedd5, #fef3c7) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="2"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="2"] {
+                        background: linear-gradient(135deg, #ede9fe, #fce7f3) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="3"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="3"] {
+                        background: linear-gradient(135deg, #d1fae5, #dbeafe) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-gray-800,
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-gray-500,
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card .text-gray-800,
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card .text-gray-600 {
+                        color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card .bg-gray-200\/70,
+                    .studynest-layout.theme-dark .student-progress-page .progress-overall-card .bg-gray-200 {
+                        background-color: rgb(148 163 184 / 0.35) !important;
+                    }
+                    @media (max-width: 640px) {
+                        .student-progress-page { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+                        .student-progress-page .progress-overall-card { padding: 1rem; }
+                        .student-progress-page .progress-pending-panel > div { padding-left: 1rem; padding-right: 1rem; }
+                        .student-progress-page .progress-pending-card .flex.items-center { align-items: flex-start; }
+                    }
+                `}</style>
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     {/* ===== Grade Level ===== */}
                     {/* 🔧 FIX: Removed "Grade:" label, just show the grade, reduced margin */}
@@ -128,7 +190,7 @@ export default function ProgressTracker({
                     {/* ===== Overall Progress Card ===== */}
                     {/* 🔧 FIX: Reduced margin from mb-6 to mb-4 */}
                     <div className="mb-4">
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
+                        <div className="progress-overall-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div>
                                     <div className="text-sm font-semibold uppercase tracking-wider text-blue-600">Overall Progress</div>
@@ -215,7 +277,8 @@ export default function ProgressTracker({
                             return (
                                 <div
                                     key={item.title}
-                                    className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-xl border border-gray-200/60 shadow-sm p-6`}
+                                    data-progress-tone={index}
+                                    className={`progress-color-card bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-xl border border-gray-200/60 shadow-sm p-6`}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`flex items-center justify-center w-12 h-12 rounded-full bg-white/70 backdrop-blur-sm ${item.iconColor}`}>
@@ -251,7 +314,7 @@ export default function ProgressTracker({
 
                     {/* ===== Pending Activities ===== */}
                     <div className="mt-6">
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="progress-pending-panel bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-200">
                                 <div className="flex items-center gap-2">
                                     <ListBulletIcon className="w-5 h-5 text-gray-700" />
@@ -286,7 +349,7 @@ export default function ProgressTracker({
                                                     href={getActivityRoute(activity.type, activity.id)}
                                                     className="block"
                                                 >
-                                                    <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden`}>
+                                                    <div data-progress-tone={index % GRADIENT_COLORS.length} className={`progress-pending-card bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden`}>
                                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-3">
                                                             <div className="flex items-center gap-4 min-w-0">
                                                                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex-shrink-0">

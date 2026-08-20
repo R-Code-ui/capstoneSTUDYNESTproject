@@ -27,8 +27,8 @@ export default function StatusBadge({
         important: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Important' },
 
         // Error/Danger states
-        archived: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500', label: 'Archived' },
-        inactive: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500', label: 'Inactive' },
+        archived: { bg: 'bg-gray-100 dark:bg-slate-700', text: 'text-gray-800 dark:text-slate-200', dot: 'bg-gray-500', label: 'Archived' },
+        inactive: { bg: 'bg-gray-100 dark:bg-slate-700', text: 'text-gray-800 dark:text-slate-200', dot: 'bg-gray-500', label: 'Inactive' },
         failed: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Failed' },
         needs_support: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Needs Support' },
         incomplete: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Incomplete' },
@@ -67,6 +67,7 @@ export default function StatusBadge({
     };
 
     const displayLabel = label || config.label;
+    const mutedStatusClass = ['inactive', 'archived'].includes(status) ? 'studynest-status-muted' : '';
 
     const variantClasses = {
         default: '',
@@ -83,7 +84,7 @@ export default function StatusBadge({
                     ${sizeClasses[size]}
                     rounded-full font-medium
                     ${pulse ? 'animate-pulse' : ''}
-                    ${className}
+                    ${mutedStatusClass} ${className}
                 `}
             >
                 {showIcon && (
@@ -103,7 +104,7 @@ export default function StatusBadge({
                 rounded-md font-medium
                 ${pulse ? 'animate-pulse' : ''}
                 ${variantClasses[variant]}
-                ${className}
+                ${mutedStatusClass} ${className}
             `}
         >
             {showIcon && variant === 'dot' && (

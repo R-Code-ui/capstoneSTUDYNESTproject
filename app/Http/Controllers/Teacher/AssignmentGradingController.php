@@ -62,7 +62,7 @@ class AssignmentGradingController extends Controller
             'submissions' => $allStudents,
             'statistics' => [
                 'total_students' => $allStudents->count(),
-                'submitted'      => $allStudents->filter(fn($s) => in_array($s['status'], ['submitted','graded','reviewed']))->count(),
+                'submitted'      => $allStudents->filter(fn($s) => in_array($s['status'], ['submitted', 'late_submission', 'graded', 'reviewed']))->count(),
                 'pending'        => $allStudents->filter(fn($s) => $s['status'] === 'not_submitted')->count(),
                 'graded'         => $allStudents->filter(fn($s) => $s['status'] === 'graded')->count(),
                 'average_score'  => $allStudents->filter(fn($s) => $s['score'] !== null)->avg('score'),
@@ -73,6 +73,7 @@ class AssignmentGradingController extends Controller
     public function grade(Request $request, Assignment $assignment, AssignmentSubmission $submission)
     {
         Gate::authorize('update', $assignment);
+        abort_unless($submission->assignment_id === $assignment->id, 404);
 
         $validated = $request->validate([
             'score'    => 'required|integer|min:0|max:' . $assignment->total_points,
@@ -96,6 +97,17 @@ class AssignmentGradingController extends Controller
     {
         Gate::authorize('update', $assignment);
 
+        $methods = $assignment->submission_methods ?? [];
+        if (is_string($methods)) {
+            $methods = json_decode($methods, true) ?: [];
+        }
+        abort_unless(in_array('paper', $methods, true), 422, 'Paper submission is not enabled for this assignment.');
+
+        $student = User::role('student')
+            ->whereKey($studentId)
+            ->where('grade_level', $assignment->grade_level)
+            ->firstOrFail();
+
         $validated = $request->validate([
             'score'    => 'nullable|integer|min:0|max:' . $assignment->total_points,
             'feedback' => 'nullable|string',
@@ -104,7 +116,7 @@ class AssignmentGradingController extends Controller
         $submission = AssignmentSubmission::firstOrCreate(
             [
                 'assignment_id' => $assignment->id,
-                'student_id'    => $studentId,
+                'student_id'    => $student->id,
             ],
             [
                 'submission_method' => 'paper',
@@ -112,6 +124,8 @@ class AssignmentGradingController extends Controller
                 'status'            => 'submitted',
             ]
         );
+
+        abort_unless($submission->submission_method === 'paper', 422, 'This student has a non-paper submission for this assignment.');
 
         if ($validated['score'] !== null) {
             $submission->update([

@@ -22,7 +22,7 @@ const CATEGORY_OPTIONS = [
     { value: 'general_academic_concern', label: 'Concern', emoji: '💬' },
 ];
 
-export default function MessagesCompose({ teachers }) {
+export default function MessagesCompose({ teachers, subjects = [] }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { data, setData, errors, post } = useForm({
@@ -53,9 +53,31 @@ export default function MessagesCompose({ teachers }) {
         >
             <Head title="Ask Teacher" />
 
-            <div className="py-12">
+            <div className="student-message-compose py-12">
+                <style>{`
+                    .studynest-layout.theme-dark .student-message-compose .student-message-form {
+                        background: #0f172a !important;
+                        border-color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .student-message-compose select,
+                    .studynest-layout.theme-dark .student-message-compose textarea {
+                        background-color: #1e293b !important;
+                        border-color: #475569 !important;
+                        color: #e2e8f0 !important;
+                    }
+                    .studynest-layout.theme-dark .student-message-compose select option {
+                        background: #1e293b;
+                        color: #e2e8f0;
+                    }
+                    .studynest-layout.theme-dark .student-message-compose textarea::placeholder { color: #94a3b8 !important; }
+                    .student-message-compose textarea { overflow-wrap: anywhere; }
+                    @media (max-width: 640px) {
+                        .student-message-compose { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+                        .student-message-compose form { padding: 1rem; }
+                    }
+                `}</style>
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="student-message-form bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -105,13 +127,15 @@ export default function MessagesCompose({ teachers }) {
                             {/* ===== Subject (optional) ===== */}
                             <div>
                                 <InputLabel htmlFor="subject" value="Subject (optional)" />
-                                <TextInput
+                                <select
                                     id="subject"
                                     value={data.subject}
                                     onChange={(e) => setData('subject', e.target.value)}
-                                    className="mt-1 block w-full"
-                                    placeholder="What is your question about?"
-                                />
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-800"
+                                >
+                                    <option value="">No subject</option>
+                                    {subjects.map((subject) => <option key={subject.id} value={subject.name}>{subject.name}</option>)}
+                                </select>
                                 <InputError message={errors.subject} className="mt-2" />
                             </div>
 

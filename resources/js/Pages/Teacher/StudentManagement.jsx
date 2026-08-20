@@ -16,6 +16,7 @@ import PasswordInput from '@/Components/PasswordInput';
 export default function StudentManagement({
     students,
     assigned_grades,
+    school_years = [],
     status_options = [],
     sort_options = [],
     filters,
@@ -23,11 +24,13 @@ export default function StudentManagement({
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
+    const [schoolYearFilter, setSchoolYearFilter] = useState(filters?.school_year || '');
     const [genderFilter, setGenderFilter] = useState(filters?.gender || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
     const [sort, setSort] = useState(filters?.sort || 'name_asc');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +44,7 @@ export default function StudentManagement({
             data: {
                 search,
                 grade_level: gradeFilter,
+                school_year: schoolYearFilter,
                 gender: genderFilter,
                 status: statusFilter,
                 sort,
@@ -61,6 +65,11 @@ export default function StudentManagement({
         applyFilters({ grade_level: value });
     };
 
+    const handleSchoolYearFilterChange = (value) => {
+        setSchoolYearFilter(value);
+        applyFilters({ school_year: value });
+    };
+
     const handleGenderFilterChange = (value) => {
         setGenderFilter(value);
         applyFilters({ gender: value });
@@ -76,6 +85,11 @@ export default function StudentManagement({
         applyFilters({ sort: value });
     };
 
+    const handleExport = () => {
+        const params = new URLSearchParams({ search: search || '', grade_level: gradeFilter || '', school_year: schoolYearFilter || '', gender: genderFilter || '', status: statusFilter || '' });
+        window.open(`${route('teacher.students.export')}?${params.toString()}`, '_blank');
+    };
+
     const handleArchive = (user) => {
         if (confirm(`Are you sure you want to archive ${user.name}?`)) {
             router.delete(route('teacher.students.archive', user.id), {
@@ -85,9 +99,11 @@ export default function StudentManagement({
     };
 
     const handleRestore = (user) => {
-        router.post(route('teacher.students.restore', user.id), {}, {
-            preserveState: true,
-        });
+        if (confirm(`Are you sure you want to restore ${user.name}? This student will become active again.`)) {
+            router.post(route('teacher.students.restore', user.id), {}, {
+                preserveState: true,
+            });
+        }
     };
 
     const handleDelete = (user) => {
@@ -101,6 +117,11 @@ export default function StudentManagement({
     const gradeOptions = [
         { value: '', label: 'All Grades' },
         ...assigned_grades.map((grade) => ({ value: grade, label: grade })),
+    ];
+
+    const schoolYearOptions = [
+        { value: '', label: 'All School Years' },
+        ...school_years.map((year) => ({ value: year, label: year })),
     ];
 
     const genderOptions = [
@@ -120,9 +141,25 @@ export default function StudentManagement({
             label: 'Gender',
             render: (row) => row.gender ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1) : '—'
         },
-        { key: 'is_active', label: 'Status', render: (row) => <StatusBadge status={row.is_active ? 'active' : 'inactive'} /> },
-        { key: 'created_at', label: 'Date Created' },
+        {
+            key: 'is_active',
+            label: 'Status',
+            render: (row) => row.is_active ? (
+                <StatusBadge status="active" size="sm" showIcon={false} className="teacher-status-badge" />
+            ) : (
+                <span className="teacher-status-badge inline-flex items-center rounded-full bg-gray-100 text-xs font-medium text-gray-800">
+                    INACTIVE
+                </span>
+            ),
+        },
     ];
+
+    const ViewIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    );
 
     const EditIcon = () => (
         <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,6 +192,7 @@ export default function StudentManagement({
     );
 
     const studentActions = (row) => [
+        { label: 'View', icon: <ViewIcon />, color: 'secondary', onClick: () => { setSelectedUser(row); setShowViewModal(true); } },
         { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
         { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
         ...(row.is_active
@@ -166,9 +204,32 @@ export default function StudentManagement({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-bold text-gray-800">Student Management</h2>}
+            header={
+                <div className="flex w-full items-center justify-between gap-4">
+                    <h2 className="text-xl font-bold text-gray-800">Student Management</h2>
+                    <PrimaryButton onClick={handleExport} className="inline-flex items-center gap-2 whitespace-nowrap">
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" />
+                        </svg>
+                        Export CSV
+                    </PrimaryButton>
+                </div>
+            }
         >
             <Head title="Student Management" />
+
+            <style>{`
+                .teacher-status-badge {
+                    height: 24px !important;
+                    padding: 0 8px !important;
+                    font-size: 12px !important;
+                    line-height: 24px !important;
+                }
+                .studynest-layout.theme-dark .teacher-status-badge {
+                    background-color: rgb(203 213 225) !important;
+                    color: rgb(30 41 59) !important;
+                }
+            `}</style>
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -192,6 +253,14 @@ export default function StudentManagement({
                                         placeholder="Grade Level"
                                         size="md"
                                         className="w-36"
+                                    />
+                                    <FilterDropdown
+                                        options={schoolYearOptions}
+                                        value={schoolYearFilter}
+                                        onChange={handleSchoolYearFilterChange}
+                                        placeholder="School Year"
+                                        size="md"
+                                        className="w-40"
                                     />
                                     <FilterDropdown
                                         options={genderOptions}
@@ -245,6 +314,41 @@ export default function StudentManagement({
                     </div>
                 </div>
             </div>
+
+            {/* ===== VIEW STUDENT MODAL ===== */}
+            <Modal
+                show={showViewModal}
+                onClose={() => { setShowViewModal(false); setSelectedUser(null); }}
+                title="Student Information"
+                size="lg"
+            >
+                {selectedUser && (
+                    <div className="space-y-5">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {[
+                                ['Student ID', selectedUser.lrn],
+                                ['First Name', selectedUser.first_name],
+                                ['Middle Name', selectedUser.middle_name || '—'],
+                                ['Last Name', selectedUser.last_name],
+                                ['Grade Level', selectedUser.grade_level],
+                                ['School Year', selectedUser.school_year || '—'],
+                                ['Gender', selectedUser.gender ? selectedUser.gender.charAt(0).toUpperCase() + selectedUser.gender.slice(1) : '—'],
+                                ['Status', selectedUser.is_active ? 'Active' : 'Archived'],
+                            ].map(([label, value]) => (
+                                <div key={label} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</div>
+                                    <div className="mt-1 break-words font-medium text-gray-800">{value}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-end border-t border-gray-200 pt-4">
+                            <SecondaryButton type="button" onClick={() => { setShowViewModal(false); setSelectedUser(null); }}>
+                                Close
+                            </SecondaryButton>
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             {/* ===== CREATE/EDIT MODAL ===== */}
             <Modal
@@ -348,6 +452,24 @@ export default function StudentManagement({
                         <InputError message={errors?.grade_level} className="mt-2" />
                     </div>
 
+                    {/* School Year */}
+                    <div>
+                        <InputLabel htmlFor="school_year" value="School Year" />
+                        <select
+                            id="school_year"
+                            name="school_year"
+                            defaultValue={selectedUser?.school_year || school_years[0] || ''}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
+                            required
+                        >
+                            <option value="">Select School Year</option>
+                            {school_years.map((year) => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                        <InputError message={errors?.school_year} className="mt-2" />
+                    </div>
+
                     {/* Gender */}
                     <div>
                         <InputLabel value="Gender" required />
@@ -424,7 +546,6 @@ export default function StudentManagement({
                             minLength={8}
                             placeholder="Enter new password"
                             error={errors?.new_password}
-                            className="!bg-white"
                         />
                     </div>
 

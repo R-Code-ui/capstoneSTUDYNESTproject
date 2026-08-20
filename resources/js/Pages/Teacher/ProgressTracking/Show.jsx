@@ -46,8 +46,35 @@ export default function ProgressShow({ student, progress }) {
         >
             <Head title={`Progress: ${student.name}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <style>{`
+                .studynest-layout.theme-dark .progress-page .bg-white {
+                    background-color: rgb(15 23 42) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .bg-gray-50 {
+                    background-color: rgb(30 41 59) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .bg-gray-200 {
+                    background-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .border-gray-100,
+                .studynest-layout.theme-dark .progress-page .border-gray-200 {
+                    border-color: rgb(51 65 85) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-gray-800 {
+                    color: rgb(226 232 240) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-gray-700,
+                .studynest-layout.theme-dark .progress-page .text-gray-600 {
+                    color: rgb(203 213 225) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-gray-500,
+                .studynest-layout.theme-dark .progress-page .text-gray-400 {
+                    color: rgb(148 163 184) !important;
+                }
+            `}</style>
+
+            <div className="progress-page py-8 sm:py-12">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Student Information ===== */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-6">

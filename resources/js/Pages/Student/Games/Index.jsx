@@ -115,10 +115,65 @@ export default function GamesIndex({
         >
             <Head title="My Games" />
 
-            <div className="py-12">
+            <style>{`
+                .studynest-layout.theme-dark .student-games-index .student-games-shell {
+                    background: #0f172a !important;
+                    border-color: #334155 !important;
+                }
+
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="0"] {
+                    background: linear-gradient(135deg, #dbeafe, #fce7f3) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="1"] {
+                    background: linear-gradient(135deg, #ffedd5, #fef3c7) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="2"] {
+                    background: linear-gradient(135deg, #ede9fe, #fce7f3) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="3"] {
+                    background: linear-gradient(135deg, #d1fae5, #dbeafe) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="4"] {
+                    background: linear-gradient(135deg, #fef3c7, #ffe4e6) !important;
+                }
+
+                .studynest-layout.theme-dark .student-games-index .student-game-card .text-gray-800,
+                .studynest-layout.theme-dark .student-games-index .student-game-card .text-gray-700,
+                .studynest-layout.theme-dark .student-games-index .student-game-card .text-gray-600 {
+                    color: #334155 !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card .bg-white\/70 {
+                    background-color: rgba(255, 255, 255, .72) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card .bg-gray-100 {
+                    background-color: #f1f5f9 !important;
+                    color: #334155 !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card .bg-yellow-100 {
+                    background-color: #fef3c7 !important;
+                    color: #92400e !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-100,
+                .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-50 {
+                    color: #047857 !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-100 {
+                    background-color: #d1fae5 !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-50 {
+                    background-color: #ecfdf5 !important;
+                }
+
+                @media (max-width: 640px) {
+                    .student-games-index .student-games-shell > .p-6 { padding: 1rem !important; }
+                    .student-games-index .student-game-card > .p-6 { padding: 1rem !important; }
+                }
+            `}</style>
+
+            <div className="student-games-index py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     {/* 🔧 FIX: Removed overflow-hidden from Card container */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="student-games-shell bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters */}
                             <div className="flex flex-col sm:flex-row gap-4">
@@ -179,7 +234,8 @@ export default function GamesIndex({
                                             return (
                                                 <div
                                                     key={game.id}
-                                                    className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                                                    data-game-tone={index % 5}
+                                                    className={`student-game-card bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
                                                 >
                                                     <div className="p-6">
                                                         <div className={`relative mb-4 h-24 overflow-hidden rounded-2xl bg-gradient-to-br ${art.theme} p-4 shadow-inner`}>

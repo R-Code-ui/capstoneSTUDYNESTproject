@@ -54,15 +54,37 @@ export default function AnnouncementsShow({ announcement }) {
         >
             <Head title={announcement.title} />
 
+            <style>{`
+                .announcement-show-title,
+                .announcement-show-content {
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                }
+                .announcement-show-title {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .announcement-show-content {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 8;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            `}</style>
+
             <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Announcement Details ===== */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-6 space-y-6">
                             {/* Header */}
                             <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                                 <div>
-                                    <h3 className="text-2xl font-bold text-gray-800">
+                                    <h3 className="announcement-show-title max-w-full text-2xl font-bold text-gray-800" title={announcement.title}>
                                         {announcement.title}
                                     </h3>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -123,7 +145,7 @@ export default function AnnouncementsShow({ announcement }) {
                             {/* Content */}
                             <div className="pt-4 border-t border-gray-200">
                                 <div className="prose prose-blue max-w-none">
-                                    <div className="text-gray-700 whitespace-pre-wrap">
+                                    <div className="announcement-show-content text-gray-700 whitespace-pre-wrap" title={announcement.content}>
                                         {announcement.content}
                                     </div>
                                 </div>

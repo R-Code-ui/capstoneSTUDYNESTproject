@@ -164,7 +164,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="assignment-page-clamp text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>
                         Grading: {assignment.title}
                     </span>
                     <SecondaryButton onClick={() => router.visit(route('teacher.assignments.index'))}>
@@ -175,6 +175,20 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             }
         >
             <Head title={`Grading: ${assignment.title}`} />
+
+            <style>{`
+                .assignment-page-clamp {
+                    min-width: 0;
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                }
+            `}</style>
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">

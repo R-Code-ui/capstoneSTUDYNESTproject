@@ -7,13 +7,14 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 
-export default function MessageGroupForm({ group = null, students = [], subjects = [] }) {
+export default function MessageGroupForm({ group = null, students = [], subjects = [], grade_level = '' }) {
     const editing = Boolean(group);
     const [search, setSearch] = useState('');
     const { data, setData, errors, processing, post, put } = useForm({
         name: group?.name || '',
         description: group?.description || '',
         subject_id: group?.subject_id || '',
+        grade_level: grade_level || group?.grade_level || '',
         member_ids: group?.member_ids || [],
     });
 
@@ -43,8 +44,35 @@ export default function MessageGroupForm({ group = null, students = [], subjects
     return (
         <AuthenticatedLayout header={<span className="text-xl font-semibold text-gray-800">{editing ? 'Edit Group' : 'Create Group'}</span>}>
             <Head title={editing ? 'Edit Group' : 'Create Group'} />
-            <div className="mx-auto max-w-3xl py-8">
-                <form onSubmit={submit} className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <style>{`
+                .studynest-layout.theme-dark .message-group-form input:not([type="checkbox"]),
+                .studynest-layout.theme-dark .message-group-form select,
+                .studynest-layout.theme-dark .message-group-form textarea {
+                    background-color: rgb(30 41 59) !important;
+                    color: rgb(226 232 240) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .message-group-form input::placeholder,
+                .studynest-layout.theme-dark .message-group-form textarea::placeholder {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .message-group-form option {
+                    background-color: rgb(30 41 59);
+                    color: rgb(226 232 240);
+                }
+                .studynest-layout.theme-dark .message-group-form .student-list {
+                    border-color: rgb(71 85 105);
+                    background-color: rgb(15 23 42);
+                }
+                .studynest-layout.theme-dark .message-group-form .student-list label {
+                    border-color: rgb(71 85 105);
+                }
+                .studynest-layout.theme-dark .message-group-form .student-list label:hover {
+                    background-color: rgb(30 41 59);
+                }
+            `}</style>
+            <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+                <form onSubmit={submit} className="message-group-form space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div>
                         <InputLabel htmlFor="name" value="Group name" required />
                         <TextInput id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} className="mt-1 block w-full" required />
@@ -72,7 +100,7 @@ export default function MessageGroupForm({ group = null, students = [], subjects
                             <span className="text-xs text-slate-500">{data.member_ids.length} selected</span>
                         </div>
                         <TextInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search students by name or ID..." className="mt-2 block w-full" />
-                        <div className="mt-2 max-h-72 overflow-y-auto rounded-md border border-slate-200">
+                        <div className="student-list mt-2 max-h-72 overflow-y-auto rounded-md border border-slate-200">
                             {visibleStudents.length === 0 ? (
                                 <p className="p-4 text-sm text-slate-500">No authorized students found.</p>
                             ) : visibleStudents.map((student) => (

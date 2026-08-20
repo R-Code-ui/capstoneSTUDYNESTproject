@@ -25,7 +25,8 @@ class AnnouncementController extends Controller
         $today = now()->toDateString();
         $gradeAudience = strtolower(str_replace(' ', '_', (string) $gradeLevel));
 
-        $announcements = Announcement::where('status', 'published')
+        $announcements = Announcement::with('user')
+            ->where('status', 'published')
             ->whereDate('publish_date', '<=', $today)
             ->where(function ($query) use ($today) {
                 $query->whereNull('expiration_date')
@@ -35,7 +36,13 @@ class AnnouncementController extends Controller
                 $query->where('target_audience', 'all_users')
                     ->orWhere('target_audience', 'all_grades')
                     ->orWhere('target_audience', $gradeLevel)
-                    ->orWhere('target_audience', $gradeAudience);
+                ->orWhere('target_audience', $gradeAudience)
+                ->orWhere(function ($query) use ($gradeLevel) {
+                    $query->where('target_audience', 'all_assigned_students')
+                        ->whereHas('user.gradeAssignments', function ($query) use ($gradeLevel) {
+                            $query->where('grade_level', $gradeLevel);
+                        });
+                });
             })
             ->when($search, function ($query, $search) {
                 return $query->where(function ($query) use ($search) {
@@ -106,6 +113,9 @@ class AnnouncementController extends Controller
                 $gradeAudience,
             ], true)) {
                 $canView = true;
+            } elseif ($announcement->target_audience === 'all_assigned_students'
+                && $announcement->user?->gradeAssignments()->where('grade_level', $user->grade_level)->exists()) {
+                $canView = true;
             }
         }
 
@@ -160,6 +170,8 @@ class AnnouncementController extends Controller
     public function markRead(Announcement $announcement)
     {
         $user = auth()->user();
+
+        Gate::authorize('view', $announcement);
 
         AnnouncementView::updateOrCreate(
             [

@@ -14,6 +14,7 @@ import {
     ArrowTrendingUpIcon,
     BookOpenIcon,
     PuzzlePieceIcon,
+    UserGroupIcon,
     ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 
@@ -21,6 +22,7 @@ export default function ReportsIndex({
     assigned_grades,
     subjects,
     terms,                // ✅ renamed from trimesters
+    school_years = [],
     filters,
 }) {
     const [selectedReport, setSelectedReport] = useState(null);
@@ -29,6 +31,10 @@ export default function ReportsIndex({
         report_type: '',
         grade_level: filters?.grade_level || '',
         subject:     filters?.subject || '',
+        school_year: filters?.school_year || '',
+        gender: filters?.gender || '',
+        status: filters?.status || '',
+        search: filters?.search || '',
         term:        filters?.term || '',      // ✅ renamed
     });
 
@@ -65,6 +71,13 @@ export default function ReportsIndex({
         },
     ];
 
+    reportTypes.push({
+        value: 'student_information',
+        label: 'Student Information Report',
+        icon: <UserGroupIcon className="w-10 h-10 text-cyan-500" />,
+        description: 'Export student profiles and enrollment information',
+    });
+
     const gradeOptions = [
         { value: '', label: 'All Grades' },
         ...assigned_grades.map((grade) => ({ value: grade, label: grade })),
@@ -80,6 +93,11 @@ export default function ReportsIndex({
         ...terms.map((t) => ({ value: t, label: t })),
     ];
 
+    const schoolYearOptions = [{ value: '', label: 'All School Years' }, ...school_years.map((year) => ({ value: year, label: year }))];
+    const genderOptions = [{ value: '', label: 'All Genders' }, { value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }];
+    const statusOptions = [{ value: '', label: 'All Statuses' }, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }];
+    const isStudentInformationReport = formData.report_type === 'student_information';
+
     const handleGeneratePdf = () => {
         if (!formData.report_type) {
             alert('Please select a report type.');
@@ -92,6 +110,10 @@ export default function ReportsIndex({
             report_type: formData.report_type,
             ...(formData.grade_level && { grade_level: formData.grade_level }),
             ...(formData.subject && { subject: formData.subject }),
+            ...(isStudentInformationReport && formData.school_year && { school_year: formData.school_year }),
+            ...(isStudentInformationReport && formData.gender && { gender: formData.gender }),
+            ...(isStudentInformationReport && formData.status && { status: formData.status }),
+            ...(isStudentInformationReport && formData.search && { search: formData.search }),
             ...(formData.term && { term: formData.term }),   // ✅
         });
 
@@ -105,6 +127,10 @@ export default function ReportsIndex({
             grade_level: '',
             subject: '',
             term: '',
+            school_year: '',
+            gender: '',
+            status: '',
+            search: '',
         });
     };
 
@@ -171,7 +197,8 @@ export default function ReportsIndex({
                                         label="Grade Level"
                                         size="md"
                                     />
-                                    <FilterDropdown
+                                    {!isStudentInformationReport && <>
+                                        <FilterDropdown
                                         options={subjectOptions}
                                         value={formData.subject}
                                         onChange={(val) => setFormData({ ...formData, subject: val })}
@@ -187,6 +214,16 @@ export default function ReportsIndex({
                                         label="Term"
                                         size="md"
                                     />
+                                        </>}
+                                    {isStudentInformationReport && <>
+                                        <FilterDropdown options={schoolYearOptions} value={formData.school_year} onChange={(val) => setFormData({ ...formData, school_year: val })} placeholder="School Year" label="School Year" size="md" />
+                                        <FilterDropdown options={genderOptions} value={formData.gender} onChange={(val) => setFormData({ ...formData, gender: val })} placeholder="Gender" label="Gender" size="md" />
+                                        <FilterDropdown options={statusOptions} value={formData.status} onChange={(val) => setFormData({ ...formData, status: val })} placeholder="Status" label="Status" size="md" />
+                                        <div className="sm:col-span-2 lg:col-span-3">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Student Name or Student ID</label>
+                                            <input type="text" value={formData.search} onChange={(event) => setFormData({ ...formData, search: event.target.value })} placeholder="Search by student name or ID" className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                                        </div>
+                                    </>}
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200">

@@ -27,12 +27,12 @@ class ReportController extends Controller
     {
         Gate::authorize('report.view');
 
-        $schoolYear = $request->input('school_year', 'SY 2026-2027');
+        $schoolYear = $request->input('school_year', config('school.school_years')[0]);
         $gradeLevel = $request->input('grade_level');
         $teacherId = $request->input('teacher_id');
         $trimester = $request->input('trimester');
 
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
         $gradeLevels = ['All Grades', 'Grade 4', 'Grade 5', 'Grade 6'];
         $teachers = User::role('teacher')->select('id', 'name', 'teacher_id')
             ->paginate(10);
@@ -77,7 +77,7 @@ class ReportController extends Controller
 
         $validated = $request->validate([
             'report_type' => 'required|in:teacher_activity,student_participation,school_summary',
-            'school_year' => 'nullable|in:SY 2026-2027,SY 2027-2028',
+            'school_year' => 'nullable|in:' . implode(',', config('school.school_years')),
             'grade_level' => 'nullable|in:All Grades,Grade 4,Grade 5,Grade 6',
             'teacher_id'   => 'nullable|exists:users,id',
             'trimester'    => 'nullable|in:All Terms,1st Term,2nd Term,3rd Term',
@@ -87,7 +87,7 @@ class ReportController extends Controller
         $gradeLevel = $validated['grade_level'] ?? null;
         $teacherId  = $validated['teacher_id'] ?? null;
         $trimester  = $validated['trimester'] ?? null;
-        $schoolYear = $validated['school_year'] ?? 'SY 2026-2027';
+        $schoolYear = $validated['school_year'] ?? config('school.school_years')[0];
 
         $reportData = [];
         $reportTitle = '';

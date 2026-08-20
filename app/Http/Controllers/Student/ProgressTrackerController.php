@@ -31,16 +31,23 @@ class ProgressTrackerController extends Controller
             ->where('status', 'published')
             ->count();
 
-        $completedLessons = $user->completedLessons()
+        $lessonIds = Lesson::where('grade_level', $gradeLevel)
             ->where('status', 'published')
+            ->pluck('id');
+        $completedLessons = $user->completedLessons()
+            ->whereIn('lessons.id', $lessonIds)
             ->count();
 
         // Assignments
         $totalAssignments = Assignment::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->count();
+        $assignmentIds = Assignment::where('grade_level', $gradeLevel)
+            ->where('status', 'published')
+            ->pluck('id');
 
         $submittedAssignments = AssignmentSubmission::where('student_id', $user->id)
+            ->whereIn('assignment_id', $assignmentIds)
             ->whereIn('status', ['submitted', 'reviewed', 'graded'])
             ->count();
 
@@ -60,16 +67,26 @@ class ProgressTrackerController extends Controller
         $firstAttempts = $completedAttempts->unique('quiz_id');
 
         $completedQuizzes = $firstAttempts->count();
-        $quizAverage = $completedQuizzes > 0 ? round($firstAttempts->avg('score')) : 0;
+        $quizPercentages = $firstAttempts->map(function ($attempt) {
+            return $attempt->total_questions > 0
+                ? min(100, max(0, ($attempt->score / $attempt->total_questions) * 100))
+                : 0;
+        });
+        $quizAverage = $quizPercentages->isNotEmpty() ? round($quizPercentages->avg()) : 0;
 
         // Games
         $totalGames = Game::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->count();
 
+        $gameIds = Game::where('grade_level', $gradeLevel)
+            ->where('status', 'published')
+            ->pluck('id');
         $completedGames = GameResult::where('student_id', $user->id)
+            ->whereIn('game_id', $gameIds)
             ->where('status', 'completed')
-            ->count();
+            ->distinct('game_id')
+            ->count('game_id');
 
         // ===== Pending Activities =====
         $pendingActivities = collect();
@@ -101,7 +118,7 @@ class ProgressTrackerController extends Controller
             ->where('status', 'published')
             ->whereDoesntHave('submissions', function ($query) use ($user) {
                 $query->where('student_id', $user->id)
-                    ->whereIn('status', ['submitted', 'reviewed', 'graded']);
+                    ->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded']);
             })
             ->get()
             ->map(function ($assignment) {
@@ -194,7 +211,7 @@ class ProgressTrackerController extends Controller
         }
 
         if ($totalMetrics > 0) {
-            $participationRate = round(($completedMetrics / $totalMetrics) * 100);
+            $participationRate = min(100, max(0, round(($completedMetrics / $totalMetrics) * 100)));
         }
 
         return Inertia::render('Student/ProgressTracker', [
@@ -203,23 +220,23 @@ class ProgressTrackerController extends Controller
                 'lessons' => [
                     'completed' => $completedLessons,
                     'total' => $totalLessons,
-                    'percentage' => $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0,
+            'percentage' => $totalLessons > 0 ? min(100, max(0, round(($completedLessons / $totalLessons) * 100))) : 0,
                 ],
                 'assignments' => [
                     'submitted' => $submittedAssignments,
                     'total' => $totalAssignments,
-                    'percentage' => $totalAssignments > 0 ? round(($submittedAssignments / $totalAssignments) * 100) : 0,
+                    'percentage' => $totalAssignments > 0 ? min(100, max(0, round(($submittedAssignments / $totalAssignments) * 100))) : 0,
                 ],
                 'quizzes' => [
                     'completed' => $completedQuizzes,
                     'total' => $totalQuizzes,
                     'average' => $quizAverage,
-                    'percentage' => $totalQuizzes > 0 ? round(($completedQuizzes / $totalQuizzes) * 100) : 0,
+                    'percentage' => $totalQuizzes > 0 ? min(100, max(0, round(($completedQuizzes / $totalQuizzes) * 100))) : 0,
                 ],
                 'games' => [
                     'completed' => $completedGames,
                     'total' => $totalGames,
-                    'percentage' => $totalGames > 0 ? round(($completedGames / $totalGames) * 100) : 0,
+                    'percentage' => $totalGames > 0 ? min(100, max(0, round(($completedGames / $totalGames) * 100))) : 0,
                 ],
             ],
             'pending_activities' => $paginatedPending,
@@ -229,7 +246,7 @@ class ProgressTrackerController extends Controller
                 'current_page' => $page,
                 'per_page' => $perPage,
                 'total' => $pendingActivities->count(),
-                'last_page' => ceil($pendingActivities->count() / $perPage),
+                'last_page' => max(1, (int) ceil($pendingActivities->count() / $perPage)),
             ],
         ]);
     }

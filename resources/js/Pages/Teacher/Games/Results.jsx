@@ -143,13 +143,15 @@ export default function GameResults({ game, results, statistics }) {
                                 <h3 className="text-sm font-semibold text-gray-700">Student Participation</h3>
                             </div>
                             <div className="p-6">
-                                <Table
-                                    columns={columns}
-                                    rows={results}
-                                    emptyMessage="No results found."
-                                    hoverable
-                                    striped
-                                />
+                                <div className="overflow-x-auto">
+                                    <Table
+                                        columns={columns}
+                                        rows={results}
+                                        emptyMessage="No results found."
+                                        hoverable
+                                        striped
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

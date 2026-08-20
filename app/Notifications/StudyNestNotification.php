@@ -13,6 +13,8 @@ class StudyNestNotification extends Notification
         public string $priority = 'normal',
         public ?string $url = null,
         public ?string $icon = null,
+        public ?string $entityType = null,
+        public ?int $entityId = null,
     ) {
     }
 
@@ -30,6 +32,8 @@ class StudyNestNotification extends Notification
             'priority' => $this->priority,
             'url' => $this->url,
             'icon' => $this->icon,
+            'entity_type' => $this->entityType,
+            'entity_id' => $this->entityId,
         ];
     }
 }

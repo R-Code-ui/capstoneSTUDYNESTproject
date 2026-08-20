@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -27,6 +28,7 @@ class StudentManagementController extends Controller
             'search' => 'nullable|string|max:255',
             'grade_level' => ['nullable', Rule::in($assignedGrades)],
             'gender' => 'nullable|in:male,female',
+            'school_year' => ['nullable', Rule::in(config('school.school_years'))],
             'status' => 'nullable|in:active,inactive',
             'sort' => 'nullable|in:name_asc,name_desc,created_at_desc',
         ]);
@@ -47,6 +49,11 @@ class StudentManagementController extends Controller
             })
             ->when($gradeFilter, function ($query, $grade) {
                 return $query->where('grade_level', $grade);
+            })
+            ->when($request->input('school_year'), function ($query, $schoolYear) {
+                return $query->whereHas('enrollments', function ($enrollments) use ($schoolYear) {
+                    $enrollments->where('school_year', $schoolYear)->where('status', 'active');
+                });
             })
             ->when($genderFilter, function ($query, $gender) {
                 return $query->where('gender', $gender);
@@ -69,7 +76,7 @@ class StudentManagementController extends Controller
             $studentsQuery->orderBy('created_at', 'desc');
         }
 
-        $students = $studentsQuery->paginate(10)->withQueryString();
+        $students = $studentsQuery->with('currentEnrollment')->paginate(10)->withQueryString();
 
         return Inertia::render('Teacher/StudentManagement', [
             'students' => $students->map(function ($student) {
@@ -85,12 +92,14 @@ class StudentManagementController extends Controller
                     'last_name' => $lastName,
                     'lrn' => $student->lrn,
                     'grade_level' => $student->grade_level,
+                    'school_year' => $student->currentEnrollment?->school_year,
                     'gender' => $student->gender,
                     'is_active' => $student->is_active,
                     'created_at' => $student->created_at->format('Y-m-d'),
                 ];
             }),
             'assigned_grades' => $assignedGrades,
+            'school_years' => config('school.school_years'),
             'status_options' => [
                 ['value' => '', 'label' => 'All Status'],
                 ['value' => 'active', 'label' => 'Active'],
@@ -103,12 +112,50 @@ class StudentManagementController extends Controller
             'filters' => [
                 'search' => $search,
                 'grade_level' => $gradeFilter,
+                'school_year' => $request->input('school_year'),
                 'gender' => $genderFilter,
                 'status' => $statusFilter,
                 'sort' => $sort,
             ],
             'pagination' => $students->toArray(),
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        Gate::authorize('student.manage');
+
+        $assignedGrades = auth()->user()->gradeAssignments()->pluck('grade_level')->all();
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'grade_level' => ['nullable', Rule::in($assignedGrades)],
+            'school_year' => ['nullable', Rule::in(config('school.school_years'))],
+            'gender' => 'nullable|in:male,female',
+            'status' => 'nullable|in:active,inactive',
+        ]);
+
+        $students = User::role('student')->whereIn('grade_level', $assignedGrades)
+            ->when($validated['search'] ?? null, fn ($q, $search) => $q->where(fn ($nested) => $nested->where('name', 'like', "%{$search}%")->orWhere('lrn', 'like', "%{$search}%")))
+            ->when($validated['grade_level'] ?? null, fn ($q, $grade) => $q->where('grade_level', $grade))
+            ->when($validated['gender'] ?? null, fn ($q, $gender) => $q->where('gender', $gender))
+            ->when(($validated['status'] ?? null) === 'active', fn ($q) => $q->where('is_active', true))
+            ->when(($validated['status'] ?? null) === 'inactive', fn ($q) => $q->where('is_active', false))
+            ->when($validated['school_year'] ?? null, fn ($q, $year) => $q->whereHas('enrollments', fn ($e) => $e->where('school_year', $year)->where('status', 'active')))
+            ->with('currentEnrollment')->orderBy('name')->get();
+
+        $filename = 'students' . (!empty($validated['school_year']) ? '_' . str_replace(' ', '_', $validated['school_year']) : '') . '.csv';
+
+        return response()->streamDownload(function () use ($students) {
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Student ID', 'Last Name', 'First Name', 'Middle Name', 'Grade Level', 'School Year', 'Gender', 'Status']);
+            foreach ($students as $student) {
+                $parts = preg_split('/\s+/', trim($student->name), -1, PREG_SPLIT_NO_EMPTY);
+                $firstName = $parts[0] ?? '';
+                $lastName = count($parts) > 1 ? array_pop($parts) : '';
+                fputcsv($output, [$student->lrn, $lastName, $firstName, implode(' ', array_slice($parts, 1)), $student->grade_level, $student->currentEnrollment?->school_year ?? '', ucfirst($student->gender ?? ''), $student->is_active ? 'Active' : 'Inactive']);
+            }
+            fclose($output);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**
@@ -128,6 +175,7 @@ class StudentManagementController extends Controller
             'lrn' => 'required|string|unique:users,lrn',
             'grade_level' => ['required', Rule::in($assignedGrades)], // dynamic assigned grades
             'gender' => 'required|in:male,female',
+            'school_year' => ['required', Rule::in(config('school.school_years'))],
         ]);
 
         // Ensure the teacher is assigned to this grade level
@@ -138,17 +186,24 @@ class StudentManagementController extends Controller
         // Construct full name
         $name = trim($validated['first_name'] . ' ' . ($validated['middle_name'] ? $validated['middle_name'] . ' ' : '') . $validated['last_name']);
 
-        $user = User::create([
-            'name' => $name,
-            'lrn' => $validated['lrn'],
-            'grade_level' => $validated['grade_level'],
-            'gender' => $validated['gender'],
-            'email' => $validated['lrn'] . '@studynest.local',
-            'password' => Hash::make('Student123'),
-            'is_active' => true,
-        ]);
-
-        $user->assignRole('student');
+        $user = null;
+        DB::transaction(function () use ($validated, $name, &$user) {
+            $user = User::create([
+                'name' => $name,
+                'lrn' => $validated['lrn'],
+                'grade_level' => $validated['grade_level'],
+                'gender' => $validated['gender'],
+                'email' => $validated['lrn'] . '@studynest.local',
+                'password' => Hash::make('Student123'),
+                'is_active' => true,
+            ]);
+            $user->assignRole('student');
+            $user->enrollments()->create([
+                'school_year' => $validated['school_year'],
+                'grade_level' => $validated['grade_level'],
+                'status' => 'active',
+            ]);
+        });
 
         return redirect()->back()->with('success', 'Student created successfully!');
     }
@@ -177,6 +232,7 @@ class StudentManagementController extends Controller
             'lrn' => ['required', 'string', Rule::unique('users', 'lrn')->ignore($user->id)],
             'grade_level' => ['required', Rule::in($assignedGrades)],
             'gender' => 'required|in:male,female',
+            'school_year' => ['required', Rule::in(config('school.school_years'))],
             'is_active' => 'boolean',
         ]);
 
@@ -186,13 +242,27 @@ class StudentManagementController extends Controller
 
         $name = trim($validated['first_name'] . ' ' . ($validated['middle_name'] ? $validated['middle_name'] . ' ' : '') . $validated['last_name']);
 
-        $user->update([
+        DB::transaction(function () use ($user, $validated, $name) {
+            $user->update([
             'name' => $name,
             'lrn' => $validated['lrn'],
             'grade_level' => $validated['grade_level'],
             'gender' => $validated['gender'],
             'is_active' => $validated['is_active'] ?? $user->is_active,
-        ]);
+            ]);
+
+            $current = $user->enrollments()->where('status', 'active')->latest('id')->first();
+            if ($current && $current->school_year === $validated['school_year'] && $current->grade_level === $validated['grade_level']) {
+                $current->update(['enrolled_at' => $current->enrolled_at ?? now()]);
+            } else {
+                $user->enrollments()->where('status', 'active')->update(['status' => 'completed']);
+                $user->enrollments()->create([
+                    'school_year' => $validated['school_year'],
+                    'grade_level' => $validated['grade_level'],
+                    'status' => 'active',
+                ]);
+            }
+        });
 
         return redirect()->back()->with('success', 'Student updated successfully!');
     }

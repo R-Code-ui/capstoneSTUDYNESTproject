@@ -10,18 +10,28 @@ import ConversationListItem from '@/Components/ConversationListItem';
 import MessageGroupList from '@/Components/MessageGroupList';
 import { PlusIcon, ChatBubbleLeftRightIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-export default function MessagesIndex({ conversations, unread_count, filters, pagination, groups = [] }) {
+export default function MessagesIndex({ conversations, unread_count, filters, pagination, groups = [], assigned_grades = [] }) {
     const [search, setSearch] = useState(filters?.search || '');
+    const [gradeLevel, setGradeLevel] = useState(filters?.grade_level || '');
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSearch = (value) => {
         setSearch(value);
         setIsLoading(true);
         router.visit(route('teacher.messages.index'), {
-            data: { search: value },
+            data: { search: value, grade_level: gradeLevel },
             preserveState: true,
             preserveScroll: true,
             onFinish: () => setIsLoading(false),
+        });
+    };
+
+    const handleGradeChange = (value) => {
+        setGradeLevel(value);
+        router.visit(route('teacher.messages.index'), {
+            data: { search, grade_level: value },
+            preserveState: true,
+            preserveScroll: true,
         });
     };
 
@@ -73,7 +83,19 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                 />
                             </div>
 
-                            <MessageGroupList groups={groups} routeName="teacher.messages.groups.show" canCreate />
+                            {assigned_grades.length > 1 && (
+                                <div className="mb-4">
+                                    <label htmlFor="message-grade-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Grade Level
+                                    </label>
+                                    <select id="message-grade-filter" value={gradeLevel} onChange={(e) => handleGradeChange(e.target.value)} className="w-full sm:w-56 rounded-md border-gray-300 shadow-sm text-sm">
+                                        <option value="">All Assigned Grades</option>
+                                        {assigned_grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
+                                    </select>
+                                </div>
+                            )}
+
+                            <MessageGroupList groups={groups} routeName="teacher.messages.groups.show" canCreate canManage createGrade={gradeLevel} />
 
                             <h2 className="mb-3 text-sm font-bold tracking-wide text-slate-500 uppercase">Direct Messages</h2>
 

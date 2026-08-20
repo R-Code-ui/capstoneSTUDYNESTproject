@@ -17,12 +17,13 @@ class QuizResultsController extends Controller
      */
     public function index(Quiz $quiz)
     {
-        Gate::authorize('quiz.view');
+        Gate::authorize('view', $quiz);
 
         // Get all attempts for this quiz, ordered by earliest first (to identify the first attempt)
         $allAttempts = QuizAttempt::where('quiz_id', $quiz->id)
             ->with('student')
-            ->orderBy('attempt_number', 'asc')   // or created_at
+            ->orderBy('attempt_number', 'asc')
+            ->orderBy('created_at', 'asc')
             ->get();
 
         // Group by student
@@ -36,18 +37,21 @@ class QuizResultsController extends Controller
         $officialScores = [];   // for statistics
         $allStudents = $students->map(function ($student) use ($grouped, &$officialScores) {
             $studentAttempts = $grouped->get($student->id, collect());
-            $firstAttempt = $studentAttempts->first(); // earliest attempt
+            $officialAttempt = $studentAttempts->firstWhere('status', 'completed');
+            $latestAttempt = $studentAttempts->sortByDesc('created_at')->first();
             $completedCount = $studentAttempts->where('status', 'completed')->count();
-            $practiceAttempts = $firstAttempt ? max(0, $completedCount - 1) : 0;
+            $practiceAttempts = max(0, $completedCount - ($officialAttempt ? 1 : 0));
 
-            $score = $firstAttempt?->score;
-            $totalQuestions = $firstAttempt?->total_questions;
-            $status = $firstAttempt?->status ?? 'not_started';
-            $attemptId = $firstAttempt?->id;
+            $score = $officialAttempt?->score;
+            $totalQuestions = $officialAttempt?->total_questions;
+            $status = $officialAttempt ? 'completed' : ($latestAttempt?->status ?? 'not_started');
+            $attemptId = $officialAttempt?->id;
 
-            // only use official (first attempt) scores for statistics
-            if ($firstAttempt && $firstAttempt->status === 'completed') {
-                $officialScores[] = $score;
+            if ($officialAttempt) {
+                $officialScores[] = [
+                    'score' => (int) $officialAttempt->score,
+                    'total' => (int) $officialAttempt->total_questions,
+                ];
             }
 
             return [
@@ -59,8 +63,8 @@ class QuizResultsController extends Controller
                 'total_questions' => $totalQuestions,
                 'status'          => $status,
                 'practice_attempts'=> $practiceAttempts,
-                'completed_at'    => $firstAttempt && $firstAttempt->completed_at
-                                       ? $firstAttempt->completed_at->format('Y-m-d H:i')
+                'completed_at'    => $officialAttempt && $officialAttempt->completed_at
+                                       ? $officialAttempt->completed_at->format('Y-m-d H:i')
                                        : null,
             ];
         });
@@ -71,16 +75,16 @@ class QuizResultsController extends Controller
         $totalOfficial = $officialScoresCollection->count();
 
         $passingScore = $quiz->passing_score ?? 75;
-        $passedCount = $officialScoresCollection->filter(function ($score) use ($quiz, $passingScore) {
-            $percentage = ($score / $quiz->total_questions) * 100;
+        $passedCount = $officialScoresCollection->filter(function ($attempt) use ($passingScore) {
+            $percentage = $attempt['total'] > 0 ? ($attempt['score'] / $attempt['total']) * 100 : 0;
             return $percentage >= $passingScore;
         })->count();
 
         $statistics = [
             'total_students'      => $totalStudents,
-            'average_score'       => $totalOfficial > 0 ? round($officialScoresCollection->avg()) : 0,
-            'highest_score'       => $totalOfficial > 0 ? $officialScoresCollection->max() : 0,
-            'lowest_score'        => $totalOfficial > 0 ? $officialScoresCollection->min() : 0,
+            'average_score'       => $totalOfficial > 0 ? round($officialScoresCollection->avg('score'), 2) : 0,
+            'highest_score'       => $totalOfficial > 0 ? $officialScoresCollection->max('score') : 0,
+            'lowest_score'        => $totalOfficial > 0 ? $officialScoresCollection->min('score') : 0,
             'passing_rate'        => $totalOfficial > 0 ? round(($passedCount / $totalOfficial) * 100) : 0,
             'completion_rate'     => $totalStudents > 0 ? round(($totalOfficial / $totalStudents) * 100) : 0,
             'max_possible_score'  => $quiz->total_questions,
@@ -88,7 +92,7 @@ class QuizResultsController extends Controller
         ];
 
         // Score distribution (based on official scores)
-        $distribution = $this->getScoreDistribution($officialScores, $quiz->total_questions);
+        $distribution = $this->getScoreDistribution($officialScores);
 
         return Inertia::render('Teacher/Quizzes/Results', [
             'quiz' => [
@@ -110,7 +114,7 @@ class QuizResultsController extends Controller
      */
     public function show(Quiz $quiz, QuizAttempt $attempt)
     {
-        Gate::authorize('quiz.view');
+        Gate::authorize('view', $quiz);
 
         // Ensure the attempt belongs to this quiz
         if ($attempt->quiz_id !== $quiz->id) {
@@ -187,12 +191,17 @@ class QuizResultsController extends Controller
      */
     public function export(Quiz $quiz)
     {
-        Gate::authorize('quiz.view');
+        Gate::authorize('view', $quiz);
 
         $attempts = QuizAttempt::where('quiz_id', $quiz->id)
             ->with('student')
             ->where('status', 'completed')
-            ->get();
+            ->orderBy('attempt_number')
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('student_id')
+            ->map(fn ($studentAttempts) => $studentAttempts->first())
+            ->values();
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -209,7 +218,7 @@ class QuizResultsController extends Controller
                     $attempt->student->lrn,
                     $attempt->score,
                     $attempt->total_questions,
-                    round(($attempt->score / $attempt->total_questions) * 100) . '%',
+                    $attempt->total_questions > 0 ? round(($attempt->score / $attempt->total_questions) * 100) . '%' : '0%',
                     $attempt->status,
                     $attempt->completed_at ? $attempt->completed_at->format('Y-m-d H:i') : '',
                 ]);
@@ -241,7 +250,7 @@ class QuizResultsController extends Controller
     /**
      * Get score distribution for chart.
      */
-    private function getScoreDistribution($scores, $maxScore)
+    private function getScoreDistribution($scores)
     {
         if (empty($scores)) {
             return [];
@@ -255,8 +264,8 @@ class QuizResultsController extends Controller
             '81-100%' => 0,
         ];
 
-        foreach ($scores as $score) {
-            $percentage = ($score / $maxScore) * 100;
+        foreach ($scores as $attempt) {
+            $percentage = $attempt['total'] > 0 ? ($attempt['score'] / $attempt['total']) * 100 : 0;
             if ($percentage <= 20) {
                 $ranges['0-20%']++;
             } elseif ($percentage <= 40) {

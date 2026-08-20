@@ -2,6 +2,20 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 // Heroicons
 import {
@@ -28,6 +42,23 @@ export default function PrincipalDashboard({
     recent_announcements,
     academic_summary
 }) {
+    const teacherChartData = (teacher_activity || []).slice(0, 8).map((teacher) => ({
+        name: teacher.name?.split(' ')[0] || 'Teacher',
+        Lessons: Number(teacher.lessons_count || 0),
+        Assignments: Number(teacher.assignments_count || 0),
+        Quizzes: Number(teacher.quizzes_count || 0),
+    }));
+    const participationChartData = (student_participation || []).map((grade) => ({
+        name: grade.grade_level?.replace('Grade ', 'G') || 'Grade',
+        Participation: Number(grade.participation_rate || 0),
+    }));
+    const academicChartData = [
+        { name: 'Quiz score', value: Number(academic_summary?.average_quiz_score || 0), color: '#f59e0b' },
+        { name: 'Assignments', value: Number(academic_summary?.assignment_completion_rate || 0), color: '#38bdf8' },
+        { name: 'Lessons', value: Number(academic_summary?.lesson_completion_rate || 0), color: '#34d399' },
+    ];
+    const chartTooltipStyle = { backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 12, color: '#f8fafc', fontSize: 12 };
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-bold text-gray-800">Principal Dashboard</h2>}
@@ -112,22 +143,39 @@ export default function PrincipalDashboard({
                         </div>
                     </div>
 
-                    {/* ===== Section 2: Teacher Activity Summary ===== */}
+                    {/* ===== Section 2: Analytics ===== */}
+                    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.85fr)]">
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-700 sm:px-6">
+                                <div><h3 className="text-sm font-bold text-gray-900 dark:text-white">Teacher activity</h3><p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Lessons, assignments, and quizzes created</p></div>
+                                <ChartBarIcon className="h-5 w-5 text-indigo-500" />
+                            </div>
+                            <div className="h-72 p-4 sm:p-6">
+                                {teacherChartData.length > 0 ? <ResponsiveContainer width="100%" height="100%"><BarChart data={teacherChartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} barGap={4}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} /><YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} /><Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: 'rgba(99,102,241,0.08)' }} /><Bar dataKey="Lessons" fill="#818cf8" radius={[5, 5, 0, 0]} /><Bar dataKey="Assignments" fill="#38bdf8" radius={[5, 5, 0, 0]} /><Bar dataKey="Quizzes" fill="#34d399" radius={[5, 5, 0, 0]} /></BarChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">No teacher activity data available.</div>}
+                            </div>
+                        </div>
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-700 sm:px-6"><div><h3 className="text-sm font-bold text-gray-900 dark:text-white">Participation by grade</h3><p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Active student participation rate</p></div><AcademicCapIcon className="h-5 w-5 text-emerald-500" /></div>
+                            <div className="h-72 p-4 sm:p-6">{participationChartData.length > 0 ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={participationChartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}><defs><linearGradient id="participationFill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#34d399" stopOpacity={0.35} /><stop offset="95%" stopColor="#34d399" stopOpacity={0.02} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} /><YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} /><Tooltip contentStyle={chartTooltipStyle} formatter={(value) => [`${value}%`, 'Participation']} /><Area type="monotone" dataKey="Participation" stroke="#10b981" strokeWidth={3} fill="url(#participationFill)" /></AreaChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">No participation data available.</div>}</div>
+                        </div>
+                    </div>
+
+                    {/* ===== Section 3: Teacher Activity Summary ===== */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-700">Teacher Activity Summary</h3>
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-amber-700">Most Active Teacher</span>
-                                    <div className="text-base font-bold text-amber-900 mt-0.5">
+                                <div className="p-4 bg-amber-50 dark:bg-amber-400/10 rounded-lg border border-amber-200 dark:border-amber-400/20">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">Most Active Teacher</span>
+                                    <div className="text-base font-bold text-amber-900 dark:text-amber-100 mt-0.5">
                                         {most_active_teacher ? most_active_teacher.name : 'N/A'}
                                     </div>
                                 </div>
-                                <div className="p-4 bg-rose-50 rounded-lg border border-rose-200">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-rose-700">Teachers Without Activity</span>
-                                    <div className="text-base font-bold text-rose-600 mt-0.5">
+                                <div className="p-4 bg-rose-50 dark:bg-rose-400/10 rounded-lg border border-rose-200 dark:border-rose-400/20">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-300">Teachers Without Activity</span>
+                                    <div className="text-base font-bold text-rose-600 dark:text-rose-100 mt-0.5">
                                         {inactive_teachers_count}
                                     </div>
                                 </div>
@@ -135,7 +183,7 @@ export default function PrincipalDashboard({
 
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm text-left text-gray-600">
-                                    <thead className="text-xs font-semibold text-gray-500 uppercase bg-gray-50">
+                                    <thead className="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-700/60">
                                         <tr>
                                             <th className="px-4 py-3">Teacher</th>
                                             <th className="px-4 py-3 text-center">Lessons</th>
@@ -145,7 +193,7 @@ export default function PrincipalDashboard({
                                             <th className="px-4 py-3 text-right">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
+                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                         {teacher_activity.length === 0 ? (
                                             <tr>
                                                 <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
@@ -154,12 +202,12 @@ export default function PrincipalDashboard({
                                             </tr>
                                         ) : (
                                             teacher_activity.slice(0, 5).map((teacher, index) => (
-                                                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="px-4 py-3 font-medium text-gray-800">{teacher.name}</td>
-                                                    <td className="px-4 py-3 text-center">{teacher.lessons_count}</td>
-                                                    <td className="px-4 py-3 text-center">{teacher.assignments_count}</td>
-                                                    <td className="px-4 py-3 text-center">{teacher.quizzes_count}</td>
-                                                    <td className="px-4 py-3 text-gray-500">{teacher.last_activity}</td>
+                                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                                                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{teacher.name}</td>
+                                                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{teacher.lessons_count}</td>
+                                                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{teacher.assignments_count}</td>
+                                                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{teacher.quizzes_count}</td>
+                                                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{teacher.last_activity}</td>
                                                     <td className="px-4 py-3 text-right">
                                                         <StatusBadge status={teacher.is_active ? 'active' : 'inactive'} />
                                                     </td>
@@ -278,7 +326,7 @@ export default function PrincipalDashboard({
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                 <Link
                                     href={route('principal.users.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-200 rounded-xl transition-all text-gray-700 hover:text-amber-700"
+                                    className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-amber-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-amber-700 dark:hover:text-amber-300"
                                 >
                                     <UserGroupIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-amber-600" />
                                     <span className="text-xs font-medium text-center">Manage Users</span>
@@ -286,7 +334,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.teachers.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-200 rounded-xl transition-all text-gray-700 hover:text-emerald-700"
+                                    className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-emerald-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-emerald-700 dark:hover:text-emerald-300"
                                 >
                                     <UsersIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-emerald-600" />
                                     <span className="text-xs font-medium text-center">Teacher Monitoring</span>
@@ -294,7 +342,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.announcements.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-xl transition-all text-gray-700 hover:text-purple-700"
+                                    className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-purple-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-purple-700 dark:hover:text-purple-300"
                                 >
                                     <MegaphoneIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-purple-600" />
                                     <span className="text-xs font-medium text-center">Announcements</span>
@@ -302,7 +350,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.reports.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-sky-50 border border-gray-200 hover:border-sky-200 rounded-xl transition-all text-gray-700 hover:text-sky-700"
+                                    className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-slate-100 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-sky-200 dark:hover:border-sky-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-sky-700 dark:hover:text-sky-300"
                                 >
                                     <DocumentDuplicateIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-sky-600" />
                                     <span className="text-xs font-medium text-center">View Reports</span>
@@ -310,7 +358,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.logs.index')}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-rose-50 border border-gray-200 hover:border-rose-200 rounded-xl transition-all text-gray-700 hover:text-rose-700"
+                                    className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-rose-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-rose-200 dark:hover:border-rose-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-rose-700 dark:hover:text-rose-300"
                                 >
                                     <EyeIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-rose-600" />
                                     <span className="text-xs font-medium text-center">Activity Logs</span>

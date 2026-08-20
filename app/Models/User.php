@@ -128,6 +128,18 @@ class User extends Authenticatable
         return $this->hasMany(TeacherGradeAssignment::class, 'teacher_id');
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(StudentEnrollment::class, 'student_id');
+    }
+
+    public function currentEnrollment()
+    {
+        return $this->hasOne(StudentEnrollment::class, 'student_id')
+            ->where('status', 'active')
+            ->latestOfMany();
+    }
+
     /**
      * Lessons created by teacher
      */

@@ -114,8 +114,30 @@ export default function AnnouncementsIndex({
         >
             <Head title="Announcements" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="student-announcements-page py-12">
+                <style>{`
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="pinned"] {
+                        background-image: linear-gradient(135deg, rgb(255 251 235), rgb(254 243 199)) !important;
+                        background-color: rgb(255 251 235) !important;
+                        border-color: rgb(245 158 11) !important;
+                    }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="0"] { background-image: linear-gradient(135deg, rgb(219 234 254), rgb(252 231 243)) !important; background-color: rgb(239 246 255) !important; border-color: rgb(191 219 254) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="1"] { background-image: linear-gradient(135deg, rgb(255 237 213), rgb(254 249 195)) !important; background-color: rgb(255 247 237) !important; border-color: rgb(253 230 138) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="2"] { background-image: linear-gradient(135deg, rgb(243 232 255), rgb(252 231 243)) !important; background-color: rgb(250 245 255) !important; border-color: rgb(233 213 255) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="3"] { background-image: linear-gradient(135deg, rgb(209 250 229), rgb(219 234 254)) !important; background-color: rgb(236 253 245) !important; border-color: rgb(167 243 208) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="4"] { background-image: linear-gradient(135deg, rgb(254 249 195), rgb(255 228 230)) !important; background-color: rgb(255 251 235) !important; border-color: rgb(253 230 138) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-800,
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-700 { color: rgb(30 41 59) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-600,
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-500 { color: rgb(71 85 105) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-blue-100"] { background-color: rgb(219 234 254) !important; color: rgb(30 64 175) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-purple-100"] { background-color: rgb(243 232 255) !important; color: rgb(107 33 168) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-yellow-100"] { background-color: rgb(254 249 195) !important; color: rgb(146 64 14) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-red-100"] { background-color: rgb(254 226 226) !important; color: rgb(185 28 28) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page > div > .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    @media (max-width: 640px) { .student-announcements-page .p-5, .student-announcements-page .p-6 { padding: 1rem; } }
+                `}</style>
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
@@ -167,7 +189,7 @@ export default function AnnouncementsIndex({
                                                 href={route('student.announcements.show', announcement.id)}
                                                 className="block"
                                             >
-                                                <div className={`bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border-2 border-yellow-400 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
+                                                <div data-card-tone="pinned" className={`bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border-2 border-yellow-400 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
                                                     announcement.is_read
                                                         ? 'opacity-90'
                                                         : ''
@@ -224,7 +246,7 @@ export default function AnnouncementsIndex({
                                                     href={route('student.announcements.show', announcement.id)}
                                                     className="block"
                                                 >
-                                                    <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
+                                                    <div data-card-tone={index % 5} className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
                                                         announcement.is_read
                                                             ? 'opacity-90'
                                                             : ''

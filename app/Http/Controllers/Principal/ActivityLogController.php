@@ -82,8 +82,8 @@ class ActivityLogController extends Controller
                     });
             })
             ->orderBy('created_at', 'desc')
-            ->withQueryString()
-            ->paginate(10); // ✅ PAGINATION ADDED (replaced limit(100))
+            ->paginate(10)
+            ->withQueryString();
 
         // Activity Summary
         $todayLogs = ActivityLog::whereIn('user_role', ['teacher', 'student'])

@@ -61,13 +61,32 @@ export default function SubmissionFiles({ submission, assignment, student }) {
         >
             <Head title={`Files - ${student.name}`} />
 
+            <style>{`
+                .assignment-page-clamp {
+                    min-width: 0;
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                }
+                .submission-assignment-title {
+                    display: inline-block;
+                    max-width: 100%;
+                    vertical-align: bottom;
+                }
+            `}</style>
+
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                     {/* Student & Assignment Info */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
                         <h2 className="text-lg font-semibold text-gray-800 mb-2">{student.name}</h2>
                         <p className="text-sm text-gray-500">
-                            Assignment: <span className="font-medium text-gray-700">{assignment.title}</span>
+                            Assignment: <span className="assignment-page-clamp submission-assignment-title font-medium text-gray-700" title={assignment.title}>{assignment.title}</span>
                         </p>
                         <p className="text-sm text-gray-500">
                             Subject: <span className="font-medium text-gray-700">{assignment.subject}</span>
@@ -101,14 +120,6 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            {file.mime?.startsWith('video/') && (
-                                                <video
-                                                    controls
-                                                    preload="metadata"
-                                                    className="w-full sm:w-64 rounded-md bg-black"
-                                                    src={route('teacher.assignments.view-file', { submissionId: submission.id, index: idx })}
-                                                />
-                                            )}
                                             <div className="flex gap-2 shrink-0">
                                                 <button
                                                     onClick={() => viewFile(file, idx)}

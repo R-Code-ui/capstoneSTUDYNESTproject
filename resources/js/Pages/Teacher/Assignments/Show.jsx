@@ -48,7 +48,7 @@ export default function AssignmentsShow({ assignment }) {
             header={
                 // 🔧 FIX: Added w-full to push buttons to the right
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="assignment-show-title text-xl font-semibold leading-tight text-gray-800" title={assignment.assignment_title}>
                         {assignment.assignment_title}
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -75,6 +75,26 @@ export default function AssignmentsShow({ assignment }) {
             }
         >
             <Head title={assignment.assignment_title} />
+
+            <style>{`
+                .assignment-show-title {
+                    display: block;
+                    min-width: 0;
+                    max-width: min(100%, 48rem);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .assignment-readable-text {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 3;
+                    overflow: hidden;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                    text-overflow: ellipsis;
+                }
+            `}</style>
 
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
@@ -141,7 +161,7 @@ export default function AssignmentsShow({ assignment }) {
                                 <h3 className="text-sm font-semibold text-gray-700">Instructions</h3>
                             </div>
                             <div className="p-6">
-                                <div className="text-gray-700 whitespace-pre-wrap">
+                                <div className="assignment-readable-text text-gray-700 whitespace-pre-wrap" title={assignment.instructions}>
                                     {assignment.instructions}
                                 </div>
                             </div>
@@ -196,18 +216,21 @@ export default function AssignmentsShow({ assignment }) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            {resource.type === 'video' && (
-                                                <video controls preload="metadata" className="w-full sm:w-64 rounded-md bg-black" src={route('teacher.assignments.view-resource', resource.id)} />
-                                            )}
-                                            <div className="flex gap-2">
-                                                <a
-                                                    href={route('teacher.assignments.download-resource', resource.id)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                                >
-                                                    <ArrowDownTrayIcon className="w-4 h-4" />
-                                                    Download
+                                            {resource.type === 'url' ? (
+                                                <a href={resource.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700">
+                                                    Open Link
                                                 </a>
-                                            </div>
+                                            ) : (
+                                                <div className="flex gap-2">
+                                                    <a
+                                                        href={route('teacher.assignments.download-resource', resource.id)}
+                                                        className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                    >
+                                                        <ArrowDownTrayIcon className="w-4 h-4" />
+                                                        Download
+                                                    </a>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

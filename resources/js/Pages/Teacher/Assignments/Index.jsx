@@ -259,6 +259,7 @@ export default function AssignmentsIndex({
                                     emptyMessage="No assignments found. Create your first assignment!"
                                     hoverable
                                     striped
+                                    responsive
                                     pagination={pagination}
                                 />
                             </div>

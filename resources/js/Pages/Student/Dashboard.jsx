@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 // Heroicons
 import {
@@ -42,17 +43,39 @@ export default function StudentDashboard({
         switch (status) {
             case 'submitted':
             case 'graded':
+            case 'reviewed':
+            case 'late_submission':
             case 'completed':
                 return <StatusBadge status="completed" label="Completed" />;
             case 'pending':
             case 'started':
                 return <StatusBadge status="in_progress" label="In Progress" />;
+            case 'returned_for_revision':
+                return <StatusBadge status="warning" label="Needs Revision" />;
+            case 'failed':
+                return <StatusBadge status="warning" label="Retry" />;
             case 'not_submitted':
             case 'assigned':
             default:
                 return <StatusBadge status="not_started" label="Not Started" />;
         }
     };
+
+    const quickLinkStyles = {
+        blue: { bg: 'bg-blue-100', hover: 'hover:bg-blue-200', text: 'text-blue-600', border: 'hover:border-blue-300' },
+        emerald: { bg: 'bg-emerald-100', hover: 'hover:bg-emerald-200', text: 'text-emerald-600', border: 'hover:border-emerald-300' },
+        purple: { bg: 'bg-purple-100', hover: 'hover:bg-purple-200', text: 'text-purple-600', border: 'hover:border-purple-300' },
+        amber: { bg: 'bg-amber-100', hover: 'hover:bg-amber-200', text: 'text-amber-600', border: 'hover:border-amber-300' },
+        rose: { bg: 'bg-rose-100', hover: 'hover:bg-rose-200', text: 'text-rose-600', border: 'hover:border-rose-300' },
+        indigo: { bg: 'bg-indigo-100', hover: 'hover:bg-indigo-200', text: 'text-indigo-600', border: 'hover:border-indigo-300' },
+    };
+
+    const progressChartData = [
+        { name: 'Lessons', value: progress_summary?.lessons?.total ? Math.round((progress_summary.lessons.completed / progress_summary.lessons.total) * 100) : 0, fill: '#60a5fa' },
+        { name: 'Assignments', value: progress_summary?.assignments?.total ? Math.round((progress_summary.assignments.submitted / progress_summary.assignments.total) * 100) : 0, fill: '#34d399' },
+        { name: 'Quizzes', value: Number(progress_summary?.quizzes?.average) || 0, fill: '#c084fc' },
+        { name: 'Games', value: progress_summary?.games?.total ? Math.round((progress_summary.games.completed / progress_summary.games.total) * 100) : 0, fill: '#fbbf24' },
+    ];
 
     return (
         <>
@@ -86,9 +109,54 @@ export default function StudentDashboard({
                     user-select: none;
                     z-index: 0;
                 }
+                .studynest-layout.theme-dark .student-dashboard-page .bg-white {
+                    background-color: rgb(15 23 42) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="from-blue-50/80"] {
+                    background-image: none !important;
+                    background-color: rgb(30 41 59) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-blue-50"],
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-blue-50/80"],
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-blue-50/50"] {
+                    background-color: rgb(23 37 84 / 0.75) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-emerald-50"],
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-emerald-50/50"] {
+                    background-color: rgb(6 78 59 / 0.55) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-purple-50/50"] {
+                    background-color: rgb(59 7 100 / 0.5) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-amber-50/50"] {
+                    background-color: rgb(120 53 15 / 0.45) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-rose-50/50"] {
+                    background-color: rgb(136 19 55 / 0.4) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-indigo-50"] {
+                    background-color: rgb(30 27 75 / 0.75) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page .text-gray-800,
+                .studynest-layout.theme-dark .student-dashboard-page .text-gray-700 {
+                    color: rgb(226 232 240) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page .text-gray-600,
+                .studynest-layout.theme-dark .student-dashboard-page .text-gray-500,
+                .studynest-layout.theme-dark .student-dashboard-page .text-gray-400 {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="border-gray-100"],
+                .studynest-layout.theme-dark .student-dashboard-page [class~="border-blue-100"],
+                .studynest-layout.theme-dark .student-dashboard-page [class~="border-emerald-100"],
+                .studynest-layout.theme-dark .student-dashboard-page [class~="border-purple-100"],
+                .studynest-layout.theme-dark .student-dashboard-page [class~="border-amber-100"] {
+                    border-color: rgb(51 65 85) !important;
+                }
             `}</style>
 
-            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+            <div className="hidden" aria-hidden="true">
                 {particles.map((p, idx) => (
                     <span
                         key={idx}
@@ -127,8 +195,8 @@ export default function StudentDashboard({
             >
                 <Head title="Student Dashboard" />
 
-                <div className="py-4 relative z-10">
-                    <div className="mx-auto max-w-7xl">
+                <div className="student-dashboard-page py-4 relative z-10">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                         {/* ===== Welcome Section ===== */}
                         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-blue-50/80 to-purple-50/80 p-5 rounded-xl border border-blue-100 shadow-sm">
@@ -156,10 +224,10 @@ export default function StudentDashboard({
                                         <Link
                                             key={idx}
                                             href={route(item.route)}
-                                            className={`p-1.5 bg-${item.color}-100 rounded-lg hover:bg-${item.color}-200 transition-colors`}
+                                            className={`p-1.5 ${quickLinkStyles[item.color].bg} rounded-lg ${quickLinkStyles[item.color].hover} transition-colors`}
                                             title={item.label}
                                         >
-                                            <item.icon className={`w-5 h-5 text-${item.color}-600`} />
+                                            <item.icon className={`w-5 h-5 ${quickLinkStyles[item.color].text}`} />
                                         </Link>
                                     ))}
                                 </div>
@@ -507,6 +575,20 @@ export default function StudentDashboard({
                                         <div className="text-xs font-medium text-gray-500">Games Completed</div>
                                     </div>
                                 </div>
+                                <div className="mt-6 border-t border-gray-200 pt-5">
+                                    <h3 className="mb-3 text-sm font-semibold text-gray-700">Progress at a glance</h3>
+                                    <div className="h-56 w-full sm:h-64">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={progressChartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                                <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                                                <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                                                <Tooltip formatter={(value) => [`${value}%`, 'Progress']} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: 8, color: '#e2e8f0' }} />
+                                                <Bar dataKey="value" fill="#818cf8" radius={[6, 6, 0, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
                             </Card>
                         </div>
 
@@ -525,7 +607,7 @@ export default function StudentDashboard({
                                         <Link
                                             key={idx}
                                             href={route(item.route)}
-                                            className={`flex flex-col items-center justify-center p-4 ${item.bg} ${item.hover} rounded-xl border border-gray-100 hover:border-${item.color}-300 transition-all duration-200 hover:scale-105 hover:shadow-md`}
+                                            className={`flex flex-col items-center justify-center p-4 ${item.bg} ${item.hover} ${quickLinkStyles[item.color].border} rounded-xl border border-gray-100 transition-all duration-200 hover:scale-105 hover:shadow-md`}
                                         >
                                             <item.icon className={`w-8 h-8 ${item.text}`} />
                                             <span className="text-xs font-medium text-gray-700 text-center mt-2">

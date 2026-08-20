@@ -54,8 +54,55 @@ export default function Modal({
     };
 
     return (
-        <Transition show={show} as={Fragment} leave="duration-200">
-            <Dialog
+        <>
+            <style>{`
+                .studynest-modal-panel input,
+                .studynest-modal-panel select,
+                .studynest-modal-panel textarea {
+                    color: rgb(30 41 59);
+                    background-color: rgb(255 255 255);
+                    border-color: rgb(203 213 225);
+                }
+                html.dark .studynest-modal-panel {
+                    background-color: rgb(15 23 42) !important;
+                    color: rgb(226 232 240) !important;
+                    border: 1px solid rgb(51 65 85);
+                }
+                html.dark .studynest-modal-panel input,
+                html.dark .studynest-modal-panel select,
+                html.dark .studynest-modal-panel textarea {
+                    color: rgb(226 232 240) !important;
+                    background-color: rgb(30 41 59) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                html.dark .studynest-modal-panel input::placeholder,
+                html.dark .studynest-modal-panel textarea::placeholder {
+                    color: rgb(148 163 184) !important;
+                }
+                html.dark .studynest-modal-panel .text-gray-800,
+                html.dark .studynest-modal-panel .text-gray-700 { color: rgb(226 232 240) !important; }
+                html.dark .studynest-modal-panel .text-gray-600,
+                html.dark .studynest-modal-panel .text-gray-500 { color: rgb(148 163 184) !important; }
+                html.dark .studynest-modal-panel .border-gray-200 { border-color: rgb(51 65 85) !important; }
+                html.dark .studynest-modal-panel .bg-gray-100 { background-color: rgb(51 65 85) !important; }
+                html.dark .studynest-modal-panel .bg-gray-50 { background-color: rgb(30 41 59) !important; }
+                html:not(.dark) .studynest-modal-panel .dark\\:bg-slate-800\\/70 { background-color: rgb(248 250 252) !important; }
+                html:not(.dark) .studynest-modal-panel .dark\\:bg-slate-700 { background-color: rgb(255 255 255) !important; }
+                html:not(.dark) .studynest-modal-panel .dark\\:border-slate-600 { border-color: rgb(203 213 225) !important; }
+                html:not(.dark) .studynest-modal-panel .dark\\:text-slate-200 { color: rgb(51 65 85) !important; }
+                html:not(.dark) .studynest-modal-panel .dark\\:hover\\:bg-slate-600:hover { background-color: rgb(248 250 252) !important; }
+                html.dark .studynest-modal-panel .hover\\:bg-gray-200:hover { background-color: rgb(71 85 105) !important; }
+                html.dark .studynest-modal-panel .studynest-secondary-button {
+                    background-color: rgb(51 65 85) !important;
+                    border-color: rgb(71 85 105) !important;
+                    color: rgb(226 232 240) !important;
+                }
+                html.dark .studynest-modal-panel .studynest-secondary-button:hover {
+                    background-color: rgb(71 85 105) !important;
+                }
+            `}</style>
+            <Transition show={show} as={Fragment} leave="duration-200">
+                <Dialog
                 as="div"
                 id="modal"
                 className="fixed inset-0 z-50 flex transform items-center overflow-y-auto px-4 py-6 transition-all sm:px-0"
@@ -91,7 +138,7 @@ export default function Modal({
                     <DialogPanel
                         className={`
                             mb-6 transform overflow-hidden rounded-xl
-                            bg-white
+                            studynest-modal-panel bg-white
                             shadow-xl transition-all
                             sm:mx-auto sm:w-full
                             ${maxWidthClass}
@@ -145,8 +192,9 @@ export default function Modal({
                         )}
                     </DialogPanel>
                 </TransitionChild>
-            </Dialog>
-        </Transition>
+                </Dialog>
+            </Transition>
+        </>
     );
 }
 

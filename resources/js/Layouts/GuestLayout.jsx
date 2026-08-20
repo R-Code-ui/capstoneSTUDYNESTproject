@@ -1,8 +1,20 @@
+import { useEffect, useState } from 'react';
 import { Link } from '@inertiajs/react';
+import { MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 
 export default function GuestLayout({ children }) {
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('studynest-theme') === 'dark';
+    });
+
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', isDarkMode);
+        localStorage.setItem('studynest-theme', isDarkMode ? 'dark' : 'light');
+    }, [isDarkMode]);
+
     return (
-        <div className="h-screen max-h-screen w-screen bg-[#FFFDF9] text-slate-800 font-sans flex flex-col justify-between relative overflow-hidden select-none">
+        <div className="studynest-auth relative flex h-dvh min-h-dvh max-h-dvh w-full items-center justify-center overflow-hidden px-4 py-3 font-sans text-slate-900 sm:px-6 sm:py-6 lg:px-8">
 
             {/* GPU-Accelerated CSS Keyframes for Performance */}
             <style>{`
@@ -49,50 +61,108 @@ export default function GuestLayout({ children }) {
                 .f-11 { left: 93%; animation-duration: 10s; animation-delay: 9s; }
             `}</style>
 
-            {/* Falling Leaves & School Elements Mix */}
-            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-                <span className="fall-item f-1 text-2xl">🍂</span>
-                <span className="fall-item f-2 text-xl">✏️</span>
-                <span className="fall-item f-3 text-2xl">🍃</span>
-                <span className="fall-item f-4 text-xl">📐</span>
-                <span className="fall-item f-5 text-2xl">🌿</span>
-                <span className="fall-item f-6 text-xl">🎒</span>
-                <span className="fall-item f-7 text-2xl">🍁</span>
-                <span className="fall-item f-8 text-xl">📚</span>
-                <span className="fall-item f-9 text-2xl">🍂</span>
-                <span className="fall-item f-10 text-xl">🎨</span>
-                <span className="fall-item f-11 text-2xl">🍃</span>
-            </div>
+            <style>{`
+                .studynest-auth {
+                    font-family: Figtree, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                    background: #f8fafc;
+                }
+                .studynest-auth .auth-background {
+                    position: fixed;
+                    inset: 0;
+                    z-index: 0;
+                    background-image: url('/storage/images/studynestbackgroundschool.jpeg');
+                    background-size: cover;
+                    background-position: center;
+                }
+                .studynest-auth .auth-background::after {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(135deg, rgb(15 23 42 / 0.78), rgb(30 64 175 / 0.48));
+                }
+                .studynest-auth .auth-card {
+                    background: rgb(15 23 42 / 0.30);
+                    border-color: rgb(255 255 255 / 0.30);
+                    box-shadow: 0 25px 70px rgb(15 23 42 / 0.24);
+                    backdrop-filter: blur(22px);
+                    -webkit-backdrop-filter: blur(22px);
+                }
+                .studynest-auth .auth-panel { background: rgb(15 23 42 / 0.12); }
+                .dark .studynest-auth { background: #020617; color: #f8fafc; }
+                .dark .studynest-auth .auth-background::after {
+                    background: linear-gradient(135deg, rgb(2 6 23 / 0.88), rgb(15 23 42 / 0.74));
+                }
+                .dark .studynest-auth .auth-card {
+                    background: rgb(15 23 42 / 0.76);
+                    border-color: rgb(148 163 184 / 0.28);
+                    box-shadow: 0 25px 70px rgb(2 6 23 / 0.55);
+                }
+                .dark .studynest-auth .auth-panel { background: rgb(15 23 42 / 0.42); }
+                .studynest-auth .auth-card [class~="text-slate-800"],
+                .studynest-auth .auth-card [class~="text-slate-700"],
+                .studynest-auth .auth-card [class~="text-gray-700"],
+                .studynest-auth .auth-card [class~="text-gray-800"] { color: #f8fafc; }
+                .dark .studynest-auth [class~="text-slate-800"],
+                .dark .studynest-auth [class~="text-slate-700"],
+                .dark .studynest-auth [class~="text-gray-700"],
+                .dark .studynest-auth [class~="text-gray-800"] { color: #f8fafc; }
+                .dark .studynest-auth [class~="text-slate-600"],
+                .dark .studynest-auth [class~="text-slate-500"],
+                .dark .studynest-auth [class~="text-gray-400"] { color: #cbd5e1; }
+                .studynest-auth input {
+                    border-radius: 9999px;
+                    background-color: rgb(255 255 255 / 0.14);
+                    color: #f8fafc;
+                    border-color: rgb(255 255 255 / 0.40);
+                }
+                .studynest-auth input::placeholder { color: rgb(226 232 240 / 0.75); }
+                .studynest-auth input:focus {
+                    background-color: rgb(255 255 255 / 0.14) !important;
+                    border-color: rgb(255 255 255 / 0.40) !important;
+                    box-shadow: none !important;
+                    outline: none !important;
+                }
+                .dark .studynest-auth input {
+                    background-color: rgb(2 6 23 / 0.58);
+                    color: #f8fafc;
+                    border-color: rgb(148 163 184 / 0.45);
+                }
+                .dark .studynest-auth input::placeholder { color: #94a3b8; }
+                .dark .studynest-auth input:focus {
+                    background-color: rgb(2 6 23 / 0.58) !important;
+                    border-color: rgb(148 163 184 / 0.45) !important;
+                }
+                .dark .studynest-auth [class~="bg-[#E0F2F1]"],
+                .dark .studynest-auth [class~="bg-[#FFF3E0]"],
+                .dark .studynest-auth [class~="bg-[#F3E5F5]"],
+                .dark .studynest-auth [class~="bg-emerald-50"] {
+                    background-color: rgb(30 41 59 / 0.78);
+                    border-color: rgb(96 165 250 / 0.35);
+                }
+                .dark .studynest-auth [class~="border-slate-100"] { border-color: rgb(148 163 184 / 0.25); }
+                .dark .studynest-auth [class~="text-emerald-700"] { color: #86efac; }
+            `}</style>
 
-            {/* Background Soft Glow Accents */}
-            <div className="absolute -top-24 -left-24 w-72 h-72 sm:w-96 sm:h-96 bg-[#4ECDC4]/15 rounded-full blur-3xl pointer-events-none z-0" />
-            <div className="absolute -bottom-24 -right-24 w-72 h-72 sm:w-96 sm:h-96 bg-[#FF6B6B]/15 rounded-full blur-3xl pointer-events-none z-0" />
+            <div className="auth-background" aria-hidden="true" />
 
-            {/* Side Character Illustrations (Hidden on Mobile, Visible on Desktop) */}
-            <div className="hidden lg:block absolute left-4 xl:left-8 bottom-6 z-0 pointer-events-none animate-float-slow">
-                <img
-                    src="/storage/images/boyJumping.png"
-                    alt="Happy Student"
-                    className="w-36 xl:w-48 h-auto object-contain drop-shadow-md"
-                />
-            </div>
-
-            <div className="hidden lg:block absolute right-4 xl:right-8 bottom-6 z-0 pointer-events-none animate-float-bounce">
-                <img
-                    src="/storage/images/boyBasketball.png"
-                    alt="Active Student"
-                    className="w-36 xl:w-48 h-auto object-contain drop-shadow-md"
-                />
-            </div>
+            <button
+                type="button"
+                onClick={() => setIsDarkMode((previous) => !previous)}
+                className="absolute right-4 top-4 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-white/75 text-slate-700 shadow-lg backdrop-blur-md transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300/70 dark:border-slate-500/50 dark:bg-slate-900/75 dark:text-slate-200 dark:hover:bg-slate-800"
+                aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+                title={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+            >
+                {isDarkMode ? <SunIcon className="h-5 w-5" aria-hidden="true" /> : <MoonIcon className="h-5 w-5" aria-hidden="true" />}
+            </button>
 
             {/* Main Center Box */}
-            <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 py-4 sm:px-6">
+            <main className="relative z-10 flex max-h-full w-full items-center justify-center py-2 sm:py-6">
 
                 {/* Central Card Container */}
-                <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden transition-all duration-300">
+                <div className="auth-card w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl">
 
                     {/* Header Banner */}
-                    <div className="bg-gradient-to-b from-[#FFFDF9] to-white px-6 pt-5 pb-3 text-center border-b border-slate-100 flex flex-col items-center">
+                    <div className="auth-panel flex flex-col items-center border-b border-white/30 px-6 pb-5 pt-7 text-center sm:px-8">
                         <Link href="/" className="transition transform hover:scale-105 inline-block">
                             <img
                                 src="/storage/images/studynestLogo.png"
@@ -100,25 +170,21 @@ export default function GuestLayout({ children }) {
                                 className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm"
                             />
                         </Link>
-                        <h2 className="mt-1.5 text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
+                        <p className="mt-2 text-sm font-bold tracking-[0.18em] text-white">
+                            StudyNest
+                        </p>
+                        <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
                             Welcome Back!
                         </h2>
-                        <p className="text-[11px] sm:text-xs font-bold text-[#FF6B6B] tracking-wider uppercase mt-1 bg-[#FF6B6B]/10 px-3 py-0.5 rounded-full inline-block">
-                            StudyNest Management Portal
-                        </p>
                     </div>
 
                     {/* Dynamic Form Children */}
-                    <div className="p-5 sm:p-6 bg-white">
+                    <div className="auth-panel p-5 sm:p-8">
                         {children}
                     </div>
                 </div>
 
-                {/* Footer Tagline */}
-                <div className="mt-4 text-center text-slate-500 text-[11px] sm:text-xs font-semibold tracking-wider uppercase">
-                    Ilijan Sur Elementary School
-                </div>
-            </div>
+            </main>
         </div>
     );
 }

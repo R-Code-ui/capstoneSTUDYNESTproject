@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\Subject;
 use App\Models\ActivityLog;
 use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
@@ -79,6 +80,7 @@ class MessageController extends Controller
                 'last_message_at'    => $msg->created_at,
                 'last_message_id'    => $msg->id,
                 'category'           => $msg->category,
+                'subject'            => $msg->subject,
                 'unread_count'       => $unreadCount,
                 'is_last_from_me'    => $msg->sender_id === $user->id,
             ];
@@ -138,8 +140,16 @@ class MessageController extends Controller
                 'name' => $t->name,
             ]);
 
+        $defaultSubjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
+        $subjects = Subject::where('grade_level', $studentGrade)
+            ->orderBy('name')->get(['id', 'name', 'grade_level']);
+        $subjectNames = $subjects->pluck('name')->all();
+        $subjects = $subjects->concat(collect($defaultSubjects)->reject(fn ($name) => in_array($name, $subjectNames, true))
+            ->map(fn ($name, $index) => ['id' => 'default-' . $index, 'name' => $name, 'grade_level' => $studentGrade]))->values();
+
         return Inertia::render('Student/Messages/Compose', [
             'teachers' => $teachers,
+            'subjects' => $subjects,
         ]);
     }
 
@@ -167,6 +177,13 @@ class MessageController extends Controller
                 $query->where('grade_level', $studentGrade);
             })
             ->firstOrFail();
+
+        if (!empty($validated['subject'])) {
+            abort_unless(Subject::where('name', $validated['subject'])
+                ->where('grade_level', $studentGrade)->exists()
+                || in_array($validated['subject'], ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'], true), 422,
+                'The selected subject is not available for your grade level.');
+        }
 
         $message = Message::create([
             'sender_id'   => $student->id,
@@ -232,6 +249,7 @@ class MessageController extends Controller
                 'id'         => $msg->id,
                 'message'    => $msg->message,
                 'category'   => $msg->category,
+                'subject'    => $msg->subject,
                 'status'     => $msg->status,
                 'is_mine'    => $msg->sender_id === $user->id,
                 'created_at' => $msg->created_at->format('M d, Y g:i A'),

@@ -7,7 +7,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Modal from '@/Components/Modal';
-import { EyeIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 export default function ActivityLogs({
     logs,
@@ -234,7 +234,7 @@ export default function ActivityLogs({
                             </div>
                             <div className="col-span-2">
                                 <div className="text-sm text-gray-500">Activity Description</div>
-                                <div className="font-medium text-gray-800 p-3 bg-gray-50 rounded-lg mt-1">
+                                <div className="mt-1 rounded-xl border border-gray-200 bg-gray-50 p-3 font-medium text-gray-800">
                                     {selectedLog.activity}
                                 </div>
                             </div>
@@ -244,14 +244,6 @@ export default function ActivityLogs({
                             </div>
                         </div>
 
-                        <div className="flex justify-end pt-4 border-t border-gray-200">
-                            <button
-                                onClick={() => { setShowLogDetail(false); setSelectedLog(null); }}
-                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                            >
-                                <XMarkIcon className="w-5 h-5" />
-                            </button>
-                        </div>
                     </div>
                 )}
             </Modal>

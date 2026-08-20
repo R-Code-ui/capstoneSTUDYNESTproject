@@ -62,16 +62,54 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
             }
         >
             <Head title={group.name} />
-            <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1fr_280px]">
-                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="teacher-group-conversation mx-auto grid max-w-5xl gap-6 px-4 pb-6 sm:px-6 lg:grid-cols-[1fr_280px] lg:px-8">
+                <style>{`
+                    .teacher-group-conversation .group-message-body {
+                        overflow-wrap: anywhere;
+                        word-break: break-word;
+                        min-width: 0;
+                    }
+                    .teacher-group-conversation .group-message-input {
+                        overflow-wrap: anywhere;
+                    }
+                    .studynest-layout.theme-dark .teacher-group-conversation .group-conversation-panel,
+                    .studynest-layout.theme-dark .teacher-group-conversation .group-members-panel {
+                        background: #0f172a !important;
+                        border-color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .teacher-group-conversation .group-message-input {
+                        background: #1e293b !important;
+                        border-color: #475569 !important;
+                        color: #e2e8f0 !important;
+                    }
+                    .studynest-layout.theme-dark .teacher-group-conversation .group-message-input::placeholder {
+                        color: #94a3b8 !important;
+                    }
+                    .studynest-layout.theme-dark .teacher-group-conversation .group-message-bubble.is-owner {
+                        background: #1e3a5f !important;
+                        color: #dbeafe !important;
+                    }
+                    .studynest-layout.theme-dark .teacher-group-conversation .group-message-bubble.is-member {
+                        background: #334155 !important;
+                        color: #e2e8f0 !important;
+                    }
+                    @media (max-width: 640px) {
+                        .teacher-group-conversation { gap: 1rem; }
+                        .teacher-group-conversation .group-conversation-panel,
+                        .teacher-group-conversation .group-members-panel { border-radius: 0.75rem; }
+                        .teacher-group-conversation .group-message-bubble { max-width: 100%; }
+                        .teacher-group-conversation .group-message-input { min-width: 0; }
+                    }
+                `}</style>
+                <div className="group-conversation-panel overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                     {group.is_archived && <div className="bg-amber-50 px-5 py-3 text-sm font-medium text-amber-800">This group has been archived. New messages are disabled.</div>}
                     {group.description && <p className="border-b border-slate-100 px-5 py-4 text-sm text-slate-600">{group.description}</p>}
                     <div className="max-h-[55vh] min-h-[320px] space-y-4 overflow-y-auto p-5">
                         {group.messages.length === 0 ? <p className="py-10 text-center text-sm text-slate-400">No messages yet.</p> : group.messages.map((message) => (
                             <div key={message.id} className={`flex ${message.sender_id === group.owner_id ? 'justify-start' : 'justify-end'}`}>
-                                <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.sender_id === group.owner_id ? 'bg-blue-50 text-blue-950' : 'bg-slate-100 text-slate-800'}`}>
+                                <div className={`group-message-bubble ${message.sender_id === group.owner_id ? 'is-owner bg-blue-50 text-blue-950' : 'is-member bg-slate-100 text-slate-800'} max-w-[85%] min-w-0 rounded-2xl px-4 py-3`}>
                                     <p className="mb-1 text-xs font-bold text-slate-500">{message.sender_name}{message.sender_id === group.owner_id ? ' · Teacher' : ''}</p>
-                                    <p className="whitespace-pre-wrap text-sm">{message.body}</p>
+                                    <p className="group-message-body whitespace-pre-wrap text-sm">{message.body}</p>
                                     <p className="mt-2 text-[11px] text-slate-400">{message.created_at}</p>
                                 </div>
                             </div>
@@ -80,14 +118,14 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                     </div>
                     <form onSubmit={send} className="border-t border-slate-200 p-4">
                         <div className="flex items-end gap-2">
-                            <textarea value={data.body} onChange={(e) => setData('body', e.target.value)} disabled={group.is_archived} rows={2} placeholder={group.is_archived ? 'Group archived' : 'Write a message...'} className="flex-1 resize-none rounded-md border-gray-300 text-sm shadow-sm" />
+                            <textarea value={data.body} onChange={(e) => setData('body', e.target.value)} disabled={group.is_archived} rows={2} placeholder={group.is_archived ? 'Group archived' : 'Write a message...'} className="group-message-input flex-1 resize-none rounded-md border-gray-300 text-sm shadow-sm" />
                             <PrimaryButton disabled={isSubmitting || group.is_archived || !data.body.trim()}><PaperAirplaneIcon className="h-4 w-4" /></PrimaryButton>
                         </div>
                         <InputError message={errors.body} className="mt-1" />
                     </form>
                 </div>
 
-                <aside className="h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <aside className="group-members-panel h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 className="flex items-center gap-2 font-semibold text-slate-800"><UserGroupIcon className="h-5 w-5" /> Members</h2>
                     <div className="mt-4 space-y-3">
                         {group.members.map((member) => <div key={member.id} className="flex items-center justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-700">{member.name}</p><p className="text-xs text-slate-400">{member.is_owner ? 'Group owner' : member.grade_level}</p></div>{canManage && !member.is_owner && <button title="Remove member" onClick={() => { if (confirm(`Remove ${member.name} from this group?`)) router.delete(route('teacher.messages.groups.members.remove', [group.id, member.id]), { preserveScroll: true }); }} className="text-xs text-red-500 hover:text-red-700">Remove</button>}</div>)}

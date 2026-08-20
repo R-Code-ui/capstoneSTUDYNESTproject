@@ -79,9 +79,40 @@ export default function MessagesShow({ student, messages }) {
         >
             <Head title={`Conversation with ${student.name}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <style>{`
+                .studynest-layout.theme-dark .message-conversation-shell textarea {
+                    background-color: rgb(30 41 59) !important;
+                    color: rgb(226 232 240) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .message-conversation-shell textarea::placeholder {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .message-conversation-shell .message-choice:not(.is-selected) {
+                    background-color: rgb(15 23 42);
+                    color: rgb(203 213 225);
+                    border-color: rgb(71 85 105);
+                }
+                .studynest-layout.theme-dark .message-conversation-shell .message-choice:not(.is-selected):hover {
+                    background-color: rgb(30 41 59);
+                    border-color: rgb(96 165 250);
+                }
+            `}</style>
+
+            <div className="teacher-message-show py-12">
+                <style>{`
+                    .teacher-message-show .student-chat-text,
+                    .teacher-message-show .student-incoming-message {
+                        overflow-wrap: anywhere;
+                        word-break: break-word;
+                    }
+                    @media (max-width: 640px) {
+                        .teacher-message-show { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+                        .teacher-message-show .message-conversation-shell > div { padding: 1rem; }
+                    }
+                `}</style>
+                <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+                    <div className="message-conversation-shell bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-6">
                             {/* ===== Thread ===== */}
                             <div className="overflow-y-auto px-1 py-2 max-h-[55vh] min-h-[300px]">
@@ -117,7 +148,7 @@ export default function MessagesShow({ student, messages }) {
                                             key={cat.value}
                                             type="button"
                                             onClick={() => setData('category', cat.value)}
-                                            className={`text-xs px-3 py-1 rounded-full border transition ${
+                                            className={`message-choice text-xs px-3 py-1 rounded-full border transition ${
                                                 data.category === cat.value
                                                     ? 'bg-blue-600 text-white border-blue-600'
                                                     : 'bg-white text-gray-500 border-gray-200 hover:border-blue-400'

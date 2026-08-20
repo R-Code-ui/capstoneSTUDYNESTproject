@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
 use App\Services\StudyNestNotificationService;
@@ -151,13 +152,17 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255',
             'category' => 'required|string',
             'content' => 'required|string',
-            'target_audience' => 'required|string|in:all_assigned_students,Grade 4,Grade 5,Grade 6',
+            'target_audience' => ['required', 'string', Rule::in($this->targetAudiences(auth()->user()))],
             'priority' => 'required|in:normal,important,urgent',
             'is_pinned' => 'boolean',
             'status' => 'required|in:draft,published',
             'publish_date' => 'required|date',
             'expiration_date' => 'nullable|date|after:publish_date',
         ]);
+
+        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
+            return back()->withErrors(['publish_date' => 'A published announcement cannot have a future publish date.'])->withInput();
+        }
 
         $announcement = Announcement::create([
             'user_id' => auth()->id(),
@@ -183,7 +188,7 @@ class AnnouncementController extends Controller
             'related_module'      => 'Announcement Module',
         ]);
 
-        if ($announcement->status === 'published') {
+        if ($this->isCurrentlyVisible($announcement)) {
             app(StudyNestNotificationService::class)->announcementPublished($announcement);
         }
 
@@ -265,7 +270,7 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255',
             'category' => 'required|string',
             'content' => 'required|string',
-            'target_audience' => 'required|string|in:all_assigned_students,Grade 4,Grade 5,Grade 6',
+            'target_audience' => ['required', 'string', Rule::in($this->targetAudiences(auth()->user()))],
             'priority' => 'required|in:normal,important,urgent',
             'is_pinned' => 'boolean',
             'status' => 'required|in:draft,published,archived',
@@ -273,7 +278,21 @@ class AnnouncementController extends Controller
             'expiration_date' => 'nullable|date|after:publish_date',
         ]);
 
+        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
+            return back()->withErrors(['publish_date' => 'A published announcement cannot have a future publish date.'])->withInput();
+        }
+
+        $wasPublished = $announcement->status === 'published';
         $announcement->update($validated);
+
+        if ($wasPublished && $announcement->wasChanged(['status', 'target_audience', 'publish_date', 'expiration_date', 'title', 'content', 'priority'])) {
+            app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
+        }
+
+        if ($this->isCurrentlyVisible($announcement)
+            && (!$wasPublished || $announcement->wasChanged(['status', 'target_audience', 'publish_date', 'expiration_date', 'title', 'content', 'priority']))) {
+            app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        }
 
         // Log announcement update
         ActivityLog::create([
@@ -294,6 +313,7 @@ class AnnouncementController extends Controller
     public function destroy(Announcement $announcement)
     {
         Gate::authorize('announcement.delete', $announcement);
+        app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
 
         // Log announcement deletion
         ActivityLog::create([
@@ -317,12 +337,16 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('announcement.edit', $announcement);
 
+        $wasPublished = $announcement->status === 'published';
+
         $announcement->update([
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
         ]);
 
-        app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        if (!$wasPublished) {
+            app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        }
 
         // Log publish
         ActivityLog::create([
@@ -355,5 +379,23 @@ class AnnouncementController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Announcement archived successfully!');
+    }
+
+    private function targetAudiences($user): array
+    {
+        $grades = $user->gradeAssignments()->pluck('grade_level')->all();
+        $normalizedGrades = array_map(fn ($grade) => strtolower(str_replace(' ', '_', $grade)), $grades);
+
+        return array_values(array_unique(array_merge(['all_assigned_students'], $grades, $normalizedGrades)));
+    }
+
+    private function isCurrentlyVisible(Announcement $announcement): bool
+    {
+        $today = now()->toDateString();
+
+        return $announcement->status === 'published'
+            && $announcement->publish_date
+            && $announcement->publish_date->toDateString() <= $today
+            && (!$announcement->expiration_date || $announcement->expiration_date->toDateString() >= $today);
     }
 }

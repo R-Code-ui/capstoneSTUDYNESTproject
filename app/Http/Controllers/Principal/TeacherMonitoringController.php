@@ -218,7 +218,8 @@ class TeacherMonitoringController extends Controller
         $lessonIds = $publishedLessons->pluck('id');
         $possibleLessonCompletions = $publishedLessons
             ->groupBy('grade_level')
-            ->sum(fn ($lessons, $grade) => $lessons->count() * ($studentCountsByGrade[$grade] ?? 0));
+            ->map(fn ($lessons, $grade) => $lessons->count() * ($studentCountsByGrade[$grade] ?? 0))
+            ->sum();
 
         $completedLessonCompletions = 0;
         if ($possibleLessonCompletions > 0) {
@@ -239,7 +240,8 @@ class TeacherMonitoringController extends Controller
         $assignmentIds = $publishedAssignments->pluck('id');
         $possibleAssignmentSubmissions = $publishedAssignments
             ->groupBy('grade_level')
-            ->sum(fn ($assignments, $grade) => $assignments->count() * ($studentCountsByGrade[$grade] ?? 0));
+            ->map(fn ($assignments, $grade) => $assignments->count() * ($studentCountsByGrade[$grade] ?? 0))
+            ->sum();
 
         $submittedAssignmentCount = 0;
         if ($possibleAssignmentSubmissions > 0) {
@@ -259,7 +261,8 @@ class TeacherMonitoringController extends Controller
         $quizIds = $publishedQuizzes->pluck('id');
         $possibleQuizAttempts = $publishedQuizzes
             ->groupBy('grade_level')
-            ->sum(fn ($quizzes, $grade) => $quizzes->count() * ($studentCountsByGrade[$grade] ?? 0));
+            ->map(fn ($quizzes, $grade) => $quizzes->count() * ($studentCountsByGrade[$grade] ?? 0))
+            ->sum();
 
         $completedQuizAttempts = 0;
         if ($possibleQuizAttempts > 0) {

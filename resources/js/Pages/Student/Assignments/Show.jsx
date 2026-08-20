@@ -174,13 +174,13 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
         window.open(route('student.assignments.view-resource', resourceId), '_blank');
     };
 
-    const availableMethods = assignment.submission_methods?.filter((m) => m !== 'photo') || [];
+    const availableMethods = (assignment.submission_methods || []).filter((method) => ['digital', 'paper'].includes(method));
 
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">{assignment.title}</span>
+                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>{assignment.title}</span>
                     <SecondaryButton onClick={() => router.visit(route('student.assignments.index'))}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" /> Back to Assignments
                     </SecondaryButton>
@@ -189,8 +189,39 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
         >
             <Head title={assignment.title} />
 
-            <div className="py-4">
-                <div className="mx-auto max-w-4xl">
+            <div className="student-assignment-show-page py-4">
+                <style>{`
+                    .studynest-layout.theme-dark .student-assignment-show-page .bg-white {
+                        background-color: rgb(15 23 42) !important;
+                        border-color: rgb(51 65 85) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .bg-gray-50 {
+                        background-color: rgb(30 41 59) !important;
+                        border-color: rgb(71 85 105) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .text-gray-800,
+                    .studynest-layout.theme-dark .student-assignment-show-page .text-gray-700 {
+                        color: rgb(226 232 240) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .text-gray-600,
+                    .studynest-layout.theme-dark .student-assignment-show-page .text-gray-500 {
+                        color: rgb(148 163 184) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page [class~="border-gray-200"],
+                    .studynest-layout.theme-dark .student-assignment-show-page [class~="border-gray-100"] {
+                        border-color: rgb(51 65 85) !important;
+                    }
+                    .student-assignment-show-page .break-words {
+                        overflow-wrap: anywhere;
+                        word-break: break-word;
+                    }
+                    @media (max-width: 640px) {
+                        .student-assignment-show-page .p-6 {
+                            padding: 1rem;
+                        }
+                    }
+                `}</style>
+                <div className="mx-auto max-w-4xl px-4 sm:px-6">
                     {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
                     {/* Flash messages */}
@@ -218,7 +249,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                 {submission && <StatusBadge status={getSubmissionStatusBadge(submission.status)} />}
                             </div>
 
-                            <h3 className="text-2xl font-bold text-gray-800 break-words">{assignment.title}</h3>
+                            <h3 className="max-w-full truncate text-2xl font-bold text-gray-800" title={assignment.title}>{assignment.title}</h3>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
                                 <div>
@@ -249,7 +280,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
                             <div className="pt-4 border-t border-gray-200">
                                 <h4 className="font-semibold text-gray-800 mb-2">Instructions</h4>
-                                <div className="text-gray-700 whitespace-pre-wrap break-words">{assignment.instructions}</div>
+                                <div className="text-gray-700 whitespace-pre-wrap break-words line-clamp-5" title={assignment.instructions}>{assignment.instructions}</div>
                             </div>
                         </div>
                     </div>
@@ -273,9 +304,6 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                                     <div className="text-sm text-gray-500">{getResourceLabel(resource.type)}</div>
                                                 </div>
                                             </div>
-                                            {resource.type === 'video' && (
-                                                <video controls preload="metadata" className="w-full sm:w-64 rounded-md bg-black" src={route('student.assignments.view-resource', resource.id)} />
-                                            )}
                                             {resource.type === 'url' ? (
                                                 <a href={resource.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors shrink-0">
                                                     Open Link

@@ -18,11 +18,14 @@ class GamePolicy
 
         if ($user->hasRole('teacher')) {
             $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-            return in_array($game->grade_level, $assignedGrades);
+            return $user->id === $game->teacher_id && in_array($game->grade_level, $assignedGrades);
         }
 
         if ($user->hasRole('student')) {
-            return $user->grade_level === $game->grade_level;
+            $studentGrade = $user->currentEnrollment?->grade_level ?? $user->grade_level;
+            return $game->status === 'published'
+                && (!$game->publish_date || $game->publish_date->lte(today()))
+                && $studentGrade === $game->grade_level;
         }
 
         return false;

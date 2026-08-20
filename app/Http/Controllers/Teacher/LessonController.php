@@ -55,7 +55,7 @@ class LessonController extends Controller
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $statuses = ['draft', 'published', 'archived'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
 
         return Inertia::render('Teacher/Lessons/Index', [
             'lessons' => $lessons->map(function ($lesson) {
@@ -93,7 +93,7 @@ class LessonController extends Controller
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
@@ -131,7 +131,7 @@ class LessonController extends Controller
         $validated = $request->validate([
             'grade_level' => ['required', Rule::in($assignedGrades)],
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
-            'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
+            'school_year' => 'required|string|in:' . implode(',', config('school.school_years')),
             'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'learning_competency' => 'required|string',
@@ -274,7 +274,7 @@ class LessonController extends Controller
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) { return 'Week ' . $i; }, range(1, 12));
 
@@ -327,7 +327,7 @@ class LessonController extends Controller
         $validated = $request->validate([
             'grade_level' => ['required', Rule::in(auth()->user()->gradeAssignments()->pluck('grade_level')->all())],
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
-            'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
+            'school_year' => 'required|string|in:' . implode(',', config('school.school_years')),
             'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'learning_competency' => 'required|string',
@@ -445,6 +445,7 @@ class LessonController extends Controller
     public function destroy(Lesson $lesson)
     {
         Gate::authorize('delete', $lesson);
+        app(StudyNestNotificationService::class)->forgetFor('lesson', $lesson->id);
 
         foreach ($lesson->resources as $resource) {
             if ($resource->resource_type !== 'url' && Storage::disk('public')->exists($resource->file_path)) {

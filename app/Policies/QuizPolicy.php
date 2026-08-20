@@ -18,11 +18,11 @@ class QuizPolicy
 
         if ($user->hasRole('teacher')) {
             $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-            return in_array($quiz->grade_level, $assignedGrades);
+            return $user->id === $quiz->teacher_id && in_array($quiz->grade_level, $assignedGrades, true);
         }
 
         if ($user->hasRole('student')) {
-            return $user->grade_level === $quiz->grade_level;
+            return $quiz->status === 'published' && $user->grade_level === $quiz->grade_level;
         }
 
         return false;

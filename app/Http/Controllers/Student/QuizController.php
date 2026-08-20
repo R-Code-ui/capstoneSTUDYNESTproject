@@ -29,8 +29,10 @@ class QuizController extends Controller
         $quizzes = Quiz::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->when($search, function ($query, $search) {
-                return $query->where('quiz_title', 'like', "%{$search}%")
-                    ->orWhere('subject', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('quiz_title', 'like', "%{$search}%")
+                        ->orWhere('subject', 'like', "%{$search}%");
+                });
             })
             ->when($subjectFilter, function ($query, $subject) {
                 return $query->where('subject', $subject);
@@ -41,10 +43,12 @@ class QuizController extends Controller
                         $q->where('student_id', $user->id)->where('status', 'completed');
                     });
                 } elseif ($status === 'pending') {
-                    return $query->whereDoesntHave('attempts', function ($q) use ($user) {
-                        $q->where('student_id', $user->id);
-                    })->orWhereHas('attempts', function ($q) use ($user) {
-                        $q->where('student_id', $user->id)->where('status', 'started');
+                    return $query->where(function ($query) use ($user) {
+                        $query->whereDoesntHave('attempts', function ($q) use ($user) {
+                            $q->where('student_id', $user->id);
+                        })->orWhereHas('attempts', function ($q) use ($user) {
+                            $q->where('student_id', $user->id)->where('status', 'started');
+                        });
                     });
                 }
                 return $query;
@@ -111,9 +115,7 @@ class QuizController extends Controller
     {
         $user = auth()->user();
 
-        if ($quiz->grade_level !== $user->grade_level) {
-            abort(403);
-        }
+        Gate::authorize('view', $quiz);
 
         $attempt = QuizAttempt::where('quiz_id', $quiz->id)
             ->where('student_id', $user->id)
@@ -169,9 +171,7 @@ class QuizController extends Controller
     {
         $user = auth()->user();
 
-        if ($quiz->grade_level !== $user->grade_level) {
-            abort(403);
-        }
+        Gate::authorize('view', $quiz);
 
         $completedAttempts = QuizAttempt::where('quiz_id', $quiz->id)
             ->where('student_id', $user->id)
@@ -191,7 +191,9 @@ class QuizController extends Controller
             return redirect()->route('student.quizzes.take', $existingAttempt->id);
         }
 
-        $attemptNumber = $completedAttempts + 1;
+        $attemptNumber = (int) QuizAttempt::where('quiz_id', $quiz->id)
+            ->where('student_id', $user->id)
+            ->max('attempt_number') + 1;
 
         $attempt = QuizAttempt::create([
             'quiz_id'        => $quiz->id,
@@ -223,6 +225,10 @@ class QuizController extends Controller
 
         if ($attempt->student_id !== $user->id) {
             abort(403);
+        }
+
+        if ($attempt->status !== 'started') {
+            return redirect()->route('student.quizzes.results', $attempt->id);
         }
 
         $quiz = $attempt->quiz;
@@ -269,6 +275,10 @@ class QuizController extends Controller
             abort(403);
         }
 
+        if ($attempt->status !== 'started') {
+            return redirect()->route('student.quizzes.results', $attempt->id);
+        }
+
         if ($attempt->status === 'completed') {
             return redirect()->route('student.quizzes.results', $attempt->id);
         }
@@ -280,6 +290,10 @@ class QuizController extends Controller
         $answers = $validated['answers'];
         $quiz = $attempt->quiz;
         $questions = $quiz->questions()->get();
+
+        $answers = collect($validated['answers'])
+            ->filter(fn ($answer, $questionId) => $questions->contains('id', (int) $questionId))
+            ->all();
 
         $score = 0;
         $totalQuestions = $questions->count();
@@ -342,6 +356,10 @@ class QuizController extends Controller
 
         if ($attempt->student_id !== $user->id) {
             abort(403);
+        }
+
+        if ($attempt->status !== 'completed') {
+            return redirect()->route('student.quizzes.take', $attempt->id);
         }
 
         $quiz = $attempt->quiz;

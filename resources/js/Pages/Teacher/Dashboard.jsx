@@ -2,6 +2,16 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    Cell,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+} from 'recharts';
 
 // Heroicons
 import {
@@ -73,6 +83,12 @@ export default function TeacherDashboard({
     };
 
     const messagesRoute = safeRoute('teacher.messages.index');
+    const participationChartData = [
+        { name: 'Lessons', value: Number(participation.lesson_completion_rate) || 0, color: '#3b82f6' },
+        { name: 'Assignments', value: Number(participation.assignment_completion_rate) || 0, color: '#10b981' },
+        { name: 'Quizzes', value: Number(participation.average_quiz_score) || 0, color: '#8b5cf6' },
+        { name: 'Games', value: Number(participation.game_participation_rate) || 0, color: '#f59e0b' },
+    ];
 
     return (
         <AuthenticatedLayout
@@ -81,7 +97,30 @@ export default function TeacherDashboard({
             <Head title="Teacher Dashboard" />
 
             <div className="py-4">
-                <div className="mx-auto max-w-7xl">
+                <style>{`
+                    .teacher-dashboard-chart { --teacher-chart-text: #475569; --teacher-chart-grid: #e2e8f0; --teacher-tooltip-bg: #ffffff; }
+                    .studynest-layout.theme-dark .teacher-dashboard-chart { --teacher-chart-text: #94a3b8; --teacher-chart-grid: #334155; --teacher-tooltip-bg: #1e293b; }
+                    .studynest-layout.theme-dark .teacher-lesson-card { background-color: rgb(30 41 59) !important; border-color: rgb(71 85 105) !important; }
+                    .studynest-layout.theme-dark .teacher-lesson-card .teacher-progress-track { background-color: rgb(71 85 105) !important; }
+                    .studynest-layout.theme-dark .teacher-chart-tooltip { color: rgb(226 232 240) !important; }
+                    .studynest-layout.theme-dark .teacher-announcement-item { background-color: rgb(30 41 59) !important; border-color: rgb(59 130 246) !important; }
+                    .studynest-layout.theme-dark .teacher-announcement-item:hover { background-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .teacher-announcement-title { color: rgb(226 232 240) !important; }
+                    .studynest-layout.theme-dark .teacher-announcement-content { color: rgb(148 163 184) !important; }
+                    .studynest-layout.theme-dark .teacher-announcement-date { color: rgb(148 163 184) !important; }
+                    .teacher-dashboard-clamp {
+                        min-width: 0;
+                        max-width: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: -webkit-box;
+                        -webkit-box-orient: vertical;
+                        -webkit-line-clamp: 2;
+                        overflow-wrap: anywhere;
+                        word-break: break-word;
+                    }
+                `}</style>
+                <div className="mx-auto min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Assigned Grades Badge ===== */}
                     {assigned_grades && assigned_grades.length > 0 && (
                         <div className="mb-6 flex flex-wrap gap-2">
@@ -169,12 +208,12 @@ export default function TeacherDashboard({
                     <div className="mt-6">
                         <Card title="Participation Summary">
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                                <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                <div className="teacher-lesson-card text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
                                     <div className="text-2xl font-bold text-blue-600">
                                         {participation.lesson_completion_rate}%
                                     </div>
                                     <div className="text-sm text-gray-600">Lesson Completion</div>
-                                    <div className="w-full mt-2 bg-gray-200 rounded-full h-2">
+                                    <div className="teacher-progress-track w-full mt-2 bg-gray-200 rounded-full h-2">
                                         <div
                                             className="bg-blue-600 h-2 rounded-full transition-all duration-500"
                                             style={{ width: `${participation.lesson_completion_rate}%` }}
@@ -224,6 +263,51 @@ export default function TeacherDashboard({
                         </Card>
                     </div>
 
+                    {/* ===== Section 2b: Participation Chart ===== */}
+                    <div className="mt-6">
+                        <Card title="Participation Overview">
+                            <div className="teacher-dashboard-chart h-64 w-full sm:h-72">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={participationChartData}
+                                        margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+                                    >
+                                        <CartesianGrid stroke="var(--teacher-chart-grid)" strokeDasharray="3 3" vertical={false} />
+                                        <XAxis
+                                            dataKey="name"
+                                            tick={{ fill: 'var(--teacher-chart-text)', fontSize: 12 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            domain={[0, 100]}
+                                            tickFormatter={(value) => `${value}%`}
+                                            tick={{ fill: 'var(--teacher-chart-text)', fontSize: 12 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <Tooltip
+                                            formatter={(value) => [`${value}%`, 'Completion']}
+                                            contentStyle={{
+                                                backgroundColor: 'var(--teacher-tooltip-bg, #ffffff)',
+                                                border: '1px solid var(--teacher-chart-grid)',
+                                                borderRadius: '10px',
+                                            }}
+                                            labelStyle={{ color: 'var(--teacher-chart-text)', marginBottom: '4px' }}
+                                            itemStyle={{ color: 'var(--teacher-chart-text)' }}
+                                            cursor={false}
+                                        />
+                                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                                            {participationChartData.map((entry) => (
+                                                <Cell key={entry.name} fill={entry.color} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </Card>
+                    </div>
+
                     {/* ===== Section 3: Students Requiring Attention ===== */}
                     <div className="mt-6">
                         <Card title="Students Requiring Attention">
@@ -233,27 +317,27 @@ export default function TeacherDashboard({
                                 </p>
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left text-gray-600">
+                                    <table className="w-full table-fixed text-left text-xs text-gray-600 sm:text-sm">
                                         <thead className="text-xs font-semibold text-gray-500 uppercase bg-gray-50">
                                             <tr>
-                                                <th className="px-4 py-3">Student</th>
-                                                <th className="px-4 py-3">Concern</th>
-                                                <th className="px-4 py-3">Status</th>
+                                                <th className="w-1/4 px-2 py-3 sm:px-4">Student</th>
+                                                <th className="w-1/2 px-2 py-3 sm:px-4">Concern</th>
+                                                <th className="w-1/4 px-2 py-3 sm:px-4">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {students_requiring_attention.map((student) => (
                                                 <tr key={student.id} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="px-4 py-3 font-medium text-gray-800">
+                                                    <td className="break-words px-2 py-3 font-medium text-gray-800 sm:px-4">
                                                         {student.name}
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="break-words px-2 py-3 sm:px-4">
                                                         <span className="inline-flex items-center gap-1 text-amber-600">
                                                             <ExclamationTriangleIcon className="w-4 h-4" />
                                                             {student.concern}
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="break-words px-2 py-3 sm:px-4">
                                                         <StatusBadge status="warning" label="Needs Attention" />
                                                     </td>
                                                 </tr>
@@ -266,8 +350,8 @@ export default function TeacherDashboard({
                     </div>
 
                     {/* ===== Section 4: Upcoming Deadlines & Recent Activity ===== */}
-                    <div className="mt-6 grid gap-6 md:grid-cols-2">
-                        <Card title="Upcoming Deadlines">
+                    <div className="mt-6 grid min-w-0 gap-6 md:grid-cols-2">
+                        <Card title="Upcoming Deadlines" className="min-w-0 overflow-hidden">
                             {upcoming_deadlines.length === 0 ? (
                                 <p className="text-sm text-gray-500">No upcoming deadlines.</p>
                             ) : (
@@ -275,12 +359,12 @@ export default function TeacherDashboard({
                                     {upcoming_deadlines.map((deadline) => (
                                         <div
                                             key={deadline.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
+                                            className="flex min-w-0 max-w-full items-center justify-between overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
                                         >
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex min-w-0 flex-1 items-center gap-3">
                                                 <ClockIcon className="w-5 h-5 text-amber-500" />
-                                                <div>
-                                                    <div className="font-medium text-gray-800">
+                                                <div className="min-w-0">
+                                                    <div className="teacher-dashboard-clamp font-medium text-gray-800" title={deadline.title}>
                                                         {deadline.title}
                                                     </div>
                                                     <div className="text-xs text-gray-500">
@@ -299,7 +383,7 @@ export default function TeacherDashboard({
                             )}
                         </Card>
 
-                        <Card title="Recent Activity">
+                        <Card title="Recent Activity" className="min-w-0 overflow-hidden">
                             {recent_activity.length === 0 ? (
                                 <p className="text-sm text-gray-500">No recent activity.</p>
                             ) : (
@@ -307,12 +391,12 @@ export default function TeacherDashboard({
                                     {recent_activity.map((activity, index) => (
                                         <div
                                             key={index}
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
+                                            className="flex min-w-0 max-w-full items-center justify-between overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
                                         >
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex min-w-0 flex-1 items-center gap-3">
                                                 {getActivityIcon(activity.type)}
-                                                <div>
-                                                    <div className="font-medium text-gray-800">
+                                                <div className="min-w-0">
+                                                    <div className="teacher-dashboard-clamp font-medium text-gray-800" title={activity.title}>
                                                         {activity.title}
                                                     </div>
                                                     <div className="text-xs text-gray-500 capitalize">
@@ -320,7 +404,7 @@ export default function TeacherDashboard({
                                                     </div>
                                                 </div>
                                             </div>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="shrink-0 text-xs text-gray-500">
                                                 {activity.date}
                                             </span>
                                         </div>
@@ -333,6 +417,7 @@ export default function TeacherDashboard({
                     {/* ===== Section 5: Recent Announcements ===== */}
                     <div className="mt-6">
                         <Card
+                            className="min-w-0 overflow-hidden"
                             title={
                                 <div className="flex items-center gap-2">
                                     <MegaphoneIcon className="w-5 h-5 text-blue-500" />
@@ -345,15 +430,15 @@ export default function TeacherDashboard({
                                     {recent_announcements.map((announcement) => (
                                         <div
                                             key={announcement.id}
-                                            className="p-3 bg-blue-50/50 rounded-lg border-l-4 border-blue-500 hover:bg-blue-50 transition-colors"
+                                            className="teacher-announcement-item min-w-0 max-w-full overflow-hidden rounded-lg border-l-4 border-blue-500 bg-blue-50/50 p-3 transition-colors hover:bg-blue-50"
                                         >
                                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                                <div>
-                                                    <div className="font-medium text-gray-800 flex items-center gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="teacher-announcement-title flex min-w-0 items-center gap-2 font-medium text-gray-800">
                                                         <BuildingOfficeIcon className="w-4 h-4 text-blue-500" />
-                                                        {announcement.title}
+                                                        <span className="min-w-0 flex-1 truncate" title={announcement.title}>{announcement.title}</span>
                                                     </div>
-                                                    <div className="text-sm text-gray-600 line-clamp-2">
+                                                    <div className="teacher-announcement-content teacher-dashboard-clamp text-sm text-gray-600">
                                                         {announcement.content}
                                                     </div>
                                                 </div>
@@ -361,7 +446,7 @@ export default function TeacherDashboard({
                                                     <span className="text-xs text-blue-600 font-medium">
                                                         {announcement.posted_by}
                                                     </span>
-                                                    <span className="text-xs text-gray-400">
+                                                    <span className="teacher-announcement-date text-xs text-gray-400">
                                                         {announcement.date}
                                                     </span>
                                                 </div>

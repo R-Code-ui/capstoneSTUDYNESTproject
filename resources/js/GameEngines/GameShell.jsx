@@ -5,7 +5,7 @@ export default function GameShell({ title, description, roundLabel, onExit, chil
     const art = getGameArt(title);
 
     return (
-        <div className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
+        <div className="student-game-shell w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <button
                     type="button"
@@ -22,7 +22,7 @@ export default function GameShell({ title, description, roundLabel, onExit, chil
                 )}
             </div>
 
-            <div className="relative isolate flex min-h-[60vh] flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(79,70,229,0.16)] backdrop-blur sm:p-6 md:p-8 lg:min-h-[68vh] lg:p-10">
+            <div className="student-game-surface relative isolate flex min-h-[60vh] flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(79,70,229,0.16)] backdrop-blur sm:p-6 md:p-8 lg:min-h-[68vh] lg:p-10">
                 <div className="pointer-events-none absolute -left-16 -top-16 -z-10 h-48 w-48 rounded-full bg-fuchsia-100/70 blur-2xl" />
                 <div className="pointer-events-none absolute -bottom-20 -right-12 -z-10 h-56 w-56 rounded-full bg-cyan-100/80 blur-2xl" />
                 <span className="pointer-events-none absolute right-5 top-3 -z-10 text-7xl opacity-10 sm:right-10 sm:text-8xl" aria-hidden="true">{art.icon}</span>

@@ -75,50 +75,60 @@ function PaginationControls({ pagination }) {
 
     const displayLinks = links && links.length > 0 ? links : buildLinks();
 
+    const getLinkLabel = (link) =>
+        String(link.label || '')
+            .replace(/&laquo;|«/g, '')
+            .replace(/&raquo;|»/g, '')
+            .trim();
+
     const from = total > 0 ? (current_page - 1) * per_page + 1 : 0;
     const to = Math.min(current_page * per_page, total);
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
+        <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700">
             {/* Info */}
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-500 dark:text-slate-400">
                 Showing{' '}
-                <span className="font-medium text-gray-800">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {from}
                 </span>{' '}
                 to{' '}
-                <span className="font-medium text-gray-800">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {to}
                 </span>{' '}
                 of{' '}
-                <span className="font-medium text-gray-800">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
                     {total}
                 </span>{' '}
                 results
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-1">
+            <nav aria-label="Pagination" className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/60">
                 {displayLinks.map((link, index) => {
+                    const label = getLinkLabel(link);
+                    const isPrevious = link.isPrevious || /previous/i.test(label);
+                    const isNext = link.isNext || /^next$/i.test(label);
+
                     if (link.url === null) {
                         return (
                             <span
                                 key={index}
-                                className="px-3 py-1.5 text-sm text-gray-400"
+                                className="px-3 py-2 text-sm text-slate-400 dark:text-slate-500"
                             >
-                                {link.label}
+                                {label}
                             </span>
                         );
                     }
 
-                    if (link.isPrevious) {
+                    if (isPrevious) {
                         return (
                             <Link
                                 key={index}
                                 href={link.url}
                                 preserveScroll
                                 preserveState
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                             >
                                 <ChevronLeftIcon className="w-4 h-4" />
                                 Previous
@@ -126,14 +136,14 @@ function PaginationControls({ pagination }) {
                         );
                     }
 
-                    if (link.isNext) {
+                    if (isNext) {
                         return (
                             <Link
                                 key={index}
                                 href={link.url}
                                 preserveScroll
                                 preserveState
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                             >
                                 Next
                                 <ChevronRightIcon className="w-4 h-4" />
@@ -148,19 +158,19 @@ function PaginationControls({ pagination }) {
                             preserveScroll
                             preserveState
                             className={`
-                                px-3 py-1.5 text-sm font-medium rounded-md transition-colors min-w-[36px] text-center
+                                min-w-[36px] rounded-lg px-3 py-2 text-center text-sm font-semibold transition-colors
                                 ${
                                     link.active
-                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                        ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-500'
+                                        : 'text-slate-600 hover:bg-white hover:text-indigo-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-indigo-300'
                                 }
                             `}
                         >
-                            {link.label}
+                            {label}
                         </Link>
                     );
                 })}
-            </div>
+            </nav>
         </div>
     );
 }
@@ -182,6 +192,7 @@ export default function Table({
     hoverable = true,
     bordered = false,
     compact = false,
+    responsive = false,
     renderCell,
     pagination = null,
 }) {
@@ -273,8 +284,68 @@ export default function Table({
     };
 
     return (
-        <div className={`overflow-x-auto ${className}`}>
-            <table className={`w-full text-sm text-left text-gray-600 ${tableClassName}`}>
+        <div className={`${responsive ? 'teacher-responsive-table-wrapper' : 'overflow-x-auto'} ${className}`}>
+            {responsive && (
+                <style>{`
+                    @media (max-width: 639px) {
+                        .teacher-responsive-table-wrapper {
+                            overflow-x: visible;
+                        }
+                        .teacher-responsive-table {
+                            display: block;
+                            width: 100%;
+                        }
+                        .teacher-responsive-table thead {
+                            display: none;
+                        }
+                        .teacher-responsive-table tbody,
+                        .teacher-responsive-table tr,
+                        .teacher-responsive-table td {
+                            display: block;
+                            width: 100%;
+                        }
+                        .teacher-responsive-table tr {
+                            margin-bottom: 0.75rem;
+                            border: 1px solid rgb(226 232 240 / 0.8);
+                            border-radius: 0.75rem;
+                            padding: 0.5rem;
+                        }
+                        .teacher-responsive-table td {
+                            display: flex;
+                            align-items: flex-start;
+                            justify-content: space-between;
+                            gap: 0.75rem;
+                            border: 0;
+                            padding: 0.65rem 0.5rem;
+                            text-align: right;
+                        }
+                        .teacher-responsive-table td::before {
+                            flex: 0 0 38%;
+                            color: rgb(100 116 139);
+                            content: attr(data-label);
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            letter-spacing: 0.04em;
+                            text-align: left;
+                            text-transform: uppercase;
+                        }
+                        .teacher-responsive-table td > * {
+                            min-width: 0;
+                            max-width: 62%;
+                        }
+                        .teacher-responsive-table td:last-child > div {
+                            justify-content: flex-end;
+                        }
+                        .studynest-layout.theme-dark .teacher-responsive-table tr {
+                            border-color: rgb(51 65 85);
+                        }
+                        .studynest-layout.theme-dark .teacher-responsive-table td::before {
+                            color: rgb(148 163 184);
+                        }
+                    }
+                `}</style>
+            )}
+            <table className={`${responsive ? 'teacher-responsive-table' : ''} w-full text-sm text-left text-gray-600 ${tableClassName}`}>
                 <thead className={`text-xs font-semibold text-gray-500 uppercase bg-gray-50 ${headerClassName}`}>
                     <tr>
                         {displayColumns.map((column, index) => {
@@ -340,8 +411,8 @@ export default function Table({
                                 <tr
                                     key={rowIndex}
                                     className={`
-                                        ${hoverable ? 'hover:bg-gray-50' : ''}
-                                        ${striped && rowIndex % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'}
+                                        ${hoverable ? 'hover:bg-gray-50 dark:hover:bg-slate-700/50' : ''}
+                                        ${striped && rowIndex % 2 === 0 ? 'bg-gray-50/50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900/30'}
                                         ${bordered ? 'border-b border-gray-200' : ''}
                                         ${onRowClick ? 'cursor-pointer' : ''}
                                         ${rowClassName}
@@ -356,6 +427,7 @@ export default function Table({
                                         return (
                                             <td
                                                 key={colIndex}
+                                                data-label={getHeaderLabel(column)}
                                                 className={`px-4 py-3 ${compact ? 'px-3 py-2' : ''}`}
                                             >
                                                 {display}
@@ -363,7 +435,7 @@ export default function Table({
                                         );
                                     })}
                                     {rowActions.length > 0 && (
-                                        <td className={`px-4 py-3 text-right ${compact ? 'px-3 py-2' : ''}`}>
+                                        <td data-label="Actions" className={`px-4 py-3 text-right ${compact ? 'px-3 py-2' : ''}`}>
                                             <div className="flex flex-wrap justify-end gap-1">
                                                 {rowActions.map((action, actionIndex) => (
                                                     <button
@@ -373,7 +445,7 @@ export default function Table({
                                                             action.onClick(row);
                                                         }}
                                                         className={`
-                                                            inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors
+                                                            inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors
                                                             ${action.color === 'danger' ? 'text-red-600 hover:bg-red-50' : ''}
                                                             ${action.color === 'success' ? 'text-emerald-600 hover:bg-emerald-50' : ''}
                                                             ${action.color === 'warning' ? 'text-amber-600 hover:bg-amber-50' : ''}
@@ -381,14 +453,14 @@ export default function Table({
                                                             ${action.className || ''}
                                                         `}
                                                         title={action.label}
+                                                        aria-label={action.label}
                                                     >
                                                         {action.icon ? (
-                                                            <span className="inline-flex items-center gap-1">
+                                                            <span className="inline-flex items-center justify-center">
                                                                 {action.icon}
-                                                                {action.label}
                                                             </span>
                                                         ) : (
-                                                            action.label
+                                                            <span className="sr-only">{action.label}</span>
                                                         )}
                                                     </button>
                                                 ))}

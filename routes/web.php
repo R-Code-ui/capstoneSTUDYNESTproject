@@ -223,6 +223,7 @@ Route::middleware('auth')->group(function () {
 
         // ===== Student Management (Teacher) =====
         Route::get('/students', [StudentManagementController::class, 'index'])->name('students.index');
+        Route::get('/students/export', [StudentManagementController::class, 'export'])->name('students.export');
         Route::post('/students', [StudentManagementController::class, 'store'])->name('students.store');
         Route::put('/students/{id}', [StudentManagementController::class, 'update'])->name('students.update');
         Route::put('/students/reset-password/{id}', [StudentManagementController::class, 'resetPassword'])->name('students.reset-password');

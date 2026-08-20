@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function QuizResults({ quiz, attempts, statistics, distribution }) {
+    const distributionMax = Math.max(...Object.values(distribution), 0);
     const handleExport = () => {
         window.open(route('teacher.quizzes.export', quiz.id), '_blank');
     };
@@ -84,7 +85,7 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="quiz-results-title text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
                         Results: {quiz.title}
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -101,6 +102,16 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
             }
         >
             <Head title={`Results: ${quiz.title}`} />
+            <style>{`
+                .quiz-results-title {
+                    display: block;
+                    min-width: 0;
+                    max-width: min(100%, 48rem);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            `}</style>
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -163,7 +174,7 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                                                 <div
                                                     className={`h-4 rounded-full ${distributionColors[range] || 'bg-gray-500'} transition-all duration-500`}
                                                     style={{
-                                                        width: `${statistics.total_students > 0 ? (count / statistics.total_students) * 100 : 0}%`,
+                                                        width: `${distributionMax > 0 ? (count / distributionMax) * 100 : 0}%`,
                                                         minWidth: count > 0 ? '8px' : '0',
                                                     }}
                                                 />

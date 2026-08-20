@@ -26,9 +26,11 @@ class LessonController extends Controller
         $lessons = Lesson::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->when($search, function ($query, $search) {
-                return $query->where('lesson_title', 'like', "%{$search}%")
-                    ->orWhere('subject', 'like', "%{$search}%")
-                    ->orWhere('learning_competency', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('lesson_title', 'like', "%{$search}%")
+                        ->orWhere('subject', 'like', "%{$search}%")
+                        ->orWhere('learning_competency', 'like', "%{$search}%");
+                });
             })
             ->when($subjectFilter, function ($query, $subject) {
                 return $query->where('subject', $subject);
@@ -69,7 +71,7 @@ class LessonController extends Controller
         // Ensure the student can only view lessons for their grade level
         Gate::authorize('view', $lesson);
 
-        $lesson->load(['resources', 'teacher']);
+        $lesson->load(['resources', 'teacher', 'relatedAssignment', 'relatedQuiz', 'relatedGame']);
 
         // Determine if lesson is completed (using the many‑to‑many relationship)
         $isCompleted = $user->completedLessons()->where('lesson_id', $lesson->id)->exists();
@@ -105,15 +107,15 @@ class LessonController extends Controller
                 }),
             ],
             'related_activities' => [
-                'assignment' => $lesson->relatedAssignment ? [
+                'assignment' => $lesson->relatedAssignment && $lesson->relatedAssignment->status === 'published' ? [
                     'id' => $lesson->relatedAssignment->id,
                     'title' => $lesson->relatedAssignment->assignment_title,
                 ] : null,
-                'quiz' => $lesson->relatedQuiz ? [
+                'quiz' => $lesson->relatedQuiz && $lesson->relatedQuiz->status === 'published' ? [
                     'id' => $lesson->relatedQuiz->id,
                     'title' => $lesson->relatedQuiz->quiz_title,
                 ] : null,
-                'game' => $lesson->relatedGame ? [
+                'game' => $lesson->relatedGame && $lesson->relatedGame->status === 'published' ? [
                     'id' => $lesson->relatedGame->id,
                     'title' => $lesson->relatedGame->game_title,
                 ] : null,

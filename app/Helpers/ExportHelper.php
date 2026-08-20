@@ -53,17 +53,14 @@ class ExportHelper
     }
 
     /**
-     * Generate Excel-style export using CSV format.
-     * For full Excel support, use Laravel Excel package.
+     * Generate an Excel-compatible CSV export.
+     * This method does not create a native XLSX workbook.
      */
     public static function generateExcel(array $data, array $headers = [], string $filename = null): Response
     {
-        // For now, we use CSV format with Excel-friendly settings
-        // To get full Excel support, install: composer require maatwebsite/excel
-        $filename = $filename ?? 'export_' . now()->format('Y-m-d_His') . '.xlsx';
+        $filename = $filename ?? 'export_' . now()->format('Y-m-d_His') . '.csv';
+        $filename = preg_replace('/\.xlsx$/i', '.csv', $filename);
 
-        // Since we don't have the Excel package installed, we'll generate a CSV
-        // that Excel can open (use UTF-8 with BOM)
         return self::generateCsv($data, $headers, $filename);
     }
 

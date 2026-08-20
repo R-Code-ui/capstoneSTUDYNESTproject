@@ -1,10 +1,16 @@
 import Checkbox from '@/Components/Checkbox';
+import { useState } from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import {
+    CheckCircleIcon,
+    EyeIcon,
+    EyeSlashIcon,
+} from '@heroicons/react/24/outline';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -12,6 +18,7 @@ export default function Login({ status, canResetPassword }) {
         password: '',
         remember: false,
     });
+    const [showPassword, setShowPassword] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
@@ -27,26 +34,27 @@ export default function Login({ status, canResetPassword }) {
 
             {status && (
                 <div className="mb-5 rounded-2xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-700 border border-emerald-200/60 shadow-sm flex items-center gap-2">
-                    <span>✨</span>
+                    <CheckCircleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
                     <span>{status}</span>
                 </div>
             )}
 
             <form onSubmit={submit} className="space-y-5">
                 <div>
-                    <InputLabel htmlFor="username" value="Username / Student ID / Teacher ID / Principal ID" />
+                    <InputLabel htmlFor="username" value="Username" />
 
-                    <TextInput
-                        id="username"
-                        type="text"
-                        name="username"
-                        value={data.username}
-                        className="mt-1.5 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('username', e.target.value)}
-                        placeholder="Enter Student ID, Teacher ID, or Principal ID"
-                    />
+                    <div className="mt-1.5">
+                        <TextInput
+                            id="username"
+                            type="text"
+                            name="username"
+                            value={data.username}
+                            className="block w-full"
+                            autoComplete="username"
+                            isFocused={true}
+                            onChange={(e) => setData('username', e.target.value)}
+                        />
+                    </div>
 
                     <InputError message={errors.username} className="mt-2" />
                 </div>
@@ -54,16 +62,26 @@ export default function Login({ status, canResetPassword }) {
                 <div>
                     <InputLabel htmlFor="password" value="Password" />
 
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1.5 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        placeholder="••••••••"
-                    />
+                    <div className="relative mt-1.5">
+                        <TextInput
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            value={data.password}
+                            className="block w-full pr-20"
+                            autoComplete="current-password"
+                            onChange={(e) => setData('password', e.target.value)}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((previous) => !previous)}
+                            className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            title={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                            {showPassword ? <EyeSlashIcon className="h-5 w-5" aria-hidden="true" /> : <EyeIcon className="h-5 w-5" aria-hidden="true" />}
+                        </button>
+                    </div>
 
                     <InputError message={errors.password} className="mt-2" />
                 </div>
@@ -85,7 +103,7 @@ export default function Login({ status, canResetPassword }) {
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-lg text-xs sm:text-sm font-bold text-[#FF6B6B] hover:text-[#FF5252] focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/30 transition"
+                            className="rounded-lg text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"
                         >
                             Forgot password?
                         </Link>
@@ -98,21 +116,6 @@ export default function Login({ status, canResetPassword }) {
                     </PrimaryButton>
                 </div>
 
-                {/* Role Guidance Badges */}
-                <div className="mt-6 pt-5 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
-                    <div className="bg-[#E0F2F1] p-2.5 rounded-2xl border border-[#B2DFDB] transition hover:scale-[1.02]">
-                        <span className="block text-xs font-black text-[#009688]">Students</span>
-                        <span className="text-[10px] text-slate-600 font-medium block mt-0.5">Use Student ID</span>
-                    </div>
-                    <div className="bg-[#FFF3E0] p-2.5 rounded-2xl border border-[#FFE0B2] transition hover:scale-[1.02]">
-                        <span className="block text-xs font-black text-[#FF9800]">Teachers</span>
-                        <span className="text-[10px] text-slate-600 font-medium block mt-0.5">Teacher ID</span>
-                    </div>
-                    <div className="bg-[#F3E5F5] p-2.5 rounded-2xl border border-[#E1BEE7] transition hover:scale-[1.02]">
-                        <span className="block text-xs font-black text-[#9C27B0]">Principal</span>
-                        <span className="text-[10px] text-slate-600 font-medium block mt-0.5">Principal ID</span>
-                    </div>
-                </div>
             </form>
         </GuestLayout>
     );

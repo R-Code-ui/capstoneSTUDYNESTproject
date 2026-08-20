@@ -6,7 +6,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Modal from '@/Components/Modal';
-import { EyeIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 export default function Index({ logs, summary, activity_types = [], grade_levels = [], filters = {}, pagination }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -38,11 +38,31 @@ export default function Index({ logs, summary, activity_types = [], grade_levels
     const activityOptions = [{ value: '', label: 'All Activities' }, ...activity_types.filter((type) => type !== 'All Activities').map((type) => ({ value: type, label: type }))];
     const gradeOptions = [{ value: '', label: 'All Assigned Grades' }, ...grade_levels.map((value) => ({ value, label: value }))];
     const columns = [
-        { key: 'date_time', label: 'Date & Time' },
-        { key: 'student', label: 'Student' },
-        { key: 'activity', label: 'Activity' },
-        { key: 'grade_level', label: 'Grade' },
-        { key: 'module', label: 'Module' },
+        {
+            key: 'date_time',
+            label: 'Date & Time',
+            render: (row) => <div className="max-w-[120px] truncate" title={row.date_time}>{row.date_time}</div>,
+        },
+        {
+            key: 'student',
+            label: 'Student',
+            render: (row) => <div className="max-w-[140px] truncate" title={row.student}>{row.student}</div>,
+        },
+        {
+            key: 'activity',
+            label: 'Activity',
+            render: (row) => <div className="max-w-[320px] truncate" title={row.activity}>{row.activity}</div>,
+        },
+        {
+            key: 'grade_level',
+            label: 'Grade',
+            render: (row) => <div className="max-w-[100px] truncate" title={row.grade_level}>{row.grade_level}</div>,
+        },
+        {
+            key: 'module',
+            label: 'Module',
+            render: (row) => <div className="max-w-[140px] truncate" title={row.module || 'N/A'}>{row.module || 'N/A'}</div>,
+        },
     ];
     const actions = (row) => [{
         label: 'View Details',
@@ -98,14 +118,13 @@ export default function Index({ logs, summary, activity_types = [], grade_levels
 
             <Modal show={!!selectedLog} onClose={() => setSelectedLog(null)} title="Activity Details" size="md">
                 {selectedLog && <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div><div className="text-sm text-gray-500">Student</div><div className="font-medium text-gray-800">{selectedLog.student}</div></div>
                         <div><div className="text-sm text-gray-500">Grade Level</div><div className="font-medium text-gray-800">{selectedLog.grade_level}</div></div>
                         <div><div className="text-sm text-gray-500">Date &amp; Time</div><div className="font-medium text-gray-800">{selectedLog.date_time}</div></div>
                         <div><div className="text-sm text-gray-500">Module</div><div className="font-medium text-gray-800">{selectedLog.module || 'N/A'}</div></div>
-                        <div className="col-span-2"><div className="text-sm text-gray-500">Academic Activity</div><div className="mt-1 rounded-lg bg-gray-50 p-3 font-medium text-gray-800">{selectedLog.activity}</div></div>
+                        <div className="sm:col-span-2"><div className="text-sm text-gray-500">Academic Activity</div><div className="mt-1 truncate rounded-lg bg-gray-50 p-3 font-medium text-gray-800" title={selectedLog.activity}>{selectedLog.activity}</div></div>
                     </div>
-                    <div className="flex justify-end border-t border-gray-200 pt-4"><button onClick={() => setSelectedLog(null)} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"><XMarkIcon className="h-5 w-5" />Close</button></div>
                 </div>}
             </Modal>
         </AuthenticatedLayout>

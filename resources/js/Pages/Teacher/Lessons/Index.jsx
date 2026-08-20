@@ -255,6 +255,7 @@ export default function LessonsIndex({
                                     emptyMessage="No lessons found. Create your first lesson!"
                                     hoverable
                                     striped
+                                    responsive
                                     pagination={pagination}
                                 />
                             </div>

@@ -26,8 +26,8 @@ class StoreAssignmentRequest extends FormRequest
             // ===== Academic Information =====
             'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
-            'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
-            'trimester' => 'required|string|in:1st Trimester,2nd Trimester,3rd Trimester',
+            'school_year' => 'required|string|in:' . implode(',', config('school.school_years')),
+            'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:' . implode(',', array_map(fn($i) => 'Week ' . $i, range(1, 12))),
             'related_lesson_id' => 'nullable|exists:lessons,id',
 
@@ -43,7 +43,7 @@ class StoreAssignmentRequest extends FormRequest
 
             // ===== Submission Settings =====
             'submission_methods' => 'required|array|min:1|max:3',
-            'submission_methods.*' => 'in:digital,photo,paper',
+            'submission_methods.*' => 'in:digital,paper',
 
             // ===== Publication Settings =====
             'status' => 'required|in:draft,published,archived',

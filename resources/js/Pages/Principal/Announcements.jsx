@@ -66,7 +66,11 @@ export default function PrincipalAnnouncements({
     };
 
     const handlePublish = (announcement) => {
-        router.post(route('principal.announcements.publish', announcement.id), {}, { preserveState: true });
+        if (confirm(`Are you sure you want to publish "${announcement.title}"?`)) {
+            router.post(route('principal.announcements.publish', announcement.id), {}, {
+                preserveState: true,
+            });
+        }
     };
 
     const handleDelete = (announcement) => {
@@ -191,14 +195,14 @@ export default function PrincipalAnnouncements({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex gap-3 items-center">
+                                <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
                                     <FilterDropdown
                                         options={categoryOptions}
                                         value={categoryFilter}
                                         onChange={(val) => handleFilterChange('category', val)}
                                         placeholder="Category"
                                         size="md"
-                                        className="w-48"
+                                        className="w-full sm:w-48"
                                     />
                                     <FilterDropdown
                                         options={statusOptions}
@@ -206,12 +210,12 @@ export default function PrincipalAnnouncements({
                                         onChange={(val) => handleFilterChange('status', val)}
                                         placeholder="Status"
                                         size="md"
-                                        className="w-48"
+                                        className="w-full sm:w-48"
                                     />
                                     {/* 🔧 FIX: Button now matches filter height with py-2 and whitespace-nowrap */}
                                     <PrimaryButton
                                         onClick={() => { setSelectedAnnouncement(null); setShowCreateModal(true); }}
-                                        className="py-2 whitespace-nowrap"
+                                        className="w-full justify-center py-2 whitespace-nowrap sm:w-auto"
                                     >
                                         + Create Announcement
                                     </PrimaryButton>

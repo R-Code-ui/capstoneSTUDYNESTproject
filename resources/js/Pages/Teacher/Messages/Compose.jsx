@@ -24,7 +24,7 @@ const CATEGORY_OPTIONS = [
     { value: 'general_academic_concern', label: 'Concern', emoji: '💬' },
 ];
 
-export default function MessagesCompose({ assigned_grades, students_by_grade, categories }) {
+export default function MessagesCompose({ assigned_grades, students_by_grade, categories, subjects_by_grade = {} }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedGrade, setSelectedGrade] = useState('');
     const [studentQuery, setStudentQuery] = useState('');
@@ -46,6 +46,8 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
         const q = studentQuery.toLowerCase();
         return gradeStudents.filter((s) => s.name.toLowerCase().includes(q));
     }, [selectedGrade, studentQuery, students_by_grade]);
+
+    const availableSubjects = subjects_by_grade?.[selectedStudent?.grade_level || selectedGrade] || [];
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -93,9 +95,38 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
         >
             <Head title="Compose Message" />
 
+            <style>{`
+                .studynest-layout.theme-dark .message-compose-shell input,
+                .studynest-layout.theme-dark .message-compose-shell select,
+                .studynest-layout.theme-dark .message-compose-shell textarea {
+                    background-color: rgb(30 41 59) !important;
+                    color: rgb(226 232 240) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .message-compose-shell input::placeholder,
+                .studynest-layout.theme-dark .message-compose-shell textarea::placeholder {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .message-compose-shell option,
+                .studynest-layout.theme-dark .message-compose-shell .message-dropdown {
+                    background-color: rgb(15 23 42);
+                    color: rgb(226 232 240);
+                    border-color: rgb(71 85 105);
+                }
+                .studynest-layout.theme-dark .message-compose-shell .message-choice:not(.is-selected) {
+                    background-color: rgb(15 23 42);
+                    color: rgb(203 213 225);
+                    border-color: rgb(71 85 105);
+                }
+                .studynest-layout.theme-dark .message-compose-shell .message-choice:not(.is-selected):hover {
+                    background-color: rgb(30 41 59);
+                    border-color: rgb(96 165 250);
+                }
+            `}</style>
+
             <div className="py-8">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+                    <div className="message-compose-shell bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
                         <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
@@ -181,7 +212,7 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
 
                                                 {/* Dropdown list */}
                                                 {dropdownOpen && (
-                                                    <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-auto">
+                                                    <ul className="message-dropdown absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-auto">
                                                         {filteredStudents.length > 0 ? (
                                                             filteredStudents.map((student) => (
                                                                 <li
@@ -226,7 +257,7 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                             key={cat.value}
                                             type="button"
                                             onClick={() => setData('category', cat.value)}
-                                            className={`flex items-center gap-1.5 text-sm px-4 py-2 rounded-full border transition ${
+                                            className={`message-choice flex items-center gap-1.5 text-sm px-4 py-2 rounded-full border transition ${
                                                 data.category === cat.value
                                                     ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                                                     : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
@@ -243,13 +274,10 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                             {/* ===== Subject (optional) ===== */}
                             <div>
                                 <InputLabel htmlFor="subject" value="Subject (optional)" />
-                                <TextInput
-                                    id="subject"
-                                    value={data.subject}
-                                    onChange={(e) => setData('subject', e.target.value)}
-                                    className="mt-1 block w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Short topic title..."
-                                />
+                                <select id="subject" value={data.subject} onChange={(e) => setData('subject', e.target.value)} className="mt-1 block w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-800">
+                                    <option value="">No subject</option>
+                                    {availableSubjects.map((subject) => <option key={subject.id} value={subject.name}>{subject.name}</option>)}
+                                </select>
                                 <InputError message={errors.subject} className="mt-2" />
                             </div>
 

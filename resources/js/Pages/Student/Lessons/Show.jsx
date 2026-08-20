@@ -72,7 +72,7 @@ export default function LessonsShow({ lesson, related_activities }) {
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={lesson.title}>
                         {lesson.title}
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -92,8 +92,59 @@ export default function LessonsShow({ lesson, related_activities }) {
         >
             <Head title={lesson.title} />
 
-            <div className="py-4">
-                <div className="mx-auto max-w-4xl">
+            <div className="student-lesson-show-page py-4">
+                <style>{`
+                    .studynest-layout.theme-dark .student-lesson-show-page .bg-white {
+                        background-color: rgb(15 23 42) !important;
+                        border-color: rgb(51 65 85) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lesson-show-page .bg-gray-50 {
+                        background-color: rgb(30 41 59) !important;
+                        border-color: rgb(71 85 105) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lesson-show-page .bg-yellow-50 {
+                        background-color: rgb(51 42 20) !important;
+                        border-color: rgb(146 105 28) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lesson-show-page .text-gray-800,
+                    .studynest-layout.theme-dark .student-lesson-show-page .text-gray-700 {
+                        color: rgb(226 232 240) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lesson-show-page .text-gray-600,
+                    .studynest-layout.theme-dark .student-lesson-show-page .text-gray-500 {
+                        color: rgb(148 163 184) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lesson-show-page .text-yellow-700 {
+                        color: rgb(253 224 71) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lesson-show-page .text-yellow-600 {
+                        color: rgb(250 204 21) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lesson-show-page [class~="border-gray-200"],
+                    .studynest-layout.theme-dark .student-lesson-show-page [class~="border-gray-100"] {
+                        border-color: rgb(51 65 85) !important;
+                    }
+
+                    .student-lesson-show-page .prose,
+                    .student-lesson-show-page .prose * {
+                        overflow-wrap: anywhere;
+                        word-break: break-word;
+                    }
+
+                    @media (max-width: 640px) {
+                        .student-lesson-show-page .p-6 {
+                            padding: 1rem;
+                        }
+                    }
+                `}</style>
+                <div className="mx-auto max-w-4xl px-4 sm:px-6">
                     {isLoading && <LoadingSpinner overlay size="lg" />}
 
                     {/* Lesson Information */}
@@ -120,7 +171,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                             </div>
 
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2 break-words">
+                                <h3 className="min-w-0 max-w-full truncate text-2xl font-bold text-gray-800 flex items-center gap-2" title={lesson.title}>
                                     <BookOpenIcon className="w-6 h-6 text-blue-500 shrink-0" />
                                     {lesson.title}
                                 </h3>
@@ -128,7 +179,7 @@ export default function LessonsShow({ lesson, related_activities }) {
 
                             <div className="pt-4 border-t border-gray-200">
                                 <h4 className="font-semibold text-gray-800 mb-2">Description</h4>
-                                <div className="text-gray-700 whitespace-pre-wrap break-words">
+                                <div className="text-gray-700 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                                     {lesson.description}
                                 </div>
                             </div>
@@ -268,7 +319,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                                     <BookOpenIcon className="w-6 h-6" />
                                     <div>
                                         <div className="font-semibold">Not Yet Completed</div>
-                                        <div className="text-sm text-yellow-600">Click the "Mark as Completed" button above when you finish this lesson.</div>
+                                        <div className="text-sm text-yellow-600 break-words">Click the "Mark as Completed" button above when you finish this lesson.</div>
                                     </div>
                                 </div>
                             </div>

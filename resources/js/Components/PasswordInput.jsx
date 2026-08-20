@@ -40,7 +40,7 @@ export default function PasswordInput({
                     className={`
                         block w-full rounded-md border-gray-300 shadow-sm
                         focus:border-blue-500 focus:ring-blue-500
-                        bg-white dark:bg-white text-gray-900
+                        bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600
                         ${error ? 'border-red-500' : ''}
                         pr-10
                     `}

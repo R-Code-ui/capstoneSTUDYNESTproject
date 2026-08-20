@@ -162,9 +162,26 @@ export default function LessonsCreate({
             header={<span className="text-xl font-semibold leading-tight text-gray-800">Create Lesson</span>}
         >
             <Head title="Create Lesson" />
+            <style>{`
+                .studynest-layout.theme-dark .lesson-form-shell input:not([type="file"]),
+                .studynest-layout.theme-dark .lesson-form-shell select,
+                .studynest-layout.theme-dark .lesson-form-shell textarea {
+                    background-color: rgb(30 41 59) !important;
+                    color: rgb(226 232 240) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .lesson-form-shell input::placeholder,
+                .studynest-layout.theme-dark .lesson-form-shell textarea::placeholder {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .lesson-form-shell option {
+                    background-color: rgb(30 41 59);
+                    color: rgb(226 232 240);
+                }
+            `}</style>
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="lesson-form-shell bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
 

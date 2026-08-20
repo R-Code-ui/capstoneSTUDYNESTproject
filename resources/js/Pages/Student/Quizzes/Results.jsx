@@ -23,7 +23,7 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
                         Quiz Results: {quiz.title}
                     </span>
                     <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
@@ -35,8 +35,18 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
         >
             <Head title={`Results: ${quiz.title}`} />
 
-            <div className="py-4">
-                <div className="mx-auto max-w-3xl">
+            <div className="student-quiz-results-page py-4">
+                <style>{`
+                    .studynest-layout.theme-dark .student-quiz-results-page .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .student-quiz-results-page .text-gray-800,
+                    .studynest-layout.theme-dark .student-quiz-results-page .text-gray-700 { color: rgb(226 232 240) !important; }
+                    .studynest-layout.theme-dark .student-quiz-results-page .text-gray-600,
+                    .studynest-layout.theme-dark .student-quiz-results-page .text-gray-500 { color: rgb(148 163 184) !important; }
+                    .studynest-layout.theme-dark .student-quiz-results-page [class~="border-gray-200"] { border-color: rgb(51 65 85) !important; }
+                    .student-quiz-results-page .break-words { overflow-wrap: anywhere; word-break: break-word; }
+                    @media (max-width: 640px) { .student-quiz-results-page .p-6 { padding: 1rem; } }
+                `}</style>
+                <div className="mx-auto max-w-3xl px-4 sm:px-6">
                     {/* ===== Score Card ===== */}
                     <div className={`bg-white rounded-xl border ${passed ? 'border-emerald-500' : 'border-red-500'} border-t-4 shadow-sm overflow-hidden`}>
                         <div className="p-6 text-center py-8">
@@ -117,7 +127,7 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                                                 {index + 1}.
                                             </div>
                                             <div className="flex-1">
-                                                <div className="font-medium text-gray-800">
+                                                <div className="font-medium text-gray-800 line-clamp-3 break-words" title={question.text}>
                                                     {question.text}
                                                 </div>
                                                 <div className="mt-2 text-sm">

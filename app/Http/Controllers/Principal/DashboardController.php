@@ -153,9 +153,9 @@ class DashboardController extends Controller
         // Count only lesson/student pairs that can actually be assigned together.
         $publishedLessons = Lesson::where('status', 'published')->get(['id', 'grade_level']);
         $lessonsByGrade = $publishedLessons->groupBy('grade_level');
-        $totalPossibleLessonCompletions = $lessonsByGrade->sum(function ($lessons, $grade) use ($students) {
+        $totalPossibleLessonCompletions = $lessonsByGrade->map(function ($lessons, $grade) use ($students) {
             return $lessons->count() * $students->where('grade_level', $grade)->count();
-        });
+        })->sum();
 
         if ($totalPossibleLessonCompletions > 0) {
             $completedLessonCompletions = DB::table('lesson_user')

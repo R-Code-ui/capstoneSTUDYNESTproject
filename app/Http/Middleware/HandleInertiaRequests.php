@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Services\StudyNestNotificationService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -20,9 +21,12 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? $request->user()->load('roles') : null,
-                'notifications' => fn () => $request->user() ? [
-                    'unread_count' => $request->user()->unreadNotifications()->count(),
-                    'items' => $request->user()->notifications()->latest()->limit(5)->get()->map(fn ($notification) => [
+                'notifications' => fn () => $request->user() ? (function () use ($request) {
+                    $user = $request->user();
+                    app(StudyNestNotificationService::class)->pruneStaleFor($user);
+                    return [
+                    'unread_count' => $user->unreadNotifications()->count(),
+                    'items' => $user->notifications()->latest()->limit(5)->get()->map(fn ($notification) => [
                         'id' => $notification->id,
                         'title' => data_get($notification->data, 'title', 'Notification'),
                         'message' => data_get($notification->data, 'message', ''),
@@ -32,7 +36,8 @@ class HandleInertiaRequests extends Middleware
                         'read_at' => $notification->read_at?->toISOString(),
                         'created_at' => $notification->created_at?->diffForHumans(),
                     ]),
-                ] : ['unread_count' => 0, 'items' => []],
+                ];
+                })() : ['unread_count' => 0, 'items' => []],
             ],
         ];
     }

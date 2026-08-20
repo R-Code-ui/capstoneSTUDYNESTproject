@@ -28,12 +28,12 @@ class LessonPolicy
         // Teacher can only view lessons for their assigned grade levels
         if ($user->hasRole('teacher')) {
             $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-            return in_array($lesson->grade_level, $assignedGrades);
+            return $user->id === $lesson->teacher_id && in_array($lesson->grade_level, $assignedGrades, true);
         }
 
         // Student can only view lessons for their grade level
         if ($user->hasRole('student')) {
-            return $user->grade_level === $lesson->grade_level;
+            return $lesson->status === 'published' && $user->grade_level === $lesson->grade_level;
         }
 
         return false;

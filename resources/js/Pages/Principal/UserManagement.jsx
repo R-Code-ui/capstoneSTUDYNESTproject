@@ -152,11 +152,11 @@ export default function UserManagement({
                                         onChange={handleGradeFilterChange}
                                         placeholder="Grade Level"
                                         size="md"
-                                        className="w-36"
+                                        className="w-full sm:w-36"
                                     />
                                     <PrimaryButton
                                         onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}
-                                        className="py-2 whitespace-nowrap"
+                                        className="w-full justify-center py-2 whitespace-nowrap sm:w-auto"
                                     >
                                         + Add Teacher
                                     </PrimaryButton>
@@ -189,6 +189,7 @@ export default function UserManagement({
                 onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}
                 title={showCreateModal ? 'Add Teacher' : 'Edit Teacher'}
                 size="lg"
+                bodyClassName="py-3"
             >
                 <form
                     onSubmit={(e) => {
@@ -214,7 +215,7 @@ export default function UserManagement({
                             onSuccess: handleSuccess,
                         });
                     }}
-                    className="space-y-4"
+                    className="space-y-3"
                 >
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />
 
@@ -308,7 +309,6 @@ export default function UserManagement({
                             minLength={8}
                             placeholder="Enter new password"
                             error={errors?.new_password}
-                            className="!bg-white"
                         />
                     </div>
 

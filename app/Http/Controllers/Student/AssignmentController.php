@@ -25,8 +25,10 @@ class AssignmentController extends Controller
         $assignments = Assignment::where('grade_level', $gradeLevel)
             ->where('status', 'published')
             ->when($search, function ($query, $search) {
-                return $query->where('assignment_title', 'like', "%{$search}%")
-                    ->orWhere('subject', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('assignment_title', 'like', "%{$search}%")
+                        ->orWhere('subject', 'like', "%{$search}%");
+                });
             })
             ->when($subjectFilter, function ($query, $subject) {
                 return $query->where('subject', $subject);
@@ -74,6 +76,8 @@ class AssignmentController extends Controller
             abort(403);
         }
 
+        abort_unless($assignment->status === 'published', 404);
+
         $assignment->load('resources');
 
         $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
@@ -84,6 +88,7 @@ class AssignmentController extends Controller
         if (is_string($submissionMethods)) {
             $submissionMethods = json_decode($submissionMethods, true);
         }
+        $submissionMethods = array_values(array_intersect($submissionMethods ?: [], ['digital', 'paper']));
 
         $resources = $assignment->resources->map(function ($resource) {
             return [
@@ -136,11 +141,22 @@ class AssignmentController extends Controller
             abort(403);
         }
 
+        abort_unless($assignment->status === 'published', 404);
+
         $validated = $request->validate([
             'submission_method' => 'required|in:digital,paper',
             'files'             => 'nullable|array|max:4',
             'files.*'           => 'file|max:102400|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4',
         ]);
+
+        $configuredMethods = $assignment->submission_methods ?? [];
+        if (is_string($configuredMethods)) {
+            $configuredMethods = json_decode($configuredMethods, true) ?: [];
+        }
+
+        if (!in_array($validated['submission_method'], $configuredMethods, true)) {
+            return redirect()->back()->with('error', 'This submission method is not enabled for the assignment.');
+        }
 
         // Check existing submission
         $existing = AssignmentSubmission::where('assignment_id', $assignment->id)
@@ -153,7 +169,11 @@ class AssignmentController extends Controller
 
         // Check late submission
         $isLate = false;
-        if ($assignment->due_date && now()->gt($assignment->due_date)) {
+        $dueAt = $assignment->due_date
+            ? \Carbon\Carbon::parse($assignment->due_date->format('Y-m-d') . ' ' . $assignment->due_time)
+            : null;
+
+        if ($dueAt && now()->gt($dueAt)) {
             if (!$assignment->allow_late_submission) {
                 return redirect()->back()->with('error', 'Late submissions are not allowed.');
             }
@@ -226,6 +246,8 @@ class AssignmentController extends Controller
             abort(403);
         }
 
+        abort_unless($assignment->status === 'published', 404);
+
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) {
             abort(404, 'File not found.');
@@ -241,6 +263,8 @@ class AssignmentController extends Controller
         $user = auth()->user();
 
         if ($assignment->grade_level !== $user->grade_level) abort(403);
+
+        abort_unless($assignment->status === 'published', 404);
 
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) abort(404, 'File not found.');

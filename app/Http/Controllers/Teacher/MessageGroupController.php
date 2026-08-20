@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Services\StudyNestNotificationService;
 
 class MessageGroupController extends Controller
 {
@@ -18,7 +19,12 @@ class MessageGroupController extends Controller
     {
         Gate::authorize('create', MessageGroup::class);
 
-        return Inertia::render('Teacher/Messages/Groups/Create', $this->formData());
+        $teacher = auth()->user();
+        $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->all();
+        $requestedGrade = request()->query('grade_level');
+        $gradeLevel = in_array($requestedGrade, $assignedGrades, true) ? $requestedGrade : null;
+
+        return Inertia::render('Teacher/Messages/Groups/Create', $this->formData($gradeLevel));
     }
 
     public function store(Request $request)
@@ -27,8 +33,8 @@ class MessageGroupController extends Controller
 
         $validated = $this->validateGroup($request);
         $teacher = auth()->user();
-        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids']);
-        $this->authorizeSubject($teacher, $validated['subject_id'] ?? null);
+        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids'], $validated['grade_level'] ?? null);
+        $this->authorizeSubject($teacher, $validated['subject_id'] ?? null, $validated['grade_level'] ?? null);
 
         $group = DB::transaction(function () use ($validated, $teacher, $studentIds) {
             $group = MessageGroup::create([
@@ -79,7 +85,7 @@ class MessageGroupController extends Controller
                     ->where('id', '!=', auth()->id())
                     ->pluck('id')->values(),
             ]],
-            $this->formData()
+            $this->formData($messageGroup->members->where('id', '!=', auth()->id())->first()?->grade_level)
         ));
     }
 
@@ -89,8 +95,8 @@ class MessageGroupController extends Controller
 
         $validated = $this->validateGroup($request);
         $teacher = auth()->user();
-        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids']);
-        $this->authorizeSubject($teacher, $validated['subject_id'] ?? null);
+        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids'], $validated['grade_level'] ?? null);
+        $this->authorizeSubject($teacher, $validated['subject_id'] ?? null, $validated['grade_level'] ?? null);
 
         DB::transaction(function () use ($validated, $messageGroup, $teacher, $studentIds) {
             $messageGroup->update([
@@ -129,6 +135,8 @@ class MessageGroupController extends Controller
             'body' => $validated['body'],
         ]);
 
+        app(StudyNestNotificationService::class)->groupMessageReceived($message);
+
         return redirect()->route('teacher.messages.groups.show', $messageGroup)
             ->with('message', 'Message sent.');
     }
@@ -160,17 +168,26 @@ class MessageGroupController extends Controller
             ->with('message', 'Group deleted.');
     }
 
-    private function formData(): array
+    private function formData(?string $gradeLevel = null): array
     {
         $teacher = auth()->user();
         $grades = $teacher->gradeAssignments()->pluck('grade_level');
+        $selectedGrades = $gradeLevel ? collect([$gradeLevel]) : $grades;
+        $defaultSubjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
+
+        foreach ($selectedGrades as $grade) {
+            foreach ($defaultSubjects as $name) {
+                Subject::firstOrCreate(['name' => $name, 'grade_level' => $grade]);
+            }
+        }
 
         return [
+            'grade_level' => $gradeLevel,
             'students' => User::role('student')
-                ->whereIn('grade_level', $grades)
+                ->whereIn('grade_level', $selectedGrades)
                 ->orderBy('name')
                 ->get(['id', 'name', 'lrn', 'grade_level']),
-            'subjects' => Subject::whereIn('grade_level', $grades)
+            'subjects' => Subject::whereIn('grade_level', $selectedGrades)
                 ->orderBy('grade_level')->orderBy('name')
                 ->get(['id', 'name', 'grade_level']),
         ];
@@ -181,15 +198,20 @@ class MessageGroupController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'grade_level' => ['nullable', 'string'],
             'subject_id' => ['nullable', 'integer', 'exists:subjects,id'],
             'member_ids' => ['required', 'array', 'min:1'],
             'member_ids.*' => ['integer', 'distinct', 'exists:users,id'],
         ]);
     }
 
-    private function authorizedStudentIds(User $teacher, array $ids): array
+    private function authorizedStudentIds(User $teacher, array $ids, ?string $gradeLevel = null): array
     {
         $grades = $teacher->gradeAssignments()->pluck('grade_level');
+        if ($gradeLevel) {
+            abort_unless($grades->contains($gradeLevel), 403, 'You are not assigned to this grade level.');
+            $grades = collect([$gradeLevel]);
+        }
         $students = User::role('student')
             ->whereIn('id', $ids)
             ->whereIn('grade_level', $grades)
@@ -201,14 +223,16 @@ class MessageGroupController extends Controller
         return $students;
     }
 
-    private function authorizeSubject(User $teacher, ?int $subjectId): void
+    private function authorizeSubject(User $teacher, ?int $subjectId, ?string $gradeLevel = null): void
     {
         if (!$subjectId) {
             return;
         }
 
+        $subject = Subject::findOrFail($subjectId);
         abort_unless(
-            $teacher->gradeAssignments()->where('grade_level', Subject::findOrFail($subjectId)->grade_level)->exists(),
+            $teacher->gradeAssignments()->where('grade_level', $subject->grade_level)->exists()
+                && (!$gradeLevel || $subject->grade_level === $gradeLevel),
             403,
             'You are not assigned to this subject grade.'
         );

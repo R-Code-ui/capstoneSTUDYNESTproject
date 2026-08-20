@@ -1,31 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import {
+    AcademicCapIcon,
+    BookOpenIcon,
+    BuildingOfficeIcon,
+    ChartBarIcon,
+    ChatBubbleLeftIcon,
+    DocumentTextIcon,
+    MegaphoneIcon,
+    MoonIcon,
+    PuzzlePieceIcon,
+    SunIcon,
+    UserGroupIcon,
+} from '@heroicons/react/24/outline';
 
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
     const [activeRoleTab, setActiveRoleTab] = useState('student');
     const [openFaq, setOpenFaq] = useState(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('studynest-theme') === 'dark';
+    });
 
-    // Enhanced Array of falling emoji particles across all screen width bands
-    const particles = [
-        { emoji: '🍃', left: '3%', duration: '12s', delay: '0s', size: '16px' },
-        { emoji: '🛸', left: '8%', duration: '18s', delay: '3s', size: '20px' },
-        { emoji: '✏️', left: '14%', duration: '15s', delay: '2s', size: '18px' },
-        { emoji: '👾', left: '20%', duration: '14s', delay: '5s', size: '22px' },
-        { emoji: '🍂', left: '26%', duration: '11s', delay: '4s', size: '16px' },
-        { emoji: '🏀', left: '32%', duration: '16s', delay: '1s', size: '22px' },
-        { emoji: '📏', left: '38%', duration: '13s', delay: '6s', size: '18px' },
-        { emoji: '🎮', left: '44%', duration: '17s', delay: '2s', size: '20px' },
-        { emoji: '🍃', left: '50%', duration: '12s', delay: '0.5s', size: '16px' },
-        { emoji: '⚽', left: '56%', duration: '15s', delay: '7s', size: '22px' },
-        { emoji: '🎨', left: '62%', duration: '16s', delay: '3s', size: '18px' },
-        { emoji: '👾', left: '68%', duration: '13s', delay: '1.5s', size: '20px' },
-        { emoji: '🎒', left: '74%', duration: '14s', delay: '4.5s', size: '20px' },
-        { emoji: '🛸', left: '80%', duration: '19s', delay: '2s', size: '22px' },
-        { emoji: '📚', left: '86%', duration: '15s', delay: '0s', size: '18px' },
-        { emoji: '🎮', left: '91%', duration: '12s', delay: '5s', size: '20px' },
-        { emoji: '⚽', left: '96%', duration: '16s', delay: '3.5s', size: '22px' },
-    ];
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', isDarkMode);
+        localStorage.setItem('studynest-theme', isDarkMode ? 'dark' : 'light');
+    }, [isDarkMode]);
 
     const toggleFaq = (index) => {
         setOpenFaq(openFaq === index ? null : index);
@@ -85,15 +86,209 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     user-select: none;
                     z-index: 1;
                 }
+
+                /* Modern UI theme: clean blue-and-slate styling without external packages */
+                [class~="bg-[#FFFDF9]"] {
+                    background-color: #f8fafc;
+                }
+                [class~="text-[#2D3748]"] {
+                    color: #0f172a;
+                }
+                [class~="bg-[#FF6B6B]"],
+                [class~="bg-[#4ECDC4]"] {
+                    background-color: #2563eb;
+                }
+                [class~="hover:bg-[#FF5252]"]:hover,
+                [class~="hover:bg-[#3DB2A9]"]:hover {
+                    background-color: #1d4ed8;
+                }
+                [class~="text-[#FF6B6B]"],
+                [class~="text-[#009688]"],
+                [class~="text-[#FF9800]"],
+                [class~="text-[#9C27B0]"] {
+                    color: #2563eb;
+                }
+                [class~="hover:text-[#FF6B6B]"]:hover {
+                    color: #1d4ed8;
+                }
+                [class~="border-amber-100"],
+                [class~="border-[#B2DFDB]"],
+                [class~="border-[#E1BEE7]"],
+                [class~="border-[#F8BBD0]"],
+                [class~="border-[#FFF59D]"],
+                [class~="border-[#BBDEFB]"] {
+                    border-color: #dbeafe;
+                }
+                [class*="from-[#FF6B6B]"] {
+                    --tw-gradient-from: #2563eb var(--tw-gradient-from-position);
+                }
+                [class*="via-[#FF8E53]"] {
+                    --tw-gradient-to: rgb(96 165 250 / 0) var(--tw-gradient-to-position);
+                    --tw-gradient-stops: var(--tw-gradient-from), #60a5fa var(--tw-gradient-via-position), var(--tw-gradient-to);
+                }
+                [class*="to-[#FFD166]"] {
+                    --tw-gradient-to: #93c5fd var(--tw-gradient-to-position);
+                }
+                [class~="bg-[#FFE66D]"] {
+                    background-color: #dbeafe;
+                }
+                [class~="bg-[#FFFDE7]"] {
+                    background-color: #eff6ff;
+                }
+                [class~="text-[#FBC02D]"],
+                [class~="bg-[#FBC02D]"],
+                [class~="border-[#FFD166]"] {
+                    color: #2563eb;
+                    border-color: #bfdbfe;
+                }
+                [class~="bg-[#FBC02D]"] {
+                    background-color: #2563eb;
+                }
+                [class~="bg-[#E0F2F1]"],
+                [class~="bg-[#FFF3E0]"],
+                [class~="bg-[#F3E5F5]"] {
+                    background-color: #eff6ff;
+                }
+                [class~="bg-blue-100"] {
+                    background-color: #dbeafe;
+                }
+                [class~="text-blue-800"] {
+                    color: #1e40af;
+                }
+                [class~="bg-blue-500"] {
+                    background-color: #2563eb;
+                }
+                [class~="border-blue-200"] {
+                    border-color: #bfdbfe;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    *, *::before, *::after {
+                        animation-duration: 0.01ms !important;
+                        animation-iteration-count: 1 !important;
+                        scroll-behavior: auto !important;
+                    }
+                }
+                .studynest-page {
+                    font-family: Figtree, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                }
+                .studynest-hero { isolation: isolate; }
+                .studynest-hero::after {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    z-index: -1;
+                    border: 1px solid rgb(255 255 255 / 0.16);
+                    border-radius: 2rem;
+                    pointer-events: none;
+                }
+                .studynest-card {
+                    transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+                }
+                .studynest-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 20px 45px rgb(15 23 42 / 0.10);
+                    border-color: rgb(37 99 235 / 0.35);
+                }
+                [class~="bg-rose-50/80"],
+                [class~="bg-emerald-50/80"],
+                [class~="bg-[#FFF3E0]"],
+                [class~="bg-[#E0F2F1]"],
+                [class~="bg-[#F3E5F5]"],
+                [class~="bg-[#E3F2FD]"],
+                [class~="bg-[#FCE4EC]"],
+                [class~="bg-[#FFFDE7]"] {
+                    background-color: #ffffff;
+                }
+                [class~="border-rose-200"],
+                [class~="border-emerald-200"],
+                [class~="border-[#FFE0B2]"],
+                [class~="border-[#B2DFDB]"],
+                [class~="border-[#E1BEE7]"],
+                [class~="border-[#BBDEFB]"],
+                [class~="border-[#F8BBD0]"],
+                [class~="border-[#FFF59D]"] {
+                    border-color: #e2e8f0;
+                }
+                [class~="bg-rose-500"],
+                [class~="bg-emerald-500"],
+                [class~="bg-[#FF9800]"],
+                [class~="bg-[#009688]"],
+                [class~="bg-[#9C27B0]"],
+                [class~="bg-[#2196F3]"],
+                [class~="bg-[#E91E63]"],
+                [class~="bg-[#FBC02D]"] {
+                    background-color: #2563eb;
+                }
+                [class~="text-rose-900"],
+                [class~="text-emerald-900"],
+                [class~="text-rose-500"],
+                [class~="text-emerald-600"],
+                [class~="text-[#FF9800]"],
+                [class~="text-[#009688]"],
+                [class~="text-[#9C27B0]"],
+                [class~="text-[#2196F3]"],
+                [class~="text-[#E91E63]"],
+                [class~="text-[#FBC02D]"] {
+                    color: #2563eb;
+                }
+                .dark .studynest-page {
+                    background-color: #0f172a;
+                    color: #e2e8f0;
+                }
+                .dark .studynest-page [class~="bg-white"],
+                .dark .studynest-page [class~="bg-white/90"],
+                .dark .studynest-page [class~="bg-white/95"],
+                .dark .studynest-page [class~="bg-slate-50"],
+                .dark .studynest-page [class~="bg-slate-50/50"],
+                .dark .studynest-page [class~="bg-slate-100"] {
+                    background-color: #111827;
+                }
+                .dark .studynest-page [class~="bg-slate-950"] {
+                    background-color: #020617;
+                }
+                .dark .studynest-page [class~="bg-rose-50/80"],
+                .dark .studynest-page [class~="bg-emerald-50/80"],
+                .dark .studynest-page [class~="bg-[#FFF3E0]"],
+                .dark .studynest-page [class~="bg-[#E0F2F1]"],
+                .dark .studynest-page [class~="bg-[#F3E5F5]"],
+                .dark .studynest-page [class~="bg-[#E3F2FD]"],
+                .dark .studynest-page [class~="bg-[#FCE4EC]"],
+                .dark .studynest-page [class~="bg-[#FFFDE7]"] {
+                    background-color: #1e293b;
+                }
+                .dark .studynest-page [class~="text-slate-900"],
+                .dark .studynest-page [class~="text-slate-800"],
+                .dark .studynest-page [class~="text-slate-700"] {
+                    color: #f8fafc;
+                }
+                .dark .studynest-page [class~="text-rose-900"],
+                .dark .studynest-page [class~="text-emerald-900"] {
+                    color: #f8fafc;
+                }
+                .dark .studynest-page [class~="text-slate-600"],
+                .dark .studynest-page [class~="text-slate-500"],
+                .dark .studynest-page [class~="text-slate-400"] {
+                    color: #cbd5e1;
+                }
+                .dark .studynest-page [class~="border-slate-100"],
+                .dark .studynest-page [class~="border-slate-200"],
+                .dark .studynest-page [class~="border-slate-200/80"],
+                .dark .studynest-page [class~="border-white"] {
+                    border-color: #334155;
+                }
+                .dark .studynest-page [class~="hover:bg-slate-50"]:hover,
+                .dark .studynest-page [class~="hover:bg-slate-100"]:hover {
+                    background-color: #1e293b;
+                }
             `}</style>
 
-            <div className="min-h-screen bg-[#FFFDF9] text-[#2D3748] font-sans selection:bg-[#FFD166] selection:text-[#1E293B] relative">
+            <div className="studynest-page min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-950">
 
                 {/* ========================================================= */}
                 {/* 100% STICKY TOP NAVIGATION BAR                            */}
                 {/* ========================================================= */}
-                <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-md">
-                    <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+                <header className="sticky top-4 z-50 w-[calc(100%-2rem)] max-w-6xl mx-auto rounded-full bg-white/90 backdrop-blur-xl border border-white shadow-lg shadow-slate-900/10">
+                    <nav className="px-4 sm:px-6 lg:px-8 h-16 sm:h-[4.5rem] flex items-center justify-between">
 
                         {/* Brand Logo & Name */}
                         <a href="#home" className="flex items-center gap-2 sm:gap-3 group shrink-0">
@@ -124,6 +319,19 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
                         {/* Auth Navigation Action & Mobile Menu Toggle Button */}
                         <div className="flex items-center gap-2 sm:gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsDarkMode((previous) => !previous)}
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-400 dark:hover:text-blue-300"
+                                aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+                                title={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+                            >
+                                {isDarkMode ? (
+                                    <SunIcon className="h-5 w-5" aria-hidden="true" />
+                                ) : (
+                                    <MoonIcon className="h-5 w-5" aria-hidden="true" />
+                                )}
+                            </button>
                             {auth?.user ? (
                                 <Link
                                     href={route('dashboard')}
@@ -212,99 +420,48 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 </header>
 
                 {/* ========================================================= */}
-                {/* GLOBAL FALLING OBJECTS                                    */}
-                {/* ========================================================= */}
-                <div className="fixed inset-0 pointer-events-none z-1 overflow-hidden" aria-hidden="true">
-                    {particles.map((p, idx) => (
-                        <span
-                            key={idx}
-                            className="animate-falling-particle opacity-70"
-                            style={{
-                                left: p.left,
-                                animationDuration: p.duration,
-                                animationDelay: p.delay,
-                                fontSize: p.size,
-                            }}
-                        >
-                            {p.emoji}
-                        </span>
-                    ))}
-                </div>
-
-                {/* ========================================================= */}
-                {/* FLOATING SIDE DECORATIONS                                 */}
-                {/* ========================================================= */}
-
-                {/* Top-Left: Boy Jumping */}
-                <div className="absolute top-28 left-2 sm:left-4 md:left-8 lg:left-12 z-20 pointer-events-none animate-float-1">
-                    <img
-                        src="/storage/images/boyJumping.png"
-                        alt="Boy Jumping"
-                        className="w-14 sm:w-20 md:w-32 lg:w-44 h-auto object-contain drop-shadow-md"
-                    />
-                </div>
-
-                {/* Mid-Right: Phone */}
-                <div className="absolute top-84 right-2 sm:right-4 md:right-8 lg:right-12 z-20 pointer-events-none animate-float-2">
-                    <img
-                        src="/storage/images/phone.png"
-                        alt="Phone"
-                        className="w-12 sm:w-18 md:w-28 lg:w-36 h-auto object-contain drop-shadow-md"
-                    />
-                </div>
-
-                {/* Lower-Left: School Supplies */}
-                <div className="absolute top-[48rem] sm:top-[42rem] lg:top-[38rem] left-2 sm:left-4 md:left-8 lg:left-10 z-20 pointer-events-none animate-float-3">
-                    <img
-                        src="/storage/images/schoolMaterial.png"
-                        alt="School Material"
-                        className="w-12 sm:w-18 md:w-28 lg:w-36 h-auto object-contain drop-shadow-md"
-                    />
-                </div>
-
-                {/* ========================================================= */}
                 {/* HERO SECTION                                              */}
                 {/* ========================================================= */}
-                <section id="home" className="relative min-h-[85vh] lg:min-h-[90vh] flex flex-col justify-between overflow-hidden z-10 pt-4">
+                <section id="home" className="studynest-hero relative w-full max-w-none mx-0 mt-8 sm:mt-10 min-h-screen flex flex-col justify-center overflow-hidden rounded-none z-10 scroll-mt-24">
 
-                    {/* Bright Background Image Overlay */}
+                    {/* School background with a dark overlay for readable text */}
                     <div className="absolute inset-0 z-0">
                         <img
-                            src="/storage/images/studynestBG.png"
-                            alt="StudyNest Background"
-                            className="w-full h-full object-cover object-bottom opacity-80"
+                            src="/storage/images/studynestbackgroundschool.jpeg"
+                            alt="Ilijan Sur Elementary School"
+                            className="w-full h-full object-cover object-center"
                         />
-                        {/* Soft white top & bottom gradient masks for readability */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/40 to-[#FFFDF9]"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/55 to-blue-950/70"></div>
+                        <div className="absolute inset-0 bg-slate-950/20"></div>
                     </div>
 
                     <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
                         {/* HERO MAIN CONTENT */}
                         <main className="mt-6 sm:mt-10 lg:mt-14 pb-12 sm:pb-20">
-                            <div className="text-center lg:text-left">
+                            <div className="text-center lg:text-left text-white">
                                 <div className="lg:flex lg:items-center lg:gap-10">
 
                                     {/* Left Text Box (Colorful White Glass Card) */}
-                                    <div className="lg:w-7/12 space-y-4 sm:space-y-6 bg-white/95 backdrop-blur-md p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xl border-4 border-amber-100 relative z-10">
+                    <div className="lg:w-7/12 space-y-4 sm:space-y-6 bg-slate-950/25 backdrop-blur-sm p-6 sm:p-8 lg:p-10 rounded-3xl shadow-2xl border border-white/20 relative z-10">
 
-                                        <div className="inline-flex items-center gap-2 rounded-full bg-[#FFE66D]/90 px-3.5 py-1 text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider border border-[#FFD166]">
+                                        <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-[11px] sm:text-xs font-bold text-white uppercase tracking-wider border border-white/25">
                                             <span className="relative flex h-2.5 w-2.5">
-                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF6B6B] opacity-75"></span>
-                                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#FF6B6B]"></span>
+                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-300 opacity-75"></span>
+                                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-400"></span>
                                             </span>
                                             Key Stage 2 (Grades 4-6)
                                         </div>
 
-                                        <h1 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight uppercase text-slate-800">
-                                            <span className="block text-[#FF6B6B] font-black mb-1">
+                                        <h1 className="text-xl sm:text-3xl lg:text-5xl font-black tracking-tight leading-tight uppercase text-white">
+                                            <span className="block text-blue-300 font-black mb-1">
                                                 STUDYNEST:
                                             </span>
-                                            <span className="block text-slate-800 text-sm sm:text-xl lg:text-2xl font-bold tracking-normal normal-case leading-snug">
+                                            <span className="block text-white text-sm sm:text-xl lg:text-2xl font-bold tracking-normal normal-case leading-snug">
                                                 A Simplified Learning Management System for Key Stage 2 Learners of Ilijan Sur Elementary School
                                             </span>
                                         </h1>
 
-                                        <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed font-medium">
+                                        <p className="text-xs sm:text-sm text-slate-200 max-w-xl leading-relaxed font-medium">
                                             Empowering teachers and elementary students with intuitive tools to manage lessons, track academic milestones, complete assignments, and engage in modern digital learning.
                                         </p>
 
@@ -312,17 +469,17 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                             {!auth?.user && (
                                                 <Link
                                                     href={route('login')}
-                                                    className="rounded-full bg-[#FF6B6B] hover:bg-[#FF5252] px-6 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-extrabold text-white shadow-lg transition duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#FF6B6B]/30"
+                                                    className="rounded-full bg-blue-600 hover:bg-blue-500 px-6 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-extrabold text-white shadow-lg shadow-blue-950/30 transition duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300/40"
                                                 >
                                                     Get Started
                                                 </Link>
                                             )}
                                             <a
                                                 href="#features"
-                                                className="inline-flex items-center gap-2 rounded-full bg-slate-100 hover:bg-slate-200 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-700 transition duration-200 group border border-slate-200 active:scale-95"
+                                                className="inline-flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-white transition duration-200 group border border-white/25 active:scale-95"
                                             >
                                                 Learn More
-                                                <svg className="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:translate-x-1 transition duration-200 text-[#4ECDC4]" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                                    <svg className="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:translate-x-1 transition duration-200 text-blue-300" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                                                 </svg>
                                             </a>
@@ -333,10 +490,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     <div className="mt-8 lg:mt-0 lg:w-5/12 flex justify-center items-center">
                                         <div className="relative w-full max-w-xs sm:max-w-sm px-4">
                                             {/* Vibrant Background Glow Accent */}
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-52 bg-[#4ECDC4]/30 rounded-full blur-2xl -z-10"></div>
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-52 bg-blue-400/30 rounded-full blur-2xl -z-10"></div>
 
                                             {/* Showcase Frame */}
-                                            <div className="rounded-3xl bg-white/95 p-6 sm:p-8 shadow-2xl backdrop-blur-md border-4 border-[#FFD166] flex items-center justify-center transition duration-300 hover:scale-105 group">
+                                            <div className="rounded-3xl bg-white/95 p-6 sm:p-8 shadow-2xl backdrop-blur-md border border-white flex items-center justify-center transition duration-300 hover:scale-105 group">
                                                 <img
                                                     src="/storage/images/studynestLogo.png"
                                                     alt="StudyNest Main Logo"
@@ -351,12 +508,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         </main>
                     </div>
 
-                    {/* Decorative Wave Divider Bottom */}
-                    <div className="w-full overflow-hidden leading-none z-10">
-                        <svg className="relative block w-full h-10 sm:h-16 text-[#FFFDF9]" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                            <path d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,50 L1200,120 L0,120 Z" fill="currentColor"></path>
-                        </svg>
-                    </div>
                 </section>
 
                 {/* ========================================================= */}
@@ -598,12 +749,12 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     </div>
                                 </div>
                                 <div className="grid sm:grid-cols-2 gap-3 pt-4 text-xs sm:text-sm font-semibold text-slate-700">
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📖 My Lessons & Learning Materials</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📝 Digital Assignment Submissions</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">⚡ Interactive Quizzes & Automated Scoring</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">🎮 Literacy & Numeracy Educational Games</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📢 Class Bulletins & Teacher Messages</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📊 Self-Monitoring Academic Progress Tracker</div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><BookOpenIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>My Lessons & Learning Materials</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><DocumentTextIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Digital Assignment Submissions</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><AcademicCapIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Interactive Quizzes & Automated Scoring</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><PuzzlePieceIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Literacy & Numeracy Educational Games</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><MegaphoneIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Class Bulletins & Teacher Messages</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChartBarIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Self-Monitoring Academic Progress Tracker</span></div>
                                 </div>
                             </div>
                         )}
@@ -620,11 +771,11 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     </div>
                                 </div>
                                 <div className="grid sm:grid-cols-2 gap-3 pt-4 text-xs sm:text-sm font-semibold text-slate-700">
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📚 Lesson & Module Creation</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📄 Assignment Review & Submission Grading</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">🎯 Online Quiz Maker & Automated Scoring</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">🕹️ Assign Educational Learning Games</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">💬 Direct Academic Messaging with Students</div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><BookOpenIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Lesson & Module Creation</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><DocumentTextIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Assignment Review & Submission Grading</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><AcademicCapIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Online Quiz Maker & Automated Scoring</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><PuzzlePieceIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Assign Educational Learning Games</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChatBubbleLeftIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Direct Academic Messaging with Students</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📈 Class Performance Reports Generation</div>
                                 </div>
                             </div>
@@ -642,11 +793,11 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     </div>
                                 </div>
                                 <div className="grid sm:grid-cols-2 gap-3 pt-4 text-xs sm:text-sm font-semibold text-slate-700">
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">👥 Teacher & Student User Account Management</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">🏫 Teacher Grade-Level Assignment Matrix</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📊 School-Wide Academic Reports & Summaries</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📢 Global School Announcements Creation</div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">🔒 Access Control & System Permissions</div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><UserGroupIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Teacher & Student User Account Management</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><BuildingOfficeIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Teacher Grade-Level Assignment Matrix</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChartBarIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>School-Wide Academic Reports & Summaries</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><MegaphoneIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Global School Announcements Creation</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><UserGroupIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Access Control & System Permissions</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📈 Continuous Audit & System Monitoring</div>
                                 </div>
                             </div>
@@ -711,7 +862,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 {/* ENHANCED GET STARTED SECTION                              */}
                 {/* ========================================================= */}
                 <section id="get-started" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-                    <div className="animate-float-1 bg-gradient-to-r from-[#FF6B6B] via-[#FF8E53] to-[#FFD166] rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 border-4 border-amber-200/40">
+                    <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 border border-blue-400/40">
                         {/* Background Decorative Glow Effect */}
                         <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -727,7 +878,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             {!auth?.user && (
                                 <Link
                                     href={route('login')}
-                                    className="rounded-full bg-white text-[#FF6B6B] hover:bg-amber-50 px-8 py-3.5 text-xs sm:text-sm font-black shadow-xl hover:shadow-2xl transition duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center gap-2"
+                                    className="rounded-full bg-white text-blue-700 hover:bg-blue-50 px-8 py-3.5 text-xs sm:text-sm font-black shadow-xl hover:shadow-2xl transition duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center gap-2"
                                 >
                                     Log In Now
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
@@ -740,15 +891,15 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 {/* ========================================================= */}
                 {/* FOOTER                                                    */}
                 {/* ========================================================= */}
-                <footer className="relative z-10 mt-12 sm:mt-20 border-t border-slate-200/80 bg-white py-8 text-center text-slate-500">
+                <footer className="relative z-10 mt-12 sm:mt-20 border-t border-blue-500/30 bg-slate-950 py-8 text-center text-slate-400">
                     <div className="max-w-7xl mx-auto px-4">
-                        <p className="text-xs sm:text-sm font-bold text-slate-700">
+                        <p className="text-xs sm:text-sm font-bold text-white">
                             © {new Date().getFullYear()} StudyNest — Learning Management System
                         </p>
                         <p className="mt-1 text-[11px] sm:text-xs text-slate-400 font-medium">
                             Ilijan Sur Elementary School • Key Stage 2 Learners
                         </p>
-                        <div className="mt-4 inline-flex items-center gap-3 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-200/80 text-[11px] font-mono text-slate-500">
+                        <div className="mt-4 inline-flex items-center gap-3 bg-slate-900 px-4 py-1.5 rounded-full border border-slate-700 text-[11px] font-mono text-slate-400">
                             <span>Laravel v{laravelVersion}</span>
                             <span className="text-slate-300">•</span>
                             <span>PHP v{phpVersion}</span>

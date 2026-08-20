@@ -194,6 +194,19 @@
         @endif
     </div>
 
+    @if(!empty($filters['school_year']))
+        <span>School Year: <strong>{{ $filters['school_year'] }}</strong></span>
+    @endif
+    @if(!empty($filters['gender']))
+        <span>Gender: <strong>{{ ucfirst($filters['gender']) }}</strong></span>
+    @endif
+    @if(!empty($filters['status']))
+        <span>Status: <strong>{{ ucfirst($filters['status']) }}</strong></span>
+    @endif
+    @if(!empty($filters['search']))
+        <span>Search: <strong>{{ $filters['search'] }}</strong></span>
+    @endif
+
     <!-- Summary Section -->
     @if(!empty($summary))
     <div class="summary-section">

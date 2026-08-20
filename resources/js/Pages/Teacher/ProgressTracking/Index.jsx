@@ -72,7 +72,13 @@ export default function ProgressIndex({
     };
 
     const handleExport = () => {
-        window.open(route('teacher.progress.export'), '_blank');
+        const query = new URLSearchParams({
+            search: search || '',
+            grade_level: gradeFilter || '',
+            subject: subjectFilter || '',
+            trimester: trimesterFilter || '',
+        });
+        window.open(`${route('teacher.progress.export')}?${query.toString()}`, '_blank');
     };
 
     const gradeOptions = [
@@ -212,8 +218,44 @@ export default function ProgressIndex({
         >
             <Head title="Progress Tracking" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <style>{`
+                .studynest-layout.theme-dark .progress-page .bg-white {
+                    background-color: rgb(15 23 42) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .bg-gray-50 {
+                    background-color: rgb(30 41 59) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .bg-gray-200 {
+                    background-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .bg-red-50 {
+                    background-color: rgb(69 10 10 / 0.45) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .border-gray-100,
+                .studynest-layout.theme-dark .progress-page .border-gray-200 {
+                    border-color: rgb(51 65 85) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-gray-800 {
+                    color: rgb(226 232 240) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-gray-700 {
+                    color: rgb(203 213 225) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-gray-600,
+                .studynest-layout.theme-dark .progress-page .text-gray-500,
+                .studynest-layout.theme-dark .progress-page .text-gray-400 {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-red-600 {
+                    color: rgb(253 164 175) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .text-red-500 {
+                    color: rgb(248 113 113) !important;
+                }
+            `}</style>
+
+            <div className="progress-page py-8 sm:py-12">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Statistics Cards ===== */}
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">

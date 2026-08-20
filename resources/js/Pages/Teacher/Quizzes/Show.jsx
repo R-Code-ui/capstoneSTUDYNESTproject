@@ -27,7 +27,7 @@ export default function QuizzesShow({ quiz }) {
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="quiz-show-title text-xl font-semibold leading-tight text-gray-800" title={quiz.quiz_title}>
                         {quiz.quiz_title}
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -54,6 +54,25 @@ export default function QuizzesShow({ quiz }) {
             }
         >
             <Head title={quiz.quiz_title} />
+            <style>{`
+                .quiz-show-title {
+                    display: block;
+                    min-width: 0;
+                    max-width: min(100%, 48rem);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .quiz-readable-text {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 3;
+                    overflow: hidden;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                    text-overflow: ellipsis;
+                }
+            `}</style>
 
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
@@ -137,7 +156,7 @@ export default function QuizzesShow({ quiz }) {
                                                         {index + 1}.
                                                     </span>
                                                     <div className="flex-1">
-                                                        <div className="font-medium text-gray-800">
+                                                        <div className="quiz-readable-text font-medium text-gray-800" title={question.question_text}>
                                                             {question.question_text}
                                                         </div>
                                                         <div className="mt-2 text-sm text-gray-500">
@@ -147,19 +166,19 @@ export default function QuizzesShow({ quiz }) {
                                                         {question.question_type === 'multiple_choice' && (
                                                             <div className="mt-2 space-y-1 text-sm">
                                                                 <div className={question.correct_answer === 'A' ? 'text-emerald-600 font-medium' : 'text-gray-600'}>
-                                                                    A. {question.choice_a}
+                                                                    <span className="quiz-readable-text">A. {question.choice_a}</span>
                                                                     {question.correct_answer === 'A' && ' ✅'}
                                                                 </div>
                                                                 <div className={question.correct_answer === 'B' ? 'text-emerald-600 font-medium' : 'text-gray-600'}>
-                                                                    B. {question.choice_b}
+                                                                    <span className="quiz-readable-text">B. {question.choice_b}</span>
                                                                     {question.correct_answer === 'B' && ' ✅'}
                                                                 </div>
                                                                 <div className={question.correct_answer === 'C' ? 'text-emerald-600 font-medium' : 'text-gray-600'}>
-                                                                    C. {question.choice_c}
+                                                                    <span className="quiz-readable-text">C. {question.choice_c}</span>
                                                                     {question.correct_answer === 'C' && ' ✅'}
                                                                 </div>
                                                                 <div className={question.correct_answer === 'D' ? 'text-emerald-600 font-medium' : 'text-gray-600'}>
-                                                                    D. {question.choice_d}
+                                                                    <span className="quiz-readable-text">D. {question.choice_d}</span>
                                                                     {question.correct_answer === 'D' && ' ✅'}
                                                                 </div>
                                                             </div>

@@ -41,7 +41,21 @@ class AnnouncementPolicy
         }
 
         if ($user->hasRole('student')) {
-            return $announcement->target_audience === $user->grade_level || $announcement->target_audience === 'all_users';
+            $gradeAudience = strtolower(str_replace(' ', '_', (string) $user->grade_level));
+
+            if ($announcement->status !== 'published'
+                || !$announcement->publish_date
+                || $announcement->publish_date->toDateString() > now()->toDateString()
+                || ($announcement->expiration_date && $announcement->expiration_date->toDateString() < now()->toDateString())) {
+                return false;
+            }
+
+            return $announcement->target_audience === $user->grade_level
+                || $announcement->target_audience === $gradeAudience
+                || $announcement->target_audience === 'all_users'
+                || $announcement->target_audience === 'all_grades'
+                || ($announcement->target_audience === 'all_assigned_students'
+                    && $announcement->user?->gradeAssignments()->where('grade_level', $user->grade_level)->exists());
         }
 
         return false;

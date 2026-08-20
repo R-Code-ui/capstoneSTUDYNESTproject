@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
 use App\Services\StudyNestNotificationService;
@@ -65,6 +66,11 @@ class GameController extends Controller
             'games' => $games->map(function ($game) {
                 $participantsCount = $game->results()->count();   // ✅ single number
 
+                $participantsCount = $game->results()
+                    ->whereIn('status', ['started', 'completed'])
+                    ->distinct('student_id')
+                    ->count('student_id');
+
                 return [
                     'id' => $game->id,
                     'title' => $game->game_title,
@@ -113,14 +119,18 @@ class GameController extends Controller
         Gate::authorize('create', Game::class);
 
         $validated = $request->validate([
-            'grade_level' => 'required|string',
+            'grade_level' => ['required', Rule::in($assignedGrades = auth()->user()->gradeAssignments()->pluck('grade_level')->all())],
             'game_title' => 'required|string|max:255',
             'game_type' => 'required|in:literacy,numeracy',
             'game_data' => 'required|array',
             'max_attempts' => 'integer|min:1|max:5',
-            'due_date' => 'nullable|date|after:today',
+            'due_date' => 'nullable|date|after_or_equal:today',
             'status' => 'required|in:draft,published',
         ]);
+
+        if (!in_array($validated['game_title'], $this->gamesByGrade()[$validated['grade_level']][$validated['game_type']] ?? [], true)) {
+            return back()->withErrors(['game_title' => 'The selected game is not available for this grade and type.'])->withInput();
+        }
 
         $validated['game_data'] = json_encode($validated['game_data']);
 
@@ -168,7 +178,14 @@ class GameController extends Controller
                 'status' => $game->status,
                 'publish_date' => $game->publish_date ? $game->publish_date->format('Y-m-d') : null,
                 'created_at' => $game->created_at->format('Y-m-d H:i'),
-                'results' => $game->results()->with('student')->get()->map(function ($result) {
+                'results' => $game->results()->with('student')
+                    ->orderByDesc('attempt_number')
+                    ->orderByDesc('completed_at')
+                    ->orderByDesc('created_at')
+                    ->get()->groupBy('student_id')->map(function ($studentResults) {
+                    $result = $studentResults->where('status', 'completed')->first()
+                        ?? $studentResults->where('status', 'started')->first()
+                        ?? $studentResults->where('status', 'assigned')->first();
                     return [
                         'student_id' => $result->student_id,
                         'student_name' => $result->student->name,
@@ -220,14 +237,18 @@ class GameController extends Controller
         Gate::authorize('update', $game);
 
         $validated = $request->validate([
-            'grade_level' => 'required|string',
+            'grade_level' => ['required', Rule::in($assignedGrades = auth()->user()->gradeAssignments()->pluck('grade_level')->all())],
             'game_title' => 'required|string|max:255',
             'game_type' => 'required|in:literacy,numeracy',
             'game_data' => 'required|array',
             'max_attempts' => 'integer|min:1|max:5',
-            'due_date' => 'nullable|date|after:today',
+            'due_date' => 'nullable|date',
             'status' => 'required|in:draft,published',
         ]);
+
+        if (!in_array($validated['game_title'], $this->gamesByGrade()[$validated['grade_level']][$validated['game_type']] ?? [], true)) {
+            return back()->withErrors(['game_title' => 'The selected game is not available for this grade and type.'])->withInput();
+        }
 
         $validated['game_data'] = json_encode($validated['game_data']);
 
@@ -255,6 +276,7 @@ class GameController extends Controller
     public function destroy(Game $game)
     {
         Gate::authorize('delete', $game);
+        app(StudyNestNotificationService::class)->forgetFor('game', $game->id);
 
         ActivityLog::create([
             'user_id'             => auth()->id(),
@@ -274,6 +296,10 @@ class GameController extends Controller
     public function publish(Game $game)
     {
         Gate::authorize('update', $game);
+
+        if ($game->status === 'published') {
+            return redirect()->back()->with('info', 'Game is already published.');
+        }
 
         $game->update([
             'status' => 'published',

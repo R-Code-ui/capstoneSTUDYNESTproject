@@ -7,9 +7,9 @@ use App\Models\Game;
 use App\Models\GameResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
-use App\Services\StudyNestNotificationService;
 
 class GameController extends Controller
 {
@@ -19,13 +19,21 @@ class GameController extends Controller
     public function index(Request $request)
     {
         $student = auth()->user();
+        $studentGrade = $student->currentEnrollment?->grade_level ?? $student->grade_level;
         $search = $request->input('search');
         $gameType = $request->input('game_type');
         $statusFilter = $request->input('status'); // 'assigned', 'started', 'completed'
 
-        $gamesQuery = Game::where('grade_level', $student->grade_level)
+        $gamesQuery = Game::where('grade_level', $studentGrade)
             ->where('status', 'published')
-            ->with('results')
+            ->where(function ($query) {
+                $query->whereNull('publish_date')->orWhereDate('publish_date', '<=', today());
+            })
+            ->with(['teacher', 'results' => function ($query) use ($student) {
+                $query->where('student_id', $student->id)
+                    ->orderByDesc('attempt_number')
+                    ->orderByDesc('created_at');
+            }])
             ->when($search, function ($query, $search) {
                 return $query->where('game_title', 'like', "%{$search}%");
             })
@@ -37,12 +45,12 @@ class GameController extends Controller
         if ($statusFilter) {
             if ($statusFilter === 'assigned') {
                 $gamesQuery->whereDoesntHave('results', function ($q) use ($student) {
-                    $q->where('student_id', $student->id);
+                    $q->where('student_id', $student->id)->whereIn('status', ['started', 'completed']);
                 });
             } elseif ($statusFilter === 'started') {
                 $gamesQuery->whereHas('results', function ($q) use ($student) {
                     $q->where('student_id', $student->id)
-                      ->where('status', '!=', 'completed');
+                      ->where('status', 'started');
                 });
             } elseif ($statusFilter === 'completed') {
                 $gamesQuery->whereHas('results', function ($q) use ($student) {
@@ -56,12 +64,12 @@ class GameController extends Controller
 
         return Inertia::render('Student/Games/Index', [
             'games' => $games->map(function ($game) use ($student) {
-                $results = $game->results()->where('student_id', $student->id)->get();
+                $results = $game->results;
                 $completedCount = $results->where('status', 'completed')->count();
-                $highestScore = $results->where('status', 'completed')->max('score') ?? 0;
-                $attemptsRemaining = max(0, $game->max_attempts - $results->count());
+                $attemptsUsed = $results->whereIn('status', ['started', 'completed'])->count();
+                $attemptsRemaining = max(0, $game->max_attempts - $attemptsUsed);
 
-                $hasStarted = $results->where('status', '!=', 'completed')->first();
+                $hasStarted = $results->where('status', 'started')->first();
                 if ($hasStarted) {
                     $status = 'started';
                 } elseif ($completedCount > 0) {
@@ -109,10 +117,11 @@ class GameController extends Controller
             ->get();
 
         $completedResults = $results->where('status', 'completed');
-        $currentResult = $results->where('status', '!=', 'completed')->first();
+        $currentResult = $results->where('status', 'started')->first();
 
-        $canPlay = $results->count() < $game->max_attempts;
-        $attemptsRemaining = max(0, $game->max_attempts - $results->count());
+        $attemptsUsed = $results->whereIn('status', ['started', 'completed'])->count();
+        $canPlay = $attemptsUsed < $game->max_attempts;
+        $attemptsRemaining = max(0, $game->max_attempts - $attemptsUsed);
 
         $gameData = $game->game_data;
         if (is_string($gameData)) {
@@ -152,23 +161,41 @@ class GameController extends Controller
         Gate::authorize('view', $game);
 
         $student = auth()->user();
-        $results = $game->results()->where('student_id', $student->id)->get();
+        $result = DB::transaction(function () use ($game, $student) {
+            $results = GameResult::where('game_id', $game->id)
+                ->where('student_id', $student->id)
+                ->lockForUpdate()
+                ->orderByDesc('attempt_number')
+                ->get();
+            $current = $results->where('status', 'started')->first();
 
-        if ($results->count() >= $game->max_attempts) {
-            return back()->with('error', 'You have reached the maximum number of attempts.');
-        }
+            if ($current) {
+                return $current;
+            }
 
-        $result = $results->where('status', '!=', 'completed')->first();
+            $attemptsUsed = $results->whereIn('status', ['started', 'completed'])->count();
+            if ($attemptsUsed >= $game->max_attempts) {
+                abort(422, 'You have reached the maximum number of attempts.');
+            }
 
-        if (!$result) {
-            $result = GameResult::create([
+            if ($game->due_date && $game->due_date->lt(today())) {
+                abort(422, 'This game is past its due date.');
+            }
+
+            $assigned = $results->where('status', 'assigned')->first();
+            if ($assigned) {
+                $assigned->update(['status' => 'started', 'started_at' => now()]);
+                return $assigned->fresh();
+            }
+
+            return GameResult::create([
                 'game_id' => $game->id,
                 'student_id' => $student->id,
-                'attempt_number' => $results->count() + 1,
+                'attempt_number' => ($results->max('attempt_number') ?? 0) + 1,
                 'status' => 'started',
                 'started_at' => now(),
             ]);
-        }
+        });
 
         ActivityLog::create([
             'user_id'             => $student->id,
@@ -186,6 +213,8 @@ class GameController extends Controller
      */
     public function showPlay(GameResult $result)
     {
+        abort_unless($result->student_id === auth()->id(), 403);
+        abort_unless($result->status === 'started', 409);
         Gate::authorize('view', $result->game);
 
         $game = $result->game;
@@ -216,9 +245,8 @@ class GameController extends Controller
      */
     public function saveProgress(Request $request, GameResult $result)
     {
-        if ($result->student_id !== auth()->id()) {
-            abort(403);
-        }
+        abort_unless($result->student_id === auth()->id(), 403);
+        abort_unless($result->status === 'started', 409);
 
         $validated = $request->validate([
             'progress' => 'nullable|array',
@@ -227,8 +255,6 @@ class GameController extends Controller
         $result->update([
             'progress_data' => $validated['progress'],
         ]);
-
-        app(StudyNestNotificationService::class)->gameCompleted($result);
 
         return redirect()->route('student.games.index')
             ->with('success', 'Progress saved. You can resume later!');
@@ -239,6 +265,8 @@ class GameController extends Controller
      */
     public function submitResult(Request $request, GameResult $result)
     {
+        abort_unless($result->student_id === auth()->id(), 403);
+        abort_unless($result->status === 'started', 409);
         Gate::authorize('view', $result->game);
 
         $validated = $request->validate([
@@ -269,7 +297,9 @@ class GameController extends Controller
      */
     public function results(GameResult $result)
     {
+        abort_unless($result->student_id === auth()->id(), 403);
         Gate::authorize('view', $result->game);
+        abort_unless($result->status === 'completed', 404);
 
         $game = $result->game;
         $student = auth()->user();

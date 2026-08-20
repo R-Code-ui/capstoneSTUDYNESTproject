@@ -26,12 +26,13 @@ export default function PrincipalReports({
     show_results = false,
     pagination,
 }) {
+    const availableSchoolYears = school_years || [];
     const [selectedReport, setSelectedReport] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [formData, setFormData] = useState({
         report_type: '',
-        school_year: filters?.school_year || 'SY 2026-2027',
+        school_year: filters?.school_year || availableSchoolYears[0] || '',
         grade_level: filters?.grade_level || '',
         teacher_id: filters?.teacher_id || '',
         trimester: filters?.trimester || '',
@@ -82,7 +83,7 @@ export default function PrincipalReports({
         ...(trimesters || []).filter(t => t !== 'All Trimesters' && t !== 'All Terms').map((t) => ({ value: t, label: t })),
     ];
 
-    const schoolYearOptions = (school_years || []).map((year) => ({ value: year, label: year }));
+    const schoolYearOptions = availableSchoolYears.map((year) => ({ value: year, label: year }));
 
     const handleGenerate = () => {
         if (!formData.report_type) {

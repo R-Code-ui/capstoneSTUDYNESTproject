@@ -92,9 +92,49 @@ export default function GamesCreate({
         >
             <Head title="Assign Game" />
 
+            <style>{`
+                .studynest-layout.theme-dark .game-form-shell input:not([type="file"]),
+                .studynest-layout.theme-dark .game-form-shell select,
+                .studynest-layout.theme-dark .game-form-shell textarea {
+                    background-color: rgb(30 41 59) !important;
+                    color: rgb(226 232 240) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .game-form-shell select:disabled {
+                    background-color: rgb(51 65 85) !important;
+                    color: rgb(203 213 225) !important;
+                    opacity: 1 !important;
+                }
+                .studynest-layout.theme-dark .game-form-shell input::placeholder,
+                .studynest-layout.theme-dark .game-form-shell textarea::placeholder {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .game-form-shell option {
+                    background-color: rgb(30 41 59);
+                    color: rgb(226 232 240);
+                }
+                .studynest-layout.theme-dark .game-form-shell .game-choice {
+                    border-color: rgb(71 85 105);
+                    background-color: rgb(15 23 42);
+                    color: rgb(226 232 240);
+                }
+                .studynest-layout.theme-dark .game-form-shell .game-choice:hover {
+                    border-color: rgb(96 165 250);
+                    background-color: rgb(30 41 59);
+                }
+                .studynest-layout.theme-dark .game-form-shell .game-choice.is-selected {
+                    border-color: rgb(96 165 250);
+                    background-color: rgb(30 64 175 / 0.28);
+                }
+                .studynest-layout.theme-dark .game-form-shell .game-preview {
+                    border-color: rgb(71 85 105);
+                    background-color: rgb(15 23 42);
+                }
+            `}</style>
+
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+                    <div className="game-form-shell bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -151,8 +191,8 @@ export default function GamesCreate({
                                                     onClick={() => handleGameSelect(game)}
                                                     className={`
                                                         w-full text-left px-4 py-3 rounded-lg border-2 transition
-                                                        ${data.game_title === game
-                                                            ? 'border-blue-600 bg-blue-50'
+                                                        game-choice ${data.game_title === game
+                                                            ? 'is-selected border-blue-600 bg-blue-50'
                                                             : 'border-gray-200 hover:border-blue-300'
                                                         }
                                                     `}
@@ -177,7 +217,7 @@ export default function GamesCreate({
                             {data.game_title && data.game_data && (
                                 <div className="border-t border-gray-200 pt-4">
                                     <h4 className="font-medium text-gray-800 mb-2">Game Preview</h4>
-                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                    <div className="game-preview bg-gray-50 p-4 rounded-lg border border-gray-200">
                                         <div className="text-sm font-medium text-gray-800">
                                             {data.game_title}
                                         </div>

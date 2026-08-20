@@ -31,21 +31,21 @@ export default function TeacherProfile({ teacher }) {
 
             {/* ===== Activity Summary ===== */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-gray-100 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{safeNumber(teacher.total_lessons)}</div>
-                    <div className="text-sm font-medium text-gray-500">Total Lessons</div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{safeNumber(teacher.total_lessons)}</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Total Lessons</div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-100 text-center">
-                    <div className="text-2xl font-bold text-purple-600">{safeNumber(teacher.total_assignments)}</div>
-                    <div className="text-sm font-medium text-gray-500">Total Assignments</div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{safeNumber(teacher.total_assignments)}</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Total Assignments</div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-100 text-center">
-                    <div className="text-2xl font-bold text-emerald-600">{safeNumber(teacher.total_quizzes)}</div>
-                    <div className="text-sm font-medium text-gray-500">Total Quizzes</div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{safeNumber(teacher.total_quizzes)}</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Total Quizzes</div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-100 text-center">
-                    <div className="text-2xl font-bold text-gray-600">{teacher.last_login || 'Never'}</div>
-                    <div className="text-sm font-medium text-gray-500">Last Login</div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                    <div className="text-2xl font-bold text-gray-600 dark:text-slate-300">{teacher.last_login || 'Never'}</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Last Login</div>
                 </div>
             </div>
         </div>

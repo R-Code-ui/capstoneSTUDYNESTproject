@@ -7,6 +7,7 @@ use App\Models\MessageGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use App\Services\StudyNestNotificationService;
 
 class MessageGroupController extends Controller
 {
@@ -55,10 +56,12 @@ class MessageGroupController extends Controller
             'body' => ['required', 'string', 'max:10000'],
         ]);
 
-        $messageGroup->messages()->create([
+        $message = $messageGroup->messages()->create([
             'sender_id' => auth()->id(),
             'body' => $validated['body'],
         ]);
+
+        app(StudyNestNotificationService::class)->groupMessageReceived($message);
 
         return redirect()->route('student.messages.groups.show', $messageGroup)
             ->with('message', 'Message sent.');

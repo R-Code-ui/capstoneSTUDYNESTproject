@@ -32,8 +32,10 @@ class AssignmentController extends Controller
 
         $assignments = Assignment::where('teacher_id', $user->id)
             ->when($search, function ($query, $search) {
-                return $query->where('assignment_title', 'like', "%{$search}%")
-                    ->orWhere('subject', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('assignment_title', 'like', "%{$search}%")
+                        ->orWhere('subject', 'like', "%{$search}%");
+                });
             })
             ->when($statusFilter, function ($query, $status) {
                 return $query->where('status', $status);
@@ -56,7 +58,9 @@ class AssignmentController extends Controller
         return Inertia::render('Teacher/Assignments/Index', [
             'assignments' => $assignments->map(function ($assignment) {
                 $submissionsCount = $assignment->submissions()->count();
-                $submittedCount = $assignment->submissions()->where('status', 'submitted')->count();
+                $submittedCount = $assignment->submissions()
+                    ->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded'])
+                    ->count();
 
                 return [
                     'id' => $assignment->id,
@@ -98,7 +102,7 @@ class AssignmentController extends Controller
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
@@ -141,20 +145,20 @@ class AssignmentController extends Controller
         $validated = $request->validate([
             'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
-            'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
+            'school_year' => 'required|string|in:' . implode(',', config('school.school_years')),
             'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'assignment_title' => 'required|string|max:255',
             'assignment_type' => 'required|string|in:homework,worksheet,performance_task,project,reflection_activity,practice_exercise,reading_assignment',
             'instructions' => 'required|string',
-            'total_points' => 'required|integer|min:1',
+            'total_points' => 'required|integer|min:1|max:100',
             'estimated_time' => 'nullable|integer',
             'allow_late_submission' => 'boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
             'resource_url' => 'nullable|url|max:2048',
-            'submission_methods' => 'required|array',
+            'submission_methods' => 'required|array|min:1|max:3',
             'submission_methods.*' => 'in:digital,paper',
             'resources' => 'nullable|array|max:4',
             'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
@@ -242,6 +246,7 @@ class AssignmentController extends Controller
         if (is_string($submissionMethods)) {
             $submissionMethods = json_decode($submissionMethods, true);
         }
+        $submissionMethods = array_values(array_intersect($submissionMethods ?: [], ['digital', 'paper']));
 
         return Inertia::render('Teacher/Assignments/Show', [
             'assignment' => [
@@ -287,7 +292,7 @@ class AssignmentController extends Controller
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
@@ -313,6 +318,7 @@ class AssignmentController extends Controller
         if (is_string($submissionMethodsValue)) {
             $submissionMethodsValue = json_decode($submissionMethodsValue, true);
         }
+        $submissionMethodsValue = array_values(array_intersect($submissionMethodsValue ?: [], ['digital', 'paper']));
 
         return Inertia::render('Teacher/Assignments/Edit', [
             'assignment' => [
@@ -367,20 +373,20 @@ class AssignmentController extends Controller
         $validated = $request->validate([
             'grade_level' => 'required|string|in:Grade 4,Grade 5,Grade 6',
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
-            'school_year' => 'required|string|in:SY 2026-2027,SY 2027-2028',
+            'school_year' => 'required|string|in:' . implode(',', config('school.school_years')),
             'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
             'week_number' => 'required|string|in:Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Week 7,Week 8,Week 9,Week 10,Week 11,Week 12',
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'assignment_title' => 'required|string|max:255',
             'assignment_type' => 'required|string|in:homework,worksheet,performance_task,project,reflection_activity,practice_exercise,reading_assignment',
             'instructions' => 'required|string',
-            'total_points' => 'required|integer|min:1',
+            'total_points' => 'required|integer|min:1|max:100',
             'estimated_time' => 'nullable|integer',
             'allow_late_submission' => 'boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
             'resource_url' => 'nullable|url|max:2048',
-            'submission_methods' => 'required|array',
+            'submission_methods' => 'required|array|min:1|max:3',
             'submission_methods.*' => 'in:digital,paper',
             'resources' => 'nullable|array|max:4',
             'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
@@ -483,6 +489,7 @@ class AssignmentController extends Controller
     public function destroy(Assignment $assignment)
     {
         Gate::authorize('delete', $assignment);
+        app(StudyNestNotificationService::class)->forgetFor('assignment', $assignment->id);
 
         foreach ($assignment->resources as $resource) {
             if (Storage::disk('public')->exists($resource->file_path)) {

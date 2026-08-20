@@ -45,7 +45,7 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
                         {quiz.title}
                     </span>
                     <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
@@ -57,8 +57,22 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
         >
             <Head title={quiz.title} />
 
-            <div className="py-4">
-                <div className="mx-auto max-w-3xl">
+            <div className="student-quiz-show-page py-4">
+                <style>{`
+                    .studynest-layout.theme-dark .student-quiz-show-page .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .student-quiz-show-page .bg-gray-50 { background-color: rgb(30 41 59) !important; border-color: rgb(71 85 105) !important; }
+                    .studynest-layout.theme-dark .student-quiz-show-page .bg-red-50 { background-color: rgb(69 26 26) !important; border-color: rgb(127 29 29) !important; }
+                    .studynest-layout.theme-dark .student-quiz-show-page .bg-yellow-50 { background-color: rgb(66 50 20) !important; border-color: rgb(146 105 28) !important; }
+                    .studynest-layout.theme-dark .student-quiz-show-page .text-gray-800,
+                    .studynest-layout.theme-dark .student-quiz-show-page .text-gray-700 { color: rgb(226 232 240) !important; }
+                    .studynest-layout.theme-dark .student-quiz-show-page .text-gray-600,
+                    .studynest-layout.theme-dark .student-quiz-show-page .text-gray-500 { color: rgb(148 163 184) !important; }
+                    .studynest-layout.theme-dark .student-quiz-show-page [class~="border-gray-200"],
+                    .studynest-layout.theme-dark .student-quiz-show-page [class~="border-gray-100"] { border-color: rgb(51 65 85) !important; }
+                    .student-quiz-show-page .break-words { overflow-wrap: anywhere; word-break: break-word; }
+                    @media (max-width: 640px) { .student-quiz-show-page .p-6 { padding: 1rem; } }
+                `}</style>
+                <div className="mx-auto max-w-3xl px-4 sm:px-6">
                     {isLoading && <LoadingSpinner overlay size="lg" />}
 
                     {/* ===== Quiz Information ===== */}
@@ -78,7 +92,7 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
                             </div>
 
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2 break-words">
+                                <h3 className="min-w-0 max-w-full truncate text-2xl font-bold text-gray-800 flex items-center gap-2" title={quiz.title}>
                                     <DocumentTextIcon className="w-6 h-6 text-blue-500 shrink-0" />
                                     {quiz.title}
                                 </h3>
@@ -110,7 +124,7 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
 
                             <div className="pt-4 border-t border-gray-200">
                                 <h4 className="font-semibold text-gray-800 mb-2">Instructions</h4>
-                                <p className="text-gray-600 break-words">
+                                <p className="text-gray-600 break-words line-clamp-4" title={quiz.instructions}>
                                     {quiz.instructions}
                                 </p>
                             </div>

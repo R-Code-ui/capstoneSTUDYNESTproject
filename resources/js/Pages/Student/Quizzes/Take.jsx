@@ -196,7 +196,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
                         {quiz.title}
                     </span>
                     <div className="flex flex-wrap items-center gap-4">
@@ -217,8 +217,23 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         >
             <Head title={`Taking: ${quiz.title}`} />
 
-            <div className="py-4">
-                <div className="mx-auto max-w-3xl">
+            <div className="student-quiz-take-page py-4">
+                <style>{`
+                    .studynest-layout.theme-dark .student-quiz-take-page .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page .bg-gray-200 { background-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page .bg-gray-50 { background-color: rgb(30 41 59) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page .border-gray-200,
+                    .studynest-layout.theme-dark .student-quiz-take-page .border-gray-300 { border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page .text-gray-800,
+                    .studynest-layout.theme-dark .student-quiz-take-page .text-gray-700 { color: rgb(226 232 240) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page .text-gray-600,
+                    .studynest-layout.theme-dark .student-quiz-take-page .text-gray-500 { color: rgb(148 163 184) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page input[type="text"] { background-color: rgb(30 41 59) !important; color: rgb(226 232 240) !important; border-color: rgb(71 85 105) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page input[type="radio"] { accent-color: rgb(59 130 246); }
+                    .student-quiz-take-page .break-words { overflow-wrap: anywhere; word-break: break-word; }
+                    @media (max-width: 640px) { .student-quiz-take-page .p-6 { padding: 1rem; } }
+                `}</style>
+                <div className="mx-auto max-w-3xl px-4 sm:px-6">
                     {isSubmitting && <LoadingSpinner overlay size="lg" text="Submitting your quiz..." />}
 
                     {timeUp && (
@@ -251,7 +266,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                 <div className="text-sm text-gray-500">
                                     Question {currentQuestionIndex + 1} of {totalQuestions}
                                 </div>
-                                <div className="text-lg font-medium text-gray-800 break-words">
+                                <div className="text-lg font-medium text-gray-800 break-words line-clamp-3" title={currentQuestion.text}>
                                     {currentQuestion.text}
                                 </div>
                                 {renderQuestion(currentQuestion)}

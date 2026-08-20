@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\MessageGroup;
 use App\Models\User;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -25,9 +26,12 @@ class MessageController extends Controller
 
         $user = auth()->user();
         $search = $request->input('search');
+        $gradeFilter = $request->input('grade_level');
         $teacherId = $user->id;
+        $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
+        $selectedGrade = in_array($gradeFilter, $assignedGrades, true) ? $gradeFilter : null;
         $studentIds = User::role('student')
-            ->whereIn('grade_level', $user->gradeAssignments()->pluck('grade_level'))
+            ->whereIn('grade_level', $selectedGrade ? [$selectedGrade] : $assignedGrades)
             ->pluck('id');
 
         $latestIds = DB::table('messages')
@@ -81,6 +85,7 @@ class MessageController extends Controller
                 'last_message_at'    => $msg->created_at,
                 'last_message_id'    => $msg->id,
                 'category'           => $msg->category,
+                'subject'            => $msg->subject,
                 'unread_count'       => $unreadCount,
                 'is_last_from_me'    => $msg->sender_id === $user->id,
             ];
@@ -111,7 +116,8 @@ class MessageController extends Controller
         return Inertia::render('Teacher/Messages/Index', [
             'conversations' => $conversations->items(),
             'unread_count'  => $totalUnread,
-            'filters'       => ['search' => $search],
+            'filters'       => ['search' => $search, 'grade_level' => $selectedGrade],
+            'assigned_grades' => $assignedGrades,
             'pagination'    => $paginator->toArray(),
             'groups'         => $groups,
         ]);
@@ -148,11 +154,22 @@ class MessageController extends Controller
         }
 
         $categories = ['lesson', 'assignment', 'quiz', 'educational_game', 'general_academic_concern'];
+        $defaultSubjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
+        $subjects = Subject::whereIn('grade_level', $assignedGrades)
+            ->orderBy('grade_level')->orderBy('name')->get(['id', 'name', 'grade_level']);
+        $subjectsByGrade = collect($assignedGrades)->mapWithKeys(function ($grade) use ($subjects, $defaultSubjects) {
+            $stored = $subjects->where('grade_level', $grade)->values();
+            $names = $stored->pluck('name')->all();
+            $fallback = collect($defaultSubjects)->reject(fn ($name) => in_array($name, $names, true))
+                ->map(fn ($name, $index) => ['id' => 'default-' . $index . '-' . md5($grade), 'name' => $name, 'grade_level' => $grade]);
+            return [$grade => $stored->concat($fallback)->values()];
+        })->all();
 
         return Inertia::render('Teacher/Messages/Compose', [
             'assigned_grades'   => $assignedGrades,
             'students_by_grade' => $studentsByGrade,
             'categories'        => $categories,
+            'subjects_by_grade' => $subjectsByGrade,
         ]);
     }
 
@@ -205,6 +222,13 @@ class MessageController extends Controller
         $teacher = auth()->user();
         $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->toArray();
         $receiver = User::role('student')->whereIn('grade_level', $assignedGrades)->findOrFail($validated['receiver_id']);
+
+        if (!empty($validated['subject'])) {
+            $subjectAllowed = Subject::where('name', $validated['subject'])
+                ->where('grade_level', $receiver->grade_level)
+                ->exists() || in_array($validated['subject'], ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'], true);
+            abort_unless($subjectAllowed, 422, 'The selected subject is not available for this student’s grade level.');
+        }
 
         $message = Message::create([
             'sender_id'   => $teacher->id,
@@ -269,6 +293,7 @@ class MessageController extends Controller
                 'id'         => $msg->id,
                 'message'    => $msg->message,
                 'category'   => $msg->category,
+                'subject'    => $msg->subject,
                 'status'     => $msg->status,
                 'is_mine'    => $msg->sender_id === $user->id,
                 'created_at' => $msg->created_at->format('M d, Y g:i A'),

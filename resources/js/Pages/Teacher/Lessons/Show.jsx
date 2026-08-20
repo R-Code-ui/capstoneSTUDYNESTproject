@@ -61,7 +61,7 @@ export default function LessonsShow({ lesson, completion_records = [] }) {
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                    <span className="lesson-show-title text-xl font-semibold leading-tight text-gray-800" title={lesson.lesson_title}>
                         {lesson.lesson_title}
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -82,7 +82,39 @@ export default function LessonsShow({ lesson, completion_records = [] }) {
             }
         >
             <Head title={lesson.lesson_title} />
-            <div className="py-12">
+            <style>{`
+                .lesson-readable-text {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 3;
+                    overflow: hidden;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                    text-overflow: ellipsis;
+                }
+                .lesson-show-title {
+                    display: block;
+                    max-width: min(100%, 48rem);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .studynest-layout.theme-dark .lesson-show-page .text-gray-700,
+                .studynest-layout.theme-dark .lesson-show-page .text-gray-800 {
+                    color: rgb(226 232 240) !important;
+                }
+                .studynest-layout.theme-dark .lesson-show-page .text-gray-500,
+                .studynest-layout.theme-dark .lesson-show-page .text-gray-600 {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .lesson-show-page .prose {
+                    color: rgb(203 213 225) !important;
+                    max-width: 100%;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                }
+            `}</style>
+            <div className="lesson-show-page py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
 
                     {/* Basic Information */}
@@ -134,16 +166,16 @@ export default function LessonsShow({ lesson, completion_records = [] }) {
                             <div className="p-6 space-y-3">
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Learning Competency</div>
-                                    <div className="text-gray-800">{lesson.learning_competency}</div>
+                                    <div className="lesson-readable-text text-gray-800">{lesson.learning_competency}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Learning Objective</div>
-                                    <div className="text-gray-800">{lesson.learning_objective}</div>
+                                    <div className="lesson-readable-text text-gray-800">{lesson.learning_objective}</div>
                                 </div>
                                 {lesson.bow_code && (
                                     <div>
                                         <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">BOW Code</div>
-                                        <div className="text-gray-800 font-mono">{lesson.bow_code}</div>
+                                        <div className="lesson-readable-text text-gray-800 font-mono">{lesson.bow_code}</div>
                                     </div>
                                 )}
                             </div>
@@ -157,7 +189,7 @@ export default function LessonsShow({ lesson, completion_records = [] }) {
                                 <h3 className="text-sm font-semibold text-gray-700">Lesson Description</h3>
                             </div>
                             <div className="p-6">
-                                <div className="text-gray-700 whitespace-pre-wrap">{lesson.lesson_description}</div>
+                                <div className="lesson-readable-text text-gray-700 whitespace-pre-wrap">{lesson.lesson_description}</div>
                             </div>
                         </div>
                     </div>
@@ -169,7 +201,7 @@ export default function LessonsShow({ lesson, completion_records = [] }) {
                             </div>
                             <div className="p-6">
                                 <div className="prose prose-blue max-w-none text-gray-700">
-                                    <div dangerouslySetInnerHTML={{ __html: lesson.lesson_content }} />
+                                    <div className="lesson-readable-text" dangerouslySetInnerHTML={{ __html: lesson.lesson_content }} />
                                 </div>
                             </div>
                         </div>
@@ -182,7 +214,7 @@ export default function LessonsShow({ lesson, completion_records = [] }) {
                                     <h3 className="text-sm font-semibold text-gray-700">Key Takeaways</h3>
                                 </div>
                                 <div className="p-6">
-                                    <div className="text-gray-700 whitespace-pre-wrap">{lesson.key_takeaways}</div>
+                                    <div className="lesson-readable-text text-gray-700 whitespace-pre-wrap">{lesson.key_takeaways}</div>
                                 </div>
                             </div>
                         </div>

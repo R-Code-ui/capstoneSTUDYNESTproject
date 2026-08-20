@@ -79,9 +79,37 @@ export default function MessagesShow({ teacher, messages }) {
         >
             <Head title={`Conversation with ${teacher.name}`} />
 
-            <div className="py-12">
+            <div className="student-message-show py-12">
+                <style>{`
+                    .student-message-show .student-message-thread { background: #ffffff; }
+                    .student-message-show .student-message-thread textarea { overflow-wrap: anywhere; }
+                    .student-message-show .student-chat-text { overflow-wrap: anywhere; word-break: break-word; }
+                    .studynest-layout.theme-dark .student-message-show .student-message-thread {
+                        background: #0f172a !important;
+                        border-color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .student-message-show .student-message-thread textarea {
+                        background: #1e293b !important;
+                        border-color: #475569 !important;
+                        color: #e2e8f0 !important;
+                    }
+                    .studynest-layout.theme-dark .student-message-show .student-message-thread textarea::placeholder { color: #94a3b8 !important; }
+                    .student-message-show .student-message-thread .student-incoming-message {
+                        background: #f1f5f9 !important;
+                        color: #1e293b !important;
+                    }
+                    .studynest-layout.theme-dark .student-message-show .student-message-thread .student-incoming-message {
+                        background: #334155 !important;
+                        color: #f1f5f9 !important;
+                    }
+                    @media (max-width: 640px) {
+                        .student-message-show { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+                        .student-message-show .student-message-thread > div { padding: 1rem; }
+                        .student-message-show .student-message-thread textarea { min-width: 0; }
+                    }
+                `}</style>
                 <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="student-message-thread bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-6">
                             {/* ===== Thread ===== */}
                             <div className="overflow-y-auto px-1 py-2 max-h-[55vh] min-h-[300px]">

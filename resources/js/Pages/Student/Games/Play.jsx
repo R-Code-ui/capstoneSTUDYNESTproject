@@ -241,7 +241,47 @@ export default function GamesPlay({ result, game, preview = false }) {
             <Head title={`Playing: ${game.title}`} />
             {isSubmitting && <LoadingSpinner overlay size="lg" text="Saving your progress..." />}
 
-            <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-sky-50 to-amber-50 py-8">
+            <style>{`
+                .studynest-layout.theme-dark .student-game-play-stage {
+                    background: #020617 !important;
+                }
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface {
+                    background: rgba(255, 255, 255, .92) !important;
+                    border-color: rgba(255, 255, 255, .8) !important;
+                    color: #0f172a !important;
+                }
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .bg-white {
+                    background-color: #ffffff !important;
+                }
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .bg-white\/50,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .bg-white\/60,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .bg-white\/90 {
+                    background-color: rgba(255, 255, 255, .92) !important;
+                }
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .text-slate-900,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .text-gray-900,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .text-gray-800,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .text-gray-700 {
+                    color: #1e293b !important;
+                }
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .text-slate-600,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .text-gray-600,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface .text-gray-500 {
+                    color: #64748b !important;
+                }
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface input,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface textarea,
+                .studynest-layout.theme-dark .student-game-play-stage .student-game-surface select {
+                    color: #1e293b !important;
+                    background-color: #ffffff !important;
+                }
+                @media (max-width: 640px) {
+                    .student-game-play-stage { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+                    .student-game-play-stage .student-game-surface { border-radius: 1.25rem !important; padding: 1rem !important; }
+                }
+            `}</style>
+
+            <div className="student-game-play-stage relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-sky-50 to-amber-50 py-8">
                 <div className="pointer-events-none absolute left-0 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-200/40 blur-3xl" />
                 <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 translate-x-1/3 translate-y-1/3 rounded-full bg-cyan-200/40 blur-3xl" />
                 <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

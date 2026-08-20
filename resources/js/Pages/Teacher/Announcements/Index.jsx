@@ -124,15 +124,6 @@ export default function AnnouncementsIndex({
             ),
         },
         {
-            key: 'category',
-            label: 'Category',
-            render: (row) => (
-                <div className="max-w-[80px] truncate" title={row.category}>
-                    {row.category}
-                </div>
-            ),
-        },
-        {
             key: 'target_audience',
             label: 'Audience',
             render: (row) => (
@@ -179,15 +170,6 @@ export default function AnnouncementsIndex({
             render: (row) => <StatusBadge status={row.status} />,
         },
         {
-            key: 'view_count',
-            label: 'Views',
-            render: (row) => (
-                <div className="max-w-[50px] truncate" title={row.view_count}>
-                    {row.view_count}
-                </div>
-            ),
-        },
-        {
             key: 'created_at',
             label: 'Date Posted',
             render: (row) => (
@@ -208,11 +190,11 @@ export default function AnnouncementsIndex({
                     <button
                         key="view"
                         onClick={() => router.visit(route('teacher.announcements.show', row.id))}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                        aria-label="View announcement"
                         title="View"
                     >
                         <EyeIcon className="w-3.5 h-3.5" />
-                        View
                     </button>
                 );
 
@@ -221,11 +203,11 @@ export default function AnnouncementsIndex({
                     <button
                         key="edit"
                         onClick={() => router.visit(route('teacher.announcements.edit', row.id))}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                        aria-label="Edit announcement"
                         title="Edit"
                     >
                         <PencilSquareIcon className="w-3.5 h-3.5" />
-                        Edit
                     </button>
                 );
 
@@ -235,11 +217,11 @@ export default function AnnouncementsIndex({
                         <button
                             key="publish"
                             onClick={() => handlePublish(row)}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
+                            className="inline-flex h-8 w-8 items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
+                            aria-label="Publish announcement"
                             title="Publish"
                         >
                             <CheckCircleIcon className="w-3.5 h-3.5" />
-                            Publish
                         </button>
                     );
                 }
@@ -250,11 +232,11 @@ export default function AnnouncementsIndex({
                         <button
                             key="archive"
                             onClick={() => handleArchive(row)}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                        aria-label="Archive announcement"
                             title="Archive"
                         >
                             <ArchiveBoxIcon className="w-3.5 h-3.5" />
-                            Archive
                         </button>
                     );
                 }
@@ -264,11 +246,11 @@ export default function AnnouncementsIndex({
                     <button
                         key="delete"
                         onClick={() => handleDelete(row)}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                        aria-label="Delete announcement"
                         title="Delete"
                     >
                         <TrashIcon className="w-3.5 h-3.5" />
-                        Delete
                     </button>
                 );
 

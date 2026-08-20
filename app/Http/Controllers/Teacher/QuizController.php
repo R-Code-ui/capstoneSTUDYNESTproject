@@ -7,6 +7,7 @@ use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
@@ -19,7 +20,7 @@ class QuizController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('quiz.view');
+        Gate::authorize('viewAny', Quiz::class);
 
         $user = auth()->user();
 
@@ -30,8 +31,10 @@ class QuizController extends Controller
 
         $quizzes = Quiz::where('teacher_id', $user->id)
             ->when($search, function ($query, $search) {
-                return $query->where('quiz_title', 'like', "%{$search}%")
-                    ->orWhere('subject', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('quiz_title', 'like', "%{$search}%")
+                        ->orWhere('subject', 'like', "%{$search}%");
+                });
             })
             ->when($statusFilter, function ($query, $status) {
                 return $query->where('status', $status);
@@ -93,13 +96,15 @@ class QuizController extends Controller
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
 
-        $lessons = Lesson::where('teacher_id', $user->id)->get()->map(function ($lesson) {
+        $lessons = Lesson::where('teacher_id', $user->id)
+            ->where('status', '!=', 'archived')
+            ->get()->map(function ($lesson) {
             return [
                 'id' => $lesson->id,
                 'title' => $lesson->lesson_title,
@@ -127,11 +132,19 @@ class QuizController extends Controller
         Gate::authorize('quiz.create');
 
         $validated = $request->validate([
-            'grade_level' => 'required|string',
-            'subject' => 'required|string',
-            'school_year' => 'required|string',
-            'trimester' => 'required|string',
-            'week_number' => 'required|string',
+            'grade_level' => ['required', 'string', 'in:' . implode(',', auth()->user()->gradeAssignments()->pluck('grade_level')->all())],
+            'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
+            'school_year' => 'required|string|in:' . implode(',', config('school.school_years')),
+            'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
+            'week_number' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (!preg_match('/^Week ([1-9]|1[0-2])$/', $value)) {
+                        $fail('The week number must be between Week 1 and Week 12.');
+                    }
+                },
+            ],
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'quiz_title' => 'required|string|max:255',
             'quiz_type' => 'required|in:multiple_choice,identification,true_false',
@@ -141,7 +154,7 @@ class QuizController extends Controller
             'attempts_allowed' => 'required|integer|min:1|max:10',   // ✅ allow up to 10 practice attempts
             'shuffle_questions' => 'boolean',
             'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
+            'publish_date' => 'nullable|date',
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
             'questions.*.choice_a' => 'nullable|string',
@@ -152,17 +165,24 @@ class QuizController extends Controller
             'questions.*.alternative_answers' => 'nullable|array',
         ]);
 
+        if (!empty($validated['related_lesson_id']) && !Lesson::whereKey($validated['related_lesson_id'])
+            ->where('teacher_id', auth()->id())
+            ->where('grade_level', $validated['grade_level'])
+            ->exists()) {
+            return back()->withErrors(['related_lesson_id' => 'The selected lesson must belong to you and the selected grade level.'])->withInput();
+        }
+
+        $questionData = $validated['questions'];
+        unset($validated['questions'], $validated['total_questions']);
+
+        DB::transaction(function () use (&$quiz, $validated, $questionData) {
         $quiz = Quiz::create([
             'teacher_id' => auth()->id(),
-            'total_questions' => count($validated['questions']),
+            'total_questions' => count($questionData),
             'attempts_allowed' => $validated['attempts_allowed'],   // ✅ use user input
             'shuffle_questions' => $validated['shuffle_questions'] ?? false,
             ...$validated,
         ]);
-
-        if ($quiz->status === 'published') {
-            app(StudyNestNotificationService::class)->quizPublished($quiz);
-        }
 
         ActivityLog::create([
             'user_id'             => auth()->id(),
@@ -172,19 +192,24 @@ class QuizController extends Controller
             'related_module'      => 'Quiz Module',
         ]);
 
-        foreach ($validated['questions'] as $index => $questionData) {
+        foreach ($questionData as $index => $question) {
             QuizQuestion::create([
                 'quiz_id' => $quiz->id,
                 'question_number' => $index + 1,
-                'question_text' => $questionData['question_text'],
+                'question_text' => $question['question_text'],
                 'question_type' => $quiz->quiz_type,
-                'choice_a' => $questionData['choice_a'] ?? null,
-                'choice_b' => $questionData['choice_b'] ?? null,
-                'choice_c' => $questionData['choice_c'] ?? null,
-                'choice_d' => $questionData['choice_d'] ?? null,
-                'correct_answer' => $questionData['correct_answer'],
-                'alternative_answers' => isset($questionData['alternative_answers']) ? json_encode($questionData['alternative_answers']) : null,
+                'choice_a' => $question['choice_a'] ?? null,
+                'choice_b' => $question['choice_b'] ?? null,
+                'choice_c' => $question['choice_c'] ?? null,
+                'choice_d' => $question['choice_d'] ?? null,
+                'correct_answer' => $question['correct_answer'],
+                'alternative_answers' => isset($question['alternative_answers']) ? json_encode($question['alternative_answers']) : null,
             ]);
+        }
+        });
+
+        if ($quiz->status === 'published') {
+            app(StudyNestNotificationService::class)->quizPublished($quiz);
         }
 
         return redirect()->route('teacher.quizzes.index')
@@ -196,7 +221,7 @@ class QuizController extends Controller
      */
     public function show(Quiz $quiz)
     {
-        Gate::authorize('quiz.view');
+        Gate::authorize('view', $quiz);
 
         $quiz->load('questions');
 
@@ -241,20 +266,22 @@ class QuizController extends Controller
      */
     public function edit(Quiz $quiz)
     {
-        Gate::authorize('quiz.edit');
+        Gate::authorize('update', $quiz);
 
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $subjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
-        $schoolYears = ['SY 2026-2027', 'SY 2027-2028'];
+        $schoolYears = config('school.school_years');
         $statuses = ['draft', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
 
-        $lessons = Lesson::where('teacher_id', $user->id)->get()->map(function ($lesson) {
+        $lessons = Lesson::where('teacher_id', $user->id)
+            ->where('status', '!=', 'archived')
+            ->get()->map(function ($lesson) {
             return [
                 'id' => $lesson->id,
                 'title' => $lesson->lesson_title,
@@ -305,6 +332,7 @@ class QuizController extends Controller
             'weeks' => $weeks,
             'related_lessons' => $lessons,
         ]);
+
     }
 
     /**
@@ -312,14 +340,26 @@ class QuizController extends Controller
      */
     public function update(Request $request, Quiz $quiz)
     {
-        Gate::authorize('quiz.edit');
+        Gate::authorize('update', $quiz);
+
+        if ($quiz->attempts()->exists()) {
+            return back()->withErrors(['quiz' => 'This quiz cannot be edited after a student has attempted it because historical results depend on its questions.']);
+        }
 
         $validated = $request->validate([
-            'grade_level' => 'required|string',
-            'subject' => 'required|string',
-            'school_year' => 'required|string',
-            'trimester' => 'required|string',
-            'week_number' => 'required|string',
+            'grade_level' => ['required', 'string', 'in:' . implode(',', auth()->user()->gradeAssignments()->pluck('grade_level')->all())],
+            'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
+            'school_year' => 'required|string|in:' . implode(',', config('school.school_years')),
+            'trimester' => 'required|string|in:1st Term,2nd Term,3rd Term',
+            'week_number' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (!preg_match('/^Week ([1-9]|1[0-2])$/', $value)) {
+                        $fail('The week number must be between Week 1 and Week 12.');
+                    }
+                },
+            ],
             'related_lesson_id' => 'nullable|exists:lessons,id',
             'quiz_title' => 'required|string|max:255',
             'quiz_type' => 'required|in:multiple_choice,identification,true_false',
@@ -329,7 +369,7 @@ class QuizController extends Controller
             'attempts_allowed' => 'required|integer|min:1|max:10',   // ✅ allow up to 10
             'shuffle_questions' => 'boolean',
             'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
+            'publish_date' => 'nullable|date',
             'questions' => 'required|array|min:1',
             'questions.*.id' => 'nullable|exists:quiz_questions,id',
             'questions.*.question_text' => 'required|string',
@@ -341,16 +381,25 @@ class QuizController extends Controller
             'questions.*.alternative_answers' => 'nullable|array',
         ]);
 
+        if (!empty($validated['related_lesson_id']) && !Lesson::whereKey($validated['related_lesson_id'])
+            ->where('teacher_id', auth()->id())
+            ->where('grade_level', $validated['grade_level'])
+            ->exists()) {
+            return back()->withErrors(['related_lesson_id' => 'The selected lesson must belong to you and the selected grade level.'])->withInput();
+        }
+
+        $questionData = $validated['questions'];
+        unset($validated['questions'], $validated['total_questions']);
+        $validated['total_questions'] = count($questionData);
+        $wasPublished = $quiz->status === 'published';
+
+        DB::transaction(function () use ($quiz, $validated, $questionData) {
         $quiz->update([
-            'total_questions' => count($validated['questions']),
+            'total_questions' => count($questionData),
             'attempts_allowed' => $validated['attempts_allowed'],   // ✅ use input
             'shuffle_questions' => $validated['shuffle_questions'] ?? false,
             ...$validated,
         ]);
-
-        if ($quiz->wasChanged('status') && $quiz->status === 'published') {
-            app(StudyNestNotificationService::class)->quizPublished($quiz);
-        }
 
         ActivityLog::create([
             'user_id'             => auth()->id(),
@@ -362,19 +411,24 @@ class QuizController extends Controller
 
         $quiz->questions()->delete();
 
-        foreach ($validated['questions'] as $index => $questionData) {
+        foreach ($questionData as $index => $question) {
             QuizQuestion::create([
                 'quiz_id' => $quiz->id,
                 'question_number' => $index + 1,
-                'question_text' => $questionData['question_text'],
+                'question_text' => $question['question_text'],
                 'question_type' => $quiz->quiz_type,
-                'choice_a' => $questionData['choice_a'] ?? null,
-                'choice_b' => $questionData['choice_b'] ?? null,
-                'choice_c' => $questionData['choice_c'] ?? null,
-                'choice_d' => $questionData['choice_d'] ?? null,
-                'correct_answer' => $questionData['correct_answer'],
-                'alternative_answers' => isset($questionData['alternative_answers']) ? json_encode($questionData['alternative_answers']) : null,
+                'choice_a' => $question['choice_a'] ?? null,
+                'choice_b' => $question['choice_b'] ?? null,
+                'choice_c' => $question['choice_c'] ?? null,
+                'choice_d' => $question['choice_d'] ?? null,
+                'correct_answer' => $question['correct_answer'],
+                'alternative_answers' => isset($question['alternative_answers']) ? json_encode($question['alternative_answers']) : null,
             ]);
+        }
+        });
+
+        if (!$wasPublished && $quiz->status === 'published') {
+            app(StudyNestNotificationService::class)->quizPublished($quiz);
         }
 
         return redirect()->route('teacher.quizzes.index')
@@ -386,7 +440,8 @@ class QuizController extends Controller
      */
     public function destroy(Quiz $quiz)
     {
-        Gate::authorize('quiz.delete');
+        Gate::authorize('delete', $quiz);
+        app(StudyNestNotificationService::class)->forgetFor('quiz', $quiz->id);
 
         ActivityLog::create([
             'user_id'             => auth()->id(),
@@ -396,9 +451,11 @@ class QuizController extends Controller
             'related_module'      => 'Quiz Module',
         ]);
 
-        $quiz->questions()->delete();
-        $quiz->attempts()->delete();
-        $quiz->delete();
+        DB::transaction(function () use ($quiz) {
+            $quiz->questions()->delete();
+            $quiz->attempts()->delete();
+            $quiz->delete();
+        });
 
         return redirect()->route('teacher.quizzes.index')
             ->with('success', 'Quiz deleted successfully!');
@@ -409,12 +466,18 @@ class QuizController extends Controller
      */
     public function publish(Quiz $quiz)
     {
-        Gate::authorize('quiz.edit');
+        Gate::authorize('update', $quiz);
+
+        $wasPublished = $quiz->status === 'published';
 
         $quiz->update([
             'status' => 'published',
             'publish_date' => now()->format('Y-m-d'),
         ]);
+
+        if (!$wasPublished) {
+            app(StudyNestNotificationService::class)->quizPublished($quiz);
+        }
 
         ActivityLog::create([
             'user_id'             => auth()->id(),

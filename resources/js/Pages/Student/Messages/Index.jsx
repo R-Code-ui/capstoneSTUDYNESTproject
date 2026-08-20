@@ -74,9 +74,54 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
         >
             <Head title="Messages" />
 
-            <div className="py-12">
+            <div className="student-messages-index py-12">
+                <style>{`
+                    .student-messages-index .student-messages-shell {
+                        background: #ffffff;
+                    }
+                    .student-messages-index .student-message-card {
+                        color: #1e293b;
+                    }
+                    .studynest-layout.theme-dark .student-messages-index .student-messages-shell {
+                        background: #0f172a !important;
+                        border-color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="0"] {
+                        background: linear-gradient(135deg, #dbeafe, #fce7f3) !important;
+                    }
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="1"] {
+                        background: linear-gradient(135deg, #ffedd5, #fef3c7) !important;
+                    }
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="2"] {
+                        background: linear-gradient(135deg, #ede9fe, #fce7f3) !important;
+                    }
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="3"] {
+                        background: linear-gradient(135deg, #d1fae5, #dbeafe) !important;
+                    }
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="4"] {
+                        background: linear-gradient(135deg, #fef3c7, #ffe4e6) !important;
+                    }
+                    .student-messages-index .student-message-card .text-gray-900,
+                    .student-messages-index .student-message-card .text-gray-800,
+                    .student-messages-index .student-message-card .text-gray-700 {
+                        color: #1e293b !important;
+                    }
+                    .student-messages-index .student-message-card .text-gray-500,
+                    .student-messages-index .student-message-card .text-gray-400 {
+                        color: #64748b !important;
+                    }
+                    .student-messages-index .student-message-card button:hover {
+                        background-color: rgb(255 255 255 / 0.24) !important;
+                    }
+                    @media (max-width: 640px) {
+                        .student-messages-index { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+                        .student-messages-index .student-messages-shell { border-radius: 0.75rem; }
+                        .student-messages-index .student-message-card button { gap: 0.65rem; padding: 0.75rem; }
+                        .student-messages-index .student-message-card button > div:nth-child(2) { min-width: 0; }
+                    }
+                `}</style>
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="student-messages-shell bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             <div className="mb-4">
                                 <SearchBar
@@ -111,7 +156,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                         return (
                                             <div key={conv.teacher_id} className="flex items-center">
                                                 <div className="flex-1 min-w-0">
-                                                    <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden`}>
+                                                    <div data-message-tone={index % GRADIENT_COLORS.length} className={`student-message-card bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden`}>
                                                         <ConversationListItem
                                                             conversation={conv}
                                                             onClick={() =>
