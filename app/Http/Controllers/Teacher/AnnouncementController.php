@@ -103,6 +103,8 @@ class AnnouncementController extends Controller
                     'posted_by' => $announcement->user_role === 'principal' ? 'Principal' : 'Teacher', // ✅ ADDED
                     'posted_by_name' => $announcement->user->name ?? 'Unknown',
                     'is_principal' => $announcement->user_role === 'principal', // ✅ ADDED
+                    'can_modify' => $announcement->user_role === 'teacher'
+                        && $announcement->user_id === auth()->id(),
                 ];
             }),
             'assigned_grades' => $assignedGrades,
@@ -201,7 +203,7 @@ class AnnouncementController extends Controller
      */
     public function show(Announcement $announcement)
     {
-        Gate::authorize('announcement.view', $announcement);
+        Gate::authorize('view', $announcement);
 
         $announcement->load('user');
 
@@ -222,6 +224,8 @@ class AnnouncementController extends Controller
                 'posted_by' => $announcement->user_role === 'principal' ? 'Principal' : 'Teacher',
                 'posted_by_name' => $announcement->user->name,
                 'is_principal' => $announcement->user_role === 'principal',
+                'can_modify' => $announcement->user_role === 'teacher'
+                    && $announcement->user_id === auth()->id(),
             ],
         ]);
     }
@@ -231,7 +235,7 @@ class AnnouncementController extends Controller
      */
     public function edit(Announcement $announcement)
     {
-        Gate::authorize('announcement.edit', $announcement);
+        Gate::authorize('update', $announcement);
 
         $user = auth()->user();
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
@@ -264,7 +268,7 @@ class AnnouncementController extends Controller
      */
     public function update(Request $request, Announcement $announcement)
     {
-        Gate::authorize('announcement.edit', $announcement);
+        Gate::authorize('update', $announcement);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -312,7 +316,7 @@ class AnnouncementController extends Controller
      */
     public function destroy(Announcement $announcement)
     {
-        Gate::authorize('announcement.delete', $announcement);
+        Gate::authorize('delete', $announcement);
         app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
 
         // Log announcement deletion
@@ -335,7 +339,7 @@ class AnnouncementController extends Controller
      */
     public function publish(Announcement $announcement)
     {
-        Gate::authorize('announcement.edit', $announcement);
+        Gate::authorize('update', $announcement);
 
         $wasPublished = $announcement->status === 'published';
 
@@ -365,7 +369,7 @@ class AnnouncementController extends Controller
      */
     public function archive(Announcement $announcement)
     {
-        Gate::authorize('announcement.edit', $announcement);
+        Gate::authorize('update', $announcement);
 
         $announcement->update(['status' => 'archived']);
 

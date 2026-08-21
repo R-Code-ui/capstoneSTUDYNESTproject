@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -157,10 +157,22 @@ function prepareGameContent(definition, game, attemptId) {
     return content;
 }
 
+function sanitizeProgress(progress, content) {
+    if (!progress || typeof progress !== 'object' || Array.isArray(progress)) return null;
+
+    const safeProgress = { ...progress };
+    if (Array.isArray(content?.rounds) && Number.isInteger(safeProgress.roundIndex)) {
+        safeProgress.roundIndex = Math.min(Math.max(safeProgress.roundIndex, 0), content.rounds.length - 1);
+    }
+
+    return safeProgress;
+}
+
 export default function GamesPlay({ result, game, preview = false }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewComplete, setPreviewComplete] = useState(false);
-    const [currentProgress, setCurrentProgress] = useState(result.progress_data || null);
+    const isLeavingRef = useRef(false);
+    const isCompletingRef = useRef(false);
 
     const definition = gameDefinitions[game.title];
     const EngineComponent = ENGINE_MAP[game.title];
@@ -168,6 +180,12 @@ export default function GamesPlay({ result, game, preview = false }) {
         () => (definition ? prepareGameContent(definition, game, result.id) : null),
         [definition, game, result.id]
     );
+    const safeInitialProgress = useMemo(() => sanitizeProgress(result.progress_data, gameContent), [result.progress_data, gameContent]);
+    const [currentProgress, setCurrentProgress] = useState(safeInitialProgress);
+
+    useEffect(() => () => {
+        isLeavingRef.current = true;
+    }, []);
 
     const particles = [
         { emoji: '👾', left: '3%', duration: '14s', delay: '0s', size: '28px' },
@@ -187,6 +205,7 @@ export default function GamesPlay({ result, game, preview = false }) {
     const handleProgress = (progress) => setCurrentProgress(progress);
 
     const handleExit = () => {
+        isLeavingRef.current = true;
         if (preview) {
             router.visit(route('teacher.games.show', game.id));
             return;
@@ -203,6 +222,8 @@ export default function GamesPlay({ result, game, preview = false }) {
     };
 
     const handleComplete = (score) => {
+        if (isLeavingRef.current || isCompletingRef.current) return;
+        isCompletingRef.current = true;
         if (preview) {
             setPreviewComplete(true);
             return;
@@ -296,7 +317,7 @@ export default function GamesPlay({ result, game, preview = false }) {
                             onComplete={handleComplete}
                             onExit={handleExit}
                             onProgress={handleProgress}
-                            initialState={result.progress_data}
+                            initialState={safeInitialProgress}
                         />
                     </div>
                 </div>

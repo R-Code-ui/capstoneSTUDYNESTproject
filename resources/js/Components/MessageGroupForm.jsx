@@ -45,6 +45,20 @@ export default function MessageGroupForm({ group = null, students = [], subjects
         <AuthenticatedLayout header={<span className="text-xl font-semibold text-gray-800">{editing ? 'Edit Group' : 'Create Group'}</span>}>
             <Head title={editing ? 'Edit Group' : 'Create Group'} />
             <style>{`
+                /* Keep form controls readable when the application is in light mode. */
+                .message-group-form textarea,
+                .message-group-form select {
+                    background-color: rgb(255 255 255) !important;
+                    color: rgb(31 41 55) !important;
+                    border-color: rgb(209 213 219) !important;
+                }
+                .message-group-form textarea::placeholder {
+                    color: rgb(156 163 175) !important;
+                }
+                .message-group-form option {
+                    background-color: rgb(255 255 255);
+                    color: rgb(31 41 55);
+                }
                 .studynest-layout.theme-dark .message-group-form input:not([type="checkbox"]),
                 .studynest-layout.theme-dark .message-group-form select,
                 .studynest-layout.theme-dark .message-group-form textarea {
@@ -81,13 +95,13 @@ export default function MessageGroupForm({ group = null, students = [], subjects
 
                     <div>
                         <InputLabel htmlFor="description" value="Description (optional)" />
-                        <textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                        <textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} rows={3} className="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-800 placeholder:text-gray-400 shadow-sm" />
                         <InputError message={errors.description} className="mt-1" />
                     </div>
 
                     <div>
                         <InputLabel htmlFor="subject_id" value="Related subject (optional)" />
-                        <select id="subject_id" value={data.subject_id} onChange={(e) => setData('subject_id', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <select id="subject_id" value={data.subject_id} onChange={(e) => setData('subject_id', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-800 shadow-sm">
                             <option value="">No subject</option>
                             {subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.grade_level} · {subject.name}</option>)}
                         </select>

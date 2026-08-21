@@ -42,8 +42,13 @@ export default function PrincipalDashboard({
     recent_announcements,
     academic_summary
 }) {
+    const shortenChartLabel = (value, maxLength = 12) => {
+        const label = String(value || 'Teacher');
+        return label.length > maxLength ? `${label.slice(0, maxLength)}…` : label;
+    };
+
     const teacherChartData = (teacher_activity || []).slice(0, 8).map((teacher) => ({
-        name: teacher.name?.split(' ')[0] || 'Teacher',
+        name: shortenChartLabel(teacher.name?.split(' ')[0], 10),
         Lessons: Number(teacher.lessons_count || 0),
         Assignments: Number(teacher.assignments_count || 0),
         Quizzes: Number(teacher.quizzes_count || 0),
@@ -169,7 +174,7 @@ export default function PrincipalDashboard({
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                                 <div className="p-4 bg-amber-50 dark:bg-amber-400/10 rounded-lg border border-amber-200 dark:border-amber-400/20">
                                     <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">Most Active Teacher</span>
-                                    <div className="text-base font-bold text-amber-900 dark:text-amber-100 mt-0.5">
+                                    <div className="mt-0.5 block max-w-[240px] truncate text-base font-bold text-amber-900 dark:text-amber-100" title={most_active_teacher?.name || 'N/A'}>
                                         {most_active_teacher ? most_active_teacher.name : 'N/A'}
                                     </div>
                                 </div>
@@ -203,11 +208,15 @@ export default function PrincipalDashboard({
                                         ) : (
                                             teacher_activity.slice(0, 5).map((teacher, index) => (
                                                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
-                                                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{teacher.name}</td>
+                                                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                                        <span className="block max-w-[180px] truncate" title={teacher.name || ''}>{teacher.name || '—'}</span>
+                                                    </td>
                                                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{teacher.lessons_count}</td>
                                                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{teacher.assignments_count}</td>
                                                     <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{teacher.quizzes_count}</td>
-                                                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{teacher.last_activity}</td>
+                                                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
+                                                        <span className="block max-w-[180px] truncate" title={teacher.last_activity || ''}>{teacher.last_activity || '—'}</span>
+                                                    </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <StatusBadge status={teacher.is_active ? 'active' : 'inactive'} />
                                                     </td>
@@ -282,10 +291,10 @@ export default function PrincipalDashboard({
                                     ) : (
                                         recent_announcements.map((announcement, index) => (
                                             <div key={index} className="pb-2 border-b border-gray-100 last:border-0 last:pb-0">
-                                                <div className="font-medium text-sm text-gray-800">{announcement.title}</div>
+                                                <div className="block max-w-[260px] truncate text-sm font-medium text-gray-800" title={announcement.title || ''}>{announcement.title || '—'}</div>
                                                 <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                                    <span>By {announcement.posted_by}</span>
-                                                    <span>{announcement.date}</span>
+                                                    <span className="max-w-[150px] truncate" title={announcement.posted_by || ''}>By {announcement.posted_by || '—'}</span>
+                                                    <span className="shrink-0">{announcement.date}</span>
                                                 </div>
                                             </div>
                                         ))
@@ -306,9 +315,9 @@ export default function PrincipalDashboard({
                             ) : (
                                 recent_activities.map((activity, index) => (
                                     <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm">
-                                        <div className="text-gray-600">
-                                            <span className="font-medium text-gray-800">{activity.teacher}</span>
-                                            <span className="text-gray-500"> {activity.action}</span>
+                                        <div className="min-w-0 max-w-[calc(100%-7rem)] truncate text-gray-600" title={`${activity.teacher || ''} ${activity.action || ''}`}>
+                                            <span className="font-medium text-gray-800">{activity.teacher || '—'}</span>
+                                            <span className="text-gray-500"> {activity.action || ''}</span>
                                         </div>
                                         <span className="text-xs text-gray-400 shrink-0 ml-2">{activity.date}</span>
                                     </div>

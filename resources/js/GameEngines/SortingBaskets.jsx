@@ -144,7 +144,7 @@ export default function SortingBaskets({ content, onComplete, onExit, onProgress
                             />
                         ))}
                     </div>
-                    <div className="flex gap-6">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                         <Basket id="basket-A" label={round.basketA} count={basketACount} onClick={() => selectedItem && placeItem(selectedItem, round.basketA)} active={selectedItem !== null} />
                         <Basket id="basket-B" label={round.basketB} count={basketBCount} onClick={() => selectedItem && placeItem(selectedItem, round.basketB)} active={selectedItem !== null} />
                     </div>

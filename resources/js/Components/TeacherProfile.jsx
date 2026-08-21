@@ -11,17 +11,17 @@ export default function TeacherProfile({ teacher }) {
         <div className="space-y-6">
             {/* ===== Basic Information ===== */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
+                <div className="min-w-0">
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Teacher Name</div>
-                    <div className="font-medium text-gray-800">{teacher.name}</div>
+                    <div className="truncate font-medium text-gray-800" title={teacher.name || ''}>{teacher.name || '—'}</div>
                 </div>
-                <div>
+                <div className="min-w-0">
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Teacher ID</div>
-                    <div className="font-medium text-gray-800">{teacher.teacher_id}</div>
+                    <div className="truncate font-medium text-gray-800" title={teacher.teacher_id || ''}>{teacher.teacher_id || '—'}</div>
                 </div>
-                <div>
+                <div className="min-w-0">
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Assigned Grades</div>
-                    <div className="font-medium text-gray-800">{teacher.grades?.join(', ') || 'None'}</div>
+                    <div className="truncate font-medium text-gray-800" title={teacher.grades?.join(', ') || 'None'}>{teacher.grades?.join(', ') || 'None'}</div>
                 </div>
                 <div>
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Status</div>

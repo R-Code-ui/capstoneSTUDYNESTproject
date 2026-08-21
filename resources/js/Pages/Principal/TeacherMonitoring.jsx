@@ -66,8 +66,24 @@ export default function TeacherMonitoring({
     );
 
     const columns = [
-        { key: 'name', label: 'Teacher' },
-        { key: 'grades', label: 'Grade Handled', render: (row) => row.grades?.join(', ') || 'None' },
+        {
+            key: 'name',
+            label: 'Teacher',
+            render: (row) => (
+                <span className="block max-w-[180px] truncate" title={row.name || ''}>
+                    {row.name || '—'}
+                </span>
+            ),
+        },
+        {
+            key: 'grades',
+            label: 'Grade Handled',
+            render: (row) => (
+                <span className="block max-w-[120px] truncate" title={row.grades?.join(', ') || 'None'}>
+                    {row.grades?.join(', ') || 'None'}
+                </span>
+            ),
+        },
         {
             key: 'lessons_count',
             label: 'Lessons',

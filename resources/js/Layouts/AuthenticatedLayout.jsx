@@ -231,6 +231,40 @@ export default function AuthenticatedLayout({ header, children }) {
                     background-color: rgb(226 232 240) !important;
                     color: rgb(51 65 85) !important;
                 }
+                .studynest-layout.theme-dark .notification-priority-badge {
+                    background-color: rgb(51 65 85) !important;
+                    color: rgb(203 213 225) !important;
+                }
+                .studynest-layout.theme-dark .notification-priority-badge.bg-rose-100 {
+                    background-color: rgb(127 29 29) !important;
+                    color: rgb(254 202 202) !important;
+                }
+                .studynest-layout.theme-dark .notification-priority-badge.bg-amber-100 {
+                    background-color: rgb(120 53 15) !important;
+                    color: rgb(253 230 138) !important;
+                }
+                .studynest-layout.theme-dark .notification-priority-badge.bg-sky-100 {
+                    background-color: rgb(7 89 133) !important;
+                    color: rgb(186 230 253) !important;
+                }
+                .studynest-layout.theme-dark .notification-new-badge {
+                    background-color: rgb(49 46 129) !important;
+                    color: rgb(199 210 254) !important;
+                }
+                .studynest-layout.theme-dark .notification-center-list {
+                    background-color: rgb(15 23 42) !important;
+                    border-color: rgb(51 65 85) !important;
+                }
+                .studynest-layout.theme-dark .notification-center-page .bg-indigo-50\/40,
+                .studynest-layout.theme-dark .notification-dropdown .bg-indigo-50\/50 {
+                    background-color: rgb(30 41 59 / 0.7) !important;
+                }
+                .studynest-layout.theme-dark .notification-action {
+                    color: rgb(165 180 252) !important;
+                }
+                .studynest-layout.theme-dark .notification-action:hover {
+                    color: rgb(199 210 254) !important;
+                }
                 @media (prefers-color-scheme: dark) {
                 .studynest-layout.theme-light .dark\\:bg-slate-950 { background-color: rgb(248 250 252) !important; }
                 .studynest-layout.theme-light .dark\\:bg-slate-900 { background-color: rgb(255 255 255) !important; }

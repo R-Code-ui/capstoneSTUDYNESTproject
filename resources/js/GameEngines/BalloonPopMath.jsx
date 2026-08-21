@@ -22,6 +22,8 @@ export default function BalloonPopMath({ content, onComplete, onExit, onProgress
     const [timeLeft, setTimeLeft] = useState(15);
     const timerRef = useRef(null);
     const finishedRef = useRef(false);
+    const correctTapsRef = useRef(initialState?.correctTaps ?? 0);
+    const wrongTapsRef = useRef(initialState?.wrongTaps ?? 0);
 
     const round = rounds[roundIndex];
 
@@ -58,9 +60,17 @@ export default function BalloonPopMath({ content, onComplete, onExit, onProgress
         setBalloons((prev) => prev.map((b) => (b.id === balloon.id ? { ...b, popped: true } : b)));
 
         if (balloon.isTarget) {
-            setCorrectTaps((c) => c + 1);
+            setCorrectTaps((current) => {
+                const next = current + 1;
+                correctTapsRef.current = next;
+                return next;
+            });
         } else {
-            setWrongTaps((w) => w + 1);
+            setWrongTaps((current) => {
+                const next = current + 1;
+                wrongTapsRef.current = next;
+                return next;
+            });
         }
     };
 
@@ -68,18 +78,20 @@ export default function BalloonPopMath({ content, onComplete, onExit, onProgress
         if (finishedRef.current) return;
         finishedRef.current = true;
         clearInterval(timerRef.current);
+        const currentCorrectTaps = correctTapsRef.current;
+        const currentWrongTaps = wrongTapsRef.current;
 
         if (roundIndex + 1 < rounds.length) {
             const next = roundIndex + 1;
             setRoundIndex(next);
             setBalloons(setupRound(rounds[next]));
-            updateProgress({ roundIndex: next, correctTaps, wrongTaps });
+            updateProgress({ roundIndex: next, correctTaps: currentCorrectTaps, wrongTaps: currentWrongTaps });
         } else {
             const totalTargets = rounds.reduce(
                 (sum, r) => sum + r.numbers.filter((n) => n === r.target).length,
                 0
             );
-            const rawScore = Math.max(0, correctTaps - wrongTaps);
+            const rawScore = Math.max(0, currentCorrectTaps - currentWrongTaps);
             const finalScore = totalTargets > 0 ? Math.round((rawScore / totalTargets) * 100) : 0;
             onComplete(Math.min(100, finalScore));
         }

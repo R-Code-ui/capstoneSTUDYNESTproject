@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import GameShell from './GameShell';
 
@@ -100,7 +100,7 @@ export default function AlphabeticalOrder({ content, onComplete, onExit, onProgr
 
                 <div className="w-full min-h-[100px] bg-violet-50 rounded-2xl border-2 border-dashed border-violet-200 flex items-center justify-center p-6">
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext items={items.map((i) => i.id)} strategy={horizontalListSortingStrategy}>
+                        <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
                             <div className="flex flex-wrap gap-3 justify-center">
                                 {items.map((item) => (
                                     <SortableLetter key={item.id} id={item.id} letter={item.letter} />

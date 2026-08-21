@@ -4,7 +4,7 @@ import GameShell from './GameShell';
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-function DraggableWord({ id, word, matched }) {
+function DraggableWord({ id, word, matched, selected, onClick }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: matched });
     const style = { transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined, zIndex: isDragging ? 50 : 1 };
 
@@ -16,19 +16,20 @@ function DraggableWord({ id, word, matched }) {
             {...listeners}
             {...attributes}
             disabled={matched}
-            className={`w-full px-5 py-4 rounded-2xl font-bold shadow-lg touch-none select-none ${matched ? 'bg-green-400 text-white cursor-default opacity-60' : 'bg-indigo-500 text-white cursor-grab active:cursor-grabbing border-b-4 border-indigo-700'}`}
+            onClick={onClick}
+            className={`w-full px-5 py-4 rounded-2xl font-bold shadow-lg touch-none select-none ${matched ? 'bg-green-400 text-white cursor-default opacity-60' : 'bg-indigo-500 text-white cursor-grab active:cursor-grabbing border-b-4 border-indigo-700'} ${selected ? 'ring-4 ring-indigo-200' : ''}`}
         >
             {word}
         </button>
     );
 }
 
-function DroppableTarget({ id, word, matched, wrong }) {
+function DroppableTarget({ id, word, matched, wrong, selected, onClick }) {
     const { setNodeRef, isOver } = useDroppable({ id, disabled: matched });
     return (
-        <div ref={setNodeRef} className={`w-full px-5 py-4 rounded-2xl border-4 border-dashed text-center font-bold flex items-center justify-center min-h-[64px] ${matched ? 'bg-green-50 border-green-300 text-green-700' : wrong ? 'bg-red-50 border-red-300 text-red-600' : isOver ? 'bg-indigo-50 border-indigo-400 text-indigo-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
+        <button type="button" ref={setNodeRef} disabled={matched} onClick={onClick} className={`w-full px-5 py-4 rounded-2xl border-4 border-dashed text-center font-bold flex items-center justify-center min-h-[64px] ${matched ? 'bg-green-50 border-green-300 text-green-700 cursor-default' : wrong ? 'bg-red-50 border-red-300 text-red-600' : isOver || selected ? 'bg-indigo-50 border-indigo-400 text-indigo-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
             {word}
-        </div>
+        </button>
     );
 }
 
@@ -38,6 +39,7 @@ export default function MatchTheMeaning({ content, onComplete, onExit, onProgres
     const [matchedWords, setMatchedWords] = useState(initialState?.matchedWords ?? []);
     const [wrongTarget, setWrongTarget] = useState(null);
     const [attempts, setAttempts] = useState(initialState?.attempts ?? 0);
+    const [selectedWord, setSelectedWord] = useState(null);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
 
@@ -73,20 +75,42 @@ export default function MatchTheMeaning({ content, onComplete, onExit, onProgres
         }
     };
 
+    const handleSelectTarget = (targetWord) => {
+        if (!selectedWord) return;
+        const pair = pairs.find((item) => item.word === selectedWord);
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        setSelectedWord(null);
+
+        if (pair?.match === targetWord) {
+            const newMatched = [...matchedWords, selectedWord];
+            setMatchedWords(newMatched);
+            updateProgress({ matchedWords: newMatched, attempts: newAttempts });
+            if (newMatched.length === pairs.length) {
+                const finalScore = Math.round((pairs.length / newAttempts) * 100);
+                setTimeout(() => onComplete(Math.min(100, finalScore)), 500);
+            }
+        } else {
+            setWrongTarget(targetWord);
+            setTimeout(() => setWrongTarget(null), 500);
+            updateProgress({ matchedWords, attempts: newAttempts });
+        }
+    };
+
     return (
         <GameShell title="Match the Meaning" description={content.description} onExit={onExit}>
-            <div className="max-w-2xl mx-auto p-6 bg-white rounded-3xl border border-indigo-100 shadow-xl">
+            <div className="max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-3xl border border-indigo-100 shadow-xl">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="grid grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8">
                         <div className="flex flex-col gap-4">
                             {pairs.map((p) => (
-                                <DraggableWord key={p.word} id={`word-${p.word}`} word={p.word} matched={matchedWords.includes(p.word)} />
+                                <DraggableWord key={p.word} id={`word-${p.word}`} word={p.word} matched={matchedWords.includes(p.word)} selected={selectedWord === p.word} onClick={() => !matchedWords.includes(p.word) && setSelectedWord(selectedWord === p.word ? null : p.word)} />
                             ))}
                         </div>
                         <div className="flex flex-col gap-4">
                             {rightOrder.map((w) => {
                                 const matchedPair = pairs.find((p) => p.match === w && matchedWords.includes(p.word));
-                                return <DroppableTarget key={w} id={`target-${w}`} word={w} matched={!!matchedPair} wrong={wrongTarget === w} />;
+                                return <DroppableTarget key={w} id={`target-${w}`} word={w} matched={!!matchedPair} wrong={wrongTarget === w} selected={selectedWord !== null} onClick={() => handleSelectTarget(w)} />;
                             })}
                         </div>
                     </div>

@@ -276,18 +276,44 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 .dark .studynest-page [class~="border-white"] {
                     border-color: #334155;
                 }
+                .dark .studynest-page [class~="border-amber-100"],
+                .dark .studynest-page [class~="border-rose-200"],
+                .dark .studynest-page [class~="border-emerald-200"],
+                .dark .studynest-page [class~="border-[#FFE0B2]"],
+                .dark .studynest-page [class~="border-[#B2DFDB]"],
+                .dark .studynest-page [class~="border-[#E1BEE7]"],
+                .dark .studynest-page [class~="border-[#BBDEFB]"],
+                .dark .studynest-page [class~="border-[#F8BBD0]"],
+                .dark .studynest-page [class~="border-[#FFF59D]"],
+                .dark .studynest-page [class~="border-blue-200"] {
+                    border-color: #334155;
+                }
+                .dark .studynest-page [class~="border-white/20"],
+                .dark .studynest-page [class~="border-white/25"] {
+                    border-color: rgb(148 163 184 / 0.28);
+                }
+                .dark .studynest-page [class~="bg-blue-100"],
+                .dark .studynest-page [class~="bg-[#FFE66D]"] {
+                    background-color: #1e3a8a;
+                }
+                .dark .studynest-page [class~="bg-[#FFFDE7]"] {
+                    background-color: #1e293b;
+                }
+                .dark .studynest-page [class~="text-blue-800"] {
+                    color: #bfdbfe;
+                }
                 .dark .studynest-page [class~="hover:bg-slate-50"]:hover,
                 .dark .studynest-page [class~="hover:bg-slate-100"]:hover {
                     background-color: #1e293b;
                 }
             `}</style>
 
-            <div className="studynest-page min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-950">
+            <div className="studynest-page relative min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-950">
 
                 {/* ========================================================= */}
                 {/* 100% STICKY TOP NAVIGATION BAR                            */}
                 {/* ========================================================= */}
-                <header className="sticky top-4 z-50 w-[calc(100%-2rem)] max-w-6xl mx-auto rounded-full bg-white/90 backdrop-blur-xl border border-white shadow-lg shadow-slate-900/10">
+                <header className="fixed left-1/2 top-6 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 rounded-full bg-white/90 backdrop-blur-xl border border-white shadow-lg shadow-slate-900/10">
                     <nav className="px-4 sm:px-6 lg:px-8 h-16 sm:h-[4.5rem] flex items-center justify-between">
 
                         {/* Brand Logo & Name */}
@@ -322,7 +348,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             <button
                                 type="button"
                                 onClick={() => setIsDarkMode((previous) => !previous)}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-400 dark:hover:text-blue-300"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                                 aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
                                 title={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
                             >
@@ -422,7 +448,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 {/* ========================================================= */}
                 {/* HERO SECTION                                              */}
                 {/* ========================================================= */}
-                <section id="home" className="studynest-hero relative w-full max-w-none mx-0 mt-8 sm:mt-10 min-h-screen flex flex-col justify-center overflow-hidden rounded-none z-10 scroll-mt-24">
+                <section id="home" className="studynest-hero relative w-full max-w-none mx-0 mt-0 min-h-screen flex flex-col justify-center overflow-hidden rounded-none z-10 scroll-mt-24">
 
                     {/* School background with a dark overlay for readable text */}
                     <div className="absolute inset-0 z-0">

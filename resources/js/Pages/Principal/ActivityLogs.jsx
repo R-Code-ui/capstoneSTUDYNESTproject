@@ -78,11 +78,27 @@ export default function ActivityLogs({
     ];
 
     const columns = [
-        { key: 'date_time', label: 'Date & Time' },
-        { key: 'user', label: 'User' },
+        {
+            key: 'date_time',
+            label: 'Date & Time',
+            render: (row) => <span className="block max-w-[110px] truncate" title={row.date_time || ''}>{row.date_time || '—'}</span>,
+        },
+        {
+            key: 'user',
+            label: 'User',
+            render: (row) => <span className="block max-w-[120px] truncate" title={row.user || ''}>{row.user || '—'}</span>,
+        },
         { key: 'role', label: 'Role' },
-        { key: 'activity', label: 'Activity' },
-        { key: 'module', label: 'Module' },
+        {
+            key: 'activity',
+            label: 'Activity',
+            render: (row) => <span className="block max-w-[320px] truncate" title={row.activity || ''}>{row.activity || '—'}</span>,
+        },
+        {
+            key: 'module',
+            label: 'Module',
+            render: (row) => <span className="block max-w-[120px] truncate" title={row.module || 'N/A'}>{row.module || 'N/A'}</span>,
+        },
     ];
 
     const actions = (row) => [
@@ -218,7 +234,7 @@ export default function ActivityLogs({
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <div className="text-sm text-gray-500">User</div>
-                                <div className="font-medium text-gray-800">{selectedLog.user}</div>
+                                <div className="max-w-[180px] truncate font-medium text-gray-800" title={selectedLog.user || ''}>{selectedLog.user || '—'}</div>
                             </div>
                             <div>
                                 <div className="text-sm text-gray-500">Role</div>
@@ -230,11 +246,11 @@ export default function ActivityLogs({
                             </div>
                             <div>
                                 <div className="text-sm text-gray-500">Module</div>
-                                <div className="font-medium text-gray-800">{selectedLog.module || 'N/A'}</div>
+                                <div className="max-w-[180px] truncate font-medium text-gray-800" title={selectedLog.module || 'N/A'}>{selectedLog.module || 'N/A'}</div>
                             </div>
                             <div className="col-span-2">
                                 <div className="text-sm text-gray-500">Activity Description</div>
-                                <div className="mt-1 rounded-xl border border-gray-200 bg-gray-50 p-3 font-medium text-gray-800">
+                                <div className="mt-1 max-h-32 overflow-y-auto break-words rounded-xl border border-gray-200 bg-gray-50 p-3 font-medium text-gray-800" title={selectedLog.activity || ''}>
                                     {selectedLog.activity}
                                 </div>
                             </div>

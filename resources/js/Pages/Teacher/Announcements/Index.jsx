@@ -198,61 +198,63 @@ export default function AnnouncementsIndex({
                     </button>
                 );
 
-                // Edit
-                actionButtons.push(
-                    <button
-                        key="edit"
-                        onClick={() => router.visit(route('teacher.announcements.edit', row.id))}
-                        className="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                        aria-label="Edit announcement"
-                        title="Edit"
-                    >
-                        <PencilSquareIcon className="w-3.5 h-3.5" />
-                    </button>
-                );
-
-                // Publish (only if draft)
-                if (row.status === 'draft') {
+                if (row.can_modify) {
+                    // Edit
                     actionButtons.push(
                         <button
-                            key="publish"
-                            onClick={() => handlePublish(row)}
-                            className="inline-flex h-8 w-8 items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
-                            aria-label="Publish announcement"
-                            title="Publish"
+                            key="edit"
+                            onClick={() => router.visit(route('teacher.announcements.edit', row.id))}
+                            className="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                            aria-label="Edit announcement"
+                            title="Edit"
                         >
-                            <CheckCircleIcon className="w-3.5 h-3.5" />
+                            <PencilSquareIcon className="w-3.5 h-3.5" />
+                        </button>
+                    );
+
+                    // Publish (only if draft)
+                    if (row.status === 'draft') {
+                        actionButtons.push(
+                            <button
+                                key="publish"
+                                onClick={() => handlePublish(row)}
+                                className="inline-flex h-8 w-8 items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
+                                aria-label="Publish announcement"
+                                title="Publish"
+                            >
+                                <CheckCircleIcon className="w-3.5 h-3.5" />
+                            </button>
+                        );
+                    }
+
+                    // Archive (only if not archived)
+                    if (row.status !== 'archived') {
+                        actionButtons.push(
+                            <button
+                                key="archive"
+                                onClick={() => handleArchive(row)}
+                                className="inline-flex h-8 w-8 items-center justify-center text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                                aria-label="Archive announcement"
+                                title="Archive"
+                            >
+                                <ArchiveBoxIcon className="w-3.5 h-3.5" />
+                            </button>
+                        );
+                    }
+
+                    // Delete
+                    actionButtons.push(
+                        <button
+                            key="delete"
+                            onClick={() => handleDelete(row)}
+                            className="inline-flex h-8 w-8 items-center justify-center text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                            aria-label="Delete announcement"
+                            title="Delete"
+                        >
+                            <TrashIcon className="w-3.5 h-3.5" />
                         </button>
                     );
                 }
-
-                // Archive (only if not archived)
-                if (row.status !== 'archived') {
-                    actionButtons.push(
-                        <button
-                            key="archive"
-                            onClick={() => handleArchive(row)}
-                        className="inline-flex h-8 w-8 items-center justify-center text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
-                        aria-label="Archive announcement"
-                            title="Archive"
-                        >
-                            <ArchiveBoxIcon className="w-3.5 h-3.5" />
-                        </button>
-                    );
-                }
-
-                // Delete
-                actionButtons.push(
-                    <button
-                        key="delete"
-                        onClick={() => handleDelete(row)}
-                        className="inline-flex h-8 w-8 items-center justify-center text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        aria-label="Delete announcement"
-                        title="Delete"
-                    >
-                        <TrashIcon className="w-3.5 h-3.5" />
-                    </button>
-                );
 
                 return (
                     <div className="flex flex-nowrap items-center gap-1">
@@ -267,7 +269,7 @@ export default function AnnouncementsIndex({
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">My Announcements</span>
+                    <span className="text-xl font-semibold leading-tight text-gray-800">Announcements</span>
                     <PrimaryButton onClick={() => router.visit(route('teacher.announcements.create'))}>
                         <PlusIcon className="w-4 h-4 mr-1" />
                         Create Announcement

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
-import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import GameShell from './GameShell';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -85,7 +85,7 @@ export default function SentenceScramble({ content, onComplete, onExit, onProgre
                 <p className="text-indigo-400 font-medium text-center">Drag and drop the words to unscramble the sentence!</p>
                 <div className="w-full min-h-[120px] bg-indigo-50 rounded-2xl border-2 border-dashed border-indigo-200 flex items-center justify-center p-6">
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext items={items.map((i) => i.id)} strategy={horizontalListSortingStrategy}>
+                        <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
                             <div className="flex flex-wrap gap-3 justify-center">
                                 {items.map((item) => (
                                     <SortableWord key={item.id} id={item.id} word={item.word} />

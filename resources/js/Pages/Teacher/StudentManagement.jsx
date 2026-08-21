@@ -132,9 +132,13 @@ export default function StudentManagement({
 
     const studentColumns = [
         { key: 'lrn', label: 'Student ID' },
-        { key: 'last_name', label: 'Last Name' },
-        { key: 'first_name', label: 'First Name' },
-        { key: 'middle_name', label: 'Middle Name' },
+        {
+            key: 'student_name',
+            label: 'Student Name',
+            render: (row) => [row.first_name, row.middle_name, row.last_name]
+                .filter(Boolean)
+                .join(' ') || 'â€”',
+        },
         { key: 'grade_level', label: 'Grade Level' },
         {
             key: 'gender',
@@ -145,9 +149,9 @@ export default function StudentManagement({
             key: 'is_active',
             label: 'Status',
             render: (row) => row.is_active ? (
-                <StatusBadge status="active" size="sm" showIcon={false} className="teacher-status-badge" />
+                <StatusBadge status="active" size="sm" showIcon={false} className="teacher-status-badge teacher-status-badge-active" />
             ) : (
-                <span className="teacher-status-badge inline-flex items-center rounded-full bg-gray-100 text-xs font-medium text-gray-800">
+                <span className="teacher-status-badge teacher-status-badge-inactive inline-flex items-center rounded-full bg-gray-100 text-xs font-medium text-gray-800">
                     INACTIVE
                 </span>
             ),
@@ -220,12 +224,22 @@ export default function StudentManagement({
 
             <style>{`
                 .teacher-status-badge {
-                    height: 24px !important;
-                    padding: 0 8px !important;
-                    font-size: 12px !important;
-                    line-height: 24px !important;
+                    display: inline-flex !important;
+                    width: 72px !important;
+                    box-sizing: border-box !important;
+                    height: 22px !important;
+                    min-height: 22px !important;
+                    padding: 0 6px !important;
+                    font-size: 11px !important;
+                    line-height: 1 !important;
+                    justify-content: center !important;
+                    white-space: nowrap !important;
                 }
-                .studynest-layout.theme-dark .teacher-status-badge {
+                .studynest-layout.theme-dark .teacher-status-badge-active {
+                    background-color: rgb(167 243 208) !important;
+                    color: rgb(6 78 59) !important;
+                }
+                .studynest-layout.theme-dark .teacher-status-badge-inactive {
                     background-color: rgb(203 213 225) !important;
                     color: rgb(30 41 59) !important;
                 }
@@ -236,23 +250,15 @@ export default function StudentManagement({
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters & Actions */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
-                                    <SearchBar
-                                        value={search}
-                                        onChange={handleSearch}
-                                        placeholder="Search students..."
-                                        size="md"
-                                    />
-                                </div>
-                                <div className="flex flex-wrap gap-3 items-center">
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
                                         onChange={handleGradeFilterChange}
                                         placeholder="Grade Level"
                                         size="md"
-                                        className="w-36"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={schoolYearOptions}
@@ -260,7 +266,7 @@ export default function StudentManagement({
                                         onChange={handleSchoolYearFilterChange}
                                         placeholder="School Year"
                                         size="md"
-                                        className="w-40"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={genderOptions}
@@ -268,7 +274,7 @@ export default function StudentManagement({
                                         onChange={handleGenderFilterChange}
                                         placeholder="Gender"
                                         size="md"
-                                        className="w-36"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={status_options}
@@ -276,7 +282,7 @@ export default function StudentManagement({
                                         onChange={handleStatusFilterChange}
                                         placeholder="Status"
                                         size="md"
-                                        className="w-36"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={sort_options}
@@ -284,11 +290,21 @@ export default function StudentManagement({
                                         onChange={handleSortChange}
                                         placeholder="Sort by"
                                         size="md"
-                                        className="w-40"
+                                        className="w-full"
                                     />
+                                </div>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <div className="min-w-0 flex-1">
+                                        <SearchBar
+                                            value={search}
+                                            onChange={handleSearch}
+                                            placeholder="Search by student ID or name..."
+                                            size="md"
+                                        />
+                                    </div>
                                     <PrimaryButton
                                         onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}
-                                        className="py-2 whitespace-nowrap"
+                                        className="justify-center whitespace-nowrap sm:min-w-[152px]"
                                     >
                                         + Add Student
                                     </PrimaryButton>
@@ -306,7 +322,10 @@ export default function StudentManagement({
                                     actions={studentActions}
                                     emptyMessage="No students found."
                                     hoverable
-                                    striped
+                                    bordered
+                                    tableClassName="min-w-[720px]"
+                                    headerClassName="border-b border-slate-200 bg-transparent text-slate-600"
+                                    rowClassName="border-slate-100"
                                     pagination={pagination}
                                 />
                             </div>

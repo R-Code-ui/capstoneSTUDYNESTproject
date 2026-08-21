@@ -249,11 +249,21 @@ class GameController extends Controller
         abort_unless($result->status === 'started', 409);
 
         $validated = $request->validate([
-            'progress' => 'nullable|array',
+            'progress' => ['nullable', 'array', 'max:30'],
+            'progress.roundIndex' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'progress.correctCount' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'progress.correctTaps' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'progress.wrongTaps' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'progress.overshoots' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'progress.attempts' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'progress.matchedWords' => ['nullable', 'array', 'max:100'],
+            'progress.filledBlanks' => ['nullable', 'array', 'max:100'],
+            'progress.usedWords' => ['nullable', 'array', 'max:100'],
+            'progress.items' => ['nullable', 'array', 'max:100'],
         ]);
 
         $result->update([
-            'progress_data' => $validated['progress'],
+            'progress_data' => $validated['progress'] ?? null,
         ]);
 
         return redirect()->route('student.games.index')

@@ -76,7 +76,7 @@ export default function CoordinatePlaneTreasureHunt({ content, onComplete, onExi
                         <span className="text-2xl font-black text-teal-600">({round.x}, {round.y})</span>
                     </div>
 
-                    <svg width={SVG_SIZE} height={SVG_SIZE} className="bg-white rounded-2xl shadow-lg border border-teal-100">
+                    <svg viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`} className="w-full max-w-[320px] h-auto aspect-square bg-white rounded-2xl shadow-lg border border-teal-100">
                         {gridLines.map((v) => (
                             <line
                                 key={`v-${v}`}

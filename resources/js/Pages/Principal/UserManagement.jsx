@@ -78,10 +78,41 @@ export default function UserManagement({
     ];
 
     const teacherColumns = [
-        { key: 'name', label: 'Name' },
+        {
+            key: 'name',
+            label: 'Name',
+            render: (row) => (
+                <span
+                    className="principal-user-name block max-w-[180px] truncate"
+                    title={row.name || ''}
+                >
+                    {row.name || '—'}
+                </span>
+            ),
+        },
         { key: 'teacher_id', label: 'Teacher ID' },
-        { key: 'grade_assignments', label: 'Assigned Grades', render: (row) => row.grade_assignments?.join(', ') || 'None' },
-        { key: 'is_active', label: 'Status', render: (row) => <StatusBadge status={row.is_active ? 'active' : 'inactive'} /> },
+        {
+            key: 'grade_assignments',
+            label: 'Assigned Grades',
+            render: (row) => (
+                <span
+                    className="block max-w-[130px] truncate"
+                    title={row.grade_assignments?.join(', ') || 'None'}
+                >
+                    {row.grade_assignments?.join(', ') || 'None'}
+                </span>
+            ),
+        },
+        {
+            key: 'is_active',
+            label: 'Status',
+            render: (row) => (
+                <StatusBadge
+                    status={row.is_active ? 'active' : 'inactive'}
+                    className={`principal-user-status ${row.is_active ? 'principal-user-status-active' : 'principal-user-status-inactive'}`}
+                />
+            ),
+        },
         { key: 'created_at', label: 'Date Created' },
     ];
 
@@ -130,6 +161,17 @@ export default function UserManagement({
             header={<h2 className="text-xl font-bold text-gray-800">User Management</h2>}
         >
             <Head title="User Management" />
+
+            <style>{`
+                .studynest-layout.theme-dark .principal-user-status-inactive {
+                    background-color: rgb(71 85 105) !important;
+                    color: rgb(226 232 240) !important;
+                }
+                .studynest-layout.theme-dark .principal-user-status-active {
+                    background-color: rgb(167 243 208) !important;
+                    color: rgb(6 78 59) !important;
+                }
+            `}</style>
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

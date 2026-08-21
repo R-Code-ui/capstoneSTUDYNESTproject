@@ -6,7 +6,7 @@ function shuffle(arr) {
     return [...arr].sort(() => Math.random() - 0.5);
 }
 
-function DraggableWord({ id, word, matched }) {
+function DraggableWord({ id, word, matched, selected, onClick }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: matched });
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -20,8 +20,10 @@ function DraggableWord({ id, word, matched }) {
             {...listeners}
             {...attributes}
             disabled={matched}
+            onClick={onClick}
             className={`w-full px-4 py-3 rounded-2xl font-black text-lg shadow-lg border-b-4 touch-none select-none
                 ${matched ? 'bg-green-400 border-green-600 text-white cursor-default' : 'bg-violet-500 border-violet-700 text-white cursor-grab active:cursor-grabbing active:scale-95'}
+                ${selected ? 'ring-4 ring-violet-200' : ''}
             `}
         >
             {word}
@@ -29,29 +31,32 @@ function DraggableWord({ id, word, matched }) {
     );
 }
 
-function DroppableTarget({ id, word, matched, wrong }) {
+function DroppableTarget({ id, word, matched, wrong, selected, onClick }) {
     const { setNodeRef, isOver } = useDroppable({ id, disabled: matched });
     return (
-        <div
+        <button
+            type="button"
             ref={setNodeRef}
+            disabled={matched}
+            onClick={onClick}
             className={`w-full px-4 py-3 rounded-2xl border-4 text-center font-black text-lg shadow-inner transition
                 ${matched
-                    ? 'bg-green-100 border-green-400 text-green-700'
+                    ? 'bg-green-100 border-green-400 text-green-700 cursor-default'
                     : wrong
                         ? 'bg-red-100 border-red-400'
-                        : isOver
+                        : isOver || selected
                             ? 'border-violet-400 border-dashed bg-violet-50'
                             : 'border-violet-200 border-dashed bg-white text-gray-500'}
             `}
         >
             {word}
-        </div>
+        </button>
     );
 }
 
 export default function CompoundWordCombiner({ content, onComplete, onExit, onProgress, initialState }) {
     const pairs = content.pairs;
-    const [rightOrder] = useState(() => shuffle(pairs.map((p) => p.match)));
+    const [rightOrder] = useState(() => shuffle(pairs.map((pair, index) => ({ ...pair, index }))));
     const [matchedWords, setMatchedWords] = useState(initialState?.matchedWords ?? []);
     const [wrongTarget, setWrongTarget] = useState(null);
     const [attempts, setAttempts] = useState(initialState?.attempts ?? 0);
@@ -75,17 +80,17 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
         if (!over) return;
 
         const word = String(active.id).replace('word-', '');
-        const targetWord = String(over.id).replace('target-', '');
+        const targetIndex = Number(String(over.id).replace('target-', ''));
         const pair = pairs.find((p) => p.word === word);
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
 
-        if (pair && pair.match === targetWord) {
+        if (pair && Number.isInteger(targetIndex) && pairs[targetIndex]?.word === word) {
             setHistory((prev) => [...prev, word]);
             const newMatched = [...matchedWords, word];
             setMatchedWords(newMatched);
             setSelectedWord(null);
-            setLastCombined(`${word}${targetWord}`);
+            setLastCombined(`${word}${pairs[targetIndex].match}`);
             setTimeout(() => setLastCombined(null), 1200);
             updateProgress({ matchedWords: newMatched, attempts: newAttempts });
 
@@ -94,7 +99,7 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
                 setTimeout(() => onComplete(Math.min(100, finalScore)), 700);
             }
         } else {
-            setWrongTarget(targetWord);
+            setWrongTarget(targetIndex);
             setSelectedWord(null);
             setTimeout(() => setWrongTarget(null), 500);
             updateProgress({ matchedWords, attempts: newAttempts });
@@ -106,18 +111,18 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
         setSelectedWord(selectedWord === word ? null : word);
     };
 
-    const handleSelectTarget = (targetWord) => {
+    const handleSelectTarget = (targetIndex) => {
         if (!selectedWord) return;
         const pair = pairs.find((p) => p.word === selectedWord);
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
 
-        if (pair && pair.match === targetWord) {
+        if (pair && pairs[targetIndex]?.word === selectedWord) {
             setHistory((prev) => [...prev, selectedWord]);
             const newMatched = [...matchedWords, selectedWord];
             setMatchedWords(newMatched);
             setSelectedWord(null);
-            setLastCombined(`${selectedWord}${targetWord}`);
+            setLastCombined(`${selectedWord}${pairs[targetIndex].match}`);
             setTimeout(() => setLastCombined(null), 1200);
             updateProgress({ matchedWords: newMatched, attempts: newAttempts });
 
@@ -126,7 +131,7 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
                 setTimeout(() => onComplete(Math.min(100, finalScore)), 700);
             }
         } else {
-            setWrongTarget(targetWord);
+            setWrongTarget(targetIndex);
             setSelectedWord(null);
             setTimeout(() => setWrongTarget(null), 500);
             updateProgress({ matchedWords, attempts: newAttempts });
@@ -144,9 +149,9 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
 
     return (
         <GameShell title="Compound Word Combiner" description={content.description} onExit={onExit}>
-            <div className="bg-gradient-to-br from-violet-50 to-purple-50 p-6 rounded-3xl border border-violet-100 shadow-inner">
+            <div className="bg-gradient-to-br from-violet-50 to-purple-50 p-4 sm:p-6 rounded-3xl border border-violet-100 shadow-inner">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                         <div className="flex flex-col gap-3">
                             {pairs.map((p) => (
                                 <DraggableWord
@@ -160,17 +165,16 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
                             ))}
                         </div>
                         <div className="flex flex-col gap-3">
-                            {rightOrder.map((w) => {
-                                const matchedPair = pairs.find((p) => p.match === w && matchedWords.includes(p.word));
+                            {rightOrder.map((pair) => {
                                 return (
                                     <DroppableTarget
-                                        key={w}
-                                        id={`target-${w}`}
-                                        word={w}
-                                        matched={!!matchedPair}
-                                        wrong={wrongTarget === w}
+                                        key={`target-${pair.index}`}
+                                        id={`target-${pair.index}`}
+                                        word={pair.match}
+                                        matched={matchedWords.includes(pair.word)}
+                                        wrong={wrongTarget === pair.index}
                                         selected={selectedWord !== null}
-                                        onClick={() => handleSelectTarget(w)}
+                                        onClick={() => handleSelectTarget(pair.index)}
                                     />
                                 );
                             })}

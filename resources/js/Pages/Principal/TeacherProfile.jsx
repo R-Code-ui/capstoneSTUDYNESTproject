@@ -64,7 +64,7 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <h2 className="text-xl font-bold text-gray-800">
+                    <h2 className="principal-profile-heading min-w-0 flex-1 truncate text-xl font-bold text-gray-800" title={`Teacher Profile: ${teacher.name}`}>
                         Teacher Profile: {teacher.name}
                     </h2>
                     <div className="flex gap-2">
@@ -76,6 +76,17 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
             }
         >
             <Head title={`Teacher Profile: ${teacher.name}`} />
+
+            <style>{`
+                .principal-profile-heading {
+                    max-width: 420px;
+                }
+                @media (max-width: 639px) {
+                    .principal-profile-heading {
+                        max-width: calc(100vw - 8rem);
+                    }
+                }
+            `}</style>
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">

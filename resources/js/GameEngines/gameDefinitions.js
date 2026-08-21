@@ -179,10 +179,10 @@ const gameDefinitions = {
             challenge: {
                 rounds: [
                     { target: 'EIGHT', options: [{ word: 'WEIGHT', isRhyme: true }, { word: 'DAY', isRhyme: false }, { word: 'HEIGHT', isRhyme: true }, { word: 'RUN', isRhyme: false }] },
-                    { target: 'BRIBE', options: [{ word: 'TRIBE', isRhyme: true }, { word: 'CAT', isRhyme: false }, { word: 'WRITE', isRhyme: true }, { word: 'DOG', isRhyme: false }] },
+                    { target: 'BRIBE', options: [{ word: 'TRIBE', isRhyme: true }, { word: 'CAT', isRhyme: false }, { word: 'WRITE', isRhyme: false }, { word: 'DOG', isRhyme: false }] },
                     { target: 'FLAKE', options: [{ word: 'SHAKE', isRhyme: true }, { word: 'SUN', isRhyme: false }, { word: 'SNAKE', isRhyme: true }, { word: 'DAY', isRhyme: false }] },
                     { target: 'GRIME', options: [{ word: 'CRIME', isRhyme: true }, { word: 'BAT', isRhyme: false }, { word: 'SLIME', isRhyme: true }, { word: 'CAT', isRhyme: false }] },
-                    { target: 'PROVE', options: [{ word: 'MOVE', isRhyme: true }, { word: 'DOG', isRhyme: false }, { word: 'LOVE', isRhyme: true }, { word: 'RUN', isRhyme: false }] },
+                    { target: 'PROVE', options: [{ word: 'MOVE', isRhyme: true }, { word: 'DOG', isRhyme: false }, { word: 'LOVE', isRhyme: false }, { word: 'RUN', isRhyme: false }] },
                     { target: 'SHRUB', options: [{ word: 'CLUB', isRhyme: true }, { word: 'BAT', isRhyme: false }, { word: 'TUB', isRhyme: true }, { word: 'SUN', isRhyme: false }] },
                     { target: 'CHIRP', options: [{ word: 'BURP', isRhyme: true }, { word: 'CAT', isRhyme: false }, { word: 'SLURP', isRhyme: true }, { word: 'DAY', isRhyme: false }] },
                     { target: 'BLOOM', options: [{ word: 'ROOM', isRhyme: true }, { word: 'DOG', isRhyme: false }, { word: 'GLOOM', isRhyme: true }, { word: 'RUN', isRhyme: false }] },
@@ -396,7 +396,7 @@ const gameDefinitions = {
     'Coin Counter': {
         grade: 'Grade 4',
         type: 'numeracy',
-        description: 'Drag coins into the jar until the total equals the target amount.',
+        description: 'Tap coins into the jar until the total equals the target amount.',
         content: {
             guided: {
                 rounds: [
@@ -443,7 +443,7 @@ const gameDefinitions = {
                     { target: 37, coins: [10, 20, 27, 37] },
                     { target: 38, coins: [13, 19, 25, 38] },
                     { target: 39, coins: [15, 20, 24, 39] },
-                    { target: 40, coins: [20, 25, 30, 40] },
+                    { target: 40, coins: [20, 20, 25, 30] },
                     { target: 41, coins: [15, 20, 26, 41] },
                     { target: 42, coins: [14, 21, 28, 42] },
                     { target: 43, coins: [20, 23, 33, 43] },
@@ -1571,5 +1571,149 @@ const gameDefinitions = {
         },
     },
 };
+
+// Five additional valid rounds for games that already use sequential round progression.
+// They are appended to every difficulty level below, bringing each of those games to 20 rounds.
+const progressiveGameRoundExtensions = {
+    'Word Builder': [
+        { image: '🌳', word: 'TREE', letters: ['T', 'R', 'E', 'E', 'L', 'S'] },
+        { image: '🌙', word: 'MOON', letters: ['M', 'O', 'O', 'N', 'T', 'P'] },
+        { image: '🚗', word: 'CAR', letters: ['C', 'A', 'R', 'B', 'D'] },
+        { image: '🏠', word: 'HOUSE', letters: ['H', 'O', 'U', 'S', 'E', 'T', 'L'] },
+        { image: '🌈', word: 'RAINBOW', letters: ['R', 'A', 'I', 'N', 'B', 'O', 'W', 'L', 'T'] },
+    ],
+    'Sentence Scramble': [
+        { correct: ['The', 'baby', 'is', 'sleeping'], scrambled: ['sleeping', 'The', 'is', 'baby'] },
+        { correct: ['We', 'clean', 'our', 'classroom', 'daily'], scrambled: ['daily', 'our', 'We', 'classroom', 'clean'] },
+        { correct: ['My', 'sister', 'bakes', 'cookies', 'on', 'Sundays'], scrambled: ['cookies', 'My', 'on', 'bakes', 'Sundays', 'sister'] },
+        { correct: ['The', 'rainbow', 'appeared', 'after', 'the', 'rain'], scrambled: ['after', 'The', 'rain', 'appeared', 'the', 'rainbow'] },
+        { correct: ['Our', 'team', 'practiced', 'hard', 'for', 'the', 'game'], scrambled: ['the', 'Our', 'hard', 'game', 'practiced', 'for', 'team'] },
+    ],
+    'Rhyme Match': [
+        { target: 'BOAT', options: [{ word: 'GOAT', isRhyme: true }, { word: 'BIRD', isRhyme: false }, { word: 'TREE', isRhyme: false }] },
+        { target: 'LIGHT', options: [{ word: 'NIGHT', isRhyme: true }, { word: 'BOOK', isRhyme: false }, { word: 'FROG', isRhyme: false }] },
+        { target: 'SMILE', options: [{ word: 'WHILE', isRhyme: true }, { word: 'CLOUD', isRhyme: false }, { word: 'PEN', isRhyme: false }] },
+        { target: 'TRAIN', options: [{ word: 'PLANE', isRhyme: true }, { word: 'FISH', isRhyme: false }, { word: 'STAR', isRhyme: false }] },
+        { target: 'SHEEP', options: [{ word: 'SLEEP', isRhyme: true }, { word: 'HOUSE', isRhyme: false }, { word: 'DRUM', isRhyme: false }] },
+    ],
+    'Alphabetical Order': [
+        { letters: ['M', 'K', 'L'], correctOrder: ['K', 'L', 'M'] },
+        { letters: ['R', 'P', 'Q'], correctOrder: ['P', 'Q', 'R'] },
+        { letters: ['V', 'T', 'U'], correctOrder: ['T', 'U', 'V'] },
+        { letters: ['H', 'F', 'G'], correctOrder: ['F', 'G', 'H'] },
+        { letters: ['Z', 'X', 'Y'], correctOrder: ['X', 'Y', 'Z'] },
+    ],
+    'Balloon Pop Math': [
+        { target: 9, numbers: [9, 4, 9, 7, 2, 9, 6, 1] },
+        { target: 12, numbers: [12, 8, 3, 12, 5, 9, 12, 7] },
+        { target: 15, numbers: [15, 11, 6, 15, 4, 9, 15, 13] },
+        { target: 18, numbers: [18, 12, 18, 7, 5, 18, 9, 14] },
+        { target: 20, numbers: [20, 16, 8, 20, 11, 5, 20, 14] },
+    ],
+    'Coin Counter': [
+        { target: 15, coins: [5, 10, 3, 8] },
+        { target: 18, coins: [6, 6, 12, 5] },
+        { target: 20, coins: [5, 5, 10, 8] },
+        { target: 25, coins: [10, 10, 5, 8] },
+        { target: 30, coins: [10, 10, 10, 15] },
+    ],
+    'Rounding Rocket': [
+        { number: 143, roundTo: 10, choices: [140, 150, 145, 130] },
+        { number: 278, roundTo: 10, choices: [270, 280, 275, 290] },
+        { number: 351, roundTo: 100, choices: [300, 400, 350, 500] },
+        { number: 649, roundTo: 100, choices: [600, 700, 650, 500] },
+        { number: 1250, roundTo: 100, choices: [1200, 1300, 1250, 1100] },
+    ],
+    'Analogy Solver': [
+        { prompt: 'Bird is to Nest as Bee is to ___', options: ['Hive', 'Tree', 'Pond', 'Cave'], correct: 'Hive' },
+        { prompt: 'Finger is to Hand as Toe is to ___', options: ['Foot', 'Leg', 'Arm', 'Head'], correct: 'Foot' },
+        { prompt: 'Book is to Read as Song is to ___', options: ['Listen', 'Draw', 'Build', 'Plant'], correct: 'Listen' },
+        { prompt: 'Puppy is to Dog as Kitten is to ___', options: ['Cat', 'Horse', 'Bird', 'Fish'], correct: 'Cat' },
+        { prompt: 'Day is to Sun as Night is to ___', options: ['Moon', 'Cloud', 'Rain', 'Wind'], correct: 'Moon' },
+    ],
+    'Fraction Pizza': [
+        { totalSlices: 6, target: 5, targetLabel: '5/6' },
+        { totalSlices: 8, target: 3, targetLabel: '3/8' },
+        { totalSlices: 8, target: 6, targetLabel: '3/4' },
+        { totalSlices: 10, target: 7, targetLabel: '7/10' },
+        { totalSlices: 12, target: 5, targetLabel: '5/12' },
+    ],
+    'Number Line Runner': [
+        { start: 3, steps: 4, operation: '+', answer: 7, min: 0, max: 10 },
+        { start: 9, steps: 3, operation: '-', answer: 6, min: 0, max: 10 },
+        { start: 12, steps: 5, operation: '+', answer: 17, min: 0, max: 20 },
+        { start: 16, steps: 7, operation: '-', answer: 9, min: 0, max: 20 },
+        { start: 25, steps: 10, operation: '+', answer: 35, min: 0, max: 40 },
+    ],
+    'Area Blocks': [
+        { rows: 3, cols: 4, target: 12, gridRows: 6, gridCols: 6 },
+        { rows: 4, cols: 4, target: 16, gridRows: 6, gridCols: 6 },
+        { rows: 2, cols: 7, target: 14, gridRows: 7, gridCols: 8 },
+        { rows: 5, cols: 3, target: 15, gridRows: 7, gridCols: 7 },
+        { rows: 4, cols: 5, target: 20, gridRows: 7, gridCols: 8 },
+    ],
+    'Decimal Number Line': [
+        { start: 1.5, jumpAmount: 0.5, operation: '+', answer: 2, min: 0, max: 5 },
+        { start: 3.5, jumpAmount: 1.5, operation: '+', answer: 5, min: 0, max: 6 },
+        { start: 4.5, jumpAmount: 2, operation: '-', answer: 2.5, min: 0, max: 6 },
+        { start: 2.25, jumpAmount: 0.75, operation: '+', answer: 3, min: 0, max: 5 },
+        { start: 6.5, jumpAmount: 1.5, operation: '-', answer: 5, min: 0, max: 8 },
+    ],
+    'Prefix Power': [
+        { baseWord: 'agree', correctPrefix: 'dis', prefixes: ['dis', 'un', 're'] },
+        { baseWord: 'possible', correctPrefix: 'im', prefixes: ['im', 'un', 'mis'] },
+        { baseWord: 'happy', correctPrefix: 'un', prefixes: ['un', 're', 'dis'] },
+        { baseWord: 'legal', correctPrefix: 'il', prefixes: ['il', 'un', 'mis'] },
+        { baseWord: 'honest', correctPrefix: 'dis', prefixes: ['dis', 're', 'pre'] },
+    ],
+    'Homophone Match': [
+        { word: 'knight', match: 'night', options: ['night', 'knit', 'light'] },
+        { word: 'flour', match: 'flower', options: ['flower', 'floor', 'flourish'] },
+        { word: 'son', match: 'sun', options: ['sun', 'sand', 'song'] },
+        { word: 'mail', match: 'male', options: ['male', 'mole', 'meal'] },
+        { word: 'brake', match: 'break', options: ['break', 'brick', 'bake'] },
+    ],
+    'Sequence the Story': [
+        { correct: ['Found ingredients', 'Mixed the batter', 'Baked the cake', 'Shared the cake'], scrambled: ['Shared the cake', 'Mixed the batter', 'Found ingredients', 'Baked the cake'] },
+        { correct: ['Packed a bag', 'Traveled to the beach', 'Built a sandcastle', 'Went home'], scrambled: ['Went home', 'Built a sandcastle', 'Packed a bag', 'Traveled to the beach'] },
+        { correct: ['Saw dark clouds', 'Rain began to fall', 'Opened an umbrella', 'Walked home safely'], scrambled: ['Opened an umbrella', 'Saw dark clouds', 'Walked home safely', 'Rain began to fall'] },
+        { correct: ['Chose a library book', 'Borrowed the book', 'Read the story', 'Returned the book'], scrambled: ['Read the story', 'Returned the book', 'Chose a library book', 'Borrowed the book'] },
+        { correct: ['Practiced for the race', 'Waited at the starting line', 'Ran to the finish line', 'Received a medal'], scrambled: ['Received a medal', 'Ran to the finish line', 'Waited at the starting line', 'Practiced for the race'] },
+    ],
+    'Balance Scale': [
+        { leftValue: 20, weights: [8, 12, 15] },
+        { leftValue: 24, weights: [9, 15, 18] },
+        { leftValue: 27, weights: [11, 16, 20] },
+        { leftValue: 30, weights: [14, 16, 22] },
+        { leftValue: 35, weights: [15, 20, 26] },
+    ],
+    'Division Dash': [
+        { dividend: 36, divisor: 4, quotient: 9, choices: [8, 9, 10, 11] },
+        { dividend: 54, divisor: 6, quotient: 9, choices: [8, 9, 10, 11] },
+        { dividend: 72, divisor: 8, quotient: 9, choices: [8, 9, 10, 11] },
+        { dividend: 84, divisor: 7, quotient: 12, choices: [11, 12, 13, 14] },
+        { dividend: 96, divisor: 8, quotient: 12, choices: [11, 12, 13, 14] },
+    ],
+    'Coordinate Plane Treasure Hunt': [
+        { x: 2, y: 4, rangeMin: 0, rangeMax: 5 },
+        { x: 6, y: 3, rangeMin: 0, rangeMax: 10 },
+        { x: 1, y: 9, rangeMin: 0, rangeMax: 10 },
+        { x: -4, y: 6, rangeMin: -10, rangeMax: 10 },
+        { x: 7, y: -8, rangeMin: -10, rangeMax: 10 },
+    ],
+    'Multiplication Frenzy': [
+        { factor1: 6, factor2: 6, product: 36, choices: [34, 36, 38, 40] },
+        { factor1: 7, factor2: 8, product: 56, choices: [54, 56, 58, 60] },
+        { factor1: 9, factor2: 7, product: 63, choices: [61, 63, 65, 67] },
+        { factor1: 11, factor2: 8, product: 88, choices: [86, 88, 90, 92] },
+        { factor1: 12, factor2: 9, product: 108, choices: [106, 108, 110, 112] },
+    ],
+};
+
+Object.entries(progressiveGameRoundExtensions).forEach(([gameName, extraRounds]) => {
+    Object.values(gameDefinitions[gameName].content).forEach((difficulty) => {
+        difficulty.rounds.push(...extraRounds.map((round) => JSON.parse(JSON.stringify(round))));
+    });
+});
 
 export default gameDefinitions;

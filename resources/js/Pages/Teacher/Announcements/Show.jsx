@@ -36,12 +36,14 @@ export default function AnnouncementsShow({ announcement }) {
                         {announcement.title}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <Link href={route('teacher.announcements.edit', announcement.id)}>
-                            <SecondaryButton>
-                                <PencilSquareIcon className="w-4 h-4 mr-1" />
-                                Edit
-                            </SecondaryButton>
-                        </Link>
+                        {announcement.can_modify && (
+                            <Link href={route('teacher.announcements.edit', announcement.id)}>
+                                <SecondaryButton>
+                                    <PencilSquareIcon className="w-4 h-4 mr-1" />
+                                    Edit
+                                </SecondaryButton>
+                            </Link>
+                        )}
                         <Link href={route('teacher.announcements.index')}>
                             <PrimaryButton>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />

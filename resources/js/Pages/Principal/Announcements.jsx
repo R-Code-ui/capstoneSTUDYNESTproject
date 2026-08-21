@@ -127,8 +127,23 @@ export default function PrincipalAnnouncements({
     );
 
     const columns = [
-        { key: 'title', label: 'Title' },
-        { key: 'audience', label: 'Audience', render: (row) => row.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) },
+        {
+            key: 'title',
+            label: 'Title',
+            render: (row) => (
+                <span className="block max-w-[260px] truncate" title={row.title || ''}>
+                    {row.title || '—'}
+                </span>
+            ),
+        },
+        {
+            key: 'audience',
+            label: 'Audience',
+            render: (row) => {
+                const audience = row.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '—';
+                return <span className="block max-w-[170px] truncate" title={audience}>{audience}</span>;
+            },
+        },
         { key: 'category', label: 'Category' },
         { key: 'created_at', label: 'Date Posted' },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
@@ -439,8 +454,8 @@ export default function PrincipalAnnouncements({
                 {selectedAnnouncement && (
                     <div className="space-y-4">
                         <div className="flex justify-between items-start">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-800">
+                            <div className="min-w-0 flex-1">
+                                <h3 className="max-w-[320px] truncate text-xl font-bold text-gray-800" title={selectedAnnouncement.title || ''}>
                                     {selectedAnnouncement.title}
                                 </h3>
                                 <div className="mt-1 flex flex-wrap gap-2 text-sm text-gray-500">
@@ -451,7 +466,7 @@ export default function PrincipalAnnouncements({
                                     <span>Status: <StatusBadge status={selectedAnnouncement.status} /></span>
                                 </div>
                             </div>
-                            <div className="text-right text-sm text-gray-500">
+                            <div className="shrink-0 text-right text-sm text-gray-500">
                                 <div>Posted: {selectedAnnouncement.created_at}</div>
                                 <div>Views: {selectedAnnouncement.view_count}</div>
                                 {selectedAnnouncement.expiration_date && (
@@ -461,18 +476,9 @@ export default function PrincipalAnnouncements({
                         </div>
 
                         <div className="pt-4 border-t border-gray-200">
-                            <div className="text-gray-700 whitespace-pre-wrap">
+                            <div className="max-h-32 overflow-y-auto whitespace-pre-wrap break-words text-gray-700" title={selectedAnnouncement.content || ''}>
                                 {selectedAnnouncement.content}
                             </div>
-                        </div>
-
-                        <div className="flex justify-end pt-4 border-t border-gray-200">
-                            <button
-                                onClick={() => { setShowViewModal(false); setSelectedAnnouncement(null); }}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                            >
-                                Close
-                            </button>
                         </div>
                     </div>
                 )}

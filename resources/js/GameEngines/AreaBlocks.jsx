@@ -31,7 +31,23 @@ export default function AreaBlocks({ content, onComplete, onExit, onProgress, in
     };
 
     const handleCheck = () => {
-        const isCorrect = filled.size === round.target;
+        const selectedCells = [...filled].map((index) => ({
+            row: Math.floor(index / round.gridCols),
+            col: index % round.gridCols,
+        }));
+        const rows = selectedCells.map((cell) => cell.row);
+        const cols = selectedCells.map((cell) => cell.col);
+        const minRow = Math.min(...rows);
+        const maxRow = Math.max(...rows);
+        const minCol = Math.min(...cols);
+        const maxCol = Math.max(...cols);
+        const selectedRows = maxRow - minRow + 1;
+        const selectedCols = maxCol - minCol + 1;
+        const formsSolidRectangle = selectedCells.length === selectedRows * selectedCols;
+        const isCorrect = filled.size === round.target
+            && selectedRows === round.rows
+            && selectedCols === round.cols
+            && formsSolidRectangle;
         const newCorrect = correctCount + (isCorrect ? 1 : 0);
         setFeedback(isCorrect ? 'correct' : 'incorrect');
 
@@ -80,7 +96,7 @@ export default function AreaBlocks({ content, onComplete, onExit, onProgress, in
                                     type="button"
                                     onClick={() => toggleCell(idx)}
                                     disabled={!!feedback}
-                                    className={`w-6 h-6 sm:w-8 sm:h-8 rounded-md border transition
+                                    className={`w-4 h-4 sm:w-8 sm:h-8 rounded-md border transition
                                         ${isFilled ? 'bg-lime-500 border-lime-600' : 'bg-gray-50 border-gray-200 hover:border-lime-300'}
                                     `}
                                 />

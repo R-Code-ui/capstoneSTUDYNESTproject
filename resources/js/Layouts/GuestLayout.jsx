@@ -78,16 +78,16 @@ export default function GuestLayout({ children }) {
                     content: "";
                     position: absolute;
                     inset: 0;
-                    background: linear-gradient(135deg, rgb(15 23 42 / 0.78), rgb(30 64 175 / 0.48));
+                    background: linear-gradient(135deg, rgb(2 6 23 / 0.88), rgb(15 23 42 / 0.74));
                 }
                 .studynest-auth .auth-card {
-                    background: rgb(15 23 42 / 0.30);
-                    border-color: rgb(255 255 255 / 0.30);
+                    background: rgb(255 255 255 / 0.88);
+                    border-color: rgb(255 255 255 / 0.72);
                     box-shadow: 0 25px 70px rgb(15 23 42 / 0.24);
                     backdrop-filter: blur(22px);
                     -webkit-backdrop-filter: blur(22px);
                 }
-                .studynest-auth .auth-panel { background: rgb(15 23 42 / 0.12); }
+                .studynest-auth .auth-panel { background: rgb(255 255 255 / 0.46); }
                 .dark .studynest-auth { background: #020617; color: #f8fafc; }
                 .dark .studynest-auth .auth-background::after {
                     background: linear-gradient(135deg, rgb(2 6 23 / 0.88), rgb(15 23 42 / 0.74));
@@ -101,7 +101,7 @@ export default function GuestLayout({ children }) {
                 .studynest-auth .auth-card [class~="text-slate-800"],
                 .studynest-auth .auth-card [class~="text-slate-700"],
                 .studynest-auth .auth-card [class~="text-gray-700"],
-                .studynest-auth .auth-card [class~="text-gray-800"] { color: #f8fafc; }
+                .studynest-auth .auth-card [class~="text-gray-800"] { color: #1e293b; }
                 .dark .studynest-auth [class~="text-slate-800"],
                 .dark .studynest-auth [class~="text-slate-700"],
                 .dark .studynest-auth [class~="text-gray-700"],
@@ -111,15 +111,15 @@ export default function GuestLayout({ children }) {
                 .dark .studynest-auth [class~="text-gray-400"] { color: #cbd5e1; }
                 .studynest-auth input {
                     border-radius: 9999px;
-                    background-color: rgb(255 255 255 / 0.14);
-                    color: #f8fafc;
-                    border-color: rgb(255 255 255 / 0.40);
+                    background-color: rgb(255 255 255 / 0.86);
+                    color: #1e293b;
+                    border-color: rgb(148 163 184 / 0.65);
                 }
-                .studynest-auth input::placeholder { color: rgb(226 232 240 / 0.75); }
+                .studynest-auth input::placeholder { color: rgb(100 116 139 / 0.85); }
                 .studynest-auth input:focus {
-                    background-color: rgb(255 255 255 / 0.14) !important;
-                    border-color: rgb(255 255 255 / 0.40) !important;
-                    box-shadow: none !important;
+                    background-color: rgb(255 255 255 / 0.98) !important;
+                    border-color: rgb(37 99 235 / 0.75) !important;
+                    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.14) !important;
                     outline: none !important;
                 }
                 .dark .studynest-auth input {
@@ -170,7 +170,7 @@ export default function GuestLayout({ children }) {
                                 className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm"
                             />
                         </Link>
-                        <p className="mt-2 text-sm font-bold tracking-[0.18em] text-white">
+                        <p className="mt-2 text-sm font-bold tracking-[0.18em] text-slate-800 dark:text-white">
                             StudyNest
                         </p>
                         <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">

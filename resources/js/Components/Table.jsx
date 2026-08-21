@@ -481,7 +481,7 @@ export default function Table({
 }
 
 // ===== STATUS BADGE HELPER =====
-export function StatusBadge({ status }) {
+export function StatusBadge({ status, className = '' }) {
     const variants = {
         active: 'bg-emerald-100 text-emerald-800',
         published: 'bg-emerald-100 text-emerald-800',
@@ -512,7 +512,7 @@ export function StatusBadge({ status }) {
     const label = status?.toString().replace(/_/g, ' ').toUpperCase() || '';
 
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[status] || 'bg-gray-100 text-gray-800'}`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[status] || 'bg-gray-100 text-gray-800'} ${className}`}>
             {label}
         </span>
     );
