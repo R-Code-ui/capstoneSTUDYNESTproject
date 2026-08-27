@@ -28,11 +28,11 @@ class ProgressTrackerController extends Controller
 
         // Lessons
         $totalLessons = Lesson::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->count();
 
         $lessonIds = Lesson::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->pluck('id');
         $completedLessons = $user->completedLessons()
             ->whereIn('lessons.id', $lessonIds)
@@ -40,10 +40,10 @@ class ProgressTrackerController extends Controller
 
         // Assignments
         $totalAssignments = Assignment::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->count();
         $assignmentIds = Assignment::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->pluck('id');
 
         $submittedAssignments = AssignmentSubmission::where('student_id', $user->id)
@@ -52,7 +52,7 @@ class ProgressTrackerController extends Controller
             ->count();
 
         // Quizzes – official stats from first attempts only
-        $quizIds = Quiz::where('grade_level', $gradeLevel)->where('status', 'published')->pluck('id');
+        $quizIds = Quiz::where('grade_level', $gradeLevel)->currentlyPublished()->pluck('id');
         $totalQuizzes = count($quizIds);
 
         // Get all completed attempts, ordered so first attempt comes first
@@ -76,11 +76,11 @@ class ProgressTrackerController extends Controller
 
         // Games
         $totalGames = Game::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->count();
 
         $gameIds = Game::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->pluck('id');
         $completedGames = GameResult::where('student_id', $user->id)
             ->whereIn('game_id', $gameIds)
@@ -94,7 +94,7 @@ class ProgressTrackerController extends Controller
         // Pending Lessons
         if ($completedLessons < $totalLessons) {
             $pendingLessons = Lesson::where('grade_level', $gradeLevel)
-                ->where('status', 'published')
+                ->currentlyPublished()
                 ->whereDoesntHave('students', function ($query) use ($user) {
                     $query->where('user_id', $user->id);
                 })
@@ -115,7 +115,7 @@ class ProgressTrackerController extends Controller
 
         // Pending Assignments
         $pendingAssignments = Assignment::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->whereDoesntHave('submissions', function ($query) use ($user) {
                 $query->where('student_id', $user->id)
                     ->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded']);
@@ -136,7 +136,7 @@ class ProgressTrackerController extends Controller
 
         // Pending Quizzes (no completed first attempt)
         $pendingQuizzes = Quiz::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->whereDoesntHave('attempts', function ($query) use ($user) {
                 $query->where('student_id', $user->id)->where('status', 'completed');
             })
@@ -156,7 +156,7 @@ class ProgressTrackerController extends Controller
 
         // Pending Games
         $pendingGames = Game::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->whereDoesntHave('results', function ($query) use ($user) {
                 $query->where('student_id', $user->id)->where('status', 'completed');
             })

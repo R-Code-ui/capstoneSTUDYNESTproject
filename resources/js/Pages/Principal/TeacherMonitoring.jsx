@@ -105,7 +105,7 @@ export default function TeacherMonitoring({
 
     const actions = (row) => [
         {
-            label: 'View Profile',
+            label: 'View',
             icon: <ViewProfileIcon />,
             color: 'primary',
             onClick: () => handleViewProfile(row)

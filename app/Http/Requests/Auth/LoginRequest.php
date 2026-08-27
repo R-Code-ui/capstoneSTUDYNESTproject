@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -51,25 +52,11 @@ class LoginRequest extends FormRequest
                 ->orWhere('teacher_id', $username)
                 ->orWhere('principal_id', $username);
         })
-            ->where('is_active', true)
             ->first();
 
-        // If user found, use their email for authentication (Laravel requires email or username field)
-        // We'll use the email field internally but the user logs in with LRN/Teacher ID/Principal ID
-        if ($user) {
-            // Attempt login using the user's email and the provided password
-            if (!Auth::attempt([
-                'email' => $user->email,
-                'password' => $this->input('password'),
-                'is_active' => true,
-            ], $this->boolean('remember'))) {
-                RateLimiter::hit($this->throttleKey());
-
-                throw ValidationException::withMessages([
-                    'username' => trans('auth.failed'),
-                ]);
-            }
-        } else {
+        // Keep invalid credentials generic. Only disclose an inactive account
+        // after its correct password has been supplied.
+        if (! $user || ! Hash::check($this->input('password'), $user->password)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -77,6 +64,17 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (! $user->is_active) {
+            RateLimiter::clear($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'username' => $user->isStudent()
+                    ? 'Your account is inactive. Please contact your teacher or school administrator.'
+                    : 'Your account is inactive. Please contact your school administrator.',
+            ]);
+        }
+
+        Auth::login($user, $this->boolean('remember'));
         RateLimiter::clear($this->throttleKey());
     }
 

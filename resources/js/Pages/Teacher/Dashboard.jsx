@@ -18,11 +18,11 @@ import {
     UsersIcon,
     BookOpenIcon,
     ClipboardDocumentListIcon,
+    ChartBarIcon,
     DocumentTextIcon,
     PuzzlePieceIcon,
     EnvelopeIcon,
     PlusCircleIcon,
-    ChartBarIcon,
     InboxIcon,
     ClockIcon,
     ExclamationTriangleIcon,
@@ -102,6 +102,10 @@ export default function TeacherDashboard({
                     .studynest-layout.theme-dark .teacher-dashboard-chart { --teacher-chart-text: #94a3b8; --teacher-chart-grid: #334155; --teacher-tooltip-bg: #1e293b; }
                     .studynest-layout.theme-dark .teacher-lesson-card { background-color: rgb(30 41 59) !important; border-color: rgb(71 85 105) !important; }
                     .studynest-layout.theme-dark .teacher-lesson-card .teacher-progress-track { background-color: rgb(71 85 105) !important; }
+                    .studynest-layout.theme-dark .teacher-stat-card { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .teacher-stat-icon { background-color: rgb(30 41 59) !important; }
+                    .studynest-layout.theme-dark .teacher-stat-icon.teacher-stat-icon-blue { color: rgb(96 165 250) !important; }
+                    .studynest-layout.theme-dark .teacher-participation-card { border-color: transparent !important; box-shadow: none !important; }
                     .studynest-layout.theme-dark .teacher-chart-tooltip { color: rgb(226 232 240) !important; }
                     .studynest-layout.theme-dark .teacher-announcement-item { background-color: rgb(30 41 59) !important; border-color: rgb(59 130 246) !important; }
                     .studynest-layout.theme-dark .teacher-announcement-item:hover { background-color: rgb(51 65 85) !important; }
@@ -139,9 +143,9 @@ export default function TeacherDashboard({
                     {/* ===== Section 1: Classroom Overview ===== */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         {/* Students */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-50 rounded-lg">
+                                <div className="teacher-stat-icon teacher-stat-icon-blue p-2 bg-blue-50 rounded-lg">
                                     <UsersIcon className="w-5 h-5 text-blue-600" />
                                 </div>
                                 <div>
@@ -152,9 +156,9 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Lessons */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-emerald-50 rounded-lg">
+                                <div className="teacher-stat-icon p-2 bg-emerald-50 rounded-lg">
                                     <BookOpenIcon className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div>
@@ -165,9 +169,9 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Assignments */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-purple-50 rounded-lg">
+                                <div className="teacher-stat-icon p-2 bg-purple-50 rounded-lg">
                                     <ClipboardDocumentListIcon className="w-5 h-5 text-purple-600" />
                                 </div>
                                 <div>
@@ -178,9 +182,9 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Quizzes */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-amber-50 rounded-lg">
+                                <div className="teacher-stat-icon p-2 bg-amber-50 rounded-lg">
                                     <DocumentTextIcon className="w-5 h-5 text-amber-600" />
                                 </div>
                                 <div>
@@ -191,9 +195,9 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Games */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-rose-50 rounded-lg">
+                                <div className="teacher-stat-icon p-2 bg-rose-50 rounded-lg">
                                     <PuzzlePieceIcon className="w-5 h-5 text-rose-600" />
                                 </div>
                                 <div>
@@ -221,7 +225,7 @@ export default function TeacherDashboard({
                                     </div>
                                 </div>
 
-                                <div className="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                                <div className="teacher-participation-card text-center p-4 bg-emerald-50 rounded-lg border border-emerald-100">
                                     <div className="text-2xl font-bold text-emerald-600">
                                         {participation.assignment_completion_rate}%
                                     </div>
@@ -234,7 +238,7 @@ export default function TeacherDashboard({
                                     </div>
                                 </div>
 
-                                <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-100">
+                                <div className="teacher-participation-card text-center p-4 bg-purple-50 rounded-lg border border-purple-100">
                                     <div className="text-2xl font-bold text-purple-600">
                                         {participation.average_quiz_score}%
                                     </div>
@@ -247,7 +251,7 @@ export default function TeacherDashboard({
                                     </div>
                                 </div>
 
-                                <div className="text-center p-4 bg-amber-50 rounded-lg border border-amber-100">
+                                <div className="teacher-participation-card text-center p-4 bg-amber-50 rounded-lg border border-amber-100">
                                     <div className="text-2xl font-bold text-amber-600">
                                         {participation.game_participation_rate}%
                                     </div>
@@ -575,15 +579,12 @@ export default function TeacherDashboard({
                                     </span>
                                 </Link>
 
-                                {/* View Reports */}
                                 <Link
                                     href={safeRoute('teacher.reports.index')}
                                     className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-rose-50 border border-gray-200 hover:border-rose-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-rose-700"
                                 >
                                     <ChartBarIcon className="w-8 h-8 text-gray-500 group-hover:text-rose-600" />
-                                    <span className="text-xs font-medium text-center mt-2">
-                                        View Reports
-                                    </span>
+                                    <span className="text-xs font-medium text-center mt-2">Reports</span>
                                 </Link>
 
                                 {/* Open Inbox */}

@@ -22,16 +22,10 @@ class AnnouncementController extends Controller
 
         $search = $request->input('search');
         $categoryFilter = $request->input('category');
-        $today = now()->toDateString();
         $gradeAudience = strtolower(str_replace(' ', '_', (string) $gradeLevel));
 
         $announcements = Announcement::with('user')
-            ->where('status', 'published')
-            ->whereDate('publish_date', '<=', $today)
-            ->where(function ($query) use ($today) {
-                $query->whereNull('expiration_date')
-                    ->orWhereDate('expiration_date', '>=', $today);
-            })
+            ->currentlyVisible()
             ->where(function ($query) use ($gradeLevel, $gradeAudience) {
                 $query->where('target_audience', 'all_users')
                     ->orWhere('target_audience', 'all_grades')
@@ -95,16 +89,12 @@ class AnnouncementController extends Controller
     public function show(Announcement $announcement)
     {
         $user = auth()->user();
-        $today = now()->toDateString();
         $gradeAudience = strtolower(str_replace(' ', '_', (string) $user->grade_level));
 
         // Check if student can view this announcement
         $canView = false;
         if (
-            $announcement->status === 'published' &&
-            $announcement->publish_date &&
-            $announcement->publish_date->toDateString() <= $today &&
-            (!$announcement->expiration_date || $announcement->expiration_date->toDateString() >= $today)
+            $announcement->isCurrentlyVisible()
         ) {
             if (in_array($announcement->target_audience, [
                 'all_users',

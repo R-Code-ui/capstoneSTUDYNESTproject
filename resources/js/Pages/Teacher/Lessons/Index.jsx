@@ -12,8 +12,6 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import {
     EyeIcon,
     PencilSquareIcon,
-    CheckCircleIcon,
-    ArchiveBoxIcon,
     TrashIcon,
     PlusIcon,
 } from '@heroicons/react/24/outline';
@@ -64,18 +62,6 @@ export default function LessonsIndex({
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
-    };
-
-    const handlePublish = (lesson) => {
-        if (confirm(`Publish "${lesson.title}"?`)) {
-            router.post(route('teacher.lessons.publish', lesson.id), {}, { preserveState: true });
-        }
-    };
-
-    const handleArchive = (lesson) => {
-        if (confirm(`Archive "${lesson.title}"?`)) {
-            router.post(route('teacher.lessons.archive', lesson.id), {}, { preserveState: true });
-        }
     };
 
     const handleDelete = (lesson) => {
@@ -143,6 +129,18 @@ export default function LessonsIndex({
             render: (row) => <StatusBadge status={row.status} />,
         },
         {
+            key: 'completion',
+            label: 'Completion',
+            render: (row) => (
+                <div className="whitespace-nowrap">
+                    <div className="font-medium text-gray-800">
+                        {row.completed_students} / {row.total_students}
+                    </div>
+                    <div className="text-xs text-gray-500">students completed</div>
+                </div>
+            ),
+        },
+        {
             key: 'created_at',
             label: 'Date Created',
             render: (row) => (
@@ -166,18 +164,6 @@ export default function LessonsIndex({
             color: 'primary',
             onClick: () => router.visit(route('teacher.lessons.edit', row.id)),
         },
-        ...(row.status === 'draft' ? [{
-            label: 'Publish',
-            icon: <CheckCircleIcon className="w-4 h-4" />,
-            color: 'success',
-            onClick: () => handlePublish(row),
-        }] : []),
-        ...(row.status !== 'archived' ? [{
-            label: 'Archive',
-            icon: <ArchiveBoxIcon className="w-4 h-4" />,
-            color: 'warning',
-            onClick: () => handleArchive(row),
-        }] : []),
         {
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,

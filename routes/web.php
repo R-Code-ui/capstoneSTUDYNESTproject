@@ -47,7 +47,7 @@ Route::get('/', function () {
 });
 
 // ========== AUTHENTICATED ROUTES ==========
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'force.password.change'])->group(function () {
 
     // ===== DASHBOARD REDIRECT ROUTE =====
     Route::get('/dashboard', function () {
@@ -101,9 +101,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/announcements/{id}/publish', [AnnouncementController::class, 'publish'])->name('announcements.publish');
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
-        Route::get('/reports/export/pdf/{reportId}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
-        Route::get('/reports/{reportId}', [ReportController::class, 'show'])->name('reports.show');
+        Route::get('/reports/pdf', [ReportController::class, 'downloadPdf'])->name('reports.pdf');
 
         Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index');
     });
@@ -214,9 +212,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/announcements/{announcement}/publish', [TeacherAnnouncementController::class, 'publish'])->name('announcements.publish');
         Route::post('/announcements/{announcement}/archive', [TeacherAnnouncementController::class, 'archive'])->name('announcements.archive');
 
-        // ===== Reports =====
         Route::get('/reports', [TeacherReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/pdf', [TeacherReportController::class, 'generatePdf'])->name('reports.pdf');
+        Route::get('/reports/pdf', [TeacherReportController::class, 'downloadPdf'])->name('reports.pdf');
 
         // ===== Student Activity Logs =====
         Route::get('/activity-logs', [StudentActivityLogController::class, 'index'])->name('activity-logs.index');

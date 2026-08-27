@@ -7,6 +7,8 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import ExternalLinksInput from '@/Components/ExternalLinksInput';
+import PublishingOptions from '@/Components/PublishingOptions';
 
 // Heroicons
 import {
@@ -47,8 +49,8 @@ export default function AssignmentsCreate({
         due_time: '',
         submission_methods: [],
         status: 'draft',
-        publish_date: new Date().toISOString().split('T')[0],
-        resource_url: '',
+        publish_date: '',
+        resource_urls: [],
         resources: [],
         bow_code: '',
         learning_competency: '',
@@ -91,6 +93,8 @@ export default function AssignmentsCreate({
                 data.resources.forEach((file) => {
                     formData.append('resources[]', file);
                 });
+            } else if (key === 'resource_urls') {
+                data.resource_urls.filter(Boolean).forEach((url) => formData.append('resource_urls[]', url));
             } else if (key === 'submission_methods') {
                 data.submission_methods.forEach((method) => {
                     formData.append('submission_methods[]', method);
@@ -495,7 +499,8 @@ export default function AssignmentsCreate({
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Submission Settings</h3>
                                 <div>
-                                    <InputLabel value="Submission Methods" required />
+                                    <InputLabel value="How can students submit?" required />
+                                    <p className="mt-1 text-sm text-gray-500">Online upload is submitted by the student. Paper hand-ins are confirmed by you after receiving the physical work.</p>
                                     <div className="mt-2 space-y-2">
                                         {submission_methods.map((method) => (
                                             <label key={method} className="flex items-center gap-2">
@@ -506,7 +511,7 @@ export default function AssignmentsCreate({
                                                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-600"
                                                 />
                                                 <span className="text-gray-700">
-                                                    {method.charAt(0).toUpperCase() + method.slice(1)} Upload
+                                                    {method === 'digital' ? 'Online file upload' : 'Paper hand-in'}
                                                 </span>
                                             </label>
                                         ))}
@@ -518,11 +523,7 @@ export default function AssignmentsCreate({
                             {/* ===== Section 5: Learning Resources ===== */}
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
-                                <div className="mb-4">
-                                    <InputLabel htmlFor="resource_url" value="External Assignment URL (Optional)" />
-                                    <TextInput id="resource_url" type="url" value={data.resource_url} onChange={(e) => setData('resource_url', e.target.value)} className="mt-1 block w-full" placeholder="https://example.com/assignment" />
-                                    <InputError message={errors.resource_url} className="mt-2" />
-                                </div>
+                                <div className="mb-5"><ExternalLinksInput value={data.resource_urls} onChange={(urls) => setData('resource_urls', urls)} errors={errors} /></div>
                                 <div>
                                     <InputLabel htmlFor="resources" value="Upload Resources (Max 4 files, 100MB each)" />
                                     <input
@@ -574,35 +575,7 @@ export default function AssignmentsCreate({
                             {/* ===== Section 6: Publication Settings ===== */}
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Publication Settings</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <InputLabel htmlFor="status" value="Status" required />
-                                        <select
-                                            id="status"
-                                            value={data.status}
-                                            onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
-                                            required
-                                        >
-                                            {statuses.map((status) => (
-                                                <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                                            ))}
-                                        </select>
-                                        <InputError message={errors.status} className="mt-2" />
-                                    </div>
-                                    <div>
-                                        <InputLabel htmlFor="publish_date" value="Publish Date" required />
-                                        <TextInput
-                                            id="publish_date"
-                                            type="date"
-                                            value={data.publish_date}
-                                            onChange={(e) => setData('publish_date', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            required
-                                        />
-                                        <InputError message={errors.publish_date} className="mt-2" />
-                                    </div>
-                                </div>
+                                <PublishingOptions data={data} setData={setData} errors={errors} />
                             </div>
 
                             {/* ===== Actions ===== */}

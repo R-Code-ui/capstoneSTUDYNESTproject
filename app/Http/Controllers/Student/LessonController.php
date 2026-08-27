@@ -24,7 +24,7 @@ class LessonController extends Controller
         $subjectFilter = $request->input('subject');
 
         $lessons = Lesson::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->when($search, function ($query, $search) {
                 return $query->where(function ($query) use ($search) {
                     $query->where('lesson_title', 'like', "%{$search}%")
@@ -77,13 +77,23 @@ class LessonController extends Controller
         $isCompleted = $user->completedLessons()->where('lesson_id', $lesson->id)->exists();
 
         // ✅ Log: student viewed lesson
-        ActivityLog::create([
-            'user_id'             => $user->id,
-            'user_role'           => 'student',
-            'activity_type'       => 'view',
-            'activity_description'=> 'Viewed lesson: "' . $lesson->lesson_title . '"',
-            'related_module'      => 'Lesson Module',
-        ]);
+        $recentViewExists = ActivityLog::query()
+            ->where('user_id', $user->id)
+            ->where('activity_type', 'view')
+            ->where('related_module', 'Lesson Module')
+            ->where('activity_description', 'Viewed lesson: "' . $lesson->lesson_title . '"')
+            ->where('created_at', '>=', now()->subMinutes(15))
+            ->exists();
+
+        if (!$recentViewExists) {
+            ActivityLog::create([
+                'user_id'             => $user->id,
+                'user_role'           => 'student',
+                'activity_type'       => 'view',
+                'activity_description'=> 'Viewed lesson: "' . $lesson->lesson_title . '"',
+                'related_module'      => 'Lesson Module',
+            ]);
+        }
 
         return Inertia::render('Student/Lessons/Show', [
             'lesson' => [
@@ -107,15 +117,15 @@ class LessonController extends Controller
                 }),
             ],
             'related_activities' => [
-                'assignment' => $lesson->relatedAssignment && $lesson->relatedAssignment->status === 'published' ? [
+                'assignment' => $lesson->relatedAssignment?->isCurrentlyPublished() ? [
                     'id' => $lesson->relatedAssignment->id,
                     'title' => $lesson->relatedAssignment->assignment_title,
                 ] : null,
-                'quiz' => $lesson->relatedQuiz && $lesson->relatedQuiz->status === 'published' ? [
+                'quiz' => $lesson->relatedQuiz?->isCurrentlyPublished() ? [
                     'id' => $lesson->relatedQuiz->id,
                     'title' => $lesson->relatedQuiz->quiz_title,
                 ] : null,
-                'game' => $lesson->relatedGame && $lesson->relatedGame->status === 'published' ? [
+                'game' => $lesson->relatedGame?->isCurrentlyPublished() ? [
                     'id' => $lesson->relatedGame->id,
                     'title' => $lesson->relatedGame->game_title,
                 ] : null,
@@ -204,4 +214,5 @@ class LessonController extends Controller
 
         return preg_replace('/<([a-z0-9]+)\s+[^>]*>/i', '<$1>', $content) ?? '';
     }
+
 }

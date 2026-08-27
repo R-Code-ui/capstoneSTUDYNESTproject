@@ -38,8 +38,6 @@ class RolePermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'game.edit']);
         Permission::firstOrCreate(['name' => 'game.delete']);
 
-        Permission::firstOrCreate(['name' => 'report.view']);
-
         Permission::firstOrCreate(['name' => 'user.manage']);
         Permission::firstOrCreate(['name' => 'teacher.manage']);
         Permission::firstOrCreate(['name' => 'student.manage']);
@@ -65,7 +63,6 @@ class RolePermissionSeeder extends Seeder
             'quiz.view', 'quiz.create', 'quiz.edit', 'quiz.delete',
             'announcement.view', 'announcement.create', 'announcement.edit', 'announcement.delete',
             'game.view', 'game.create', 'game.edit', 'game.delete',
-            'report.view',
             'user.manage', 'teacher.manage', 'student.manage',
             'log.view',
             'message.view', 'message.send', 'message.delete',
@@ -81,7 +78,6 @@ class RolePermissionSeeder extends Seeder
             'quiz.view', 'quiz.create', 'quiz.edit', 'quiz.delete',
             'announcement.view', 'announcement.create', 'announcement.edit', 'announcement.delete',
             'game.view', 'game.create', 'game.edit', 'game.delete',
-            'report.view',
             'message.view', 'message.send', 'message.delete',
             'message.group.view', 'message.group.create', 'message.group.manage', 'message.group.send',
             'progress.view',

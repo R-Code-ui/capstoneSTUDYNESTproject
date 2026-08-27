@@ -1,297 +1,87 @@
 import { useState } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
-import FilterDropdown from '@/Components/FilterDropdown';
-import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-
-// Heroicons
 import {
-    DocumentDuplicateIcon,
     AcademicCapIcon,
+    ChartBarIcon,
+    DocumentTextIcon,
     UsersIcon,
 } from '@heroicons/react/24/outline';
 
-export default function PrincipalReports({
-    school_years,
-    grade_levels,
-    teachers,
-    trimesters,
-    filters,
-    report_title = null,
-    report_data = null,
-    report_id = null,
-    show_results = false,
-    pagination,
-}) {
-    const availableSchoolYears = school_years || [];
-    const [selectedReport, setSelectedReport] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
-    const [formData, setFormData] = useState({
-        report_type: '',
-        school_year: filters?.school_year || availableSchoolYears[0] || '',
-        grade_level: filters?.grade_level || '',
-        teacher_id: filters?.teacher_id || '',
-        trimester: filters?.trimester || '',
-    });
+const reports = [
+    { key: 'student_directory', title: 'Student Directory Report', description: 'A complete student list by grade level and account status.', icon: UsersIcon },
+    { key: 'teacher_activity', title: 'Teacher Activity Report', description: 'Published lessons, assignments, quizzes, and games per teacher.', icon: AcademicCapIcon },
+    { key: 'student_progress', title: 'Student Learning Progress Report', description: 'Completion of learning activities for each student.', icon: ChartBarIcon },
+    { key: 'school_summary', title: 'School Activity Summary', description: 'A concise overview of active users and published school content.', icon: DocumentTextIcon },
+];
 
-    const { flash } = usePage().props;
-    const hasReportData = report_data && show_results;
+export default function PrincipalReports({ grade_levels = [], school_years = [] }) {
+    const [reportType, setReportType] = useState('student_directory');
+    const [gradeLevel, setGradeLevel] = useState('all');
+    const [status, setStatus] = useState('active');
+    const [schoolYear, setSchoolYear] = useState(school_years[0] || '');
+    const selectedReport = reports.find((report) => report.key === reportType);
+    const needsSchoolYear = reportType !== 'student_directory';
+    const needsStudentStatus = reportType !== 'teacher_activity';
 
-    const resultData = hasReportData ? (report_data.data || []) : [];
-    const resultSummary = hasReportData ? (report_data.summary || null) : null;
-
-    const ReportIcons = {
-        teacher_activity: () => (
-            <UsersIcon className="w-10 h-10 mb-2 text-gray-600" />
-        ),
-        student_participation: () => (
-            <AcademicCapIcon className="w-10 h-10 mb-2 text-gray-600" />
-        ),
-        school_summary: () => (
-            <DocumentDuplicateIcon className="w-10 h-10 mb-2 text-gray-600" />
-        ),
+    const generatePdf = () => {
+        const params = new URLSearchParams({ report_type: reportType, grade_level: gradeLevel });
+        if (needsStudentStatus) params.set('status', status);
+        if (needsSchoolYear && schoolYear) params.set('school_year', schoolYear);
+        window.open(`${route('principal.reports.pdf')}?${params.toString()}`, '_blank', 'noopener,noreferrer');
     };
-
-    const PdfIcon = () => (
-        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-    );
-
-    const reportTypes = [
-        { value: 'teacher_activity', label: 'Teacher Activity Report', icon: 'teacher_activity' },
-        { value: 'student_participation', label: 'Student Participation Report', icon: 'student_participation' },
-        { value: 'school_summary', label: 'School Activity Summary Report', icon: 'school_summary' },
-    ];
-
-    const gradeOptions = [
-        { value: '', label: 'All Grades' },
-        ...(grade_levels || []).filter(g => g !== 'All Grades').map((grade) => ({ value: grade, label: grade })),
-    ];
-
-    const teacherOptions = [
-        { value: '', label: 'All Teachers' },
-        ...(teachers || []).map((teacher) => ({ value: teacher.id, label: teacher.name })),
-    ];
-
-    const trimesterOptions = [
-        { value: '', label: 'All Terms' },
-        ...(trimesters || []).filter(t => t !== 'All Trimesters' && t !== 'All Terms').map((t) => ({ value: t, label: t })),
-    ];
-
-    const schoolYearOptions = availableSchoolYears.map((year) => ({ value: year, label: year }));
-
-    const handleGenerate = () => {
-        if (!formData.report_type) {
-            alert('Please select a report type.');
-            return;
-        }
-
-        setIsLoading(true);
-        router.post(route('principal.reports.generate'), formData, {
-            preserveState: true,
-            onSuccess: () => {
-                setIsLoading(false);
-            },
-            onError: () => {
-                setIsLoading(false);
-            },
-        });
-    };
-
-    const handleReset = () => {
-        setFormData({
-            ...formData,
-            grade_level: '',
-            teacher_id: '',
-            trimester: '',
-        });
-        router.visit(route('principal.reports.index'), { preserveState: true });
-    };
-
-    const handleExportPdf = () => {
-        if (!report_id) {
-            alert('No report to export. Please generate a report first.');
-            return;
-        }
-
-        setIsExporting(true);
-        const url = route('principal.reports.export.pdf', report_id);
-        window.open(url, '_blank');
-        setTimeout(() => setIsExporting(false), 1000);
-    };
-
-    const renderReportResults = () => {
-        if (!hasReportData) return null;
-
-        return (
-            <div className="mt-6 space-y-4">
-                {resultSummary && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {Object.entries(resultSummary).map(([key, value]) => (
-                            <div key={key} className="bg-gray-50 p-4 rounded-lg text-center">
-                                <div className="text-xl font-bold text-gray-800">{value}</div>
-                                <div className="text-xs text-gray-500">
-                                    {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {resultData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left text-gray-600">
-                            <thead className="text-xs font-semibold text-gray-500 uppercase bg-gray-50">
-                                <tr>
-                                    {Object.keys(resultData[0]).map((key) => (
-                                        <th key={key} className="px-6 py-3">
-                                            {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {resultData.map((row, index) => (
-                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                        {Object.values(row).map((value, i) => (
-                                            <td key={i} className="px-6 py-4">
-                                                {typeof value === 'number' ? value : value || '—'}
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="text-center text-gray-500 py-8">
-                        No detailed rows found for this report.
-                    </p>
-                )}
-
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <SecondaryButton onClick={handleExportPdf} disabled={isExporting}>
-                        <span className="flex items-center gap-1">
-                            <PdfIcon /> Download PDF
-                        </span>
-                    </SecondaryButton>
-                </div>
-            </div>
-        );
-    };
-
-    const resultsTitle = report_title || 'Report Results';
 
     return (
-        <AuthenticatedLayout
-            header={<h2 className="text-xl font-bold text-gray-800">Reports</h2>}
-        >
+        <AuthenticatedLayout header={<h2 className="text-xl font-bold text-gray-800">Reports</h2>}>
             <Head title="Reports" />
 
-            <div className="py-6 sm:py-10">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-                    {/* Report Selection Cards */}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {reportTypes.map((type) => {
-                            const IconComponent = ReportIcons[type.icon] || ReportIcons.school_summary;
-                            return (
-                                <div
-                                    key={type.value}
-                                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 bg-white rounded-xl border ${
-                                        selectedReport === type.value
-                                            ? 'border-blue-600 ring-2 ring-blue-600'
-                                            : 'border-gray-200'
-                                    } shadow-sm overflow-hidden`}
-                                    onClick={() => {
-                                        setSelectedReport(type.value);
-                                        setFormData({ ...formData, report_type: type.value });
-                                    }}
-                                >
-                                    <div className="p-6 flex flex-col items-center text-center">
-                                        <IconComponent />
-                                        <h4 className="font-semibold text-gray-800">
-                                            {type.label}
-                                        </h4>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+            <div className="principal-reports-page py-6 sm:py-10">
+                <style>{`
+                    .studynest-layout.theme-dark .principal-reports-page .report-hero { background: linear-gradient(110deg, rgb(30 41 59), rgb(15 23 42)) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .principal-reports-page .report-choice { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .principal-reports-page .report-choice-selected { background-color: rgb(30 41 59) !important; border-color: rgb(59 130 246) !important; }
+                    .studynest-layout.theme-dark .principal-reports-page .report-filters { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .principal-reports-page h1, .studynest-layout.theme-dark .principal-reports-page h3, .studynest-layout.theme-dark .principal-reports-page h4 { color: rgb(241 245 249) !important; }
+                    .studynest-layout.theme-dark .principal-reports-page p, .studynest-layout.theme-dark .principal-reports-page label { color: rgb(148 163 184) !important; }
+                    .studynest-layout.theme-dark .principal-reports-page select { background-color: rgb(30 41 59) !important; border-color: rgb(71 85 105) !important; color: rgb(241 245 249) !important; }
+                    .studynest-layout.theme-dark .principal-reports-page option { background-color: rgb(30 41 59); color: rgb(241 245 249); }
+                    .studynest-layout.theme-dark .principal-reports-page .border-slate-200 { border-color: rgb(51 65 85) !important; }
+                `}</style>
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+                    <section className="report-hero rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-5 sm:p-7">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Principal reports</p>
+                        <h1 className="mt-1 text-2xl font-bold text-slate-900">Generate clear school reports</h1>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Choose a report, set its scope, then download a professional PDF for school records or presentation.</p>
+                    </section>
 
-                    {/* Filter Panel - FIX: removed overflow-hidden */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-sm font-semibold text-gray-700">Report Filters</h3>
+                    <section>
+                        <h3 className="mb-3 text-base font-semibold text-slate-800">Choose a report</h3>
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            {reports.map((report) => {
+                                const Icon = report.icon;
+                                const isSelected = report.key === reportType;
+                                return <button key={report.key} type="button" onClick={() => setReportType(report.key)} className={`report-choice rounded-xl border p-5 text-left transition-all ${isSelected ? 'report-choice-selected border-blue-600 bg-blue-50 ring-2 ring-blue-600/20' : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm'}`}>
+                                    <span className={`mb-4 inline-flex rounded-lg p-2.5 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}><Icon className="h-6 w-6" /></span>
+                                    <h4 className="font-semibold text-slate-900">{report.title}</h4>
+                                    <p className="mt-2 text-sm leading-5 text-slate-600">{report.description}</p>
+                                </button>;
+                            })}
                         </div>
-                        <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                <FilterDropdown
-                                    options={schoolYearOptions}
-                                    value={formData.school_year}
-                                    onChange={(val) => setFormData({ ...formData, school_year: val })}
-                                    placeholder="School Year"
-                                    label="School Year"
-                                    size="md"
-                                />
-                                <FilterDropdown
-                                    options={gradeOptions}
-                                    value={formData.grade_level}
-                                    onChange={(val) => setFormData({ ...formData, grade_level: val })}
-                                    placeholder="Grade Level"
-                                    label="Grade Level"
-                                    size="md"
-                                />
-                                <FilterDropdown
-                                    options={teacherOptions}
-                                    value={formData.teacher_id}
-                                    onChange={(val) => setFormData({ ...formData, teacher_id: val })}
-                                    placeholder="Teacher"
-                                    label="Teacher"
-                                    size="md"
-                                />
-                                <FilterDropdown
-                                    options={trimesterOptions}
-                                    value={formData.trimester}
-                                    onChange={(val) => setFormData({ ...formData, trimester: val })}
-                                    placeholder="Term"
-                                    label="Term"
-                                    size="md"
-                                />
-                            </div>
+                    </section>
 
-                            {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-                                <SecondaryButton type="button" onClick={handleReset}>
-                                    Reset Filters
-                                </SecondaryButton>
-                                <PrimaryButton
-                                    type="button"
-                                    onClick={handleGenerate}
-                                    disabled={!formData.report_type || isLoading}
-                                >
-                                    {isLoading ? 'Generating...' : 'Generate Report'}
-                                </PrimaryButton>
-                            </div>
+                    <section className="report-filters rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                        <div className="flex flex-col gap-1 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div><h3 className="font-semibold text-slate-900">Report filters</h3><p className="mt-1 text-sm text-slate-600">{selectedReport?.title}</p></div>
+                            <span className="mt-2 inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:mt-0">PDF download</span>
                         </div>
-                    </div>
-
-                    {isLoading && <LoadingSpinner overlay size="lg" text="Generating report..." />}
-
-                    {hasReportData && (
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
-                                <h3 className="text-sm font-semibold text-gray-700">{resultsTitle}</h3>
-                            </div>
-                            <div className="p-6">
-                                {renderReportResults()}
-                            </div>
+                        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <label className="block text-sm font-medium text-slate-700">Grade Level<select value={gradeLevel} onChange={(event) => setGradeLevel(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600"><option value="all">All Grades</option>{grade_levels.map((grade) => <option key={grade} value={grade}>{grade}</option>)}</select></label>
+                            {needsStudentStatus && <label className="block text-sm font-medium text-slate-700">Student Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600"><option value="active">Active Students</option><option value="inactive">Inactive Students</option><option value="all">All Students</option></select></label>}
+                            {needsSchoolYear && <label className="block text-sm font-medium text-slate-700">School Year<select value={schoolYear} onChange={(event) => setSchoolYear(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600">{school_years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>}
                         </div>
-                    )}
+                        <div className="mt-6 flex justify-end border-t border-slate-200 pt-5"><PrimaryButton onClick={generatePdf} className="inline-flex items-center gap-2"><DocumentTextIcon className="h-5 w-5" />Generate PDF</PrimaryButton></div>
+                    </section>
                 </div>
             </div>
         </AuthenticatedLayout>

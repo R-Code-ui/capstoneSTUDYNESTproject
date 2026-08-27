@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
+use App\Models\User;
 use App\Models\AssignmentResource;
 use App\Models\Lesson;
 use Carbon\Carbon;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
 use App\Services\StudyNestNotificationService;
+use App\Services\PublicationManager;
 
 class AssignmentController extends Controller
 {
@@ -51,13 +53,19 @@ class AssignmentController extends Controller
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
 
-        $statuses = ['draft', 'published', 'archived'];
+        $studentCounts = User::role('student')
+            ->where('is_active', true)
+            ->whereIn('grade_level', $assignments->pluck('grade_level')->unique())
+            ->selectRaw('grade_level, COUNT(*) as total')
+            ->groupBy('grade_level')
+            ->pluck('total', 'grade_level');
+
+        $statuses = ['draft', 'scheduled', 'published', 'archived'];
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
 
         return Inertia::render('Teacher/Assignments/Index', [
-            'assignments' => $assignments->map(function ($assignment) {
-                $submissionsCount = $assignment->submissions()->count();
+            'assignments' => $assignments->map(function ($assignment) use ($studentCounts) {
                 $submittedCount = $assignment->submissions()
                     ->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded'])
                     ->count();
@@ -71,7 +79,9 @@ class AssignmentController extends Controller
                     'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                     'total_points' => $assignment->total_points,
                     'status' => $assignment->status,
-                    'submissions' => $submittedCount . '/' . $submissionsCount,
+                    'submissions' => $submittedCount . '/' . ($studentCounts[$assignment->grade_level] ?? 0),
+                    'completed_students' => $submittedCount,
+                    'total_students' => (int) ($studentCounts[$assignment->grade_level] ?? 0),
                     'created_at' => $assignment->created_at->format('Y-m-d'),
                 ];
             }),
@@ -103,7 +113,7 @@ class AssignmentController extends Controller
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = config('school.school_years');
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'scheduled', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
@@ -157,16 +167,18 @@ class AssignmentController extends Controller
             'allow_late_submission' => 'boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
-            'resource_url' => 'nullable|url|max:2048',
+            'resource_urls' => 'nullable|array|max:10',
+            'resource_urls.*' => 'nullable|url|max:2048',
             'submission_methods' => 'required|array|min:1|max:3',
             'submission_methods.*' => 'in:digital,paper',
             'resources' => 'nullable|array|max:4',
             'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
-            'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
+            'status' => 'required|in:draft,scheduled,published,archived',
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
         ]);
 
         unset($validated['resources']);
+        app(PublicationManager::class)->normalize($validated);
 
         if (Carbon::parse($validated['due_date'] . ' ' . $validated['due_time'])->lte(now())) {
             return redirect()->back()
@@ -174,9 +186,15 @@ class AssignmentController extends Controller
                 ->withInput();
         }
 
-        $resourceUrl = $validated['resource_url'] ?? null;
+        app(PublicationManager::class)->ensureDeadlineAfterPublication(
+            Carbon::parse($validated['due_date'] . ' ' . $validated['due_time']),
+            $validated['publish_date'],
+            'due_date'
+        );
+
+        $resourceUrls = array_values(array_filter($validated['resource_urls'] ?? []));
         $validated['submission_methods'] = json_encode($validated['submission_methods']);
-        unset($validated['resource_url'], $validated['deleted_resource_ids']);
+        unset($validated['resource_urls'], $validated['deleted_resource_ids']);
 
         $assignment = Assignment::create([
             'teacher_id' => auth()->id(),
@@ -191,7 +209,7 @@ class AssignmentController extends Controller
             'related_module'      => 'Assignment Module',
         ]);
 
-        if ($assignment->status === 'published') {
+        if ($assignment->isCurrentlyPublished()) {
             app(StudyNestNotificationService::class)->assignmentPublished($assignment);
         }
 
@@ -218,16 +236,7 @@ class AssignmentController extends Controller
             }
         }
 
-        if (!empty($resourceUrl)) {
-            AssignmentResource::create([
-                'assignment_id' => $assignment->id,
-                'resource_type' => 'url',
-                'file_name' => 'External Link',
-                'file_path' => $resourceUrl,
-                'file_size' => 0,
-                'mime_type' => 'url',
-            ]);
-        }
+        $this->syncExternalResources($assignment, $resourceUrls);
 
         return redirect()->route('teacher.assignments.index')
             ->with('success', 'Assignment created successfully!');
@@ -263,7 +272,7 @@ class AssignmentController extends Controller
                 'due_time' => $assignment->due_time,
                 'submission_methods' => $submissionMethods,
                 'status' => $assignment->status,
-                'publish_date' => $assignment->publish_date ? $assignment->publish_date->format('Y-m-d') : '—',
+                'publish_date' => $assignment->publish_date?->format('M d, Y g:i A') ?? 'Not published',
                 'created_at' => $assignment->created_at->format('Y-m-d H:i'),
                 'resources' => $assignment->resources->map(function ($resource) {
                     return [
@@ -293,7 +302,7 @@ class AssignmentController extends Controller
         $assignmentTypes = ['homework', 'worksheet', 'performance_task', 'project', 'reflection_activity', 'practice_exercise', 'reading_assignment'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = config('school.school_years');
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'scheduled', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
@@ -339,7 +348,7 @@ class AssignmentController extends Controller
                 'due_time' => $assignment->due_time,
                 'submission_methods' => $submissionMethodsValue,
                 'status' => $assignment->status,
-                'publish_date' => $assignment->publish_date ? $assignment->publish_date->format('Y-m-d') : '—',
+                'publish_date' => $assignment->publish_date?->format('Y-m-d\TH:i') ?? '',
                 'resources' => $assignment->resources->map(function ($resource) {
                     return [
                         'id' => $resource->id,
@@ -385,17 +394,21 @@ class AssignmentController extends Controller
             'allow_late_submission' => 'boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
-            'resource_url' => 'nullable|url|max:2048',
+            'resource_urls' => 'nullable|array|max:10',
+            'resource_urls.*' => 'nullable|url|max:2048',
+            'resource_urls_present' => 'nullable|boolean',
             'submission_methods' => 'required|array|min:1|max:3',
             'submission_methods.*' => 'in:digital,paper',
             'resources' => 'nullable|array|max:4',
             'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
-            'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
+            'status' => 'required|in:draft,scheduled,published,archived',
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
             'deleted_resource_ids' => 'nullable|string',
         ]);
 
         unset($validated['resources']);
+        $wasPublished = $assignment->isCurrentlyPublished();
+        app(PublicationManager::class)->normalize($validated, $assignment);
 
         if (Carbon::parse($validated['due_date'] . ' ' . $validated['due_time'])->lte(now())) {
             return redirect()->back()
@@ -403,12 +416,23 @@ class AssignmentController extends Controller
                 ->withInput();
         }
 
-        $resourceUrl = $validated['resource_url'] ?? null;
+        app(PublicationManager::class)->ensureDeadlineAfterPublication(
+            Carbon::parse($validated['due_date'] . ' ' . $validated['due_time']),
+            $validated['publish_date'],
+            'due_date'
+        );
+
+        $resourceUrls = array_values(array_filter($validated['resource_urls'] ?? []));
+        $resourceUrlsPresent = $request->boolean('resource_urls_present');
         $deletedResourceIds = $validated['deleted_resource_ids'] ?? null;
         $validated['submission_methods'] = json_encode($validated['submission_methods']);
-        unset($validated['resource_url'], $validated['deleted_resource_ids']);
+        unset($validated['resource_urls'], $validated['resource_urls_present'], $validated['deleted_resource_ids']);
 
         $assignment->update($validated);
+
+        if (!$wasPublished && $assignment->isCurrentlyPublished()) {
+            app(StudyNestNotificationService::class)->assignmentPublished($assignment);
+        }
 
         if (!empty($deletedResourceIds)) {
             $deletedIds = explode(',', $deletedResourceIds);
@@ -464,19 +488,8 @@ class AssignmentController extends Controller
             }
         }
 
-        if ($request->has('resource_url')) {
-            $assignment->resources()->where('resource_type', 'url')->delete();
-
-            if (!empty($resourceUrl)) {
-                AssignmentResource::create([
-                    'assignment_id' => $assignment->id,
-                    'resource_type' => 'url',
-                    'file_name' => 'External Link',
-                    'file_path' => $resourceUrl,
-                    'file_size' => 0,
-                    'mime_type' => 'url',
-                ]);
-            }
+        if ($resourceUrlsPresent) {
+            $this->syncExternalResources($assignment, $resourceUrls);
         }
 
         return redirect()->route('teacher.assignments.index')
@@ -521,7 +534,7 @@ class AssignmentController extends Controller
 
         $assignment->update([
             'status' => 'published',
-            'publish_date' => now()->format('Y-m-d'),
+            'publish_date' => now(),
         ]);
 
         app(StudyNestNotificationService::class)->assignmentPublished($assignment);
@@ -618,5 +631,22 @@ class AssignmentController extends Controller
 
         // All other types (Word documents, PowerPoint presentations, etc.) are stored as 'worksheet'
         return 'worksheet';
+    }
+
+    private function syncExternalResources(Assignment $assignment, array $urls): void
+    {
+        $assignment->resources()->where('resource_type', 'url')->delete();
+
+        foreach ($urls as $url) {
+            $host = parse_url($url, PHP_URL_HOST) ?: 'External resource';
+            AssignmentResource::create([
+                'assignment_id' => $assignment->id,
+                'resource_type' => 'url',
+                'file_name' => ucfirst(preg_replace('/^www\./i', '', $host)),
+                'file_path' => $url,
+                'file_size' => 0,
+                'mime_type' => 'url',
+            ]);
+        }
     }
 }

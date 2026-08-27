@@ -193,17 +193,6 @@ class StudyNestNotificationService
         ));
     }
 
-    public function reportGenerated(User $creator, string $reportTitle, ?int $reportId = null): void
-    {
-        $recipients = $creator->isTeacher()
-            ? User::role('principal')->where('is_active', true)->get()
-            : collect([$creator]);
-        $this->send($recipients, new StudyNestNotification(
-            'report_generated', 'Report Generated', $creator->name . ' generated "' . $reportTitle . '".',
-            'normal', $creator->isTeacher() ? route('principal.reports.index') : route('principal.reports.index'), 'report'
-        ));
-    }
-
     public function userCreated(User $createdUser, User $actor): void
     {
         $recipients = User::role('principal')->where('is_active', true)->where('id', '!=', $actor->id)->get();
@@ -229,6 +218,10 @@ class StudyNestNotificationService
 
         if ($audience === 'teachers_only') {
             return $query->role('teacher')->get();
+        }
+
+        if ($audience === 'all_grades') {
+            return $query->role('student')->get();
         }
 
         if (preg_match('/grade[ _-]?(4|5|6)/i', $audience, $matches)) {

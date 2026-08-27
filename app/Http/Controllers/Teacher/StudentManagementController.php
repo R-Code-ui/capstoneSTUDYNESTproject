@@ -37,7 +37,7 @@ class StudentManagementController extends Controller
         $gradeFilter = $request->input('grade_level');
         $genderFilter = $request->input('gender');
         $statusFilter = $request->input('status');   // 'active', 'inactive'
-        $sort = $request->input('sort', 'name_asc'); // default sort by name A-Z
+        $sort = $request->input('sort', 'created_at_desc'); // default: newest students first
 
         $studentsQuery = User::role('student')
             ->whereIn('grade_level', $assignedGrades)
@@ -106,8 +106,9 @@ class StudentManagementController extends Controller
                 ['value' => 'inactive', 'label' => 'Inactive'],
             ],
             'sort_options' => [
-                ['value' => 'name_asc', 'label' => 'Name A‑Z'],
-                ['value' => 'name_desc', 'label' => 'Name Z‑A'],
+                ['value' => 'name_asc', 'label' => 'Last Name (A–Z)'],
+                ['value' => 'name_desc', 'label' => 'Last Name (Z–A)'],
+                ['value' => 'created_at_desc', 'label' => 'Recently Added'],
             ],
             'filters' => [
                 'search' => $search,
@@ -196,6 +197,7 @@ class StudentManagementController extends Controller
                 'email' => $validated['lrn'] . '@studynest.local',
                 'password' => Hash::make('Student123'),
                 'is_active' => true,
+                'must_change_password' => true,
             ]);
             $user->assignRole('student');
             $user->enrollments()->create([
@@ -205,7 +207,11 @@ class StudentManagementController extends Controller
             ]);
         });
 
-        return redirect()->back()->with('success', 'Student created successfully!');
+        // Return to the first page without any active filters so the newly
+        // created student is immediately visible at the top of the table.
+        return redirect()
+            ->route('teacher.students.index', ['sort' => 'created_at_desc'])
+            ->with('success', 'Student created successfully!');
     }
 
     /**
@@ -289,6 +295,7 @@ class StudentManagementController extends Controller
 
         $user->update([
             'password' => Hash::make($validated['new_password']),
+            'must_change_password' => true,
         ]);
 
         return redirect()->back()->with('success', 'Password reset successfully!');

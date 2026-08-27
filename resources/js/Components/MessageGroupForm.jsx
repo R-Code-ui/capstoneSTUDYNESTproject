@@ -33,6 +33,13 @@ export default function MessageGroupForm({ group = null, students = [], subjects
         setData('member_ids', memberIds);
     };
 
+    const allStudentIds = students.map((student) => student.id);
+    const allStudentsSelected = allStudentIds.length > 0 && allStudentIds.every((id) => data.member_ids.includes(id));
+
+    const toggleAllStudents = () => {
+        setData('member_ids', allStudentsSelected ? [] : allStudentIds);
+    };
+
     const submit = (event) => {
         event.preventDefault();
         const options = { preserveScroll: true };
@@ -109,9 +116,19 @@ export default function MessageGroupForm({ group = null, students = [], subjects
                     </div>
 
                     <div>
-                        <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                             <InputLabel value="Students" required />
-                            <span className="text-xs text-slate-500">{data.member_ids.length} selected</span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs text-slate-500">{data.member_ids.length} selected</span>
+                                <button
+                                    type="button"
+                                    onClick={toggleAllStudents}
+                                    disabled={allStudentIds.length === 0}
+                                    className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20"
+                                >
+                                    {allStudentsSelected ? 'Clear selection' : 'Select all students'}
+                                </button>
+                            </div>
                         </div>
                         <TextInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search students by name or ID..." className="mt-2 block w-full" />
                         <div className="student-list mt-2 max-h-72 overflow-y-auto rounded-md border border-slate-200">

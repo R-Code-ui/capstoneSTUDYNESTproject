@@ -118,7 +118,9 @@ export default function AnnouncementsShow({ announcement }) {
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Target Audience</div>
                                     <div className="font-medium text-gray-800">
-                                        {announcement.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        {announcement.target_audience === 'all_grades'
+                                            ? 'All Students'
+                                            : announcement.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                     </div>
                                 </div>
                                 <div>

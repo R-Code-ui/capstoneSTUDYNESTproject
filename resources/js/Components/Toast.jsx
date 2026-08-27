@@ -11,13 +11,11 @@ export default function Toast({
     const [isVisible, setIsVisible] = useState(true);
     const [progress, setProgress] = useState(100);
 
-    // Check for flash messages from Inertia
-    const { flash } = usePage().props;
-    const flashMessage = flash?.message || message;
-    const flashType = flash?.type || type;
+    const toastMessage = message;
+    const toastType = type;
 
     useEffect(() => {
-        if (!flashMessage) {
+        if (!toastMessage) {
             setIsVisible(false);
             return;
         }
@@ -44,44 +42,44 @@ export default function Toast({
             clearTimeout(timer);
             clearInterval(interval);
         };
-    }, [flashMessage, duration]);
+    }, [toastMessage, duration]);
 
-    if (!isVisible || !flashMessage) {
+    if (!isVisible || !toastMessage) {
         return null;
     }
 
     const variants = {
         success: {
-            bg: 'bg-green-50 dark:bg-green-900/30',
-            border: 'border-green-400 dark:border-green-600',
-            text: 'text-green-800 dark:text-green-200',
-            icon: 'text-green-400 dark:text-green-300',
-            progress: 'bg-green-500 dark:bg-green-400',
+            bg: 'bg-green-50 dark:bg-slate-900',
+            border: 'border-green-400 dark:border-emerald-500/70',
+            text: 'text-green-800 dark:text-slate-100',
+            icon: 'text-green-500 dark:text-emerald-400',
+            progress: 'bg-green-500 dark:bg-emerald-400',
         },
         error: {
-            bg: 'bg-red-50 dark:bg-red-900/30',
-            border: 'border-red-400 dark:border-red-600',
-            text: 'text-red-800 dark:text-red-200',
-            icon: 'text-red-400 dark:text-red-300',
-            progress: 'bg-red-500 dark:bg-red-400',
+            bg: 'bg-red-50 dark:bg-slate-900',
+            border: 'border-red-400 dark:border-rose-500/70',
+            text: 'text-red-800 dark:text-slate-100',
+            icon: 'text-red-500 dark:text-rose-400',
+            progress: 'bg-red-500 dark:bg-rose-400',
         },
         warning: {
-            bg: 'bg-yellow-50 dark:bg-yellow-900/30',
-            border: 'border-yellow-400 dark:border-yellow-600',
-            text: 'text-yellow-800 dark:text-yellow-200',
-            icon: 'text-yellow-400 dark:text-yellow-300',
-            progress: 'bg-yellow-500 dark:bg-yellow-400',
+            bg: 'bg-yellow-50 dark:bg-slate-900',
+            border: 'border-yellow-400 dark:border-amber-500/70',
+            text: 'text-yellow-800 dark:text-slate-100',
+            icon: 'text-yellow-500 dark:text-amber-400',
+            progress: 'bg-yellow-500 dark:bg-amber-400',
         },
         info: {
-            bg: 'bg-blue-50 dark:bg-blue-900/30',
-            border: 'border-blue-400 dark:border-blue-600',
-            text: 'text-blue-800 dark:text-blue-200',
-            icon: 'text-blue-400 dark:text-blue-300',
-            progress: 'bg-blue-500 dark:bg-blue-400',
+            bg: 'bg-blue-50 dark:bg-slate-900',
+            border: 'border-blue-400 dark:border-sky-500/70',
+            text: 'text-blue-800 dark:text-slate-100',
+            icon: 'text-blue-500 dark:text-sky-400',
+            progress: 'bg-blue-500 dark:bg-sky-400',
         },
     };
 
-    const variant = variants[flashType] || variants.success;
+    const variant = variants[toastType] || variants.success;
 
     const icons = {
         success: (
@@ -116,14 +114,14 @@ export default function Toast({
     };
 
     return (
-        <div className={`fixed ${positionClasses[position] || positionClasses['top-right']} z-50 max-w-sm w-full pointer-events-none`}>
-            <div className={`pointer-events-auto relative rounded-lg border ${variant.border} shadow-lg ${variant.bg} overflow-hidden`}>
+        <div className={`fixed ${positionClasses[position] || positionClasses['top-right']} z-[100] max-w-sm w-full pointer-events-none`}>
+            <div className={`pointer-events-auto relative overflow-hidden rounded-xl border ${variant.border} bg-opacity-100 shadow-2xl ${variant.bg}`}>
                 <div className="flex items-start p-4">
                     <div className={`flex-shrink-0 ${variant.icon}`}>
-                        {icons[flashType] || icons.info}
+                        {icons[toastType] || icons.info}
                     </div>
                     <div className={`ml-3 flex-1 ${variant.text}`}>
-                        <p className="text-sm font-medium">{flashMessage}</p>
+                        <p className="text-sm font-medium">{toastMessage}</p>
                     </div>
                     <button
                         onClick={() => {

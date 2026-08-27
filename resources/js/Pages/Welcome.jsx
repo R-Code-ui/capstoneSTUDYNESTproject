@@ -313,7 +313,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 {/* ========================================================= */}
                 {/* 100% STICKY TOP NAVIGATION BAR                            */}
                 {/* ========================================================= */}
-                <header className="fixed left-1/2 top-6 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 rounded-full bg-white/90 backdrop-blur-xl border border-white shadow-lg shadow-slate-900/10">
+                <header className={`fixed left-1/2 top-6 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden border border-white bg-white/90 shadow-lg shadow-slate-900/10 backdrop-blur-xl ${isMobileMenuOpen ? 'rounded-3xl' : 'rounded-full'}`}>
                     <nav className="px-4 sm:px-6 lg:px-8 h-16 sm:h-[4.5rem] flex items-center justify-between">
 
                         {/* Brand Logo & Name */}
@@ -379,8 +379,9 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                 type="button"
-                                className="inline-flex lg:hidden items-center justify-center p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#4ECDC4]"
+                                className={`inline-flex lg:hidden h-10 w-10 items-center justify-center rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-[#4ECDC4] ${isMobileMenuOpen ? 'bg-[#4ECDC4]/15 text-[#168f87]' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
                                 aria-expanded={isMobileMenuOpen}
+                                aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
                             >
                                 <span className="sr-only">Open main menu</span>
                                 {!isMobileMenuOpen ? (
@@ -398,7 +399,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
                     {/* Mobile Dropdown Navigation Menu */}
                     {isMobileMenuOpen && (
-                        <div className="lg:hidden border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-2 pb-4 space-y-2 font-bold text-sm text-slate-700 shadow-lg">
+                        <div className="lg:hidden border-t border-slate-200 bg-white/95 px-4 pb-4 pt-3 font-bold text-sm text-slate-700">
                             <a
                                 href="#home"
                                 onClick={() => setIsMobileMenuOpen(false)}
@@ -605,7 +606,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="text-emerald-600 font-bold">•</span>
-                                    <span>Role-Based Access Control (RBAC) ensuring secure, LRN-tailored portals.</span>
+                                    <span>Role-Based Access Control (RBAC) ensuring secure, role-tailored portals.</span>
                                 </li>
                             </ul>
                         </div>
@@ -680,7 +681,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                 Role-Based Access
                             </h3>
                             <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                                Secure, high-integrity gateways filtering explicit parameters for LRN credentials, Teacher IDs, or Principal keys.
+                                Secure, high-integrity gateways protecting school-issued account credentials and role-specific access keys.
                             </p>
                         </div>
 
@@ -771,7 +772,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800">Student Access Portal</h3>
-                                        <p className="text-xs text-slate-500 font-bold">Log in using Learner Reference Number (LRN)</p>
+                                         <p className="text-xs text-slate-500 font-bold">Log in using the student account credentials provided by the school</p>
                                     </div>
                                 </div>
                                 <div className="grid sm:grid-cols-2 gap-3 pt-4 text-xs sm:text-sm font-semibold text-slate-700">
@@ -802,7 +803,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><AcademicCapIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Online Quiz Maker & Automated Scoring</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><PuzzlePieceIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Assign Educational Learning Games</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChatBubbleLeftIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Direct Academic Messaging with Students</span></div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📈 Class Performance Reports Generation</div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChartBarIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Class Performance Reports Generation</span></div>
                                 </div>
                             </div>
                         )}
@@ -824,7 +825,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChartBarIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>School-Wide Academic Reports & Summaries</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><MegaphoneIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Global School Announcements Creation</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><UserGroupIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Access Control & System Permissions</span></div>
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">📈 Continuous Audit & System Monitoring</div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChartBarIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Continuous Audit & System Monitoring</span></div>
                                 </div>
                             </div>
                         )}
@@ -853,16 +854,24 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             },
                             {
                                 q: 'How do students log into their accounts?',
-                                a: 'Students log in using their 12-digit Learner Reference Number (LRN) provided by the school administration.'
+                                 a: 'Students log in using the school-issued student account credentials provided by the school administration.'
                             },
                             {
                                 q: 'Does StudyNest support offline or paper-based learning?',
                                 a: 'Yes! StudyNest supports both digital assignment submissions and manual tracking for physical paper-based classroom activities.'
                             },
-                            {
-                                q: 'Can teachers track student quiz results automatically?',
-                                a: 'Yes, quizzes created within the platform feature automated scoring and instant grade recording for teacher review.'
-                            }
+                             {
+                                 q: 'Can teachers track student quiz results automatically?',
+                                 a: 'Yes, quizzes created within the platform feature automated scoring and instant grade recording for teacher review.'
+                             },
+                             {
+                                 q: 'What devices can students use to access StudyNest?',
+                                 a: 'StudyNest works on modern phones, tablets, laptops, and desktop computers with an internet browser.'
+                             },
+                             {
+                                 q: 'How does StudyNest protect user access?',
+                                 a: 'Each role has its own protected portal, and access is limited according to the permissions assigned by the school.'
+                             }
                         ].map((faq, idx) => (
                             <div key={idx} className="bg-white rounded-2xl border-2 border-slate-200/80 overflow-hidden shadow-xs">
                                 <button
@@ -904,7 +913,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             {!auth?.user && (
                                 <Link
                                     href={route('login')}
-                                    className="rounded-full bg-white text-blue-700 hover:bg-blue-50 px-8 py-3.5 text-xs sm:text-sm font-black shadow-xl hover:shadow-2xl transition duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center gap-2"
+                                    className="rounded-full bg-white text-blue-700 hover:bg-blue-50 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 px-8 py-3.5 text-xs sm:text-sm font-black shadow-xl hover:shadow-2xl transition duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center gap-2"
                                 >
                                     Log In Now
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>

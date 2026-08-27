@@ -23,7 +23,7 @@ class AssignmentController extends Controller
         $subjectFilter = $request->input('subject');
 
         $assignments = Assignment::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->when($search, function ($query, $search) {
                 return $query->where(function ($query) use ($search) {
                     $query->where('assignment_title', 'like', "%{$search}%")
@@ -76,7 +76,7 @@ class AssignmentController extends Controller
             abort(403);
         }
 
-        abort_unless($assignment->status === 'published', 404);
+        abort_unless($assignment->isCurrentlyPublished(), 404);
 
         $assignment->load('resources');
 
@@ -141,10 +141,10 @@ class AssignmentController extends Controller
             abort(403);
         }
 
-        abort_unless($assignment->status === 'published', 404);
+        abort_unless($assignment->isCurrentlyPublished(), 404);
 
         $validated = $request->validate([
-            'submission_method' => 'required|in:digital,paper',
+            'submission_method' => 'required|in:digital',
             'files'             => 'nullable|array|max:4',
             'files.*'           => 'file|max:102400|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4',
         ]);
@@ -246,7 +246,7 @@ class AssignmentController extends Controller
             abort(403);
         }
 
-        abort_unless($assignment->status === 'published', 404);
+        abort_unless($assignment->isCurrentlyPublished(), 404);
 
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) {
@@ -264,7 +264,7 @@ class AssignmentController extends Controller
 
         if ($assignment->grade_level !== $user->grade_level) abort(403);
 
-        abort_unless($assignment->status === 'published', 404);
+        abort_unless($assignment->isCurrentlyPublished(), 404);
 
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) abort(404, 'File not found.');
@@ -273,4 +273,5 @@ class AssignmentController extends Controller
             'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),
         ]);
     }
+
 }

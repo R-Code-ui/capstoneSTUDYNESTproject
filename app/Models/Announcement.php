@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Announcement extends Model
@@ -38,9 +39,31 @@ class Announcement extends Model
     {
         return [
             'is_pinned' => 'boolean',
-            'publish_date' => 'date',
-            'expiration_date' => 'date',
+            'publish_date' => 'datetime',
+            'expiration_date' => 'datetime',
         ];
+    }
+
+    /**
+     * Limit a query to announcements that are visible right now.
+     */
+    public function scopeCurrentlyVisible(Builder $query): Builder
+    {
+        return $query
+            ->where('status', 'published')
+            ->whereNotNull('publish_date')
+            ->where('publish_date', '<=', now())
+            ->where(function (Builder $query) {
+                $query->whereNull('expiration_date')
+                    ->orWhere('expiration_date', '>', now());
+            });
+    }
+
+    public function isCurrentlyVisible(): bool
+    {
+        return $this->status === 'published'
+            && $this->publish_date?->lessThanOrEqualTo(now())
+            && (!$this->expiration_date || $this->expiration_date->isFuture());
     }
 
     /**

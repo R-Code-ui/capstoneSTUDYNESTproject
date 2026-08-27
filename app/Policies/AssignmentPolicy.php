@@ -30,7 +30,7 @@ class AssignmentPolicy
         }
 
         if ($user->hasRole('student')) {
-            return $user->grade_level === $assignment->grade_level;
+            return $assignment->isCurrentlyPublished() && $user->grade_level === $assignment->grade_level;
         }
 
         return false;

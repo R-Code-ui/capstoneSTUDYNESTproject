@@ -21,11 +21,9 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $grade = $user->grade_level;
-        $today = now()->toDateString();
-        $published = fn ($query) => $query->where('status', 'published')->whereDate('publish_date', '<=', $today);
+        $published = fn ($query) => $query->currentlyPublished();
 
-        $recentAnnouncements = Announcement::with('user')->where('status', 'published')->whereDate('publish_date', '<=', $today)
-            ->where(fn ($q) => $q->whereNull('expiration_date')->orWhereDate('expiration_date', '>=', $today))
+        $recentAnnouncements = Announcement::with('user')->currentlyVisible()
             ->where(fn ($q) => $q->whereIn('target_audience', ['all_users', 'all_grades', $grade, strtolower(str_replace(' ', '_', $grade))])
                 ->orWhere(fn ($inner) => $inner->where('target_audience', 'all_assigned_students')->whereHas('user.gradeAssignments', fn ($grades) => $grades->where('grade_level', $grade))))
             ->latest()->limit(3)->get()->map(fn ($announcement) => [

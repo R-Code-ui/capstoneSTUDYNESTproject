@@ -10,210 +10,152 @@ use App\Models\GameResult;
 use App\Models\Lesson;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
-use App\Models\ReportExport;
 use App\Models\User;
-use App\Services\StudyNestNotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ReportController extends Controller
 {
-    private const SUBJECTS = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
-    private const TERMS = ['1st Term', '2nd Term', '3rd Term'];
-
-    public function index(Request $request)
+    public function index()
     {
-        Gate::authorize('report.view');
-        $assignedGrades = auth()->user()->gradeAssignments()->pluck('grade_level')->values()->all();
+        $teacher = auth()->user();
+        $grades = $teacher->gradeAssignments()->pluck('grade_level')->values();
+
+        $subjects = collect([
+            ...$teacher->lessons()->pluck('subject'),
+            ...$teacher->assignments()->pluck('subject'),
+            ...$teacher->quizzes()->pluck('subject'),
+        ])->filter()->unique()->sort()->values();
+
         return Inertia::render('Teacher/Reports/Index', [
-            'assigned_grades' => $assignedGrades,
-            'subjects' => self::SUBJECTS,
-            'terms' => self::TERMS,
-            'school_years' => config('school.school_years', []),
-            'grade_levels' => $assignedGrades,
-            'filters' => [
-                'grade_level' => $request->input('grade_level'),
-                'subject' => $request->input('subject'),
-                'term' => $request->input('term'),
-                'school_year' => $request->input('school_year'),
-                'gender' => $request->input('gender'),
-                'status' => $request->input('status'),
-                'search' => $request->input('search'),
-            ],
+            'assigned_grades' => $grades,
+            'subjects' => $subjects,
+            'school_years' => config('school.school_years'),
+            'trimesters' => ['1st Term', '2nd Term', '3rd Term'],
         ]);
     }
 
-    public function generatePdf(Request $request)
+    public function downloadPdf(Request $request)
     {
-        Gate::authorize('report.view');
-        $user = auth()->user();
-        $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->values()->all();
-        $reportType = $request->input('report_type');
-        $grade = $request->input('grade_level');
-        $subject = $request->input('subject');
-        $term = $request->input('term'); // UI name; stored/query column is trimester.
-        $schoolYear = $request->input('school_year');
-        $gender = $request->input('gender');
-        $status = $request->input('status');
-        $search = $request->input('search');
-        $types = ['assignment_completion', 'quiz_performance', 'student_progress', 'lesson_completion', 'game_participation', 'student_information'];
+        $teacher = auth()->user();
+        $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->all();
 
-        if (!in_array($reportType, $types, true) || ($grade !== null && $grade !== '' && !in_array($grade, $assignedGrades, true))
-            || ($subject !== null && $subject !== '' && !in_array($subject, self::SUBJECTS, true))
-            || ($term !== null && $term !== '' && !in_array($term, self::TERMS, true))
-            || ($schoolYear !== null && $schoolYear !== '' && !in_array($schoolYear, config('school.school_years', []), true))
-            || ($gender !== null && $gender !== '' && !in_array($gender, ['male', 'female'], true))
-            || ($status !== null && $status !== '' && !in_array($status, ['active', 'inactive'], true))
-            || ($search !== null && strlen($search) > 255)) {
-            return redirect()->back()->with('error', 'Invalid report filters.');
-        }
+        $validated = $request->validate([
+            'report_type' => ['required', Rule::in(['student_directory', 'assignment_completion', 'quiz_performance', 'student_progress'])],
+            'grade_level' => ['required', Rule::in($assignedGrades)],
+            'status' => ['nullable', Rule::in(['all', 'active', 'inactive'])],
+            'school_year' => ['nullable', Rule::in(config('school.school_years'))],
+            'subject' => 'nullable|string|max:255',
+            'trimester' => ['nullable', Rule::in(['all', '1st Term', '2nd Term', '3rd Term'])],
+        ]);
 
-        $title = $reportType === 'student_information'
-            ? 'Student Information Report'
-            : ucwords(str_replace('_', ' ', $reportType)) . ' Report';
+        $grade = $validated['grade_level'];
+        $status = $validated['status'] ?? 'active';
+        $schoolYear = $validated['school_year'] ?? config('school.school_years')[0] ?? null;
+        $subject = $validated['subject'] ?? 'all';
+        $trimester = $validated['trimester'] ?? 'all';
 
-        if ($reportType === 'student_information') {
-            $students = User::role('student')
-                ->whereIn('grade_level', $assignedGrades)
-                ->whereHas('enrollments', function ($query) use ($schoolYear) {
-                    $query->where('status', 'active')
-                        ->when($schoolYear, fn ($q) => $q->where('school_year', $schoolYear));
-                })
-                ->when($grade, fn ($q) => $q->where('grade_level', $grade))
-                ->when($gender, fn ($q) => $q->where('gender', $gender))
-                ->when($status === 'active', fn ($q) => $q->where('is_active', true))
-                ->when($status === 'inactive', fn ($q) => $q->where('is_active', false))
-                ->when($search, fn ($q) => $q->where(fn ($nested) => $nested
-                    ->where('name', 'like', "%{$search}%")
-                    ->orWhere('lrn', 'like', "%{$search}%")))
-                ->with('currentEnrollment')
-                ->orderBy('name')
-                ->get();
-        } else {
-            $students = User::role('student')->whereIn('grade_level', $assignedGrades)
-                ->when($grade, fn ($q) => $q->where('grade_level', $grade))->get();
-        }
-
-        $report = match ($reportType) {
-            'assignment_completion' => $this->assignmentReport($user, $students, $subject, $term),
-            'quiz_performance' => $this->quizReport($user, $students, $subject, $term),
-            'student_progress' => $this->progressReport($user, $students, $subject, $term),
-            'lesson_completion' => $this->lessonReport($user, $students, $subject, $term),
-            'game_participation' => $this->gameReport($user, $students),
-            'student_information' => $this->studentInformationReport($students),
+        [$title, $columns, $rows, $summary] = match ($validated['report_type']) {
+            'student_directory' => $this->studentDirectory($grade, $status),
+            'assignment_completion' => $this->assignmentCompletion($teacher->id, $grade, $status, $schoolYear, $subject, $trimester),
+            'quiz_performance' => $this->quizPerformance($teacher->id, $grade, $status, $schoolYear, $subject, $trimester),
+            'student_progress' => $this->studentProgress($teacher->id, $grade, $status, $schoolYear, $subject, $trimester),
         };
 
-        $export = ReportExport::create([
-            'user_id' => $user->id, 'report_type' => $title, 'grade_level' => $grade ?: null,
-            'subject' => $reportType === 'student_information' ? null : ($subject ?: null),
-            'trimester' => $reportType === 'student_information' ? null : ($term ?: null), 'generated_at' => now(),
-            'file_path' => null, 'file_name' => $title . '_' . now()->format('Y-m-d') . '.pdf',
-        ]);
-        app(StudyNestNotificationService::class)->reportGenerated($user, $title, $export->id);
-        $pdf = Pdf::loadView('pdf.teacher-report', [
-            'reportTitle' => $title, 'data' => $report['data'], 'summary' => $report['summary'],
-            'filters' => [
-                'grade_level' => $grade, 'subject' => $reportType === 'student_information' ? null : $subject,
-                'term' => $reportType === 'student_information' ? null : $term,
-                'school_year' => $reportType === 'student_information' ? $schoolYear : null,
-                'gender' => $reportType === 'student_information' ? $gender : null,
-                'status' => $reportType === 'student_information' ? $status : null,
-                'search' => $reportType === 'student_information' ? $search : null,
-            ],
-            'generatedAt' => now()->format('Y-m-d H:i'),
-        ]);
-        return $pdf->download($title . '_' . now()->format('Y-m-d') . '.pdf');
+        $filters = ['Grade Level' => $grade, 'Student Status' => ucfirst($status)];
+        if ($validated['report_type'] !== 'student_directory') {
+            if ($schoolYear) $filters['School Year'] = $schoolYear;
+            if ($subject !== 'all') $filters['Subject'] = $subject;
+            if ($trimester !== 'all') $filters['Term'] = $trimester;
+        }
+
+        if ($validated['report_type'] === 'student_directory') {
+            return Pdf::loadView('pdf.student-directory', ['title' => $title, 'students' => $rows, 'summary' => $summary, 'filters' => $filters, 'reportOwner' => 'Teacher'])
+                ->setPaper('a4', 'portrait')
+                ->download(str($title)->slug('-') . '-' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        return Pdf::loadView('pdf.principal-report', ['title' => $title, 'columns' => $columns, 'rows' => $rows, 'summary' => $summary, 'filters' => $filters, 'reportOwner' => 'Teacher'])
+            ->setPaper('a4', 'portrait')
+            ->download(str($title)->slug('-') . '-' . now()->format('Y-m-d') . '.pdf');
     }
 
-    private function studentInformationReport($students): array
+    private function studentDirectory(string $grade, string $status): array
     {
-        $data = $students->map(function ($student) {
-            $parts = preg_split('/\s+/', trim($student->name), -1, PREG_SPLIT_NO_EMPTY);
-            $firstName = $parts[0] ?? '';
-            $lastName = count($parts) > 1 ? array_pop($parts) : '';
-
-            return [
-                'student_id' => $student->lrn,
-                'last_name' => $lastName,
-                'first_name' => $firstName,
-                'middle_name' => implode(' ', array_slice($parts, 1)),
-                'grade_level' => $student->grade_level,
-                'school_year' => $student->currentEnrollment?->school_year ?? '',
-                'gender' => ucfirst($student->gender ?? ''),
-                'account_status' => $student->is_active ? 'Active' : 'Inactive',
-            ];
-        });
-
-        return [
-            'data' => $data->all(),
-            'summary' => ['total_students' => $data->count()],
-        ];
+        $students = $this->students($grade, $status)->with('currentEnrollment')->orderBy('name')->get();
+        $rows = $students->values()->map(fn (User $student, int $index) => $this->studentDetails($student, $index))->all();
+        return ['Student Directory Report', [], $rows, ['Total Students' => $students->count(), 'Active Students' => $students->where('is_active', true)->count(), 'Inactive Students' => $students->where('is_active', false)->count()]];
     }
 
-    private function assignmentReport($user, $students, ?string $subject, ?string $term): array
+    private function assignmentCompletion(int $teacherId, string $grade, string $status, ?string $schoolYear, string $subject, string $trimester): array
     {
-        $items = Assignment::where('teacher_id', $user->id)->where('status', 'published')
-            ->when($subject, fn ($q) => $q->where('subject', $subject))->when($term, fn ($q) => $q->where('trimester', $term))->get();
-        $data = $items->map(function ($item) use ($students) {
-            $eligible = $students->where('grade_level', $item->grade_level); $ids = $eligible->pluck('id'); $total = $ids->count();
-            $completed = AssignmentSubmission::where('assignment_id', $item->id)->whereIn('student_id', $ids)
-                ->whereIn('status', ['submitted', 'late_submission', 'graded', 'reviewed'])->count();
-            return ['assignment' => $item->assignment_title, 'grade' => $item->grade_level, 'subject' => $item->subject, 'total_students' => $total, 'completed' => $completed, 'incomplete' => max(0, $total - $completed), 'completion_rate' => $total ? round($completed / $total * 100) : 0];
-        });
-        return ['data' => $data->all(), 'summary' => ['total_assignments' => $items->count(), 'average_completion_rate' => $data->avg('completion_rate') ?? 0, 'total_students' => $students->count(), 'total_completed' => $data->sum('completed')]];
+        $students = $this->students($grade, $status)->orderBy('name')->get();
+        $assignmentIds = $this->contentQuery(Assignment::query(), $teacherId, $grade, $schoolYear, $subject, $trimester)->pluck('id');
+        $submissions = AssignmentSubmission::whereIn('student_id', $students->pluck('id'))->whereIn('assignment_id', $assignmentIds)->get()->groupBy('student_id');
+        $totalAssignments = $assignmentIds->count();
+        $completedStatuses = ['submitted', 'late_submission', 'reviewed', 'graded'];
+        $rows = $students->values()->map(function (User $student, int $index) use ($submissions, $totalAssignments, $completedStatuses) {
+            $studentSubmissions = $submissions->get($student->id, collect());
+            $submitted = $studentSubmissions->whereIn('status', $completedStatuses)->pluck('assignment_id')->unique()->count();
+            return ['no' => $index + 1, 'student_name' => $student->name, 'total_assignments' => $totalAssignments, 'submitted' => $submitted, 'late' => $studentSubmissions->where('status', 'late_submission')->pluck('assignment_id')->unique()->count(), 'graded' => $studentSubmissions->where('status', 'graded')->pluck('assignment_id')->unique()->count(), 'missing' => max($totalAssignments - $submitted, 0)];
+        })->all();
+        return ['Assignment Completion Report', ['no' => 'No.', 'student_name' => 'Student Name', 'total_assignments' => 'Assigned', 'submitted' => 'Submitted', 'late' => 'Late', 'graded' => 'Graded', 'missing' => 'Missing'], $rows, ['Students' => $students->count(), 'Published Assignments' => $totalAssignments, 'Total Submitted' => collect($rows)->sum('submitted'), 'Total Missing' => collect($rows)->sum('missing')]];
     }
 
-    private function quizReport($user, $students, ?string $subject, ?string $term): array
+    private function quizPerformance(int $teacherId, string $grade, string $status, ?string $schoolYear, string $subject, string $trimester): array
     {
-        $items = Quiz::where('teacher_id', $user->id)->where('status', 'published')
-            ->when($subject, fn ($q) => $q->where('subject', $subject))->when($term, fn ($q) => $q->where('trimester', $term))->get();
-        $data = $items->map(function ($item) use ($students) {
-            $eligible = $students->where('grade_level', $item->grade_level); $ids = $eligible->pluck('id');
-            $attempts = QuizAttempt::where('quiz_id', $item->id)->whereIn('student_id', $ids)->where('status', 'completed')
-                ->orderBy('attempt_number')->orderBy('created_at')->get()->groupBy('student_id')->map(fn ($rows) => $rows->first())->values()
-                ->map(fn ($a) => (object) ['percentage' => $a->total_questions > 0 ? round($a->score / $a->total_questions * 100) : 0]);
-            return ['quiz' => $item->quiz_title, 'grade' => $item->grade_level, 'subject' => $item->subject, 'total_students' => $ids->count(), 'attempts' => $attempts->count(), 'average_score' => $attempts->avg('percentage') ?? 0, 'highest_score' => $attempts->max('percentage') ?? 0, 'lowest_score' => $attempts->min('percentage') ?? 0, 'passing_rate' => $attempts->count() ? round($attempts->where('percentage', '>=', 75)->count() / $attempts->count() * 100) : 0];
-        });
-        return ['data' => $data->all(), 'summary' => ['total_quizzes' => $items->count(), 'average_score' => $data->avg('average_score') ?? 0, 'highest_performing_quiz' => $data->sortByDesc('average_score')->first()['quiz'] ?? 'N/A', 'lowest_performing_quiz' => $data->sortBy('average_score')->first()['quiz'] ?? 'N/A']];
+        $students = $this->students($grade, $status)->orderBy('name')->get();
+        $quizIds = $this->contentQuery(Quiz::query(), $teacherId, $grade, $schoolYear, $subject, $trimester)->pluck('id');
+        $attempts = QuizAttempt::whereIn('student_id', $students->pluck('id'))->whereIn('quiz_id', $quizIds)->where('status', 'completed')->get()->groupBy('student_id');
+        $totalQuizzes = $quizIds->count();
+        $rows = $students->values()->map(function (User $student, int $index) use ($attempts, $totalQuizzes) {
+            $studentAttempts = $attempts->get($student->id, collect());
+            $completed = $studentAttempts->pluck('quiz_id')->unique()->count();
+            $percentages = $studentAttempts->filter(fn ($attempt) => $attempt->total_questions > 0)->map(fn ($attempt) => ($attempt->score / $attempt->total_questions) * 100);
+            return ['no' => $index + 1, 'student_name' => $student->name, 'assigned_quizzes' => $totalQuizzes, 'completed_quizzes' => $completed, 'average_score' => $percentages->isNotEmpty() ? round($percentages->avg()) . '%' : 'N/A', 'completion_rate' => $totalQuizzes ? round(($completed / $totalQuizzes) * 100) . '%' : 'N/A'];
+        })->all();
+        return ['Quiz Performance Report', ['no' => 'No.', 'student_name' => 'Student Name', 'assigned_quizzes' => 'Assigned', 'completed_quizzes' => 'Completed', 'average_score' => 'Average Score', 'completion_rate' => 'Completion'], $rows, ['Students' => $students->count(), 'Published Quizzes' => $totalQuizzes, 'Average Completion' => count($rows) && $totalQuizzes ? round(collect($rows)->avg(fn ($row) => (int) $row['completion_rate'])) . '%' : 'N/A']];
     }
 
-    private function progressReport($user, $students, ?string $subject, ?string $term): array
+    private function studentProgress(int $teacherId, string $grade, string $status, ?string $schoolYear, string $subject, string $trimester): array
     {
-        $lessons = Lesson::where('teacher_id', $user->id)->where('status', 'published')->when($subject, fn ($q) => $q->where('subject', $subject))->when($term, fn ($q) => $q->where('trimester', $term))->get();
-        $assignments = Assignment::where('teacher_id', $user->id)->where('status', 'published')->when($subject, fn ($q) => $q->where('subject', $subject))->when($term, fn ($q) => $q->where('trimester', $term))->get();
-        $quizzes = Quiz::where('teacher_id', $user->id)->where('status', 'published')->when($subject, fn ($q) => $q->where('subject', $subject))->when($term, fn ($q) => $q->where('trimester', $term))->get();
-        $games = Game::where('teacher_id', $user->id)->where('status', 'published')->get();
-        $data = $students->map(fn ($student) => $this->studentProgress($student, $lessons, $assignments, $quizzes, $games));
-        return ['data' => $data->all(), 'summary' => ['total_students' => $students->count(), 'average_progress' => $data->avg('overall_progress') ?? 0]];
+        $students = $this->students($grade, $status)->orderBy('name')->get();
+        $lessonIds = $this->contentQuery(Lesson::query(), $teacherId, $grade, $schoolYear, $subject, $trimester)->pluck('id');
+        $assignmentIds = $this->contentQuery(Assignment::query(), $teacherId, $grade, $schoolYear, $subject, $trimester)->pluck('id');
+        $quizIds = $this->contentQuery(Quiz::query(), $teacherId, $grade, $schoolYear, $subject, $trimester)->pluck('id');
+        $gameIds = Game::where('teacher_id', $teacherId)->where('grade_level', $grade)->currentlyPublished()->pluck('id');
+        $ids = $students->pluck('id');
+        $lessonCounts = DB::table('lesson_user')->whereIn('user_id', $ids)->whereIn('lesson_id', $lessonIds)->whereNotNull('completed_at')->selectRaw('user_id, count(distinct lesson_id) as total')->groupBy('user_id')->pluck('total', 'user_id');
+        $assignmentCounts = AssignmentSubmission::whereIn('student_id', $ids)->whereIn('assignment_id', $assignmentIds)->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded'])->selectRaw('student_id, count(distinct assignment_id) as total')->groupBy('student_id')->pluck('total', 'student_id');
+        $quizCounts = QuizAttempt::whereIn('student_id', $ids)->whereIn('quiz_id', $quizIds)->where('status', 'completed')->selectRaw('student_id, count(distinct quiz_id) as total')->groupBy('student_id')->pluck('total', 'student_id');
+        $gameCounts = GameResult::whereIn('student_id', $ids)->whereIn('game_id', $gameIds)->whereNotNull('completed_at')->selectRaw('student_id, count(distinct game_id) as total')->groupBy('student_id')->pluck('total', 'student_id');
+        $available = $lessonIds->count() + $assignmentIds->count() + $quizIds->count() + $gameIds->count();
+        $rows = $students->values()->map(function (User $student, int $index) use ($lessonCounts, $assignmentCounts, $quizCounts, $gameCounts, $lessonIds, $assignmentIds, $quizIds, $gameIds, $available) {
+            $lesson = min((int) ($lessonCounts[$student->id] ?? 0), $lessonIds->count()); $assignment = min((int) ($assignmentCounts[$student->id] ?? 0), $assignmentIds->count()); $quiz = min((int) ($quizCounts[$student->id] ?? 0), $quizIds->count()); $game = min((int) ($gameCounts[$student->id] ?? 0), $gameIds->count());
+            return ['no' => $index + 1, 'student_name' => $student->name, 'lessons' => "$lesson / {$lessonIds->count()}", 'assignments' => "$assignment / {$assignmentIds->count()}", 'quizzes' => "$quiz / {$quizIds->count()}", 'games' => "$game / {$gameIds->count()}", 'overall_progress' => $available ? round((($lesson + $assignment + $quiz + $game) / $available) * 100) . '%' : 'N/A'];
+        })->all();
+        return ['Student Learning Progress Report', ['no' => 'No.', 'student_name' => 'Student Name', 'lessons' => 'Lessons', 'assignments' => 'Assignments', 'quizzes' => 'Quizzes', 'games' => 'Games', 'overall_progress' => 'Overall'], $rows, ['Students' => $students->count(), 'Learning Resources' => $available, 'Average Progress' => count($rows) && $available ? round(collect($rows)->avg(fn ($row) => (int) $row['overall_progress'])) . '%' : 'N/A']];
     }
 
-    private function studentProgress($student, $lessons, $assignments, $quizzes, $games): array
+    private function students(string $grade, string $status)
     {
-        $lessons = $lessons->where('grade_level', $student->grade_level); $assignments = $assignments->where('grade_level', $student->grade_level); $quizzes = $quizzes->where('grade_level', $student->grade_level); $games = $games->where('grade_level', $student->grade_level);
-        $lt = $lessons->count(); $at = $assignments->count(); $qt = $quizzes->count(); $gt = $games->count();
-        $lc = $student->completedLessons()->whereIn('lesson_id', $lessons->pluck('id'))->count();
-        $ac = AssignmentSubmission::where('student_id', $student->id)->whereIn('assignment_id', $assignments->pluck('id'))->whereIn('status', ['submitted', 'late_submission', 'graded', 'reviewed'])->count();
-        $attempts = QuizAttempt::where('student_id', $student->id)->whereIn('quiz_id', $quizzes->pluck('id'))->where('status', 'completed')->orderBy('attempt_number')->orderBy('created_at')->get()->groupBy('quiz_id')->map(fn ($rows) => $rows->first())->values();
-        $scores = $attempts->map(fn ($a) => $a->total_questions > 0 ? $a->score / $a->total_questions * 100 : 0); $avg = $scores->isNotEmpty() ? round($scores->avg()) : 0;
-        $gc = GameResult::where('student_id', $student->id)->whereIn('game_id', $games->pluck('id'))->where('status', 'completed')->distinct('game_id')->count('game_id');
-        $lp = $lt ? min(100, $lc / $lt * 100) : 0; $ap = $at ? min(100, $ac / $at * 100) : 0; $qp = $qt ? min(100, $attempts->count() / $qt * 100) : 0; $gp = $gt ? min(100, $gc / $gt * 100) : 0;
-        $overall = min(100, round($lp * .3 + $ap * .3 + $qp * .3 + $gp * .1));
-        return ['student' => $student->name, 'student_id' => $student->lrn, 'grade' => $student->grade_level, 'lessons' => "$lc/$lt", 'assignments' => "$ac/$at", 'quiz_average' => "$avg%", 'games' => "$gc/$gt", 'overall_progress' => $overall, 'status' => $overall < 60 ? 'Needs Support' : ($overall < 80 ? 'Needs Monitoring' : 'Excellent')];
+        return User::role('student')->where('grade_level', $grade)->when($status !== 'all', fn ($query) => $query->where('is_active', $status === 'active'));
     }
 
-    private function lessonReport($user, $students, ?string $subject, ?string $term): array
+    private function studentDetails(User $student, int $index): array
     {
-        $items = Lesson::where('teacher_id', $user->id)->where('status', 'published')->when($subject, fn ($q) => $q->where('subject', $subject))->when($term, fn ($q) => $q->where('trimester', $term))->get();
-        $data = $items->map(function ($item) use ($students) { $eligible = $students->where('grade_level', $item->grade_level); $total = $eligible->count(); $completed = $eligible->filter(fn ($s) => $s->completedLessons()->where('lesson_id', $item->id)->exists())->count(); return ['lesson' => $item->lesson_title, 'grade' => $item->grade_level, 'subject' => $item->subject, 'total_students' => $total, 'completed' => $completed, 'incomplete' => max(0, $total - $completed), 'completion_rate' => $total ? round($completed / $total * 100) : 0]; });
-        return ['data' => $data->all(), 'summary' => ['total_lessons' => $items->count(), 'average_completion_rate' => $data->avg('completion_rate') ?? 0, 'total_completed' => $data->sum('completed')]];
+        $names = preg_split('/\s+/', trim($student->name), -1, PREG_SPLIT_NO_EMPTY);
+        $firstName = $names[0] ?? '—';
+        $lastName = count($names) > 1 ? array_pop($names) : '—';
+
+        return ['no' => $index + 1, 'student_id' => $student->lrn ?: '—', 'first_name' => $firstName, 'middle_name' => implode(' ', array_slice($names, 1)) ?: '—', 'last_name' => $lastName, 'grade_level' => $student->grade_level ?: '—', 'school_year' => $student->currentEnrollment?->school_year ?: '—', 'gender' => $student->gender ? ucfirst($student->gender) : '—', 'status' => $student->is_active ? 'Active' : 'Inactive'];
     }
 
-    private function gameReport($user, $students): array
+    private function contentQuery($query, int $teacherId, string $grade, ?string $schoolYear, string $subject, string $trimester)
     {
-        $items = Game::where('teacher_id', $user->id)->where('status', 'published')->get();
-        $data = $items->map(function ($item) use ($students) { $eligible = $students->where('grade_level', $item->grade_level); $ids = $eligible->pluck('id'); $results = GameResult::where('game_id', $item->id)->whereIn('student_id', $ids)->get(); $completed = $results->where('status', 'completed')->pluck('student_id')->unique()->count(); $started = $results->where('status', 'started')->pluck('student_id')->unique()->count(); $assigned = $results->where('status', 'assigned')->pluck('student_id')->unique()->count(); $scores = $results->where('status', 'completed')->groupBy('student_id')->map(fn ($rows) => $rows->sortBy('attempt_number')->first()->score); return ['game' => $item->game_title, 'grade' => $item->grade_level, 'game_type' => $item->game_type, 'total_students' => $ids->count(), 'completed' => $completed, 'started' => $started, 'assigned' => $assigned, 'participation_rate' => $ids->count() ? round($completed / $ids->count() * 100) : 0, 'average_score' => $scores->avg() ?? 0, 'highest_score' => $scores->max() ?? 0, 'lowest_score' => $scores->min() ?? 0]; });
-        return ['data' => $data->all(), 'summary' => ['total_games' => $items->count(), 'average_participation_rate' => $data->avg('participation_rate') ?? 0, 'total_participants' => $data->sum('completed')]];
+        return $query->where('teacher_id', $teacherId)->where('grade_level', $grade)->currentlyPublished()->when($schoolYear, fn ($content) => $content->where('school_year', $schoolYear))->when($subject !== 'all', fn ($content) => $content->where('subject', $subject))->when($trimester !== 'all', fn ($content) => $content->where('trimester', $trimester));
     }
 }

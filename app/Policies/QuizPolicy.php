@@ -22,7 +22,7 @@ class QuizPolicy
         }
 
         if ($user->hasRole('student')) {
-            return $quiz->status === 'published' && $user->grade_level === $quiz->grade_level;
+            return $quiz->isCurrentlyPublished() && $user->grade_level === $quiz->grade_level;
         }
 
         return false;

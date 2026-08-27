@@ -65,7 +65,7 @@ export default function Index({ logs, summary, activity_types = [], grade_levels
         },
     ];
     const actions = (row) => [{
-        label: 'View Details',
+        label: 'View',
         icon: <EyeIcon className="h-4 w-4" />,
         color: 'primary',
         onClick: () => setSelectedLog(row),
@@ -76,13 +76,16 @@ export default function Index({ logs, summary, activity_types = [], grade_levels
             <Head title="Student Activity Logs" />
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-700">Today&apos;s academic activity summary</h3>
+                        <p className="mt-1 text-xs text-gray-500">Only lesson, assignment, quiz, and game activity from your assigned grades is shown.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         {[
                             ['lesson_activities', 'Lesson Activities'],
                             ['assignment_activities', 'Assignment Activities'],
                             ['quiz_activities', 'Quiz Activities'],
                             ['game_activities', 'Game Activities'],
-                            ['other_student_activities', 'Other Student Activities'],
                         ].map(([key, label]) => (
                             <div key={key} className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
                                 <div className="text-2xl font-bold text-gray-800">{summary?.[key] ?? 0}</div>

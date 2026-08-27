@@ -434,10 +434,11 @@ export default function Table({
                                             </td>
                                         );
                                     })}
-                                    {rowActions.length > 0 && (
+                                    {hasActions() && (
                                         <td data-label="Actions" className={`px-4 py-3 text-right ${compact ? 'px-3 py-2' : ''}`}>
-                                            <div className="flex flex-wrap justify-end gap-1">
-                                                {rowActions.map((action, actionIndex) => (
+                                            {rowActions.length > 0 ? (
+                                                <div className="flex flex-wrap justify-end gap-1">
+                                                    {rowActions.map((action, actionIndex) => (
                                                     <button
                                                         key={actionIndex}
                                                         onClick={(e) => {
@@ -445,14 +446,14 @@ export default function Table({
                                                             action.onClick(row);
                                                         }}
                                                         className={`
-                                                            inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors
-                                                            ${action.color === 'danger' ? 'text-red-600 hover:bg-red-50' : ''}
-                                                            ${action.color === 'success' ? 'text-emerald-600 hover:bg-emerald-50' : ''}
-                                                            ${action.color === 'warning' ? 'text-amber-600 hover:bg-amber-50' : ''}
-                                                            ${(!action.color || action.color === 'primary') ? 'text-gray-600 hover:bg-gray-100' : ''}
+                                                            group relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-xs font-medium transition-all duration-150
+                                                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900
+                                                            ${action.color === 'danger' ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40' : ''}
+                                                            ${action.color === 'success' ? 'text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40' : ''}
+                                                            ${action.color === 'warning' ? 'text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40' : ''}
+                                                            ${(!action.color || action.color === 'primary') ? 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700' : ''}
                                                             ${action.className || ''}
                                                         `}
-                                                        title={action.label}
                                                         aria-label={action.label}
                                                     >
                                                         {action.icon ? (
@@ -462,9 +463,16 @@ export default function Table({
                                                         ) : (
                                                             <span className="sr-only">{action.label}</span>
                                                         )}
+                                                        <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-slate-100 dark:text-slate-900">
+                                                            {action.label}
+                                                            <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-100" />
+                                                        </span>
                                                     </button>
-                                                ))}
-                                            </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-gray-400">No action available</span>
+                                            )}
                                         </td>
                                     )}
                                 </tr>
@@ -485,6 +493,7 @@ export function StatusBadge({ status, className = '' }) {
     const variants = {
         active: 'bg-emerald-100 text-emerald-800',
         published: 'bg-emerald-100 text-emerald-800',
+        scheduled: 'bg-indigo-100 text-indigo-800',
         draft: 'bg-amber-100 text-amber-800',
         archived: 'bg-gray-100 text-gray-800',
         pending: 'bg-amber-100 text-amber-800',

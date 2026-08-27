@@ -7,6 +7,8 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import ExternalLinksInput from '@/Components/ExternalLinksInput';
+import PublishingOptions from '@/Components/PublishingOptions';
 
 // Heroicons
 import {
@@ -47,8 +49,8 @@ export default function LessonsCreate({
         related_quiz_id: '',
         related_game_id: '',
         status: 'draft',
-        publish_date: new Date().toISOString().split('T')[0],
-        resource_url: '',
+        publish_date: '',
+        resource_urls: [],
         resources: [],
     });
 
@@ -62,6 +64,8 @@ export default function LessonsCreate({
                 data.resources.forEach((file) => {
                     formData.append('resources[]', file);
                 });
+            } else if (key === 'resource_urls') {
+                data.resource_urls.filter(Boolean).forEach((url) => formData.append('resource_urls[]', url));
             } else if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
                 formData.append(key, data[key]);
             }
@@ -373,11 +377,7 @@ export default function LessonsCreate({
                             {/* ===== Section 4: Learning Resources ===== */}
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
-                                <div className="mb-4">
-                                    <InputLabel htmlFor="resource_url" value="External Lesson URL (Optional)" />
-                                    <TextInput id="resource_url" type="url" value={data.resource_url} onChange={(e) => setData('resource_url', e.target.value)} className="mt-1 block w-full" placeholder="https://example.com/lesson" />
-                                    <InputError message={errors.resource_url} className="mt-2" />
-                                </div>
+                                <div className="mb-5"><ExternalLinksInput value={data.resource_urls} onChange={(urls) => setData('resource_urls', urls)} errors={errors} /></div>
                                 <div>
                                     <InputLabel htmlFor="resources" value="Upload Resources (Max 4 files, 100MB each)" />
                                     <input
@@ -481,35 +481,7 @@ export default function LessonsCreate({
                             {/* ===== Section 6: Publication Settings ===== */}
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Publication Settings</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <InputLabel htmlFor="status" value="Status" required />
-                                        <select
-                                            id="status"
-                                            value={data.status}
-                                            onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
-                                            required
-                                        >
-                                            {statuses.map((status) => (
-                                                <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                                            ))}
-                                        </select>
-                                        <InputError message={errors.status} className="mt-2" />
-                                    </div>
-                                    <div>
-                                        <InputLabel htmlFor="publish_date" value="Publish Date" required />
-                                        <TextInput
-                                            id="publish_date"
-                                            type="date"
-                                            value={data.publish_date}
-                                            onChange={(e) => setData('publish_date', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            required
-                                        />
-                                        <InputError message={errors.publish_date} className="mt-2" />
-                                    </div>
-                                </div>
+                                <PublishingOptions data={data} setData={setData} errors={errors} />
                             </div>
 
                             {/* ===== Actions ===== */}

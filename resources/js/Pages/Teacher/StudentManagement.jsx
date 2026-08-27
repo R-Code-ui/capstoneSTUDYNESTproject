@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table, { StatusBadge } from '@/Components/Table';
@@ -27,16 +27,25 @@ export default function StudentManagement({
     const [schoolYearFilter, setSchoolYearFilter] = useState(filters?.school_year || '');
     const [genderFilter, setGenderFilter] = useState(filters?.gender || '');
     const [statusFilter, setStatusFilter] = useState(filters?.status || '');
-    const [sort, setSort] = useState(filters?.sort || 'name_asc');
+    const [sort, setSort] = useState(filters?.sort || 'created_at_desc');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [gender, setGender] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState('');
 
     const { errors } = usePage().props;
+
+    useEffect(() => {
+        if (showEditModal && selectedUser) {
+            setGender(String(selectedUser.gender || '').toLowerCase());
+        } else if (showCreateModal) {
+            setGender('');
+        }
+    }, [showEditModal, showCreateModal, selectedUser]);
 
     const applyFilters = (additional = {}) => {
         setIsLoading(true);
@@ -111,6 +120,13 @@ export default function StudentManagement({
             router.delete(route('teacher.students.destroy', user.id), {
                 preserveState: true,
             });
+        }
+    };
+
+    const openResetConfirmation = (user) => {
+        if (confirm(`Are you sure you want to reset ${user.name}'s password?`)) {
+            setSelectedUser(user);
+            setShowResetModal(true);
         }
     };
 
@@ -197,8 +213,8 @@ export default function StudentManagement({
 
     const studentActions = (row) => [
         { label: 'View', icon: <ViewIcon />, color: 'secondary', onClick: () => { setSelectedUser(row); setShowViewModal(true); } },
-        { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
-        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
+        { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setGender((row.gender || '').toLowerCase()); setShowEditModal(true); } },
+        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => openResetConfirmation(row) },
         ...(row.is_active
             ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
             : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
@@ -242,6 +258,38 @@ export default function StudentManagement({
                 .studynest-layout.theme-dark .teacher-status-badge-inactive {
                     background-color: rgb(203 213 225) !important;
                     color: rgb(30 41 59) !important;
+                }
+                .student-gender-radio {
+                    accent-color: rgb(37 99 235) !important;
+                }
+                .studynest-layout.theme-dark .student-gender-radio {
+                    accent-color: rgb(96 165 250) !important;
+                }
+                .student-gender-radio {
+                    appearance: none;
+                    width: 20px;
+                    height: 20px;
+                    margin: 0;
+                    border: 2px solid rgb(148 163 184);
+                    border-radius: 9999px;
+                    background: rgb(255 255 255);
+                    cursor: pointer;
+                }
+                .student-gender-radio:checked {
+                    border-color: rgb(37 99 235);
+                    background: radial-gradient(circle, rgb(255 255 255) 0 34%, rgb(37 99 235) 38% 100%);
+                }
+                .studynest-layout.theme-dark .student-gender-radio {
+                    border-color: rgb(100 116 139);
+                    background: rgb(15 23 42);
+                }
+                .studynest-layout.theme-dark .student-gender-radio:checked {
+                    border-color: rgb(96 165 250);
+                    background: radial-gradient(circle, rgb(15 23 42) 0 34%, rgb(96 165 250) 38% 100%);
+                }
+                .student-gender-radio:focus-visible {
+                    outline: 2px solid rgb(37 99 235);
+                    outline-offset: 2px;
                 }
             `}</style>
 
@@ -303,7 +351,7 @@ export default function StudentManagement({
                                         />
                                     </div>
                                     <PrimaryButton
-                                        onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}
+                                        onClick={() => { setSelectedUser(null); setGender(''); setShowCreateModal(true); }}
                                         className="justify-center whitespace-nowrap sm:min-w-[152px]"
                                     >
                                         + Add Student
@@ -360,11 +408,6 @@ export default function StudentManagement({
                                 </div>
                             ))}
                         </div>
-                        <div className="flex justify-end border-t border-gray-200 pt-4">
-                            <SecondaryButton type="button" onClick={() => { setShowViewModal(false); setSelectedUser(null); }}>
-                                Close
-                            </SecondaryButton>
-                        </div>
                     </div>
                 )}
             </Modal>
@@ -372,7 +415,7 @@ export default function StudentManagement({
             {/* ===== CREATE/EDIT MODAL ===== */}
             <Modal
                 show={showCreateModal || showEditModal}
-                onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}
+                onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); setGender(''); }}
                 title={showCreateModal ? 'Add Student' : 'Edit Student'}
                 size="lg"
             >
@@ -382,11 +425,19 @@ export default function StudentManagement({
                         const form = e.target;
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
-
                         const handleSuccess = () => {
+                            if (showCreateModal) {
+                                setSearch('');
+                                setGradeFilter('');
+                                setSchoolYearFilter('');
+                                setGenderFilter('');
+                                setStatusFilter('');
+                                setSort('created_at_desc');
+                            }
                             setShowCreateModal(false);
                             setShowEditModal(false);
                             setSelectedUser(null);
+                            setGender('');
                         };
 
                         const url = showCreateModal
@@ -401,6 +452,19 @@ export default function StudentManagement({
                     className="space-y-4"
                 >
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />
+
+                    {/* Student ID */}
+                    <div>
+                        <InputLabel htmlFor="lrn" value="Student ID" />
+                        <TextInput
+                            id="lrn"
+                            name="lrn"
+                            defaultValue={selectedUser?.lrn || ''}
+                            className="mt-1 block w-full"
+                            required
+                        />
+                        <InputError message={errors?.lrn} className="mt-2" />
+                    </div>
 
                     {/* First Name */}
                     <div>
@@ -438,19 +502,6 @@ export default function StudentManagement({
                             className="mt-1 block w-full"
                         />
                         <InputError message={errors?.middle_name} className="mt-2" />
-                    </div>
-
-                    {/* Student ID */}
-                    <div>
-                        <InputLabel htmlFor="lrn" value="Student ID" />
-                        <TextInput
-                            id="lrn"
-                            name="lrn"
-                            defaultValue={selectedUser?.lrn || ''}
-                            className="mt-1 block w-full"
-                            required
-                        />
-                        <InputError message={errors?.lrn} className="mt-2" />
                     </div>
 
                     {/* Grade Level */}
@@ -498,8 +549,10 @@ export default function StudentManagement({
                                     type="radio"
                                     name="gender"
                                     value="male"
-                                    defaultChecked={selectedUser?.gender === 'male'}
-                                    className="rounded border-gray-300 text-gray-600 shadow-sm focus:ring-blue-600"
+                                    checked={gender === 'male'}
+                                    onChange={() => setGender('male')}
+                                    required
+                                    className="student-gender-radio"
                                 />
                                 <span className="text-sm text-gray-700">Male</span>
                             </label>
@@ -508,8 +561,9 @@ export default function StudentManagement({
                                     type="radio"
                                     name="gender"
                                     value="female"
-                                    defaultChecked={selectedUser?.gender === 'female'}
-                                    className="rounded border-gray-300 text-gray-600 shadow-sm focus:ring-blue-600"
+                                    checked={gender === 'female'}
+                                    onChange={() => setGender('female')}
+                                    className="student-gender-radio"
                                 />
                                 <span className="text-sm text-gray-700">Female</span>
                             </label>
@@ -518,7 +572,7 @@ export default function StudentManagement({
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}>
+                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); setGender(''); }}>
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit">

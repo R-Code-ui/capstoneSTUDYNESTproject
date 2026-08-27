@@ -16,13 +16,18 @@ import PasswordInput from '@/Components/PasswordInput';
 export default function UserManagement({
     teachers,
     grade_levels,
+    status_options = [],
+    sort_options = [],
     filters,
     teachers_pagination,
 }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
+    const [statusFilter, setStatusFilter] = useState(filters?.status || '');
+    const [sort, setSort] = useState(filters?.sort || 'created_at_desc');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -30,24 +35,40 @@ export default function UserManagement({
 
     const { errors } = usePage().props;
 
-    const handleSearch = (value) => {
-        setSearch(value);
+    const applyFilters = (additional = {}) => {
         setIsLoading(true);
         router.visit(route('principal.users.index'), {
-            data: { search: value, grade_level: gradeFilter },
+            data: { search, grade_level: gradeFilter, status: statusFilter, sort, ...additional },
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
     };
 
+    const handleSearch = (value) => {
+        setSearch(value);
+        applyFilters({ search: value });
+    };
+
     const handleGradeFilterChange = (value) => {
         setGradeFilter(value);
-        setIsLoading(true);
-        router.visit(route('principal.users.index'), {
-            data: { search, grade_level: value },
-            preserveState: true,
-            onFinish: () => setIsLoading(false),
-        });
+        applyFilters({ grade_level: value });
+    };
+
+    const handleStatusFilterChange = (value) => {
+        setStatusFilter(value);
+        applyFilters({ status: value });
+    };
+
+    const handleSortChange = (value) => {
+        setSort(value);
+        applyFilters({ sort: value });
+    };
+
+    const openResetConfirmation = (user) => {
+        if (confirm(`Are you sure you want to reset ${user.name}'s password?`)) {
+            setSelectedUser(user);
+            setShowResetModal(true);
+        }
     };
 
     const handleArchive = (user) => {
@@ -59,9 +80,11 @@ export default function UserManagement({
     };
 
     const handleRestore = (user) => {
-        router.post(route('principal.users.restore', user.id), {}, {
-            preserveState: true,
-        });
+        if (confirm(`Are you sure you want to restore ${user.name}? This teacher will become active again.`)) {
+            router.post(route('principal.users.restore', user.id), {}, {
+                preserveState: true,
+            });
+        }
     };
 
     const handleDelete = (user) => {
@@ -122,6 +145,13 @@ export default function UserManagement({
         </svg>
     );
 
+    const ViewIcon = () => (
+        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    );
+
     const KeyIcon = () => (
         <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -147,8 +177,9 @@ export default function UserManagement({
     );
 
     const teacherActions = (row) => [
+        { label: 'View', icon: <ViewIcon />, color: 'secondary', onClick: () => { setSelectedUser(row); setShowViewModal(true); } },
         { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
-        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => { setSelectedUser(row); setShowResetModal(true); } },
+        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => openResetConfirmation(row) },
         ...(row.is_active
             ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
             : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
@@ -171,6 +202,40 @@ export default function UserManagement({
                     background-color: rgb(167 243 208) !important;
                     color: rgb(6 78 59) !important;
                 }
+                .principal-grade-checkbox {
+                    appearance: none;
+                    width: 20px;
+                    height: 20px;
+                    flex: 0 0 20px;
+                    margin: 0;
+                    cursor: pointer;
+                    border: 2px solid rgb(71 85 105);
+                    border-radius: 4px;
+                    background-color: #fff;
+                    transition: background-color 150ms, border-color 150ms;
+                }
+                html.dark .principal-grade-option {
+                    border-color: rgb(71 85 105);
+                    background-color: rgb(30 41 59);
+                    color: rgb(226 232 240);
+                }
+                html.dark .principal-grade-option:hover {
+                    border-color: rgb(96 165 250);
+                    background-color: rgb(30 41 59);
+                }
+                html.dark .principal-grade-checkbox {
+                    border-color: rgb(100 116 139);
+                    background-color: rgb(15 23 42);
+                }
+                .principal-grade-checkbox:checked {
+                    border-color: rgb(37 99 235);
+                    background-color: rgb(37 99 235);
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m4 10 4 4 8-8'/%3E%3C/svg%3E");
+                }
+                .principal-grade-checkbox:focus-visible {
+                    outline: 3px solid rgb(147 197 253);
+                    outline-offset: 2px;
+                }
             `}</style>
 
             <div className="py-6 sm:py-10">
@@ -178,24 +243,42 @@ export default function UserManagement({
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters & Actions */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
-                                    <SearchBar
-                                        value={search}
-                                        onChange={handleSearch}
-                                        placeholder="Search teachers..."
-                                        size="md"
-                                    />
-                                </div>
-                                <div className="flex flex-wrap gap-3 items-center">
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
                                         onChange={handleGradeFilterChange}
                                         placeholder="Grade Level"
                                         size="md"
-                                        className="w-full sm:w-36"
+                                        className="w-full"
                                     />
+                                    <FilterDropdown
+                                        options={status_options}
+                                        value={statusFilter}
+                                        onChange={handleStatusFilterChange}
+                                        placeholder="Status"
+                                        size="md"
+                                        className="w-full"
+                                    />
+                                    <FilterDropdown
+                                        options={sort_options}
+                                        value={sort}
+                                        onChange={handleSortChange}
+                                        placeholder="Sort by"
+                                        size="md"
+                                        className="w-full"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <div className="min-w-0 flex-1">
+                                        <SearchBar
+                                            value={search}
+                                            onChange={handleSearch}
+                                            placeholder="Search teachers..."
+                                            size="md"
+                                        />
+                                    </div>
                                     <PrimaryButton
                                         onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}
                                         className="w-full justify-center py-2 whitespace-nowrap sm:w-auto"
@@ -224,6 +307,34 @@ export default function UserManagement({
                     </div>
                 </div>
             </div>
+
+            {/* ===== VIEW TEACHER MODAL ===== */}
+            <Modal
+                show={showViewModal}
+                onClose={() => { setShowViewModal(false); setSelectedUser(null); }}
+                title="Teacher Information"
+                size="lg"
+            >
+                {selectedUser && (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {[
+                            ['Teacher ID', selectedUser.teacher_id || '—'],
+                            ['First Name', selectedUser.first_name || '—'],
+                            ['Middle Name', selectedUser.middle_name || '—'],
+                            ['Last Name', selectedUser.last_name || '—'],
+                            ['Assigned Grades', selectedUser.grade_assignments?.join(', ') || '—'],
+                            ['Status', selectedUser.is_active ? 'Active' : 'Inactive'],
+                            ['Date Created', selectedUser.created_at || '—'],
+                            ['Account Role', 'Teacher'],
+                        ].map(([label, value]) => (
+                            <div key={label} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</div>
+                                <div className="mt-1 break-words font-medium text-gray-800">{value}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Modal>
 
             {/* ===== CREATE/EDIT MODAL ===== */}
             <Modal
@@ -262,18 +373,6 @@ export default function UserManagement({
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />
 
                     <div>
-                        <InputLabel htmlFor="name" value="Full Name" />
-                        <TextInput
-                            id="name"
-                            name="name"
-                            defaultValue={selectedUser?.name || ''}
-                            className="mt-1 block w-full"
-                            required
-                        />
-                        <InputError message={errors?.name} className="mt-2" />
-                    </div>
-
-                    <div>
                         <InputLabel htmlFor="teacher_id" value="Teacher ID" />
                         <TextInput
                             id="teacher_id"
@@ -286,17 +385,42 @@ export default function UserManagement({
                     </div>
 
                     <div>
+                        <InputLabel htmlFor="first_name" value="First Name" />
+                        <TextInput
+                            id="first_name"
+                            name="first_name"
+                            defaultValue={selectedUser?.first_name || ''}
+                            className="mt-1 block w-full"
+                            required
+                        />
+                        <InputError message={errors?.first_name} className="mt-2" />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="last_name" value="Last Name" />
+                        <TextInput id="last_name" name="last_name" defaultValue={selectedUser?.last_name || ''} className="mt-1 block w-full" required />
+                        <InputError message={errors?.last_name} className="mt-2" />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="middle_name" value="Middle Name (Optional)" />
+                        <TextInput id="middle_name" name="middle_name" defaultValue={selectedUser?.middle_name || ''} className="mt-1 block w-full" />
+                        <InputError message={errors?.middle_name} className="mt-2" />
+                    </div>
+
+                    <div>
                         <InputLabel htmlFor="grade_levels" value="Assigned Grades" />
                         <div className="mt-2 space-y-2">
                             {grade_levels.map((grade) => (
-                                <label key={grade} className="flex items-center gap-2">
+                                <label key={grade} className="principal-grade-option flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800 transition-colors hover:border-blue-300 hover:bg-blue-50">
                                     <input
                                         type="checkbox"
                                         name="grade_levels[]"
                                         value={grade}
                                         defaultChecked={selectedUser?.grade_assignments?.includes(grade)}
+                                        className="principal-grade-checkbox"
                                     />
-                                    <span className="text-sm text-gray-700">{grade}</span>
+                                    <span className="text-sm font-medium">{grade}</span>
                                 </label>
                             ))}
                         </div>

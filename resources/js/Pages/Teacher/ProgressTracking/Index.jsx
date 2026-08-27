@@ -26,6 +26,7 @@ export default function ProgressIndex({
     stats,
     student_progress,
     at_risk_students,
+    at_risk_pagination,
     grade_levels,
     subjects,
     trimesters,
@@ -79,6 +80,24 @@ export default function ProgressIndex({
             trimester: trimesterFilter || '',
         });
         window.open(`${route('teacher.progress.export')}?${query.toString()}`, '_blank');
+    };
+
+    const changeAtRiskPage = (page) => {
+        if (page < 1 || page > (at_risk_pagination?.last_page || 1)) return;
+
+        setIsLoading(true);
+        router.visit(route('teacher.progress.index'), {
+            data: {
+                search,
+                grade_level: gradeFilter,
+                subject: subjectFilter,
+                trimester: trimesterFilter,
+                at_risk_page: page,
+            },
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => setIsLoading(false),
+        });
     };
 
     const gradeOptions = [
@@ -196,7 +215,7 @@ export default function ProgressIndex({
 
     const actions = (row) => [
         {
-            label: 'View Details',
+            label: 'View',
             icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => router.visit(route('teacher.progress.show', row.student_id)),
@@ -252,6 +271,21 @@ export default function ProgressIndex({
                 .studynest-layout.theme-dark .progress-page .text-red-500 {
                     color: rgb(248 113 113) !important;
                 }
+                .studynest-layout.theme-dark .progress-page .support-student-card {
+                    border-color: transparent !important;
+                    box-shadow: none !important;
+                }
+                .studynest-layout.theme-dark .progress-page .support-pagination {
+                    background-color: rgb(15 23 42) !important;
+                    border-color: rgb(51 65 85) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .support-pagination-button {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .support-pagination-button:hover:not(:disabled) {
+                    background-color: rgb(30 41 59) !important;
+                    color: rgb(241 245 249) !important;
+                }
             `}</style>
 
             <div className="progress-page py-8 sm:py-12">
@@ -295,7 +329,7 @@ export default function ProgressIndex({
                                         {at_risk_students.map((student) => (
                                             <div
                                                 key={student.student_id}
-                                                className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
+                                                className="support-student-card flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
                                             >
                                                 <div>
                                                     <div className="font-medium text-gray-800">{student.name}</div>
@@ -312,6 +346,34 @@ export default function ProgressIndex({
                                             </div>
                                         ))}
                                     </div>
+                                    {at_risk_pagination?.total > 0 && (
+                                        <div className="mt-4 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                                            <p className="text-sm text-slate-500">
+                                                Showing <span className="font-semibold text-slate-800">{(at_risk_pagination.current_page - 1) * at_risk_pagination.per_page + 1}</span> to <span className="font-semibold text-slate-800">{Math.min(at_risk_pagination.current_page * at_risk_pagination.per_page, at_risk_pagination.total)}</span> of <span className="font-semibold text-slate-800">{at_risk_pagination.total}</span> results
+                                            </p>
+                                            <nav aria-label="Students requiring support pagination" className="support-pagination flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => changeAtRiskPage(at_risk_pagination.current_page - 1)}
+                                                    disabled={at_risk_pagination.current_page === 1}
+                                                    className="support-pagination-button rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
+                                                >
+                                                    Previous
+                                                </button>
+                                                <span className="min-w-[36px] rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm">
+                                                    {at_risk_pagination.current_page}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => changeAtRiskPage(at_risk_pagination.current_page + 1)}
+                                                    disabled={at_risk_pagination.current_page === at_risk_pagination.last_page}
+                                                    className="support-pagination-button rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
+                                                >
+                                                    Next
+                                                </button>
+                                            </nav>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

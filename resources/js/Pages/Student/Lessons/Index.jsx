@@ -77,48 +77,79 @@ export default function LessonsIndex({
             <div className="student-lessons-page py-4">
                 <style>{`
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone="0"] {
-                        background-image: linear-gradient(135deg, rgb(219 234 254), rgb(252 231 243)) !important;
-                        background-color: rgb(239 246 255) !important;
-                        border-color: rgb(191 219 254) !important;
+                        background-image: linear-gradient(135deg, rgb(30 58 95), rgb(74 41 70)) !important;
+                        background-color: rgb(30 58 95) !important;
+                        border-color: rgb(71 98 133) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone="1"] {
-                        background-image: linear-gradient(135deg, rgb(255 237 213), rgb(254 249 195)) !important;
-                        background-color: rgb(255 247 237) !important;
-                        border-color: rgb(253 230 138) !important;
+                        background-image: linear-gradient(135deg, rgb(91 57 31), rgb(75 70 27)) !important;
+                        background-color: rgb(91 57 31) !important;
+                        border-color: rgb(133 105 53) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone="2"] {
-                        background-image: linear-gradient(135deg, rgb(243 232 255), rgb(252 231 243)) !important;
-                        background-color: rgb(250 245 255) !important;
-                        border-color: rgb(233 213 255) !important;
+                        background-image: linear-gradient(135deg, rgb(67 45 100), rgb(83 43 72)) !important;
+                        background-color: rgb(67 45 100) !important;
+                        border-color: rgb(112 83 143) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone="3"] {
-                        background-image: linear-gradient(135deg, rgb(209 250 229), rgb(219 234 254)) !important;
-                        background-color: rgb(236 253 245) !important;
-                        border-color: rgb(167 243 208) !important;
+                        background-image: linear-gradient(135deg, rgb(25 82 70), rgb(30 58 95)) !important;
+                        background-color: rgb(25 82 70) !important;
+                        border-color: rgb(55 123 104) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone="4"] {
-                        background-image: linear-gradient(135deg, rgb(254 249 195), rgb(255 228 230)) !important;
-                        background-color: rgb(255 251 235) !important;
-                        border-color: rgb(253 230 138) !important;
+                        background-image: linear-gradient(135deg, rgb(87 70 25), rgb(91 42 50)) !important;
+                        background-color: rgb(87 70 25) !important;
+                        border-color: rgb(137 111 52) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lessons-page [data-card-tone="5"] {
+                        background-image: linear-gradient(135deg, rgb(38 52 103), rgb(67 45 100)) !important;
+                        background-color: rgb(38 52 103) !important;
+                        border-color: rgb(76 92 153) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lessons-page [data-card-tone="6"] {
+                        background-image: linear-gradient(135deg, rgb(21 75 76), rgb(25 82 70)) !important;
+                        background-color: rgb(21 75 76) !important;
+                        border-color: rgb(50 119 118) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lessons-page [data-card-tone="7"] {
+                        background-image: linear-gradient(135deg, rgb(91 42 50), rgb(91 57 31)) !important;
+                        background-color: rgb(91 42 50) !important;
+                        border-color: rgb(137 77 83) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lessons-page [data-card-tone="8"] {
+                        background-image: linear-gradient(135deg, rgb(20 74 95), rgb(30 58 95)) !important;
+                        background-color: rgb(20 74 95) !important;
+                        border-color: rgb(51 111 134) !important;
+                    }
+
+                    .studynest-layout.theme-dark .student-lessons-page [data-card-tone="9"] {
+                        background-image: linear-gradient(135deg, rgb(87 70 25), rgb(75 70 27)) !important;
+                        background-color: rgb(87 70 25) !important;
+                        border-color: rgb(137 111 52) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone] .text-gray-800,
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone] .text-gray-700 {
-                        color: rgb(30 41 59) !important;
+                        color: rgb(241 245 249) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone] .text-gray-600,
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone] .text-gray-500 {
-                        color: rgb(71 85 105) !important;
+                        color: rgb(203 213 225) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page [class~="bg-white/70"],
                     .studynest-layout.theme-dark .student-lessons-page [class~="bg-white/50"] {
-                        background-color: rgb(255 255 255 / 0.72) !important;
+                        background-color: rgb(15 23 42 / 0.58) !important;
+                        color: rgb(226 232 240) !important;
                     }
 
                     .studynest-layout.theme-dark .student-lessons-page .text-gray-800,

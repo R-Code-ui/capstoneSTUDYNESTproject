@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 
-export default function GuestLayout({ children }) {
+export default function GuestLayout({ children, heading = 'Welcome Back!' }) {
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window === 'undefined') return false;
         return localStorage.getItem('studynest-theme') === 'dark';
@@ -174,7 +174,7 @@ export default function GuestLayout({ children }) {
                             StudyNest
                         </p>
                         <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
-                            Welcome Back!
+                            {heading}
                         </h2>
                     </div>
 

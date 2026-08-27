@@ -13,7 +13,6 @@ import {
     EyeIcon,
     PencilSquareIcon,
     ClipboardDocumentListIcon,
-    CheckCircleIcon,
     TrashIcon,
     PlusIcon,
 } from '@heroicons/react/24/outline';
@@ -64,12 +63,6 @@ export default function AssignmentsIndex({
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
-    };
-
-    const handlePublish = (assignment) => {
-        if (confirm(`Publish "${assignment.title}"?`)) {
-            router.post(route('teacher.assignments.publish', assignment.id), {}, { preserveState: true });
-        }
     };
 
     const handleDelete = (assignment) => {
@@ -144,8 +137,11 @@ export default function AssignmentsIndex({
             key: 'submissions',
             label: 'Submissions',
             render: (row) => (
-                <div className="max-w-[80px] truncate" title={row.submissions}>
-                    {row.submissions}
+                <div className="whitespace-nowrap" title={row.submissions}>
+                    <div className="font-medium text-gray-800">
+                        {row.completed_students} / {row.total_students}
+                    </div>
+                    <div className="text-xs text-gray-500">students completed</div>
                 </div>
             ),
         },
@@ -170,17 +166,11 @@ export default function AssignmentsIndex({
             onClick: () => router.visit(route('teacher.assignments.edit', row.id)),
         },
         {
-            label: 'Grade',
+            label: 'Manage Submissions',
             icon: <ClipboardDocumentListIcon className="w-4 h-4" />,
             color: 'success',
             onClick: () => router.visit(route('teacher.assignments.grade', row.id)),
         },
-        ...(row.status === 'draft' ? [{
-            label: 'Publish',
-            icon: <CheckCircleIcon className="w-4 h-4" />,
-            color: 'success',
-            onClick: () => handlePublish(row),
-        }] : []),
         {
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,

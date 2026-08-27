@@ -1,6 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import Toast from '@/Components/Toast';
 import NotificationBell from '@/Components/NotificationBell';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -48,11 +47,10 @@ function ThemeToggle({ dark, toggle }) {
 }
 
 export default function AuthenticatedLayout({ header, children }) {
-    const { auth, flash } = usePage().props;
+    const { auth } = usePage().props;
     const user = auth.user;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
-    const [showToast, setShowToast] = useState(!!flash?.message);
     const [darkMode, setDarkMode] = useState(() =>
         typeof window !== 'undefined' && localStorage.getItem('studynest-theme') === 'dark'
     );
@@ -282,15 +280,6 @@ export default function AuthenticatedLayout({ header, children }) {
                     .studynest-layout.theme-light .dark\\:hover\\:bg-slate-600:hover { background-color: rgb(248 250 252) !important; }
                 }
             `}</style>
-            {/* Toast Notification */}
-            {flash?.message && showToast && (
-                <Toast
-                    message={flash.message}
-                    type={flash.type || 'success'}
-                    onClose={() => setShowToast(false)}
-                />
-            )}
-
             <div className={`studynest-layout ${darkMode ? 'theme-dark' : 'theme-light'} min-h-screen bg-slate-50 font-sans antialiased text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100 flex flex-col md:flex-row`}>
 
                 {/* ===== DESKTOP SIDEBAR (Clean White) ===== */}
@@ -318,67 +307,60 @@ export default function AuthenticatedLayout({ header, children }) {
 
                 {/* ===== MOBILE TOPBAR ===== */}
                 <div className="md:hidden sticky top-0 flex h-16 items-center justify-between px-4 bg-white/95 border-b border-slate-200 dark:bg-slate-900/95 dark:border-slate-800 shadow-sm z-30 backdrop-blur">
-                    <Link href="/" className="flex items-center gap-2">
-                        <img
-                            src="/storage/images/studynestLogo.png"
-                            alt="StudyNest Logo"
-                            className="h-7 w-auto object-contain"
-                        />
-                        <span className="font-extrabold text-sm tracking-wider text-slate-800 dark:text-white">STUDYNEST</span>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
+                            aria-label={showingNavigationDropdown ? 'Close navigation menu' : 'Open navigation menu'}
+                            aria-expanded={showingNavigationDropdown}
+                            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:text-slate-300 ${showingNavigationDropdown ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        >
+                            {showingNavigationDropdown ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+                        </button>
+                        <Link href="/" className="flex items-center gap-2">
+                            <img
+                                src="/storage/images/studynestLogo.png"
+                                alt="StudyNest Logo"
+                                className="h-7 w-auto object-contain"
+                            />
+                            <span className="font-extrabold text-sm tracking-wider text-slate-800 dark:text-white">STUDYNEST</span>
+                        </Link>
+                    </div>
 
                     <div className="flex items-center gap-2">
                         <ThemeToggle dark={darkMode} toggle={() => setDarkMode((value) => !value)} />
                         <NotificationBell />
-                        <button
-                            onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
-                            className="inline-flex items-center justify-center rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 focus:outline-none transition-colors"
-                        >
-                            <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                <path
-                                    className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M4 6h16M4 12h16M4 18h16"
-                                />
-                                <path
-                                    className={showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
-                        </button>
                     </div>
                 </div>
-
                 {/* ===== MOBILE NAVIGATION DRAWER ===== */}
-                <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' md:hidden sticky top-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-30 shadow-lg'}>
-                    <div className="space-y-1 px-3 pb-3 pt-2">
-                            {navLinks.map((link) => { const Icon = link.icon; const active = route().current(link.routeName); return <Link key={link.href} href={link.href} onClick={() => setShowingNavigationDropdown(false)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${active ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800'}`}><Icon className="h-5 w-5" />{link.label}{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-500" />}</Link>; })}
-                    </div>
-
-                    <div className="border-t border-slate-200 dark:border-slate-800 pb-3 pt-4 px-4 bg-slate-50 dark:bg-slate-950">
-                        <div className="flex items-center gap-3 mb-3">
-                            <Avatar user={user} small />
-                            <div>
-                                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{user.name}</div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400">{user.email}</div>
-                            </div>
+                <div className={`fixed inset-0 z-50 md:hidden ${showingNavigationDropdown ? '' : 'pointer-events-none'}`} aria-hidden={!showingNavigationDropdown}>
+                    <button
+                        type="button"
+                        aria-label="Close navigation"
+                        onClick={() => setShowingNavigationDropdown(false)}
+                        className={`absolute inset-0 bg-slate-950/55 transition-opacity duration-200 ${showingNavigationDropdown ? 'opacity-100' : 'opacity-0'}`}
+                    />
+                    <aside className={`absolute inset-y-0 left-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 ${showingNavigationDropdown ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
+                            <Link href="/" onClick={() => setShowingNavigationDropdown(false)} className="flex items-center gap-2">
+                                <img src="/storage/images/studynestLogo.png" alt="StudyNest Logo" className="h-7 w-auto object-contain" />
+                                <span className="font-extrabold text-sm tracking-wider text-slate-800 dark:text-white">STUDYNEST</span>
+                            </Link>
+                            <button type="button" onClick={() => setShowingNavigationDropdown(false)} aria-label="Close navigation" className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
                         </div>
-
-                        <div className="space-y-1">
-                            {/* Profile Settings visible for all users */}
-                            <ResponsiveNavLink className="hover:bg-slate-100/70 dark:hover:bg-slate-800/70" href={route('profile.edit')}>
-                                Profile Settings
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink className="hover:bg-slate-100/70 dark:hover:bg-slate-800/70" method="post" href={route('logout')} as="button">
-                                Log Out
-                            </ResponsiveNavLink>
+                        <div className="flex-1 overflow-y-auto space-y-1 p-3">
+                            <div className="mb-2 flex items-center justify-between px-2 pt-2"><span className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">Workspace</span><span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">{userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'Member'}</span></div>
+                            <nav className="space-y-1" aria-label="Mobile navigation">
+                                {navLinks.map((link) => { const Icon = link.icon; const active = route().current(link.routeName); return <Link key={link.href} href={link.href} onClick={() => setShowingNavigationDropdown(false)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${active ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800'}`}><Icon className="h-5 w-5" />{link.label}{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-500" />}</Link>; })}
+                            </nav>
                         </div>
-                    </div>
+                        <div className="border-t border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+                            <div className="mb-3 flex items-center gap-3"><Avatar user={user} small /><div className="min-w-0"><div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{user.name}</div><div className="truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</div></div></div>
+                            <div className="space-y-1"><ResponsiveNavLink className="hover:bg-slate-100/70 dark:hover:bg-slate-800/70" href={route('profile.edit')}>Profile Settings</ResponsiveNavLink><ResponsiveNavLink className="hover:bg-slate-100/70 dark:hover:bg-slate-800/70" method="post" href={route('logout')} as="button">Log Out</ResponsiveNavLink></div>
+                        </div>
+                    </aside>
                 </div>
 
                 {/* ===== MAIN CONTENT AREA ===== */}

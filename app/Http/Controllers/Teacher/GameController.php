@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
 use App\Services\StudyNestNotificationService;
+use App\Services\PublicationManager;
+use Illuminate\Support\Carbon;
 
 class GameController extends Controller
 {
@@ -59,7 +61,7 @@ class GameController extends Controller
             ->paginate(10);
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-        $statuses = ['draft', 'published'];      // ✅ 'archived' removed
+        $statuses = ['draft', 'scheduled', 'published'];
         $gameTypes = ['literacy', 'numeracy'];
 
         return Inertia::render('Teacher/Games/Index', [
@@ -103,7 +105,7 @@ class GameController extends Controller
         $user = auth()->user();
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-        $statuses = ['draft', 'published'];
+        $statuses = ['draft', 'scheduled', 'published'];
         $gameTypes = ['literacy', 'numeracy'];
 
         return Inertia::render('Teacher/Games/Create', [
@@ -125,7 +127,8 @@ class GameController extends Controller
             'game_data' => 'required|array',
             'max_attempts' => 'integer|min:1|max:5',
             'due_date' => 'nullable|date|after_or_equal:today',
-            'status' => 'required|in:draft,published',
+            'status' => 'required|in:draft,scheduled,published',
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
         ]);
 
         if (!in_array($validated['game_title'], $this->gamesByGrade()[$validated['grade_level']][$validated['game_type']] ?? [], true)) {
@@ -133,15 +136,23 @@ class GameController extends Controller
         }
 
         $validated['game_data'] = json_encode($validated['game_data']);
+        app(PublicationManager::class)->normalize($validated);
+
+        if (!empty($validated['due_date'])) {
+            app(PublicationManager::class)->ensureDeadlineAfterPublication(
+                Carbon::parse($validated['due_date'])->endOfDay(),
+                $validated['publish_date'],
+                'due_date'
+            );
+        }
 
         $game = Game::create([
             'teacher_id' => auth()->id(),
             'max_attempts' => $validated['max_attempts'] ?? 5,
-            'publish_date' => now()->format('Y-m-d'),
             ...$validated,
         ]);
 
-        if ($game->status === 'published') {
+        if ($game->isCurrentlyPublished()) {
             app(StudyNestNotificationService::class)->gamePublished($game);
         }
 
@@ -176,7 +187,7 @@ class GameController extends Controller
                 'max_attempts' => $game->max_attempts,
                 'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                 'status' => $game->status,
-                'publish_date' => $game->publish_date ? $game->publish_date->format('Y-m-d') : null,
+                'publish_date' => $game->publish_date?->format('M d, Y g:i A') ?? 'Not published',
                 'created_at' => $game->created_at->format('Y-m-d H:i'),
                 'results' => $game->results()->with('student')
                     ->orderByDesc('attempt_number')
@@ -206,7 +217,7 @@ class GameController extends Controller
         $user = auth()->user();
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-        $statuses = ['draft', 'published'];
+        $statuses = ['draft', 'scheduled', 'published'];
         $gameTypes = ['literacy', 'numeracy'];
 
         $gameData = $game->game_data;
@@ -224,6 +235,7 @@ class GameController extends Controller
                 'max_attempts' => $game->max_attempts,
                 'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
                 'status' => $game->status,
+                'publish_date' => $game->publish_date?->format('Y-m-d\TH:i'),
             ],
             'assigned_grades' => $assignedGrades,
             'statuses' => $statuses,
@@ -243,7 +255,8 @@ class GameController extends Controller
             'game_data' => 'required|array',
             'max_attempts' => 'integer|min:1|max:5',
             'due_date' => 'nullable|date',
-            'status' => 'required|in:draft,published',
+            'status' => 'required|in:draft,scheduled,published',
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
         ]);
 
         if (!in_array($validated['game_title'], $this->gamesByGrade()[$validated['grade_level']][$validated['game_type']] ?? [], true)) {
@@ -251,13 +264,23 @@ class GameController extends Controller
         }
 
         $validated['game_data'] = json_encode($validated['game_data']);
+        $wasPublished = $game->isCurrentlyPublished();
+        app(PublicationManager::class)->normalize($validated, $game);
+
+        if (!empty($validated['due_date'])) {
+            app(PublicationManager::class)->ensureDeadlineAfterPublication(
+                Carbon::parse($validated['due_date'])->endOfDay(),
+                $validated['publish_date'],
+                'due_date'
+            );
+        }
 
         $game->update([
             'max_attempts' => $validated['max_attempts'] ?? 5,
             ...$validated,
         ]);
 
-        if ($game->wasChanged('status') && $game->status === 'published') {
+        if (!$wasPublished && $game->isCurrentlyPublished()) {
             app(StudyNestNotificationService::class)->gamePublished($game);
         }
 
@@ -303,7 +326,7 @@ class GameController extends Controller
 
         $game->update([
             'status' => 'published',
-            'publish_date' => now()->format('Y-m-d'),
+            'publish_date' => now(),
         ]);
 
         app(StudyNestNotificationService::class)->gamePublished($game);

@@ -117,23 +117,23 @@ export default function AnnouncementsIndex({
             <div className="student-announcements-page py-12">
                 <style>{`
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone="pinned"] {
-                        background-image: linear-gradient(135deg, rgb(255 251 235), rgb(254 243 199)) !important;
-                        background-color: rgb(255 251 235) !important;
-                        border-color: rgb(245 158 11) !important;
+                        background-image: linear-gradient(135deg, rgb(87 70 25), rgb(91 42 50)) !important;
+                        background-color: rgb(87 70 25) !important;
+                        border-color: rgb(180 120 30) !important;
                     }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="0"] { background-image: linear-gradient(135deg, rgb(219 234 254), rgb(252 231 243)) !important; background-color: rgb(239 246 255) !important; border-color: rgb(191 219 254) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="1"] { background-image: linear-gradient(135deg, rgb(255 237 213), rgb(254 249 195)) !important; background-color: rgb(255 247 237) !important; border-color: rgb(253 230 138) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="2"] { background-image: linear-gradient(135deg, rgb(243 232 255), rgb(252 231 243)) !important; background-color: rgb(250 245 255) !important; border-color: rgb(233 213 255) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="3"] { background-image: linear-gradient(135deg, rgb(209 250 229), rgb(219 234 254)) !important; background-color: rgb(236 253 245) !important; border-color: rgb(167 243 208) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="4"] { background-image: linear-gradient(135deg, rgb(254 249 195), rgb(255 228 230)) !important; background-color: rgb(255 251 235) !important; border-color: rgb(253 230 138) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="0"] { background-image: linear-gradient(135deg, rgb(30 58 95), rgb(74 41 70)) !important; background-color: rgb(30 58 95) !important; border-color: rgb(71 98 133) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="1"] { background-image: linear-gradient(135deg, rgb(91 57 31), rgb(75 70 27)) !important; background-color: rgb(91 57 31) !important; border-color: rgb(133 105 53) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="2"] { background-image: linear-gradient(135deg, rgb(67 45 100), rgb(83 43 72)) !important; background-color: rgb(67 45 100) !important; border-color: rgb(112 83 143) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="3"] { background-image: linear-gradient(135deg, rgb(25 82 70), rgb(30 58 95)) !important; background-color: rgb(25 82 70) !important; border-color: rgb(55 123 104) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="4"] { background-image: linear-gradient(135deg, rgb(87 70 25), rgb(91 42 50)) !important; background-color: rgb(87 70 25) !important; border-color: rgb(137 111 52) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-800,
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-700 { color: rgb(30 41 59) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-700 { color: rgb(241 245 249) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-600,
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-500 { color: rgb(71 85 105) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-blue-100"] { background-color: rgb(219 234 254) !important; color: rgb(30 64 175) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-purple-100"] { background-color: rgb(243 232 255) !important; color: rgb(107 33 168) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-yellow-100"] { background-color: rgb(254 249 195) !important; color: rgb(146 64 14) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-red-100"] { background-color: rgb(254 226 226) !important; color: rgb(185 28 28) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-500 { color: rgb(203 213 225) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-blue-100"] { background-color: rgb(30 64 175 / 0.35) !important; color: rgb(191 219 254) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-purple-100"] { background-color: rgb(107 33 168 / 0.35) !important; color: rgb(233 213 255) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-yellow-100"] { background-color: rgb(146 64 14 / 0.4) !important; color: rgb(253 230 138) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-red-100"] { background-color: rgb(185 28 28 / 0.35) !important; color: rgb(254 202 202) !important; }
                     .studynest-layout.theme-dark .student-announcements-page > div > .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
                     @media (max-width: 640px) { .student-announcements-page .p-5, .student-announcements-page .p-6 { padding: 1rem; } }
                 `}</style>

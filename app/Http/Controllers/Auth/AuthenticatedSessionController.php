@@ -36,15 +36,24 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // ✅ Log login
+        $role = $user->roles->first()->name ?? 'unknown';
+        $user->update(['last_login_at' => now()]);
+
         ActivityLog::create([
-            'user_id'             => $user->id,
-            'user_role'           => $user->roles->first()->name ?? 'unknown',
-            'activity_type'       => 'login',
-            'activity_description'=> ucfirst($user->roles->first()->name ?? 'User') . ' logged in.',
-            'related_module'      => null,
+            'user_id' => $user->id,
+            'user_role' => $role,
+            'activity_type' => 'login',
+            'activity_description' => ucfirst($role) . ' logged in.',
+            'related_module' => null,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
 
+        if ($user->must_change_password) {
+            return redirect()->route('password.force-change');
+        }
+
+        // ✅ Log login
         // Redirect based on user role
         if ($user->hasRole('principal')) {
             return redirect()->intended(route('principal.dashboard'));

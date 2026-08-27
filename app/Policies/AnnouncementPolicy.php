@@ -27,15 +27,10 @@ class AnnouncementPolicy
                 array_map(fn ($grade) => strtolower(str_replace(' ', '_', $grade)), $assignedGrades)
             );
 
-            $today = now()->toDateString();
-
             return $announcement->user_role === 'principal'
-                && $announcement->status === 'published'
-                && $announcement->publish_date
-                && $announcement->publish_date->toDateString() <= $today
-                && (!$announcement->expiration_date || $announcement->expiration_date->toDateString() >= $today)
+                && $announcement->isCurrentlyVisible()
                 && in_array($announcement->target_audience, array_merge(
-                    ['all_users', 'all_grades', 'teachers_only'],
+                    ['all_users', 'teachers_only'],
                     $gradeAudiences
                 ), true);
         }
@@ -43,17 +38,13 @@ class AnnouncementPolicy
         if ($user->hasRole('student')) {
             $gradeAudience = strtolower(str_replace(' ', '_', (string) $user->grade_level));
 
-            if ($announcement->status !== 'published'
-                || !$announcement->publish_date
-                || $announcement->publish_date->toDateString() > now()->toDateString()
-                || ($announcement->expiration_date && $announcement->expiration_date->toDateString() < now()->toDateString())) {
+            if (!$announcement->isCurrentlyVisible()) {
                 return false;
             }
 
             return $announcement->target_audience === $user->grade_level
                 || $announcement->target_audience === $gradeAudience
                 || $announcement->target_audience === 'all_users'
-                || $announcement->target_audience === 'all_grades'
                 || ($announcement->target_audience === 'all_assigned_students'
                     && $announcement->user?->gradeAssignments()->where('grade_level', $user->grade_level)->exists());
         }

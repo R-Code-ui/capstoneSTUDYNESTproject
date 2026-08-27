@@ -87,30 +87,30 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                         border-color: #334155 !important;
                     }
                     .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="0"] {
-                        background: linear-gradient(135deg, #dbeafe, #fce7f3) !important;
+                        background: linear-gradient(135deg, #1e3a5f, #4a2946) !important;
                     }
                     .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="1"] {
-                        background: linear-gradient(135deg, #ffedd5, #fef3c7) !important;
+                        background: linear-gradient(135deg, #5b391f, #4b461b) !important;
                     }
                     .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="2"] {
-                        background: linear-gradient(135deg, #ede9fe, #fce7f3) !important;
+                        background: linear-gradient(135deg, #432d64, #532b48) !important;
                     }
                     .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="3"] {
-                        background: linear-gradient(135deg, #d1fae5, #dbeafe) !important;
+                        background: linear-gradient(135deg, #195246, #1e3a5f) !important;
                     }
                     .studynest-layout.theme-dark .student-messages-index .student-message-card[data-message-tone="4"] {
-                        background: linear-gradient(135deg, #fef3c7, #ffe4e6) !important;
+                        background: linear-gradient(135deg, #574619, #5b2a32) !important;
                     }
-                    .student-messages-index .student-message-card .text-gray-900,
-                    .student-messages-index .student-message-card .text-gray-800,
-                    .student-messages-index .student-message-card .text-gray-700 {
-                        color: #1e293b !important;
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card .text-gray-900,
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card .text-gray-800,
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card .text-gray-700 {
+                        color: #f1f5f9 !important;
                     }
-                    .student-messages-index .student-message-card .text-gray-500,
-                    .student-messages-index .student-message-card .text-gray-400 {
-                        color: #64748b !important;
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card .text-gray-500,
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card .text-gray-400 {
+                        color: #cbd5e1 !important;
                     }
-                    .student-messages-index .student-message-card button:hover {
+                    .studynest-layout.theme-dark .student-messages-index .student-message-card button:hover {
                         background-color: rgb(255 255 255 / 0.24) !important;
                     }
                     @media (max-width: 640px) {

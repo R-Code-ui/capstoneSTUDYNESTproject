@@ -26,10 +26,10 @@ class DashboardController extends Controller
         $students = User::role('student')->whereIn('grade_level', $assignedGrades)->get();
         $studentIds = $students->pluck('id');
 
-        $lessons = Lesson::where('teacher_id', $teacher->id)->where('status', 'published')->get(['id', 'grade_level']);
-        $assignments = Assignment::where('teacher_id', $teacher->id)->where('status', 'published')->get(['id', 'grade_level', 'assignment_title', 'due_date']);
-        $quizzes = Quiz::where('teacher_id', $teacher->id)->where('status', 'published')->get(['id', 'grade_level']);
-        $games = Game::where('teacher_id', $teacher->id)->where('status', 'published')->get(['id', 'grade_level']);
+        $lessons = Lesson::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level']);
+        $assignments = Assignment::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level', 'assignment_title', 'due_date']);
+        $quizzes = Quiz::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level']);
+        $games = Game::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level']);
 
         $completedLessons = 0;
         $completedAssignments = 0;
@@ -103,8 +103,8 @@ class DashboardController extends Controller
                 return ['id' => $message->id, 'from' => $message->sender_id === $teacher->id ? 'You' : ($message->sender?->name ?? 'Unknown user'), 'subject' => $message->subject, 'message' => Str::limit($message->message, 50), 'date' => $message->created_at?->diffForHumans() ?? 'Unknown date', 'unread' => $message->receiver_id === $teacher->id && $message->status === 'unread'];
             });
 
-        $audiences = array_merge(['all_users', 'all_grades', 'all_assigned_students'], $assignedGrades, array_map(fn ($grade) => strtolower(str_replace(' ', '_', $grade)), $assignedGrades));
-        $recentAnnouncements = Announcement::where('status', 'published')->whereIn('target_audience', array_unique($audiences))->with('user')->latest()->limit(3)->get()->map(fn ($announcement) => ['id' => $announcement->id, 'title' => $announcement->title, 'content' => Str::limit($announcement->content, 100), 'posted_by' => $announcement->user?->name ?? 'Unknown', 'date' => $announcement->created_at?->diffForHumans() ?? 'Unknown date']);
+        $audiences = array_merge(['all_users', 'teachers_only', 'all_assigned_students'], $assignedGrades, array_map(fn ($grade) => strtolower(str_replace(' ', '_', $grade)), $assignedGrades));
+        $recentAnnouncements = Announcement::currentlyVisible()->whereIn('target_audience', array_unique($audiences))->with('user')->latest()->limit(3)->get()->map(fn ($announcement) => ['id' => $announcement->id, 'title' => $announcement->title, 'content' => Str::limit($announcement->content, 100), 'posted_by' => $announcement->user?->name ?? 'Unknown', 'date' => $announcement->created_at?->diffForHumans() ?? 'Unknown date']);
 
         return Inertia::render('Teacher/Dashboard', [
             'assigned_grades' => $assignedGrades,

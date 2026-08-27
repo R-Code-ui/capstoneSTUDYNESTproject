@@ -23,8 +23,7 @@ class GamePolicy
 
         if ($user->hasRole('student')) {
             $studentGrade = $user->currentEnrollment?->grade_level ?? $user->grade_level;
-            return $game->status === 'published'
-                && (!$game->publish_date || $game->publish_date->lte(today()))
+            return $game->isCurrentlyPublished()
                 && $studentGrade === $game->grade_level;
         }
 

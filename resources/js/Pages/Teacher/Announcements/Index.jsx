@@ -12,14 +12,35 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import {
     EyeIcon,
     PencilSquareIcon,
-    CheckCircleIcon,
-    ArchiveBoxIcon,
     TrashIcon,
     PlusIcon,
     ExclamationTriangleIcon,
     UserIcon,
     BuildingOfficeIcon,
+    ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
+
+function AnnouncementActionButton({ label, color = 'primary', onClick, children }) {
+    const colorClasses = {
+        primary: 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700',
+        danger: 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40',
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={label}
+            className={`group relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${colorClasses[color] || colorClasses.primary}`}
+        >
+            {children}
+            <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-slate-100 dark:text-slate-900">
+                {label}
+                <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-100" />
+            </span>
+        </button>
+    );
+}
 
 export default function AnnouncementsIndex({
     announcements,
@@ -72,18 +93,6 @@ export default function AnnouncementsIndex({
         });
     };
 
-    const handlePublish = (announcement) => {
-        if (confirm(`Publish "${announcement.title}"?`)) {
-            router.post(route('teacher.announcements.publish', announcement.id), {}, { preserveState: true });
-        }
-    };
-
-    const handleArchive = (announcement) => {
-        if (confirm(`Archive "${announcement.title}"?`)) {
-            router.post(route('teacher.announcements.archive', announcement.id), {}, { preserveState: true });
-        }
-    };
-
     const handleDelete = (announcement) => {
         if (confirm(`Delete "${announcement.title}"? This action cannot be undone.`)) {
             router.delete(route('teacher.announcements.destroy', announcement.id), { preserveState: true });
@@ -107,9 +116,9 @@ export default function AnnouncementsIndex({
     ];
 
     const authorOptions = [
-        { value: '', label: 'All Authors' },
+        { value: '', label: 'All Announcements' },
+        { value: 'principal', label: 'Official: Principal' },
         { value: 'me', label: 'My Announcements' },
-        { value: 'principal', label: 'Principal' },
     ];
 
     // 🔧 FIX: Columns with truncation
@@ -127,8 +136,8 @@ export default function AnnouncementsIndex({
             key: 'target_audience',
             label: 'Audience',
             render: (row) => (
-                <div className="max-w-[100px] truncate" title={row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}>
-                    {row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                <div className="max-w-[100px] truncate" title={row.target_audience === 'all_grades' ? 'All Students' : row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}>
+                    {row.target_audience === 'all_grades' ? 'All Students' : row.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </div>
             ),
         },
@@ -140,7 +149,13 @@ export default function AnnouncementsIndex({
                     {row.is_principal ? (
                         <>
                             <BuildingOfficeIcon className="w-4 h-4 text-blue-500" />
-                            <span className="text-blue-600 font-medium">Principal</span>
+                            <div className="flex flex-col leading-tight">
+                                <span className="text-blue-700 font-medium">Principal</span>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-blue-600">
+                                    <ShieldCheckIcon className="h-3 w-3" />
+                                    Official
+                                </span>
+                            </div>
                         </>
                     ) : (
                         <>
@@ -187,72 +202,37 @@ export default function AnnouncementsIndex({
 
                 // View
                 actionButtons.push(
-                    <button
+                    <AnnouncementActionButton
                         key="view"
+                        label="View"
                         onClick={() => router.visit(route('teacher.announcements.show', row.id))}
-                        className="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                        aria-label="View announcement"
-                        title="View"
                     >
-                        <EyeIcon className="w-3.5 h-3.5" />
-                    </button>
+                        <EyeIcon className="w-4 h-4" />
+                    </AnnouncementActionButton>
                 );
 
                 if (row.can_modify) {
                     // Edit
                     actionButtons.push(
-                        <button
+                        <AnnouncementActionButton
                             key="edit"
+                            label="Edit"
                             onClick={() => router.visit(route('teacher.announcements.edit', row.id))}
-                            className="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                            aria-label="Edit announcement"
-                            title="Edit"
                         >
-                            <PencilSquareIcon className="w-3.5 h-3.5" />
-                        </button>
+                            <PencilSquareIcon className="w-4 h-4" />
+                        </AnnouncementActionButton>
                     );
-
-                    // Publish (only if draft)
-                    if (row.status === 'draft') {
-                        actionButtons.push(
-                            <button
-                                key="publish"
-                                onClick={() => handlePublish(row)}
-                                className="inline-flex h-8 w-8 items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
-                                aria-label="Publish announcement"
-                                title="Publish"
-                            >
-                                <CheckCircleIcon className="w-3.5 h-3.5" />
-                            </button>
-                        );
-                    }
-
-                    // Archive (only if not archived)
-                    if (row.status !== 'archived') {
-                        actionButtons.push(
-                            <button
-                                key="archive"
-                                onClick={() => handleArchive(row)}
-                                className="inline-flex h-8 w-8 items-center justify-center text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
-                                aria-label="Archive announcement"
-                                title="Archive"
-                            >
-                                <ArchiveBoxIcon className="w-3.5 h-3.5" />
-                            </button>
-                        );
-                    }
 
                     // Delete
                     actionButtons.push(
-                        <button
+                        <AnnouncementActionButton
                             key="delete"
+                            label="Delete"
+                            color="danger"
                             onClick={() => handleDelete(row)}
-                            className="inline-flex h-8 w-8 items-center justify-center text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                            aria-label="Delete announcement"
-                            title="Delete"
                         >
-                            <TrashIcon className="w-3.5 h-3.5" />
-                        </button>
+                            <TrashIcon className="w-4 h-4" />
+                        </AnnouncementActionButton>
                     );
                 }
 
@@ -322,12 +302,17 @@ export default function AnnouncementsIndex({
                                         options={authorOptions}
                                         value={authorFilter}
                                         onChange={(val) => handleFilterChange('author', val)}
-                                        placeholder="Author"
+                                        placeholder="Source"
                                         size="md"
                                         className="w-40"
                                     />
                                 </div>
                             </div>
+
+                            <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-500">
+                                <ShieldCheckIcon className="h-4 w-4 text-blue-500" />
+                                Official announcements from the Principal are view-only. You can edit or delete only your own announcements.
+                            </p>
 
                             {/* Loading Spinner */}
                             {isLoading && <LoadingSpinner overlay size="lg" />}

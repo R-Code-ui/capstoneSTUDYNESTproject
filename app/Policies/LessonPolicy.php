@@ -33,7 +33,7 @@ class LessonPolicy
 
         // Student can only view lessons for their grade level
         if ($user->hasRole('student')) {
-            return $lesson->status === 'published' && $user->grade_level === $lesson->grade_level;
+            return $lesson->isCurrentlyPublished() && $user->grade_level === $lesson->grade_level;
         }
 
         return false;

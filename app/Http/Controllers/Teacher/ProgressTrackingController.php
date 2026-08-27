@@ -12,6 +12,7 @@ use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -48,7 +49,23 @@ class ProgressTrackingController extends Controller
         $gameTotal = $allProgress->sum('game_total');
         $quizScores = $allProgress->pluck('quiz_score')->filter(fn ($score) => $score !== null);
 
-        $atRiskStudents = $allProgress->filter(fn ($student) => $student['overall_progress'] < 60)->values();
+        $atRiskStudents = $allProgress
+            ->filter(fn ($student) => $student['overall_progress'] < 60)
+            ->values();
+        $atRiskPerPage = 7;
+        $atRiskPage = max(1, (int) $request->input('at_risk_page', 1));
+        $atRiskPaginator = new LengthAwarePaginator(
+            $atRiskStudents->forPage($atRiskPage, $atRiskPerPage)->values(),
+            $atRiskStudents->count(),
+            $atRiskPerPage,
+            $atRiskPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'at_risk_page',
+                'query' => $request->query(),
+            ],
+        );
+
         return Inertia::render('Teacher/ProgressTracking/Index', [
             'stats' => [
                 'total_students' => $allStudents->count(),
@@ -58,7 +75,13 @@ class ProgressTrackingController extends Controller
                 'game_participation' => $gameTotal > 0 ? round(($allProgress->sum('games_completed') / $gameTotal) * 100) : 0,
             ],
             'student_progress' => $studentProgress,
-            'at_risk_students' => $atRiskStudents,
+            'at_risk_students' => $atRiskPaginator->items(),
+            'at_risk_pagination' => [
+                'current_page' => $atRiskPaginator->currentPage(),
+                'last_page' => $atRiskPaginator->lastPage(),
+                'per_page' => $atRiskPaginator->perPage(),
+                'total' => $atRiskPaginator->total(),
+            ],
             'grade_levels' => $assignedGrades,
             'subjects' => ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'],
             'trimesters' => ['1st Term', '2nd Term', '3rd Term'],
@@ -162,12 +185,12 @@ class ProgressTrackingController extends Controller
 
     private function publishedContent(int $teacherId, ?string $subject, ?string $trimester): array
     {
-        $query = fn ($model) => $model::where('teacher_id', $teacherId)->where('status', 'published')
+        $query = fn ($model) => $model::where('teacher_id', $teacherId)->currentlyPublished()
             ->when($subject, fn ($q) => $q->where('subject', $subject))
             ->when($trimester, fn ($q) => $q->where('trimester', $trimester))
             ->get(['id', 'grade_level']);
         return ['lessons' => $query(Lesson::class), 'assignments' => $query(Assignment::class), 'quizzes' => $query(Quiz::class),
-            'games' => Game::where('teacher_id', $teacherId)->where('status', 'published')->get(['id', 'grade_level'])];
+            'games' => Game::where('teacher_id', $teacherId)->currentlyPublished()->get(['id', 'grade_level'])];
     }
 
     private function calculateStudentProgress(User $student, array $content): array

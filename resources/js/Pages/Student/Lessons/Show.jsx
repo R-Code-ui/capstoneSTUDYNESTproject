@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import StudentResources from '@/Components/StudentResources';
 
 // Heroicons
 import {
@@ -213,54 +214,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                                         Learning Resources
                                     </h3>
                                 </div>
-                                <div className="p-6 space-y-3">
-                                    {lesson.resources.map((resource) => (
-                                        <div
-                                            key={resource.id}
-                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-3"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                {getResourceIcon(resource.type)}
-                                                <div>
-                                                    <div className="font-medium text-gray-800 break-words">
-                                                        {resource.name}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {getResourceLabel(resource.type)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {isUrlResource(resource.type) ? (
-                                                <a
-                                                    href={resource.path}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors shrink-0"
-                                                >
-                                                    <LinkIcon className="w-4 h-4" />
-                                                    Open Link
-                                                </a>
-                                            ) : (
-                                                <div className="flex gap-2 shrink-0">
-                                                    <button
-                                                        onClick={() => handleView(resource.id)}
-                                                        className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
-                                                    >
-                                                        <EyeIcon className="w-4 h-4" />
-                                                        View
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDownload(resource.id)}
-                                                        className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                                    >
-                                                        <ArrowDownTrayIcon className="w-4 h-4" />
-                                                        Download
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                                <div className="p-4 sm:p-6"><StudentResources resources={lesson.resources} viewUrl={(id) => route('student.lessons.view-resource', id)} downloadUrl={(id) => route('student.lessons.download-resource', id)} /></div>
                             </div>
                         </div>
                     )}

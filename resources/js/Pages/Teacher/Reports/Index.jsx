@@ -1,250 +1,43 @@
 import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
-import FilterDropdown from '@/Components/FilterDropdown';
-import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
+import { ChartBarIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, DocumentTextIcon, UsersIcon } from '@heroicons/react/24/outline';
 
-// Heroicons
-import {
-    DocumentTextIcon,
-    ChartBarIcon,
-    ArrowTrendingUpIcon,
-    BookOpenIcon,
-    PuzzlePieceIcon,
-    UserGroupIcon,
-    ArrowPathIcon,
-} from '@heroicons/react/24/outline';
+const reports = [
+    { key: 'student_directory', title: 'Student Directory Report', description: 'A list of students in one of your assigned grade levels.', icon: UsersIcon },
+    { key: 'assignment_completion', title: 'Assignment Completion Report', description: 'Submission, late, graded, and missing assignment counts.', icon: ClipboardDocumentListIcon },
+    { key: 'quiz_performance', title: 'Quiz Performance Report', description: 'Completed quizzes, average scores, and completion rates.', icon: ClipboardDocumentCheckIcon },
+    { key: 'student_progress', title: 'Student Learning Progress Report', description: 'Combined lesson, assignment, quiz, and game completion.', icon: ChartBarIcon },
+];
 
-export default function ReportsIndex({
-    assigned_grades,
-    subjects,
-    terms,                // ✅ renamed from trimesters
-    school_years = [],
-    filters,
-}) {
-    const [selectedReport, setSelectedReport] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        report_type: '',
-        grade_level: filters?.grade_level || '',
-        subject:     filters?.subject || '',
-        school_year: filters?.school_year || '',
-        gender: filters?.gender || '',
-        status: filters?.status || '',
-        search: filters?.search || '',
-        term:        filters?.term || '',      // ✅ renamed
-    });
+export default function TeacherReports({ assigned_grades = [], subjects = [], school_years = [], trimesters = [] }) {
+    const [reportType, setReportType] = useState('student_directory');
+    const [gradeLevel, setGradeLevel] = useState(assigned_grades[0] || '');
+    const [status, setStatus] = useState('active');
+    const [schoolYear, setSchoolYear] = useState(school_years[0] || '');
+    const [subject, setSubject] = useState('all');
+    const [trimester, setTrimester] = useState('all');
+    const selectedReport = reports.find((report) => report.key === reportType);
+    const needsLearningFilters = reportType !== 'student_directory';
 
-    const reportTypes = [
-        {
-            value: 'assignment_completion',
-            label: 'Assignment Completion Report',
-            icon: <DocumentTextIcon className="w-10 h-10 text-blue-500" />,
-            description: 'Track student assignment submission rates',
-        },
-        {
-            value: 'quiz_performance',
-            label: 'Quiz Performance Report',
-            icon: <ChartBarIcon className="w-10 h-10 text-purple-500" />,
-            description: 'Review quiz scores and class performance',
-        },
-        {
-            value: 'student_progress',
-            label: 'Student Progress Report',
-            icon: <ArrowTrendingUpIcon className="w-10 h-10 text-emerald-500" />,
-            description: 'View overall student academic progress',
-        },
-        {
-            value: 'lesson_completion',
-            label: 'Lesson Completion Report',
-            icon: <BookOpenIcon className="w-10 h-10 text-amber-500" />,
-            description: 'Monitor lesson participation rates',
-        },
-        {
-            value: 'game_participation',
-            label: 'Game Participation Report',
-            icon: <PuzzlePieceIcon className="w-10 h-10 text-indigo-500" />,
-            description: 'Track educational game engagement',
-        },
-    ];
-
-    reportTypes.push({
-        value: 'student_information',
-        label: 'Student Information Report',
-        icon: <UserGroupIcon className="w-10 h-10 text-cyan-500" />,
-        description: 'Export student profiles and enrollment information',
-    });
-
-    const gradeOptions = [
-        { value: '', label: 'All Grades' },
-        ...assigned_grades.map((grade) => ({ value: grade, label: grade })),
-    ];
-
-    const subjectOptions = [
-        { value: '', label: 'All Subjects' },
-        ...subjects.map((subject) => ({ value: subject, label: subject })),
-    ];
-
-    const termOptions = [               // ✅ renamed
-        { value: '', label: 'All Terms' },
-        ...terms.map((t) => ({ value: t, label: t })),
-    ];
-
-    const schoolYearOptions = [{ value: '', label: 'All School Years' }, ...school_years.map((year) => ({ value: year, label: year }))];
-    const genderOptions = [{ value: '', label: 'All Genders' }, { value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }];
-    const statusOptions = [{ value: '', label: 'All Statuses' }, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }];
-    const isStudentInformationReport = formData.report_type === 'student_information';
-
-    const handleGeneratePdf = () => {
-        if (!formData.report_type) {
-            alert('Please select a report type.');
-            return;
+    const generatePdf = () => {
+        if (!gradeLevel) return;
+        const params = new URLSearchParams({ report_type: reportType, grade_level: gradeLevel, status });
+        if (needsLearningFilters) {
+            if (schoolYear) params.set('school_year', schoolYear);
+            if (subject !== 'all') params.set('subject', subject);
+            if (trimester !== 'all') params.set('trimester', trimester);
         }
-
-        setIsLoading(true);
-
-        const params = new URLSearchParams({
-            report_type: formData.report_type,
-            ...(formData.grade_level && { grade_level: formData.grade_level }),
-            ...(formData.subject && { subject: formData.subject }),
-            ...(isStudentInformationReport && formData.school_year && { school_year: formData.school_year }),
-            ...(isStudentInformationReport && formData.gender && { gender: formData.gender }),
-            ...(isStudentInformationReport && formData.status && { status: formData.status }),
-            ...(isStudentInformationReport && formData.search && { search: formData.search }),
-            ...(formData.term && { term: formData.term }),   // ✅
-        });
-
-        window.open(route('teacher.reports.pdf') + '?' + params.toString(), '_blank');
-        setIsLoading(false);
+        window.open(`${route('teacher.reports.pdf')}?${params.toString()}`, '_blank', 'noopener,noreferrer');
     };
 
-    const handleReset = () => {
-        setFormData({
-            report_type: selectedReport || '',
-            grade_level: '',
-            subject: '',
-            term: '',
-            school_year: '',
-            gender: '',
-            status: '',
-            search: '',
-        });
-    };
-
-    return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
-                        Reports
-                    </span>
-                </div>
-            }
-        >
-            <Head title="Reports" />
-
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    {/* Report Types */}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {reportTypes.map((type) => (
-                            <div
-                                key={type.value}
-                                className={`
-                                    bg-white rounded-xl border shadow-sm overflow-hidden
-                                    cursor-pointer transition-all duration-200
-                                    hover:shadow-lg hover:-translate-y-1
-                                    ${selectedReport === type.value ? 'ring-2 ring-blue-600 border-blue-600' : 'border-gray-200'}
-                                `}
-                                onClick={() => {
-                                    setSelectedReport(type.value);
-                                    setFormData({ ...formData, report_type: type.value });
-                                }}
-                            >
-                                <div className="p-6">
-                                    <div className="flex items-start gap-4">
-                                        <div className="text-4xl">{type.icon}</div>
-                                        <div>
-                                            <h4 className="font-semibold text-gray-800">
-                                                {type.label}
-                                            </h4>
-                                            <p className="text-sm text-gray-500 mt-1">
-                                                {type.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Filters + Generate Button */}
-                    <div className="mt-6">
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                            <div className="px-6 py-4 border-b border-gray-200">
-                                <h3 className="text-sm font-semibold text-gray-700">Report Filters</h3>
-                            </div>
-                            <div className="p-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <FilterDropdown
-                                        options={gradeOptions}
-                                        value={formData.grade_level}
-                                        onChange={(val) => setFormData({ ...formData, grade_level: val })}
-                                        placeholder="Grade Level"
-                                        label="Grade Level"
-                                        size="md"
-                                    />
-                                    {!isStudentInformationReport && <>
-                                        <FilterDropdown
-                                        options={subjectOptions}
-                                        value={formData.subject}
-                                        onChange={(val) => setFormData({ ...formData, subject: val })}
-                                        placeholder="Subject"
-                                        label="Subject"
-                                        size="md"
-                                    />
-                                    <FilterDropdown
-                                        options={termOptions}                // ✅ renamed
-                                        value={formData.term}               // ✅
-                                        onChange={(val) => setFormData({ ...formData, term: val })}
-                                        placeholder="Term"
-                                        label="Term"
-                                        size="md"
-                                    />
-                                        </>}
-                                    {isStudentInformationReport && <>
-                                        <FilterDropdown options={schoolYearOptions} value={formData.school_year} onChange={(val) => setFormData({ ...formData, school_year: val })} placeholder="School Year" label="School Year" size="md" />
-                                        <FilterDropdown options={genderOptions} value={formData.gender} onChange={(val) => setFormData({ ...formData, gender: val })} placeholder="Gender" label="Gender" size="md" />
-                                        <FilterDropdown options={statusOptions} value={formData.status} onChange={(val) => setFormData({ ...formData, status: val })} placeholder="Status" label="Status" size="md" />
-                                        <div className="sm:col-span-2 lg:col-span-3">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Student Name or Student ID</label>
-                                            <input type="text" value={formData.search} onChange={(event) => setFormData({ ...formData, search: event.target.value })} placeholder="Search by student name or ID" className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
-                                        </div>
-                                    </>}
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-                                    <SecondaryButton onClick={handleReset}>
-                                        <ArrowPathIcon className="w-4 h-4 mr-1" />
-                                        Reset Filters
-                                    </SecondaryButton>
-                                    <PrimaryButton
-                                        onClick={handleGeneratePdf}
-                                        disabled={!formData.report_type || isLoading}
-                                    >
-                                        {isLoading ? 'Generating...' : 'Generate Report (PDF)'}
-                                    </PrimaryButton>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {isLoading && <LoadingSpinner overlay size="lg" text="Generating PDF..." />}
-                </div>
-            </div>
-        </AuthenticatedLayout>
-    );
+    return <AuthenticatedLayout header={<h2 className="text-xl font-bold text-gray-800">Reports</h2>}>
+        <Head title="Reports" />
+        <div className="teacher-reports-page py-6 sm:py-10"><style>{`.studynest-layout.theme-dark .teacher-reports-page .report-hero { background: linear-gradient(110deg, rgb(30 41 59), rgb(15 23 42)) !important; border-color: rgb(51 65 85) !important; } .studynest-layout.theme-dark .teacher-reports-page .report-choice { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; } .studynest-layout.theme-dark .teacher-reports-page .report-choice-selected { background-color: rgb(30 41 59) !important; border-color: rgb(99 102 241) !important; } .studynest-layout.theme-dark .teacher-reports-page .report-filters { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; } .studynest-layout.theme-dark .teacher-reports-page h1, .studynest-layout.theme-dark .teacher-reports-page h3, .studynest-layout.theme-dark .teacher-reports-page h4 { color: rgb(241 245 249) !important; } .studynest-layout.theme-dark .teacher-reports-page p, .studynest-layout.theme-dark .teacher-reports-page label { color: rgb(148 163 184) !important; } .studynest-layout.theme-dark .teacher-reports-page select { background-color: rgb(30 41 59) !important; border-color: rgb(71 85 105) !important; color: rgb(241 245 249) !important; } .studynest-layout.theme-dark .teacher-reports-page option { background-color: rgb(30 41 59); color: rgb(241 245 249); } .studynest-layout.theme-dark .teacher-reports-page .border-slate-200 { border-color: rgb(51 65 85) !important; }`}</style><div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <section className="report-hero rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-white p-5 sm:p-7"><p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">Teacher reports</p><h1 className="mt-1 text-2xl font-bold text-slate-900">Monitor your assigned classes</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Reports are restricted to your assigned grade levels. Select one grade, then download a clean PDF.</p></section>
+            <section><h3 className="mb-3 text-base font-semibold text-slate-800">Choose a report</h3><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{reports.map((report) => { const Icon = report.icon; const selected = report.key === reportType; return <button key={report.key} type="button" onClick={() => setReportType(report.key)} className={`report-choice rounded-xl border p-5 text-left transition-all ${selected ? 'report-choice-selected border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600/20' : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'}`}><span className={`mb-4 inline-flex rounded-lg p-2.5 ${selected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}><Icon className="h-6 w-6" /></span><h4 className="font-semibold text-slate-900">{report.title}</h4><p className="mt-2 text-sm leading-5 text-slate-600">{report.description}</p></button>; })}</div></section>
+            <section className="report-filters rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex flex-col gap-1 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-semibold text-slate-900">Report filters</h3><p className="mt-1 text-sm text-slate-600">{selectedReport?.title}</p></div><span className="mt-2 inline-flex w-fit rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 sm:mt-0">Your assigned grades only</span></div><div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><label className="block text-sm font-medium text-slate-700">Grade Level<select value={gradeLevel} onChange={(event) => setGradeLevel(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-indigo-600 focus:ring-indigo-600">{assigned_grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}</select></label><label className="block text-sm font-medium text-slate-700">Student Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-indigo-600 focus:ring-indigo-600"><option value="active">Active Students</option><option value="inactive">Inactive Students</option><option value="all">All Students</option></select></label>{needsLearningFilters && <><label className="block text-sm font-medium text-slate-700">School Year<select value={schoolYear} onChange={(event) => setSchoolYear(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-indigo-600 focus:ring-indigo-600">{school_years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label><label className="block text-sm font-medium text-slate-700">Subject<select value={subject} onChange={(event) => setSubject(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-indigo-600 focus:ring-indigo-600"><option value="all">All Subjects</option>{subjects.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className="block text-sm font-medium text-slate-700">Term<select value={trimester} onChange={(event) => setTrimester(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-indigo-600 focus:ring-indigo-600"><option value="all">All Terms</option>{trimesters.map((term) => <option key={term} value={term}>{term}</option>)}</select></label></>}</div><div className="mt-6 flex justify-end border-t border-slate-200 pt-5"><PrimaryButton onClick={generatePdf} disabled={!gradeLevel} className="inline-flex items-center gap-2"><DocumentTextIcon className="h-5 w-5" />Generate PDF</PrimaryButton></div></section>
+        </div></div>
+    </AuthenticatedLayout>;
 }

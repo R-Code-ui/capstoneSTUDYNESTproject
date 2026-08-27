@@ -55,10 +55,5 @@ class AuthServiceProvider extends ServiceProvider
                 return true;
             }
         });
-
-        // Additional Gates if needed
-        Gate::define('view-report', function ($user) {
-            return $user->hasRole('principal') || $user->hasRole('teacher');
-        });
     }
 }

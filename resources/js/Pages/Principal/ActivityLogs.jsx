@@ -103,7 +103,7 @@ export default function ActivityLogs({
 
     const actions = (row) => [
         {
-            label: 'View Details',
+            label: 'View',
             icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
             onClick: () => viewLogDetail(row)
@@ -118,19 +118,14 @@ export default function ActivityLogs({
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-                    {/* ===== Activity Summary Cards ===== */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-700">Today&apos;s activity summary</h3>
+                        <p className="mt-1 text-xs text-gray-500">Each event is counted in one category only.</p>
+                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.user_logins}</div>
-                            <div className="text-xs font-medium text-gray-500">User Logins</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.teacher_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Teacher Activities</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.student_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Student Activities</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.sign_in_events}</div>
+                            <div className="text-xs font-medium text-gray-500">Sign-in Events</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-gray-800">{summary.lesson_activities}</div>
@@ -149,8 +144,16 @@ export default function ActivityLogs({
                             <div className="text-xs font-medium text-gray-500">Game Activities</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.other_user_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Other User Activities</div>
+                            <div className="text-2xl font-bold text-gray-800">{summary.announcement_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Announcement Activities</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.message_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Message Activities</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <div className="text-2xl font-bold text-gray-800">{summary.other_activities}</div>
+                            <div className="text-xs font-medium text-gray-500">Other Activities</div>
                         </div>
                     </div>
 

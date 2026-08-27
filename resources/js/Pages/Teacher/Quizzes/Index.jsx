@@ -12,7 +12,6 @@ import {
     EyeIcon,
     PencilSquareIcon,
     ChartBarIcon,
-    CheckCircleIcon,
     TrashIcon,
     PlusIcon,
 } from '@heroicons/react/24/outline';
@@ -63,12 +62,6 @@ export default function QuizzesIndex({
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
-    };
-
-    const handlePublish = (quiz) => {
-        if (confirm(`Publish "${quiz.title}"?`)) {
-            router.post(route('teacher.quizzes.publish', quiz.id), {}, { preserveState: true });
-        }
     };
 
     const handleDelete = (quiz) => {
@@ -165,12 +158,6 @@ export default function QuizzesIndex({
             color: 'success',
             onClick: () => router.visit(route('teacher.quizzes.results', row.id)),
         },
-        ...(row.status === 'draft' ? [{
-            label: 'Publish',
-            icon: <CheckCircleIcon className="w-4 h-4" />,
-            color: 'success',
-            onClick: () => handlePublish(row),
-        }] : []),
         {
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,

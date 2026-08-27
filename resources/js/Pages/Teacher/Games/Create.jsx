@@ -8,6 +8,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import PublishingOptions from '@/Components/PublishingOptions';
 
 export default function GamesCreate({
     assigned_grades,
@@ -28,6 +29,7 @@ export default function GamesCreate({
         max_attempts: 5,
         due_date: '',
         status: 'draft',
+        publish_date: '',
     });
 
     useEffect(() => {
@@ -284,21 +286,7 @@ export default function GamesCreate({
                             {/* ===== Publication Settings ===== */}
                             <div className="border-t border-gray-200 pt-4">
                                 <h4 className="font-medium text-gray-800 mb-4">Publication Settings</h4>
-                                <div>
-                                    <InputLabel htmlFor="status" value="Status" required />
-                                    <select
-                                        id="status"
-                                        value={data.status}
-                                        onChange={(e) => setData('status', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
-                                        required
-                                    >
-                                        {statuses.map((status) => (
-                                            <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                                        ))}
-                                    </select>
-                                    <InputError message={errors.status} className="mt-2" />
-                                </div>
+                                <PublishingOptions data={data} setData={setData} errors={errors} />
                             </div>
 
                             {/* ===== Actions ===== */}

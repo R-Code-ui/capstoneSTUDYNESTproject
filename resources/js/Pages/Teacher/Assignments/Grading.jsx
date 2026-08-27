@@ -101,9 +101,15 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
         {
             key: 'submission_method',
             label: 'Method',
-            render: (row) => row.submission_method
-                ? row.submission_method.charAt(0).toUpperCase() + row.submission_method.slice(1)
-                : '—',
+            render: (row) => {
+                if (row.submission_method) {
+                    return row.submission_method === 'digital' ? 'Online upload' : 'Paper hand-in';
+                }
+                if (assignment.submission_methods?.includes('digital') && assignment.submission_methods?.includes('paper')) {
+                    return 'Online or paper';
+                }
+                return assignment.submission_methods?.includes('digital') ? 'Online upload' : 'Paper hand-in';
+            },
         },
         {
             key: 'status',
@@ -122,16 +128,31 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             label: 'Submitted',
             render: (row) => row.submitted_at || '—',
         },
+        {
+            key: 'next_step',
+            label: 'Next Step',
+            render: (row) => {
+                if (row.status === 'not_submitted') {
+                    return assignment.submission_methods?.includes('paper')
+                        ? 'Awaiting submission or paper receipt'
+                        : 'Awaiting online upload';
+                }
+                if (row.status === 'returned_for_revision') return 'Awaiting resubmission';
+                if (row.status === 'graded') return 'Grade recorded';
+                return row.submission_method === 'digital' ? 'Review uploaded work' : 'Grade paper hand-in';
+            },
+        },
     ];
 
     const actions = (row) => {
         const list = [];
 
-        // Grade or Mark Paper
+        // A digital assignment cannot be graded until the student uploads work.
+        // Paper receipt is recorded by the teacher because the platform cannot verify a physical hand-in.
         if (row.status === 'not_submitted') {
             if (assignment.submission_methods?.includes('paper')) {
                 list.push({
-                    label: 'Mark Paper',
+                    label: 'Record Paper Received',
                     icon: <DocumentIcon className="w-4 h-4" />,
                     color: 'warning',
                     onClick: () => handleMarkPaper(row),
@@ -139,7 +160,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             }
         } else {
             list.push({
-                label: 'Grade',
+                label: row.submission_method === 'digital' ? 'Review & Grade' : 'Grade Paper',
                 icon: <ClipboardDocumentListIcon className="w-4 h-4" />,
                 color: 'success',
                 onClick: () => handleGrade(row),
@@ -303,12 +324,12 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
             <Modal
                 show={showPaperModal}
                 onClose={() => { setShowPaperModal(false); setSelectedStudent(null); setErrors({}); }}
-                title={`Mark Paper Submission: ${selectedStudent?.student_name || ''}`}
+                title={`Record Paper Received: ${selectedStudent?.student_name || ''}`}
                 size="md"
             >
                 <form onSubmit={submitPaper} className="space-y-4">
                     <p className="text-sm text-gray-600">
-                        Mark this student's paper-based submission as completed.
+                        Confirm that you received this student's physical paper. You may record a score now or grade it later.
                     </p>
                     <div>
                         <InputLabel htmlFor="paper_score" value={`Score (out of ${assignment.total_points}) (Optional)`} />
@@ -341,7 +362,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics 
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit" disabled={isLoading}>
-                            {isLoading ? 'Saving...' : 'Mark as Submitted'}
+                            {isLoading ? 'Saving...' : 'Record Paper Received'}
                         </PrimaryButton>
                     </div>
                 </form>

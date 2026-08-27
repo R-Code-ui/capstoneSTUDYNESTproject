@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasScheduledPublication;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Lesson extends Model
 {
-    use HasFactory;
+    use HasFactory, HasScheduledPublication;
 
     /**
      * The attributes that are mass assignable.
@@ -43,7 +44,7 @@ class Lesson extends Model
     protected function casts(): array
     {
         return [
-            'publish_date' => 'date',
+            'publish_date' => 'datetime',
         ];
     }
 

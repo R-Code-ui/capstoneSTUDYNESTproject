@@ -128,10 +128,14 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                                     e.stopPropagation();
                                                     handleDeleteConversation(conv.student_id, conv.name);
                                                 }}
-                                                className="ml-2 p-2 text-gray-400 hover:text-red-600 transition-colors"
-                                                title="Remove conversation from your messages"
+                                                aria-label="Remove conversation from your messages"
+                                                className="group relative ml-2 inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-all duration-150 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:text-slate-400 dark:hover:bg-red-950/40 dark:hover:text-red-400 dark:focus-visible:ring-offset-slate-900"
                                             >
                                                 <TrashIcon className="w-4 h-4" />
+                                                <span role="tooltip" className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-slate-100 dark:text-slate-900">
+                                                    Remove conversation
+                                                    <span className="absolute right-3 top-full border-4 border-transparent border-t-slate-900 dark:border-t-slate-100" />
+                                                </span>
                                             </button>
                                         </div>
                                     ))}

@@ -29,6 +29,7 @@ class User extends Authenticatable
         'principal_id',
         'is_active',
         'last_login_at',
+        'must_change_password',
     ];
 
     /**
@@ -53,6 +54,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
+            'must_change_password' => 'boolean',
         ];
     }
 
@@ -262,11 +264,4 @@ class User extends Authenticatable
         return $this->hasMany(ActivityLog::class, 'user_id');
     }
 
-    /**
-     * Report exports by user
-     */
-    public function reportExports()
-    {
-        return $this->hasMany(ReportExport::class, 'user_id');
-    }
 }

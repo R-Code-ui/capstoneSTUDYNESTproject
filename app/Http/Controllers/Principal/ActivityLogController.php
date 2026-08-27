@@ -91,15 +91,27 @@ class ActivityLogController extends Controller
             ->whereDate('created_at', today())
             ->get();
 
+        // These categories are mutually exclusive, so an event is never
+        // presented twice in the Principal summary.
+        $trackedModules = [
+            'Lesson Module',
+            'Assignment Module',
+            'Quiz Module',
+            'Game Module',
+            'Announcement Module',
+            'Message Module',
+        ];
+        $nonLoginLogs = $todayLogs->reject(fn ($log) => $log->activity_type === 'login');
+
         $summary = [
-            'user_logins' => $todayLogs->where('activity_type', 'login')->count(),
-            'teacher_activities' => $todayLogs->where('user_role', 'teacher')->count(),
-            'student_activities' => $todayLogs->where('user_role', 'student')->count(),
-            'lesson_activities' => $todayLogs->where('related_module', 'Lesson Module')->count(),
-            'assignment_activities' => $todayLogs->where('related_module', 'Assignment Module')->count(),
-            'quiz_activities' => $todayLogs->where('related_module', 'Quiz Module')->count(),
-            'game_activities' => $todayLogs->where('related_module', 'Game Module')->count(),
-            'other_user_activities' => $todayLogs->whereNotIn('related_module', ['Lesson Module', 'Assignment Module', 'Quiz Module', 'Game Module'])->count(),
+            'sign_in_events' => $todayLogs->where('activity_type', 'login')->count(),
+            'lesson_activities' => $nonLoginLogs->where('related_module', 'Lesson Module')->count(),
+            'assignment_activities' => $nonLoginLogs->where('related_module', 'Assignment Module')->count(),
+            'quiz_activities' => $nonLoginLogs->where('related_module', 'Quiz Module')->count(),
+            'game_activities' => $nonLoginLogs->where('related_module', 'Game Module')->count(),
+            'announcement_activities' => $nonLoginLogs->where('related_module', 'Announcement Module')->count(),
+            'message_activities' => $nonLoginLogs->where('related_module', 'Message Module')->count(),
+            'other_activities' => $nonLoginLogs->whereNotIn('related_module', $trackedModules)->count(),
         ];
 
         $activityTypes = [
@@ -122,7 +134,7 @@ class ActivityLogController extends Controller
                 return [
                     'id' => $log->id,
                     'date_time' => $log->created_at->format('M d, Y h:i A'),
-                    'user' => $log->user?->name ?? 'Unknown',
+                    'user' => $log->user?->name ?? 'Deleted ' . ucfirst($log->user_role),
                     'role' => ucfirst($log->user_role),
                     'activity' => $log->activity_description,
                     'module' => $log->related_module,

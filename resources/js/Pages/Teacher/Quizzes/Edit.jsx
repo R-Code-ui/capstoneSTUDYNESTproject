@@ -8,6 +8,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import PublishingOptions from '@/Components/PublishingOptions';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function QuizzesEdit({
@@ -39,7 +40,7 @@ export default function QuizzesEdit({
         attempts_allowed: quiz.attempts_allowed || 1,   // ✅ pre‑fill
         shuffle_questions: quiz.shuffle_questions || false,
         status: quiz.status || 'draft',
-        publish_date: quiz.publish_date || new Date().toISOString().split('T')[0],
+        publish_date: quiz.publish_date || '',
         questions: questions,
     });
 
@@ -519,37 +520,12 @@ export default function QuizzesEdit({
                             {/* Publication Settings */}
                             <div className="border-t border-gray-200 pt-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Publication Settings</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <InputLabel htmlFor="status" value="Status" required />
-                                        <select
-                                            id="status"
-                                            value={data.status}
-                                            onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
-                                            required
-                                        >
-                                            {statuses.map((status) => (
-                                                <option key={status} value={status}>
-                                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <InputError message={errors.status} className="mt-2" />
-                                    </div>
-                                    <div>
-                                        <InputLabel htmlFor="publish_date" value="Publish Date" required />
-                                        <TextInput
-                                            id="publish_date"
-                                            type="date"
-                                            value={data.publish_date}
-                                            onChange={(e) => setData('publish_date', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            required
-                                        />
-                                        <InputError message={errors.publish_date} className="mt-2" />
-                                    </div>
-                                </div>
+                                <PublishingOptions
+                                    data={data}
+                                    setData={setData}
+                                    errors={errors}
+                                    locked={['published', 'archived'].includes(quiz.status)}
+                                />
                             </div>
 
                             {/* Actions */}

@@ -22,6 +22,7 @@ class UserSeeder extends Seeder
                 'email' => 'principal@studynest.com',
                 'password' => Hash::make('Principal123'),
                 'is_active' => true,
+                'must_change_password' => true,
                 'grade_level' => null,
                 'gender' => null, // ✅ ADDED
             ]
@@ -38,6 +39,7 @@ class UserSeeder extends Seeder
                 'email' => 'maria.santos@studynest.com',
                 'password' => Hash::make('Teacher123'),
                 'is_active' => true,
+                'must_change_password' => true,
                 'grade_level' => null,
                 'gender' => null, // ✅ ADDED
             ]
@@ -52,6 +54,7 @@ class UserSeeder extends Seeder
                 'email' => 'juan.reyes@studynest.com',
                 'password' => Hash::make('Teacher123'),
                 'is_active' => true,
+                'must_change_password' => true,
                 'grade_level' => null,
                 'gender' => null, // ✅ ADDED
             ]
@@ -68,6 +71,7 @@ class UserSeeder extends Seeder
                 'email' => 'angelo.santos@studynest.com',
                 'password' => Hash::make('Student123'),
                 'is_active' => true,
+                'must_change_password' => true,
                 'grade_level' => 'Grade 4',
                 'gender' => 'male', // ✅ ADDED
             ]
@@ -82,6 +86,7 @@ class UserSeeder extends Seeder
                 'email' => 'maria.delacruz@studynest.com',
                 'password' => Hash::make('Student123'),
                 'is_active' => true,
+                'must_change_password' => true,
                 'grade_level' => 'Grade 5',
                 'gender' => 'female', // ✅ ADDED
             ]
@@ -96,6 +101,7 @@ class UserSeeder extends Seeder
                 'email' => 'pedro.reyes@studynest.com',
                 'password' => Hash::make('Student123'),
                 'is_active' => true,
+                'must_change_password' => true,
                 'grade_level' => 'Grade 6',
                 'gender' => 'male', // ✅ ADDED
             ]

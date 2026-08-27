@@ -25,10 +25,7 @@ class GameController extends Controller
         $statusFilter = $request->input('status'); // 'assigned', 'started', 'completed'
 
         $gamesQuery = Game::where('grade_level', $studentGrade)
-            ->where('status', 'published')
-            ->where(function ($query) {
-                $query->whereNull('publish_date')->orWhereDate('publish_date', '<=', today());
-            })
+            ->currentlyPublished()
             ->with(['teacher', 'results' => function ($query) use ($student) {
                 $query->where('student_id', $student->id)
                     ->orderByDesc('attempt_number')

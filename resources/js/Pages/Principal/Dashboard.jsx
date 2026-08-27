@@ -24,10 +24,10 @@ import {
     DocumentTextIcon,
     ClipboardDocumentListIcon,
     ChartBarIcon,
+    DocumentDuplicateIcon,
     MegaphoneIcon,
     UsersIcon,
     EyeIcon,
-    DocumentDuplicateIcon,
     CalendarIcon,
     ArrowRightIcon,
 } from '@heroicons/react/24/outline';
@@ -362,7 +362,7 @@ export default function PrincipalDashboard({
                                     className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-slate-100 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-sky-200 dark:hover:border-sky-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-sky-700 dark:hover:text-sky-300"
                                 >
                                     <DocumentDuplicateIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-sky-600" />
-                                    <span className="text-xs font-medium text-center">View Reports</span>
+                                    <span className="text-xs font-medium text-center">Reports</span>
                                 </Link>
 
                                 <Link

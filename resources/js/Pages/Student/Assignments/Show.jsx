@@ -7,6 +7,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import StudentResources from '@/Components/StudentResources';
 
 import {
     ArrowLeftIcon,
@@ -29,7 +30,10 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
     const { flash } = usePage().props; // to show success/error messages
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState([]);
-    const [selectedMethod, setSelectedMethod] = useState('');
+    const [selectedMethod, setSelectedMethod] = useState(() => {
+        const methods = assignment.submission_methods || [];
+        return methods.includes('digital') && !methods.includes('paper') ? 'digital' : '';
+    });
     const [fileErrors, setFileErrors] = useState([]);
     const [formErrors, setFormErrors] = useState({});
 
@@ -92,7 +96,11 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
             alert('Please select a submission method.');
             return;
         }
-        if (selectedMethod === 'digital' && selectedFiles.length === 0) {
+        if (selectedMethod !== 'digital') {
+            alert('Paper hand-ins are confirmed by your teacher after you submit the physical work.');
+            return;
+        }
+        if (selectedFiles.length === 0) {
             alert('Please select at least one file to upload.');
             return;
         }
@@ -294,33 +302,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                         <PaperClipIcon className="w-5 h-5 text-gray-500" /> Learning Resources
                                     </h3>
                                 </div>
-                                <div className="p-6 space-y-3">
-                                    {resources.map((resource) => (
-                                        <div key={resource.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-3">
-                                            <div className="flex items-center gap-4">
-                                                {getResourceIcon(resource.type)}
-                                                <div>
-                                                    <div className="font-medium text-gray-800 break-words">{resource.name}</div>
-                                                    <div className="text-sm text-gray-500">{getResourceLabel(resource.type)}</div>
-                                                </div>
-                                            </div>
-                                            {resource.type === 'url' ? (
-                                                <a href={resource.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors shrink-0">
-                                                    Open Link
-                                                </a>
-                                            ) : (
-                                                <div className="flex gap-2 shrink-0">
-                                                    <button onClick={() => handleView(resource.id)} className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
-                                                        <EyeIcon className="w-4 h-4" /> View
-                                                    </button>
-                                                    <button onClick={() => handleDownload(resource.id)} className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
-                                                        <ArrowDownTrayIcon className="w-4 h-4" /> Download
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                                <div className="p-4 sm:p-6"><StudentResources resources={resources} viewUrl={(id) => route('student.assignments.view-resource', id)} downloadUrl={(id) => route('student.assignments.download-resource', id)} /></div>
                             </div>
                         </div>
                     )}
@@ -366,15 +348,31 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                         </div>
                     )}
 
-                    {/* Submission Form */}
-                    {canSubmit() && (
+                    {/* Paper-only assignments are confirmed by the teacher, not submitted in the app. */}
+                    {canSubmit() && availableMethods.includes('paper') && !availableMethods.includes('digital') && (
+                        <div className="mt-6">
+                            <div className="bg-amber-50 rounded-xl border border-amber-200 p-6">
+                                <div className="flex items-start gap-3 text-amber-800">
+                                    <DocumentTextIcon className="w-6 h-6 shrink-0" />
+                                    <div>
+                                        <h3 className="font-semibold">Hand in on paper</h3>
+                                        <p className="mt-1 text-sm">Complete this assignment on paper and give it to your teacher by the due date. Your teacher will confirm receipt in StudyNest.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Online submission form */}
+                    {canSubmit() && availableMethods.includes('digital') && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-200">
-                                    <h3 className="text-sm font-semibold text-gray-700">Submit Assignment</h3>
+                                    <h3 className="text-sm font-semibold text-gray-700">Turn In Assignment</h3>
                                 </div>
                                 <div className="p-6">
                                     <form onSubmit={handleSubmit} className="space-y-6">
+                                        {availableMethods.length > 1 && (
                                         <div>
                                             <InputLabel value="Submission Method" required />
                                             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -399,6 +397,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                             </div>
                                             {formErrors.submission_method && <InputError message={formErrors.submission_method} className="mt-2" />}
                                         </div>
+                                        )}
 
                                         {selectedMethod === 'digital' && (
                                             <div>
@@ -437,7 +436,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                             <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                                                 <p className="text-yellow-700">
                                                     <CheckCircleIcon className="inline-block w-5 h-5 mr-2" />
-                                                    Submit your work directly to your teacher. They will mark it as submitted.
+                                                    Hand your completed work directly to your teacher. StudyNest will not mark it as submitted until your teacher confirms receipt.
                                                 </p>
                                             </div>
                                         )}
@@ -446,9 +445,13 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                             <SecondaryButton type="button" onClick={() => router.visit(route('student.assignments.index'))}>
                                                 Cancel
                                             </SecondaryButton>
-                                            <PrimaryButton type="submit" disabled={isSubmitting || !selectedMethod}>
-                                                {isSubmitting ? 'Submitting...' : 'Submit Assignment'}
-                                            </PrimaryButton>
+                                            {selectedMethod === 'digital' ? (
+                                                <PrimaryButton type="submit" disabled={isSubmitting}>
+                                                    {isSubmitting ? 'Submitting...' : 'Turn In Assignment'}
+                                                </PrimaryButton>
+                                            ) : (
+                                                <span className="self-center text-sm text-gray-500">Hand the paper to your teacher to complete submission.</span>
+                                            )}
                                         </div>
                                     </form>
                                 </div>
@@ -462,9 +465,9 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                 <div className="flex items-center gap-3 text-emerald-700">
                                     <CheckCircleIcon className="w-6 h-6" />
                                     <div>
-                                        <div className="font-semibold">Assignment Submitted!</div>
+                                        <div className="font-semibold">{submission.submission_method === 'paper' ? 'Paper Receipt Recorded' : 'Assignment Submitted!'}</div>
                                         <div className="text-sm text-emerald-600">
-                                            {submission.status === 'graded' ? 'Your assignment has been graded.' : 'Waiting for teacher to review your submission.'}
+                                            {submission.status === 'graded' ? 'Your assignment has been graded.' : submission.submission_method === 'paper' ? 'Your teacher confirmed that they received your paper.' : 'Waiting for teacher to review your submission.'}
                                         </div>
                                     </div>
                                 </div>

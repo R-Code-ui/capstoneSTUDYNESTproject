@@ -122,46 +122,69 @@ export default function GamesIndex({
                 }
 
                 .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="0"] {
-                    background: linear-gradient(135deg, #dbeafe, #fce7f3) !important;
+                    background: linear-gradient(135deg, #1e3a5f, #4a2946) !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="1"] {
-                    background: linear-gradient(135deg, #ffedd5, #fef3c7) !important;
+                    background: linear-gradient(135deg, #5b391f, #4b461b) !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="2"] {
-                    background: linear-gradient(135deg, #ede9fe, #fce7f3) !important;
+                    background: linear-gradient(135deg, #432d64, #532b48) !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="3"] {
-                    background: linear-gradient(135deg, #d1fae5, #dbeafe) !important;
+                    background: linear-gradient(135deg, #195246, #1e3a5f) !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="4"] {
-                    background: linear-gradient(135deg, #fef3c7, #ffe4e6) !important;
+                    background: linear-gradient(135deg, #574619, #5b2a32) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="5"] {
+                    background: linear-gradient(135deg, #263467, #432d64) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="6"] {
+                    background: linear-gradient(135deg, #154b4c, #195246) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="7"] {
+                    background: linear-gradient(135deg, #5b2a32, #5b391f) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="8"] {
+                    background: linear-gradient(135deg, #144a5f, #1e3a5f) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card[data-game-tone="9"] {
+                    background: linear-gradient(135deg, #574619, #4b461b) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card {
+                    border-color: rgba(100, 116, 139, .65) !important;
                 }
 
                 .studynest-layout.theme-dark .student-games-index .student-game-card .text-gray-800,
                 .studynest-layout.theme-dark .student-games-index .student-game-card .text-gray-700,
                 .studynest-layout.theme-dark .student-games-index .student-game-card .text-gray-600 {
-                    color: #334155 !important;
+                    color: #f1f5f9 !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card .bg-white\/70 {
-                    background-color: rgba(255, 255, 255, .72) !important;
+                    background-color: rgba(15, 23, 42, .58) !important;
+                }
+                .studynest-layout.theme-dark .student-games-index .student-game-card [class~="bg-white/70"] {
+                    background-color: rgba(15, 23, 42, .72) !important;
+                    color: #cbd5e1 !important;
+                    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, .18) !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card .bg-gray-100 {
-                    background-color: #f1f5f9 !important;
-                    color: #334155 !important;
+                    background-color: rgba(51, 65, 85, .7) !important;
+                    color: #e2e8f0 !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card .bg-yellow-100 {
-                    background-color: #fef3c7 !important;
-                    color: #92400e !important;
+                    background-color: rgba(146, 64, 14, .4) !important;
+                    color: #fde68a !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-100,
                 .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-50 {
-                    color: #047857 !important;
+                    color: #a7f3d0 !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-100 {
-                    background-color: #d1fae5 !important;
+                    background-color: rgba(6, 95, 70, .42) !important;
                 }
                 .studynest-layout.theme-dark .student-games-index .student-game-card .bg-emerald-50 {
-                    background-color: #ecfdf5 !important;
+                    background-color: rgba(15, 118, 110, .3) !important;
                 }
 
                 @media (max-width: 640px) {

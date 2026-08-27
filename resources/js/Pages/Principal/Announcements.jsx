@@ -12,7 +12,16 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import { formatDate } from '@/Utils/dateHelpers';
+
+const manilaDateTimeInput = (date = new Date()) => new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+}).format(date).replace(' ', 'T');
 
 export default function PrincipalAnnouncements({
     announcements = [],
@@ -30,6 +39,8 @@ export default function PrincipalAnnouncements({
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [publicationMode, setPublicationMode] = useState('draft');
+    const [scheduledAt, setScheduledAt] = useState('');
 
     const { errors } = usePage().props;
 
@@ -59,20 +70,6 @@ export default function PrincipalAnnouncements({
         });
     };
 
-    const handleArchive = (announcement) => {
-        if (confirm(`Are you sure you want to archive "${announcement.title}"?`)) {
-            router.post(route('principal.announcements.archive', announcement.id), {}, { preserveState: true });
-        }
-    };
-
-    const handlePublish = (announcement) => {
-        if (confirm(`Are you sure you want to publish "${announcement.title}"?`)) {
-            router.post(route('principal.announcements.publish', announcement.id), {}, {
-                preserveState: true,
-            });
-        }
-    };
-
     const handleDelete = (announcement) => {
         if (confirm(`Are you sure you want to delete "${announcement.title}"?`)) {
             router.delete(route('principal.announcements.destroy', announcement.id), { preserveState: true });
@@ -91,7 +88,9 @@ export default function PrincipalAnnouncements({
 
     const audienceOptions = (audience_options || []).map((aud) => ({
         value: aud,
-        label: aud.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        label: aud === 'all_grades'
+            ? 'All Students'
+            : aud.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     }));
 
     // SVG ICONS
@@ -105,18 +104,6 @@ export default function PrincipalAnnouncements({
     const EditIcon = () => (
         <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-    );
-
-    const PublishIcon = () => (
-        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-    );
-
-    const ArchiveIcon = () => (
-        <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
         </svg>
     );
 
@@ -140,12 +127,23 @@ export default function PrincipalAnnouncements({
             key: 'audience',
             label: 'Audience',
             render: (row) => {
-                const audience = row.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '—';
+                const audience = row.audience === 'all_grades'
+                    ? 'All Students'
+                    : row.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '—';
                 return <span className="block max-w-[170px] truncate" title={audience}>{audience}</span>;
             },
         },
         { key: 'category', label: 'Category' },
-        { key: 'created_at', label: 'Date Posted' },
+        {
+            key: 'publish_date',
+            label: 'Publication',
+            render: (row) => {
+                if (row.status === 'scheduled') return `Scheduled ${row.publish_date_short}`;
+                if (row.status === 'published') return `Published ${row.publish_date_short}`;
+                if (row.status === 'archived' && row.publish_date_short) return `Published ${row.publish_date_short}`;
+                return 'Not published';
+            },
+        },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     ];
 
@@ -165,21 +163,11 @@ export default function PrincipalAnnouncements({
             color: 'primary',
             onClick: () => {
                 setSelectedAnnouncement(row);
+                setPublicationMode(row.status);
+                setScheduledAt(row.status === 'scheduled' ? (row.publish_date || '') : '');
                 setShowEditModal(true);
             }
         },
-        ...(row.status === 'draft' ? [{
-            label: 'Publish',
-            icon: <PublishIcon />,
-            color: 'success',
-            onClick: () => handlePublish(row)
-        }] : []),
-        ...(row.status !== 'archived' ? [{
-            label: 'Archive',
-            icon: <ArchiveIcon />,
-            color: 'warning',
-            onClick: () => handleArchive(row)
-        }] : []),
         {
             label: 'Delete',
             icon: <DeleteIcon />,
@@ -229,7 +217,12 @@ export default function PrincipalAnnouncements({
                                     />
                                     {/* 🔧 FIX: Button now matches filter height with py-2 and whitespace-nowrap */}
                                     <PrimaryButton
-                                        onClick={() => { setSelectedAnnouncement(null); setShowCreateModal(true); }}
+                                        onClick={() => {
+                                            setSelectedAnnouncement(null);
+                                            setPublicationMode('draft');
+                                            setScheduledAt('');
+                                            setShowCreateModal(true);
+                                        }}
                                         className="w-full justify-center py-2 whitespace-nowrap sm:w-auto"
                                     >
                                         + Create Announcement
@@ -269,6 +262,11 @@ export default function PrincipalAnnouncements({
                         const form = e.target;
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
+                        data.status = publicationMode;
+
+                        if (publicationMode !== 'scheduled') {
+                            delete data.publish_date;
+                        }
 
                         const handleSuccess = () => {
                             setShowCreateModal(false);
@@ -354,8 +352,8 @@ export default function PrincipalAnnouncements({
                         <InputError message={errors?.content} className="mt-2" />
                     </div>
 
-                    {/* Three columns: Priority, Pin, Status */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Two columns: Priority + Pin */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <InputLabel htmlFor="priority" value="Priority" />
                             <select
@@ -386,59 +384,91 @@ export default function PrincipalAnnouncements({
                             <InputError message={errors?.is_pinned} className="mt-2" />
                         </div>
 
-                        <div>
-                            <InputLabel htmlFor="status" value="Status" />
-                            <select
-                                id="status"
-                                name="status"
-                                defaultValue={selectedAnnouncement?.status || 'draft'}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
-                                required
-                            >
-                                <option value="draft">Draft</option>
-                                <option value="published">Published</option>
-                                <option value="archived">Archived</option>
-                            </select>
-                            <InputError message={errors?.status} className="mt-2" />
-                        </div>
                     </div>
 
-                    {/* Two columns: Publish Date + Expiration Date */}
+                    <div>
+                        <InputLabel value="Publishing Option" />
+                        {['published', 'archived'].includes(selectedAnnouncement?.status) ? (
+                            <div className="mt-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                                {selectedAnnouncement.status === 'published'
+                                    ? `Published ${selectedAnnouncement.publish_date_label || ''}`
+                                    : 'Archived'}
+                            </div>
+                        ) : (
+                            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3" role="group" aria-label="Publishing option">
+                                {[
+                                    { value: 'draft', label: 'Save as draft', help: 'Only you can see it' },
+                                    { value: 'published', label: 'Publish now', help: 'Visible immediately' },
+                                    { value: 'scheduled', label: 'Schedule', help: 'Publish automatically' },
+                                ].map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => setPublicationMode(option.value)}
+                                        aria-pressed={publicationMode === option.value}
+                                        className={`rounded-lg border px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-slate-900 ${publicationMode === option.value
+                                            ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600 dark:border-blue-400 dark:bg-blue-500/20 dark:ring-blue-400'
+                                            : 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-900/40 dark:hover:border-slate-500 dark:hover:bg-slate-800'}`}
+                                    >
+                                        <span className={`block text-sm font-semibold ${publicationMode === option.value
+                                            ? 'text-blue-900 dark:text-blue-100'
+                                            : 'text-gray-800 dark:text-slate-100'}`}>{option.label}</span>
+                                        <span className={`block text-xs ${publicationMode === option.value
+                                            ? 'text-blue-700 dark:text-blue-200'
+                                            : 'text-gray-500 dark:text-slate-400'}`}>{option.help}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <InputError message={errors?.status} className="mt-2" />
+                    </div>
+
+                    {/* Schedule Date & Time + Expiration Date & Time */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <InputLabel htmlFor="publish_date" value="Publish Date" />
-                            <TextInput
-                                id="publish_date"
-                                name="publish_date"
-                                type="date"
-                                defaultValue={selectedAnnouncement?.publish_date || ''}
-                                className="mt-1 block w-full"
-                                required
-                            />
-                            <InputError message={errors?.publish_date} className="mt-2" />
-                        </div>
+                        {publicationMode === 'scheduled' && (
+                            <div>
+                                <InputLabel htmlFor="publish_date" value="Schedule Date & Time" />
+                                <TextInput
+                                    id="publish_date"
+                                    name="publish_date"
+                                    type="datetime-local"
+                                    value={scheduledAt}
+                                    onChange={(event) => setScheduledAt(event.target.value)}
+                                    min={manilaDateTimeInput()}
+                                    className="mt-1 block w-full"
+                                    required
+                                />
+                                <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Asia/Manila (PHT)</p>
+                                <InputError message={errors?.publish_date} className="mt-2" />
+                            </div>
+                        )}
 
                         <div>
-                            <InputLabel htmlFor="expiration_date" value="Expiration Date (Optional)" />
+                            <InputLabel htmlFor="expiration_date" value="Expiration Date & Time (Optional)" />
                             <TextInput
                                 id="expiration_date"
                                 name="expiration_date"
-                                type="date"
+                                type="datetime-local"
                                 defaultValue={selectedAnnouncement?.expiration_date || ''}
-                                min={selectedAnnouncement?.publish_date || new Date().toISOString().split('T')[0]}
+                                min={publicationMode === 'scheduled' && scheduledAt ? scheduledAt : manilaDateTimeInput()}
                                 className="mt-1 block w-full"
                             />
+                            <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Must be after publication · Asia/Manila (PHT)</p>
                             <InputError message={errors?.expiration_date} className="mt-2" />
                         </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <div className="flex justify-end gap-3 border-t border-gray-200 pt-4 dark:border-slate-700">
                         <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedAnnouncement(null); }}>
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit">
-                            {showCreateModal ? 'Create Announcement' : 'Update Announcement'}
+                            {publicationMode === 'scheduled'
+                                ? (showCreateModal ? 'Schedule Announcement' : 'Update Schedule')
+                                : publicationMode === 'draft'
+                                    ? (showCreateModal ? 'Save Draft' : 'Update Draft')
+                                    : (showCreateModal ? 'Publish Now' : 'Update Announcement')}
                         </PrimaryButton>
                     </div>
                 </form>
@@ -461,16 +491,24 @@ export default function PrincipalAnnouncements({
                                 <div className="mt-1 flex flex-wrap gap-2 text-sm text-gray-500">
                                     <span>Category: {selectedAnnouncement.category}</span>
                                     <span>•</span>
-                                    <span>Audience: {selectedAnnouncement.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                    <span>Audience: {selectedAnnouncement.audience === 'all_grades'
+                                        ? 'All Students'
+                                        : selectedAnnouncement.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                     <span>•</span>
                                     <span>Status: <StatusBadge status={selectedAnnouncement.status} /></span>
                                 </div>
                             </div>
                             <div className="shrink-0 text-right text-sm text-gray-500">
-                                <div>Posted: {selectedAnnouncement.created_at}</div>
+                                <div>
+                                    {selectedAnnouncement.status === 'scheduled'
+                                        ? `Scheduled: ${selectedAnnouncement.publish_date_label}`
+                                        : selectedAnnouncement.publish_date_label
+                                            ? `Published: ${selectedAnnouncement.publish_date_label}`
+                                            : `Created: ${selectedAnnouncement.created_at}`}
+                                </div>
                                 <div>Views: {selectedAnnouncement.view_count}</div>
                                 {selectedAnnouncement.expiration_date && (
-                                    <div>Expires: {formatDate(selectedAnnouncement.expiration_date)}</div>
+                                    <div>Expires: {selectedAnnouncement.expiration_date_label}</div>
                                 )}
                             </div>
                         </div>

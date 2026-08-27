@@ -33,7 +33,6 @@ export default function Navigation({ user }) {
                 { href: route('teacher.announcements.index'), label: 'Announcements' },
                 { href: route('teacher.messages.index'), label: 'Messages' },
                 { href: route('teacher.progress.index'), label: 'Progress' },
-                { href: route('teacher.reports.index'), label: 'Reports' },
             );
         } else if (userRole === 'student') {
             links.push(

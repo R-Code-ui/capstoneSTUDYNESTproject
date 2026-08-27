@@ -17,20 +17,6 @@ import {
     ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
-// Soft gradient combinations for cards
-const GRADIENT_COLORS = [
-    { from: 'from-blue-100', to: 'to-pink-100' },
-    { from: 'from-orange-100', to: 'to-yellow-100' },
-    { from: 'from-purple-100', to: 'to-pink-100' },
-    { from: 'from-emerald-100', to: 'to-blue-100' },
-    { from: 'from-yellow-100', to: 'to-rose-100' },
-    { from: 'from-indigo-100', to: 'to-purple-100' },
-    { from: 'from-teal-100', to: 'to-emerald-100' },
-    { from: 'from-rose-100', to: 'to-orange-100' },
-    { from: 'from-cyan-100', to: 'to-blue-100' },
-    { from: 'from-amber-100', to: 'to-yellow-100' },
-];
-
 export default function ProgressTracker({
     grade_level,
     summary,
@@ -146,30 +132,136 @@ export default function ProgressTracker({
                     }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="0"],
                     .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="0"] {
-                        background: linear-gradient(135deg, #dbeafe, #fce7f3) !important;
+                        background: linear-gradient(135deg, #1e3a5f, #4a2946) !important;
                     }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="1"],
                     .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="1"] {
-                        background: linear-gradient(135deg, #ffedd5, #fef3c7) !important;
+                        background: linear-gradient(135deg, #5b391f, #4b461b) !important;
                     }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="2"],
                     .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="2"] {
-                        background: linear-gradient(135deg, #ede9fe, #fce7f3) !important;
+                        background: linear-gradient(135deg, #432d64, #532b48) !important;
                     }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="3"],
                     .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="3"] {
-                        background: linear-gradient(135deg, #d1fae5, #dbeafe) !important;
+                        background: linear-gradient(135deg, #195246, #1e3a5f) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="4"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="4"] {
+                        background: linear-gradient(135deg, #574619, #5b2a32) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="5"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="5"] {
+                        background: linear-gradient(135deg, #263467, #432d64) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="6"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="6"] {
+                        background: linear-gradient(135deg, #154b4c, #195246) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="7"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="7"] {
+                        background: linear-gradient(135deg, #5b2a32, #5b391f) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="8"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="8"] {
+                        background: linear-gradient(135deg, #144a5f, #1e3a5f) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="9"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="9"] {
+                        background: linear-gradient(135deg, #574619, #4b461b) !important;
                     }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-gray-800,
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-gray-500,
                     .studynest-layout.theme-dark .student-progress-page .progress-pending-card .text-gray-800,
                     .studynest-layout.theme-dark .student-progress-page .progress-pending-card .text-gray-600 {
-                        color: #334155 !important;
+                        color: #f1f5f9 !important;
                     }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card .bg-gray-200\/70,
                     .studynest-layout.theme-dark .student-progress-page .progress-overall-card .bg-gray-200 {
                         background-color: rgb(148 163 184 / 0.35) !important;
                     }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card [class~="bg-white/70"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card [class~="bg-white/70"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-grade-badge {
+                        background-color: rgb(15 23 42 / 0.58) !important;
+                        border-color: rgb(71 85 105) !important;
+                        color: rgb(191 219 254) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card [class~="bg-amber-100"] {
+                        background-color: rgb(146 64 14 / 0.4) !important;
+                        color: rgb(253 230 138) !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card [class~="bg-gray-200"] {
+                        background-color: rgb(15 23 42 / 0.62) !important;
+                        color: rgb(226 232 240) !important;
+                    }
+                    /* Calm, accessible colour system for progress content. */
+                    .student-progress-page .progress-overall-card {
+                        background: linear-gradient(135deg, #f8fbff, #eef4ff) !important;
+                        border-color: #dbeafe !important;
+                    }
+                    .student-progress-page .progress-color-card,
+                    .student-progress-page .progress-pending-card {
+                        background-image: none !important;
+                        border-color: #dbe4f0 !important;
+                    }
+                    .student-progress-page .progress-color-card[data-progress-tone="0"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="0"] { background-color: #eff6ff !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="1"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="1"] { background-color: #fffbeb !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="2"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="2"] { background-color: #f5f3ff !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="3"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="3"] { background-color: #f0fdfa !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="4"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="4"] { background-color: #fff1f2 !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="5"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="5"] { background-color: #eef2ff !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="6"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="6"] { background-color: #ecfeff !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="7"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="7"] { background-color: #fff7ed !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="8"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="8"] { background-color: #f0f9ff !important; }
+                    .student-progress-page .progress-color-card[data-progress-tone="9"],
+                    .student-progress-page .progress-pending-card[data-progress-tone="9"] { background-color: #fefce8 !important; }
+                    .student-progress-page .progress-color-card .bg-gray-200\/70,
+                    .student-progress-page .progress-overall-card .bg-gray-200 { background-color: #dbe4f0 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-overall-card {
+                        background: linear-gradient(135deg, #111c33, #172554) !important;
+                        border-color: #334155 !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card,
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card {
+                        background-image: none !important;
+                        border-color: #475569 !important;
+                        box-shadow: none !important;
+                    }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="0"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="0"] { background-color: #172b4d !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="1"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="1"] { background-color: #3b2e16 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="2"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="2"] { background-color: #2e2148 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="3"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="3"] { background-color: #123b3b !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="4"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="4"] { background-color: #421f31 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="5"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="5"] { background-color: #252d58 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="6"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="6"] { background-color: #123b47 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="7"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="7"] { background-color: #432b1d !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="8"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="8"] { background-color: #173651 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card[data-progress-tone="9"],
+                    .studynest-layout.theme-dark .student-progress-page .progress-pending-card[data-progress-tone="9"] { background-color: #363318 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card .bg-gray-200\/70,
+                    .studynest-layout.theme-dark .student-progress-page .progress-overall-card .bg-gray-200 { background-color: #334155 !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-red-600 { color: #fda4af !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-amber-600 { color: #fcd34d !important; }
+                    .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-emerald-600 { color: #6ee7b7 !important; }
                     @media (max-width: 640px) {
                         .student-progress-page { padding-top: 1.25rem; padding-bottom: 1.25rem; }
                         .student-progress-page .progress-overall-card { padding: 1rem; }
@@ -181,7 +273,7 @@ export default function ProgressTracker({
                     {/* ===== Grade Level ===== */}
                     {/* 🔧 FIX: Removed "Grade:" label, just show the grade, reduced margin */}
                     <div className="mb-3">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+                        <div className="progress-grade-badge inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg">
                             <AcademicCapIcon className="w-5 h-5 text-blue-600" />
                             <span className="font-semibold text-blue-700">{grade_level}</span>
                         </div>
@@ -273,12 +365,11 @@ export default function ProgressTracker({
                                 color: 'amber',
                             },
                         ].map((item, index) => {
-                            const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
                             return (
                                 <div
                                     key={item.title}
                                     data-progress-tone={index}
-                                    className={`progress-color-card bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-xl border border-gray-200/60 shadow-sm p-6`}
+                                    className="progress-color-card rounded-xl border shadow-sm p-6"
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`flex items-center justify-center w-12 h-12 rounded-full bg-white/70 backdrop-blur-sm ${item.iconColor}`}>
@@ -342,14 +433,13 @@ export default function ProgressTracker({
                                 ) : (
                                     <div className="space-y-3">
                                         {pending_activities.map((activity, index) => {
-                                            const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
                                             return (
                                                 <Link
                                                     key={index}
                                                     href={getActivityRoute(activity.type, activity.id)}
                                                     className="block"
                                                 >
-                                                    <div data-progress-tone={index % GRADIENT_COLORS.length} className={`progress-pending-card bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden`}>
+                                                    <div data-progress-tone={index % 10} className="progress-pending-card rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden">
                                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-3">
                                                             <div className="flex items-center gap-4 min-w-0">
                                                                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex-shrink-0">

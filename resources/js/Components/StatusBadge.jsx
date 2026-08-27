@@ -12,6 +12,7 @@ export default function StatusBadge({
         // Active/Published states
         active: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Active' },
         published: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Published' },
+        scheduled: { bg: 'bg-indigo-100', text: 'text-indigo-800', dot: 'bg-indigo-500', label: 'Scheduled' },
         completed: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Completed' },
         passed: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Passed' },
         graded: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Graded' },

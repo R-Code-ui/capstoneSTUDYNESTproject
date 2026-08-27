@@ -210,28 +210,6 @@ export default function StudentDashboard({
                                     {grade_level} Student
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2 mt-3 sm:mt-0">
-                                <span className="text-sm text-gray-500 font-medium">Quick Links:</span>
-                                <div className="flex flex-wrap gap-1">
-                                    {[
-                                        { icon: BookOpenIcon, color: 'blue', label: 'Lessons', route: 'student.lessons.index' },
-                                        { icon: ClipboardDocumentListIcon, color: 'emerald', label: 'Assignments', route: 'student.assignments.index' },
-                                        { icon: DocumentTextIcon, color: 'purple', label: 'Quizzes', route: 'student.quizzes.index' },
-                                        { icon: PuzzlePieceIcon, color: 'amber', label: 'Games', route: 'student.games.index' },
-                                        { icon: MegaphoneIcon, color: 'rose', label: 'Announcements', route: 'student.announcements.index' },
-                                        { icon: ChartBarIcon, color: 'indigo', label: 'Progress', route: 'student.progress.index' },
-                                    ].map((item, idx) => (
-                                        <Link
-                                            key={idx}
-                                            href={route(item.route)}
-                                            className={`p-1.5 ${quickLinkStyles[item.color].bg} rounded-lg ${quickLinkStyles[item.color].hover} transition-colors`}
-                                            title={item.label}
-                                        >
-                                            <item.icon className={`w-5 h-5 ${quickLinkStyles[item.color].text}`} />
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
 
                         {/* ===== Recent Announcements ===== */}
@@ -583,8 +561,19 @@ export default function StudentDashboard({
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                                 <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
                                                 <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
-                                                <Tooltip formatter={(value) => [`${value}%`, 'Progress']} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: 8, color: '#e2e8f0' }} />
-                                                <Bar dataKey="value" fill="#818cf8" radius={[6, 6, 0, 0]} />
+                                                <Tooltip
+                                                    formatter={(value) => [`${value}%`, 'Progress']}
+                                                    cursor={{ fill: 'rgba(148, 163, 184, 0.12)' }}
+                                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: 8, color: '#e2e8f0' }}
+                                                    labelStyle={{ color: '#f8fafc' }}
+                                                    itemStyle={{ color: '#a5b4fc' }}
+                                                />
+                                                <Bar
+                                                    dataKey="value"
+                                                    fill="#818cf8"
+                                                    activeBar={{ fill: '#6366f1', stroke: '#a5b4fc', strokeWidth: 1 }}
+                                                    radius={[6, 6, 0, 0]}
+                                                />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>

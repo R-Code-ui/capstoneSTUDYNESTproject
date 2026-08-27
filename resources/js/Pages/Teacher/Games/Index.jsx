@@ -13,7 +13,6 @@ import {
     EyeIcon,
     PencilSquareIcon,
     ChartBarIcon,
-    CheckCircleIcon,
     TrashIcon,
     PlusIcon,
 } from '@heroicons/react/24/outline';
@@ -63,12 +62,6 @@ export default function GamesIndex({
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
-    };
-
-    const handlePublish = (game) => {
-        if (confirm(`Publish "${game.title}"?`)) {
-            router.post(route('teacher.games.publish', game.id), {}, { preserveState: true });
-        }
     };
 
     const handleDelete = (game) => {
@@ -174,12 +167,6 @@ export default function GamesIndex({
             color: 'success',
             onClick: () => router.visit(route('teacher.games.results', row.id)),
         },
-        ...(row.status === 'draft' ? [{
-            label: 'Publish',
-            icon: <CheckCircleIcon className="w-4 h-4" />,
-            color: 'success',
-            onClick: () => handlePublish(row),
-        }] : []),
         {
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,

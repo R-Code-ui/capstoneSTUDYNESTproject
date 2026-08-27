@@ -27,7 +27,7 @@ class QuizController extends Controller
         $statusFilter = $request->input('status');
 
         $quizzes = Quiz::where('grade_level', $gradeLevel)
-            ->where('status', 'published')
+            ->currentlyPublished()
             ->when($search, function ($query, $search) {
                 return $query->where(function ($query) use ($search) {
                     $query->where('quiz_title', 'like', "%{$search}%")
@@ -344,7 +344,8 @@ class QuizController extends Controller
             'related_module'      => 'Quiz Module',
         ]);
 
-        return redirect()->route('student.quizzes.results', $attempt->id);
+        return redirect()->route('student.quizzes.results', $attempt->id)
+            ->with('success', 'Quiz submitted successfully!');
     }
 
     /**

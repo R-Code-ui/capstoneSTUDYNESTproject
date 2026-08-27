@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AnnouncementController extends Controller
@@ -40,7 +42,7 @@ class AnnouncementController extends Controller
             ->paginate(10); // ✅ PAGINATION ADDED
 
         $categories = ['Reminder', 'Event Announcement', 'Class Suspension', 'Emergency Notice', 'Academic Notice', 'School Activity'];
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'scheduled', 'published', 'archived'];
         $audienceOptions = ['all_users', 'all_grades', 'grade_4', 'grade_5', 'grade_6', 'teachers_only'];
 
         return Inertia::render('Principal/Announcements', [
@@ -54,8 +56,11 @@ class AnnouncementController extends Controller
                     'status' => $announcement->status,
                     'priority' => $announcement->priority,
                     'is_pinned' => $announcement->is_pinned,
-                    'publish_date' => $announcement->publish_date ? $announcement->publish_date->format('Y-m-d') : null,
-                    'expiration_date' => $announcement->expiration_date ? $announcement->expiration_date->format('Y-m-d') : null,
+                    'publish_date' => $announcement->publish_date?->format('Y-m-d\TH:i'),
+                    'publish_date_label' => $announcement->publish_date?->format('M d, Y g:i A'),
+                    'publish_date_short' => $announcement->publish_date?->format('M d, g:i A'),
+                    'expiration_date' => $announcement->expiration_date?->format('Y-m-d\TH:i'),
+                    'expiration_date_label' => $announcement->expiration_date?->format('M d, Y g:i A'),
                     'view_count' => $announcement->view_count,
                     'created_at' => $announcement->publish_date
                         ? $announcement->publish_date->diffForHumans()
@@ -89,21 +94,24 @@ class AnnouncementController extends Controller
             'target_audience' => 'required|in:all_users,all_grades,grade_4,grade_5,grade_6,teachers_only',
             'priority' => 'required|in:normal,important,urgent',
             'is_pinned' => 'boolean',
-            'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
-            'expiration_date' => 'nullable|date|after:publish_date',
+            'status' => ['required', Rule::in(['draft', 'scheduled', 'published'])],
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
+            'expiration_date' => 'nullable|date|after:now',
         ]);
 
-        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
-            return back()->withErrors(['publish_date' => 'A published announcement cannot have a future publish date.'])->withInput();
+        $publishDate = match ($validated['status']) {
+            'published' => now(),
+            'scheduled' => Carbon::parse($validated['publish_date']),
+            default => null,
+        };
+        $expirationDate = !empty($validated['expiration_date']) ? Carbon::parse($validated['expiration_date']) : null;
+
+        if ($validated['status'] === 'scheduled' && !$publishDate->isFuture()) {
+            return back()->withErrors(['publish_date' => 'The scheduled publish time must be in the future.'])->withInput();
         }
 
-        if (
-            $validated['status'] === 'published' &&
-            !empty($validated['expiration_date']) &&
-            $validated['expiration_date'] < now()->toDateString()
-        ) {
-            return back()->withErrors(['expiration_date' => 'A published announcement cannot already be expired.'])->withInput();
+        if ($expirationDate && $publishDate && !$expirationDate->greaterThan($publishDate)) {
+            return back()->withErrors(['expiration_date' => 'The expiration time must be after the publish time.'])->withInput();
         }
 
         $announcement = Announcement::create([
@@ -116,8 +124,8 @@ class AnnouncementController extends Controller
             'priority' => $validated['priority'],
             'is_pinned' => $validated['is_pinned'] ?? false,
             'status' => $validated['status'],
-            'publish_date' => $validated['publish_date'],
-            'expiration_date' => $validated['expiration_date'] ?? null,
+            'publish_date' => $publishDate,
+            'expiration_date' => $expirationDate,
             'view_count' => 0,
         ]);
 
@@ -125,7 +133,13 @@ class AnnouncementController extends Controller
             app(StudyNestNotificationService::class)->announcementPublished($announcement);
         }
 
-        return redirect()->back()->with('success', 'Announcement created successfully!');
+        $message = match ($announcement->status) {
+            'scheduled' => 'Announcement scheduled successfully!',
+            'published' => 'Announcement published successfully!',
+            default => 'Announcement saved as draft!',
+        };
+
+        return redirect()->back()->with('success', $message);
     }
 
     /**
@@ -136,7 +150,7 @@ class AnnouncementController extends Controller
         Gate::authorize('announcement.edit');
 
         $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
-        $wasPublished = $announcement->status === 'published';
+        $wasVisible = $announcement->isCurrentlyVisible();
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -145,21 +159,31 @@ class AnnouncementController extends Controller
             'target_audience' => 'required|in:all_users,all_grades,grade_4,grade_5,grade_6,teachers_only',
             'priority' => 'required|in:normal,important,urgent',
             'is_pinned' => 'boolean',
-            'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'required|date',
-            'expiration_date' => 'nullable|date|after:publish_date',
+            'status' => ['required', Rule::in(['draft', 'scheduled', 'published', 'archived'])],
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
+            'expiration_date' => 'nullable|date|after:now',
         ]);
 
-        if ($validated['status'] === 'published' && $validated['publish_date'] > now()->toDateString()) {
-            return back()->withErrors(['publish_date' => 'A published announcement cannot have a future publish date.'])->withInput();
+        if ($announcement->status === 'published') {
+            $validated['status'] = 'published';
+        } elseif ($announcement->status === 'archived') {
+            $validated['status'] = 'archived';
         }
 
-        if (
-            $validated['status'] === 'published' &&
-            !empty($validated['expiration_date']) &&
-            $validated['expiration_date'] < now()->toDateString()
-        ) {
-            return back()->withErrors(['expiration_date' => 'A published announcement cannot already be expired.'])->withInput();
+        $publishDate = match ($validated['status']) {
+            'published' => $announcement->status === 'published' ? $announcement->publish_date : now(),
+            'scheduled' => Carbon::parse($validated['publish_date']),
+            'archived' => $announcement->publish_date,
+            default => null,
+        };
+        $expirationDate = !empty($validated['expiration_date']) ? Carbon::parse($validated['expiration_date']) : null;
+
+        if ($validated['status'] === 'scheduled' && !$publishDate->isFuture()) {
+            return back()->withErrors(['publish_date' => 'The scheduled publish time must be in the future.'])->withInput();
+        }
+
+        if ($expirationDate && $publishDate && !$expirationDate->greaterThan($publishDate)) {
+            return back()->withErrors(['expiration_date' => 'The expiration time must be after the publish time.'])->withInput();
         }
 
         $announcement->update([
@@ -170,26 +194,19 @@ class AnnouncementController extends Controller
             'priority' => $validated['priority'],
             'is_pinned' => $validated['is_pinned'] ?? $announcement->is_pinned,
             'status' => $validated['status'],
-            'publish_date' => $validated['publish_date'],
-            'expiration_date' => $validated['expiration_date'] ?? null,
+            'publish_date' => $publishDate,
+            'expiration_date' => $expirationDate,
         ]);
 
-        if ($this->isCurrentlyVisible($announcement) && (
-            !$wasPublished ||
-            $announcement->wasChanged([
-                'title',
-                'content',
-                'target_audience',
-                'priority',
-                'status',
-                'publish_date',
-                'expiration_date',
-            ])
-        )) {
+        if (!$wasVisible && $announcement->isCurrentlyVisible()) {
             app(StudyNestNotificationService::class)->announcementPublished($announcement);
         }
 
-        return redirect()->back()->with('success', 'Announcement updated successfully!');
+        $message = $announcement->status === 'scheduled'
+            ? 'Announcement schedule updated successfully!'
+            : 'Announcement updated successfully!';
+
+        return redirect()->back()->with('success', $message);
     }
 
     /**
@@ -228,7 +245,7 @@ class AnnouncementController extends Controller
         $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
         $announcement->update([
             'status' => 'published',
-            'publish_date' => now()->format('Y-m-d'),
+            'publish_date' => now(),
         ]);
 
         if ($this->isCurrentlyVisible($announcement)) {
@@ -240,11 +257,7 @@ class AnnouncementController extends Controller
 
     private function isCurrentlyVisible(Announcement $announcement): bool
     {
-        $today = now()->toDateString();
-
-        return $announcement->status === 'published'
-            && $announcement->publish_date
-            && $announcement->publish_date->toDateString() <= $today
-            && (!$announcement->expiration_date || $announcement->expiration_date->toDateString() >= $today);
+        return $announcement->isCurrentlyVisible();
     }
+
 }

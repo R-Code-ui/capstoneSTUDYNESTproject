@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasScheduledPublication;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Assignment extends Model
 {
-    use HasFactory;
+    use HasFactory, HasScheduledPublication;
 
     protected $fillable = [
         'teacher_id',
@@ -36,7 +37,7 @@ class Assignment extends Model
         'allow_late_submission' => 'boolean',
         'submission_methods' => 'array', // ← This automatically decodes JSON to array
         'due_date' => 'date',
-        'publish_date' => 'date',
+        'publish_date' => 'datetime',
     ];
 
     // Relationships

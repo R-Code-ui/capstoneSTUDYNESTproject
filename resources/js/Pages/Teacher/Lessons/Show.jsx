@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -20,7 +21,15 @@ import {
     EyeIcon,
 } from '@heroicons/react/24/outline';
 
-export default function LessonsShow({ lesson, completion_records = [] }) {
+export default function LessonsShow({ lesson, completion_records = [], student_completion = [] }) {
+    const [completionFilter, setCompletionFilter] = useState('all');
+    const completedStudents = student_completion.filter((student) => student.status === 'completed');
+    const incompleteStudents = student_completion.filter((student) => student.status === 'not_completed');
+    const visibleStudents = completionFilter === 'completed'
+        ? completedStudents
+        : completionFilter === 'not_completed'
+            ? incompleteStudents
+            : student_completion;
     const getResourceIcon = (type) => {
         switch (type) {
             case 'pdf_module': return <DocumentIcon className="w-6 h-6 text-red-500" />;
@@ -279,17 +288,22 @@ export default function LessonsShow({ lesson, completion_records = [] }) {
                     )}
 
                     <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-sm font-semibold text-gray-700">Student Completion Records</h3>
+                        <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <h3 className="text-sm font-semibold text-gray-700">Student Completion ({completedStudents.length}/{student_completion.length})</h3>
+                            <select value={completionFilter} onChange={(event) => setCompletionFilter(event.target.value)} className="rounded-md border-gray-300 text-sm">
+                                <option value="all">All Students</option>
+                                <option value="completed">Completed</option>
+                                <option value="not_completed">Not Completed</option>
+                            </select>
                         </div>
                         <div className="p-6">
-                            {completion_records.length === 0 ? (
-                                <p className="text-sm text-gray-500">No students have completed this lesson yet.</p>
+                            {visibleStudents.length === 0 ? (
+                                <p className="text-sm text-gray-500">No students match this filter.</p>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full text-sm">
-                                        <thead><tr className="border-b text-left text-gray-500"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Grade Level</th><th className="py-2">Completed At</th></tr></thead>
-                                        <tbody>{completion_records.map((record) => <tr key={record.id} className="border-b last:border-0"><td className="py-3 pr-4 font-medium text-gray-800">{record.name}</td><td className="py-3 pr-4 text-gray-600">{record.grade_level}</td><td className="py-3 text-gray-600">{record.completed_at || 'N/A'}</td></tr>)}</tbody>
+                                        <thead><tr className="border-b text-left text-gray-500"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Grade Level</th><th className="py-2 pr-4">Status</th><th className="py-2">Completed At</th></tr></thead>
+                                        <tbody>{visibleStudents.map((student) => <tr key={student.id} className="border-b last:border-0"><td className="py-3 pr-4 font-medium text-gray-800">{student.name}</td><td className="py-3 pr-4 text-gray-600">{student.grade_level}</td><td className={`py-3 pr-4 ${student.status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}`}>{student.status === 'completed' ? 'Completed' : 'Not completed'}</td><td className="py-3 text-gray-600">{student.completed_at || '—'}</td></tr>)}</tbody>
                                     </table>
                                 </div>
                             )}

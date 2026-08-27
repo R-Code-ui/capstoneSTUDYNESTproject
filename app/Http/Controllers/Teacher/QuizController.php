@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use App\Models\ActivityLog;
 use App\Services\StudyNestNotificationService;
+use App\Services\PublicationManager;
 
 class QuizController extends Controller
 {
@@ -49,7 +50,7 @@ class QuizController extends Controller
             ->paginate(10);
 
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'scheduled', 'published', 'archived'];
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
 
@@ -97,7 +98,7 @@ class QuizController extends Controller
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = config('school.school_years');
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'scheduled', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
@@ -153,8 +154,8 @@ class QuizController extends Controller
             'passing_score' => 'nullable|integer|min:0|max:100',
             'attempts_allowed' => 'required|integer|min:1|max:10',   // ✅ allow up to 10 practice attempts
             'shuffle_questions' => 'boolean',
-            'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'nullable|date',
+            'status' => 'required|in:draft,scheduled,published,archived',
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
             'questions.*.choice_a' => 'nullable|string',
@@ -171,6 +172,8 @@ class QuizController extends Controller
             ->exists()) {
             return back()->withErrors(['related_lesson_id' => 'The selected lesson must belong to you and the selected grade level.'])->withInput();
         }
+
+        app(PublicationManager::class)->normalize($validated);
 
         $questionData = $validated['questions'];
         unset($validated['questions'], $validated['total_questions']);
@@ -208,7 +211,7 @@ class QuizController extends Controller
         }
         });
 
-        if ($quiz->status === 'published') {
+        if ($quiz->isCurrentlyPublished()) {
             app(StudyNestNotificationService::class)->quizPublished($quiz);
         }
 
@@ -241,7 +244,7 @@ class QuizController extends Controller
                 'attempts_allowed' => $quiz->attempts_allowed,
                 'shuffle_questions' => $quiz->shuffle_questions,
                 'status' => $quiz->status,
-                'publish_date' => $quiz->publish_date ? $quiz->publish_date->format('Y-m-d') : '',
+                'publish_date' => $quiz->publish_date?->format('M d, Y g:i A') ?? 'Not published',
                 'created_at' => $quiz->created_at->format('Y-m-d H:i'),
                 'questions' => $quiz->questions->map(function ($question) {
                     return [
@@ -274,7 +277,7 @@ class QuizController extends Controller
         $quizTypes = ['multiple_choice', 'identification', 'true_false'];
         $trimesters = ['1st Term', '2nd Term', '3rd Term'];
         $schoolYears = config('school.school_years');
-        $statuses = ['draft', 'published', 'archived'];
+        $statuses = ['draft', 'scheduled', 'published', 'archived'];
         $weeks = array_map(function ($i) {
             return 'Week ' . $i;
         }, range(1, 12));
@@ -307,7 +310,7 @@ class QuizController extends Controller
                 'attempts_allowed' => $quiz->attempts_allowed,
                 'shuffle_questions' => $quiz->shuffle_questions,
                 'status' => $quiz->status,
-                'publish_date' => $quiz->publish_date ? $quiz->publish_date->format('Y-m-d') : '',
+                'publish_date' => $quiz->publish_date?->format('Y-m-d\TH:i') ?? '',
                 'questions' => $quiz->questions->map(function ($question) {
                     return [
                         'id' => $question->id,
@@ -342,10 +345,6 @@ class QuizController extends Controller
     {
         Gate::authorize('update', $quiz);
 
-        if ($quiz->attempts()->exists()) {
-            return back()->withErrors(['quiz' => 'This quiz cannot be edited after a student has attempted it because historical results depend on its questions.']);
-        }
-
         $validated = $request->validate([
             'grade_level' => ['required', 'string', 'in:' . implode(',', auth()->user()->gradeAssignments()->pluck('grade_level')->all())],
             'subject' => 'required|string|in:English,Filipino,Mathematics,Science,Araling Panlipunan,MAPEH,GMRC,EPP/TLE',
@@ -368,8 +367,8 @@ class QuizController extends Controller
             'passing_score' => 'nullable|integer|min:0|max:100',
             'attempts_allowed' => 'required|integer|min:1|max:10',   // ✅ allow up to 10
             'shuffle_questions' => 'boolean',
-            'status' => 'required|in:draft,published,archived',
-            'publish_date' => 'nullable|date',
+            'status' => 'required|in:draft,scheduled,published,archived',
+            'publish_date' => 'nullable|required_if:status,scheduled|date',
             'questions' => 'required|array|min:1',
             'questions.*.id' => 'nullable|exists:quiz_questions,id',
             'questions.*.question_text' => 'required|string',
@@ -388,12 +387,16 @@ class QuizController extends Controller
             return back()->withErrors(['related_lesson_id' => 'The selected lesson must belong to you and the selected grade level.'])->withInput();
         }
 
+        $wasPublished = $quiz->isCurrentlyPublished();
+        app(PublicationManager::class)->normalize($validated, $quiz);
+
         $questionData = $validated['questions'];
         unset($validated['questions'], $validated['total_questions']);
         $validated['total_questions'] = count($questionData);
-        $wasPublished = $quiz->status === 'published';
+        $hasAttempts = $quiz->attempts()->exists();
+        $existingQuestions = $quiz->questions()->get()->keyBy('id');
 
-        DB::transaction(function () use ($quiz, $validated, $questionData) {
+        DB::transaction(function () use ($quiz, $validated, $questionData, $existingQuestions, $hasAttempts) {
         $quiz->update([
             'total_questions' => count($questionData),
             'attempts_allowed' => $validated['attempts_allowed'],   // ✅ use input
@@ -409,11 +412,9 @@ class QuizController extends Controller
             'related_module'      => 'Quiz Module',
         ]);
 
-        $quiz->questions()->delete();
-
+        $activeQuestionIds = [];
         foreach ($questionData as $index => $question) {
-            QuizQuestion::create([
-                'quiz_id' => $quiz->id,
+            $questionAttributes = [
                 'question_number' => $index + 1,
                 'question_text' => $question['question_text'],
                 'question_type' => $quiz->quiz_type,
@@ -423,11 +424,28 @@ class QuizController extends Controller
                 'choice_d' => $question['choice_d'] ?? null,
                 'correct_answer' => $question['correct_answer'],
                 'alternative_answers' => isset($question['alternative_answers']) ? json_encode($question['alternative_answers']) : null,
-            ]);
+            ];
+
+            $existingQuestion = !empty($question['id']) ? $existingQuestions->get((int) $question['id']) : null;
+            if ($existingQuestion) {
+                $existingQuestion->update($questionAttributes);
+                $activeQuestionIds[] = $existingQuestion->id;
+            } else {
+                $activeQuestionIds[] = QuizQuestion::create([
+                    'quiz_id' => $quiz->id,
+                    ...$questionAttributes,
+                ])->id;
+            }
+        }
+
+        // Keep question records that are already referenced by past attempts.
+        // This lets teachers update/publish a quiz without corrupting attempt data.
+        if (! $hasAttempts) {
+            $quiz->questions()->whereNotIn('id', $activeQuestionIds)->delete();
         }
         });
 
-        if (!$wasPublished && $quiz->status === 'published') {
+        if (!$wasPublished && $quiz->isCurrentlyPublished()) {
             app(StudyNestNotificationService::class)->quizPublished($quiz);
         }
 
@@ -472,7 +490,7 @@ class QuizController extends Controller
 
         $quiz->update([
             'status' => 'published',
-            'publish_date' => now()->format('Y-m-d'),
+            'publish_date' => now(),
         ]);
 
         if (!$wasPublished) {
