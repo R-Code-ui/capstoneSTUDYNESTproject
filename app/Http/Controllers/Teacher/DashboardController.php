@@ -27,7 +27,7 @@ class DashboardController extends Controller
         $studentIds = $students->pluck('id');
 
         $lessons = Lesson::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level']);
-        $assignments = Assignment::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level', 'assignment_title', 'due_date']);
+        $assignments = Assignment::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level', 'assignment_title', 'due_date', 'due_time', 'allow_late_submission']);
         $quizzes = Quiz::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level']);
         $games = Game::where('teacher_id', $teacher->id)->currentlyPublished()->get(['id', 'grade_level']);
 
@@ -87,8 +87,8 @@ class DashboardController extends Controller
         $assignmentDenominator = $assignments->count() ? $students->sum(fn ($student) => $assignments->where('grade_level', $student->grade_level)->count()) : 0;
         $gameParticipants = $gameParticipantIds->unique()->count();
 
-        $upcomingDeadlines = $assignments->filter(fn ($assignment) => $assignment->due_date && $assignment->due_date->startOfDay()->greaterThanOrEqualTo(now()->startOfDay()))
-            ->sortBy('due_date')->take(5)->values()->map(function ($assignment) {
+        $upcomingDeadlines = $assignments->filter(fn ($assignment) => $assignment->deadlineStatus() === 'open')
+            ->sortBy(fn ($assignment) => $assignment->dueAt())->take(5)->values()->map(function ($assignment) {
                 return ['id' => $assignment->id, 'title' => $assignment->assignment_title, 'type' => 'assignment', 'due_date' => $assignment->due_date->format('M d'), 'days_left' => max(0, now()->startOfDay()->diffInDays($assignment->due_date->startOfDay(), false))];
             });
 

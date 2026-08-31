@@ -25,6 +25,7 @@ class QuizQuestion extends Model
         'choice_d',
         'correct_answer',
         'alternative_answers',
+        'is_active',
     ];
 
     /**
@@ -36,6 +37,7 @@ class QuizQuestion extends Model
     {
         return [
             'alternative_answers' => 'array',
+            'is_active' => 'boolean',
         ];
     }
 

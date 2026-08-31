@@ -2,6 +2,7 @@ import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 import {
     ArrowLeftIcon,
     DocumentIcon,
@@ -15,6 +16,21 @@ import {
 export default function SubmissionFiles({ submission, assignment, student }) {
     const files = submission?.files || [];
     const hasLegacyFile = !files.length && submission?.file_path;
+    const isOfficeFile = (file) => /\.(doc|docx|ppt|pptx)$/i.test(file?.name || file?.path || '')
+        || /(msword|wordprocessingml|ms-powerpoint|presentationml)/i.test(file?.mime || '');
+    const officeApplication = (file) => /\.(ppt|pptx)$/i.test(file?.name || file?.path || '')
+        || /(powerpoint|presentationml)/i.test(file?.mime || '') ? 'PowerPoint' : 'Word';
+    const fileCategory = (file) => {
+        if ((file?.mime || '').startsWith('image/')) return 'Images';
+        if ((file?.mime || '').startsWith('video/')) return 'Videos';
+        return 'Documents';
+    };
+    const fileSections = ['Documents', 'Images', 'Videos']
+        .map((label) => ({
+            label,
+            files: files.map((file, index) => ({ file, index })).filter(({ file }) => fileCategory(file) === label),
+        }))
+        .filter((section) => section.files.length > 0);
 
     const getIcon = (mime) => {
         if (!mime) return <PaperClipIcon className="w-5 h-5 text-gray-500" />;
@@ -31,18 +47,21 @@ export default function SubmissionFiles({ submission, assignment, student }) {
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
+    const openFile = (url, action) => {
+        const fileWindow = window.open(url, '_blank');
+        if (!fileWindow) {
+            toast.error(`Your browser blocked the file ${action}. Please allow pop-ups and try again.`);
+            return;
+        }
+        fileWindow.opener = null;
+    };
+
     const viewFile = (file, index) => {
-        window.open(
-            route('teacher.assignments.view-file', { submissionId: submission.id, index }),
-            '_blank'
-        );
+        openFile(route('teacher.assignments.view-file', { submissionId: submission.id, index }), 'viewer');
     };
 
     const downloadFile = (file, index) => {
-        window.open(
-            route('teacher.assignments.download-file', { submissionId: submission.id, index }),
-            '_blank'
-        );
+        openFile(route('teacher.assignments.download-file', { submissionId: submission.id, index }), 'download');
     };
 
     return (
@@ -52,7 +71,9 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         {student.name} – Submitted Files
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('teacher.assignments.grade', assignment.id))}>
+                    <SecondaryButton onClick={() => router.visit(route('teacher.assignments.grade', assignment.id), {
+                        onError: () => toast.error('Unable to return to grading. Please try again.'),
+                    })}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Grading
                     </SecondaryButton>
@@ -106,10 +127,17 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                 <p className="text-gray-500 text-center py-8">No files have been submitted.</p>
                             ) : (
                                 <>
-                                    {files.map((file, idx) => (
+                                    {fileSections.map((section) => (
+                                        <section key={section.label} className="overflow-hidden rounded-xl border border-gray-200">
+                                            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+                                                <h4 className="text-sm font-semibold text-gray-700">{section.label}</h4>
+                                                <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-600">{section.files.length}</span>
+                                            </div>
+                                            <div className="divide-y divide-gray-200">
+                                    {section.files.map(({ file, index: idx }) => (
                                         <div
                                             key={idx}
-                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-4"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4"
                                         >
                                             <div className="flex items-center gap-4">
                                                 {getIcon(file.mime)}
@@ -118,15 +146,16 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                                     <div className="text-sm text-gray-500">
                                                         {file.mime ? file.mime.split('/').pop().toUpperCase() : 'Unknown'} – {formatSize(file.size)}
                                                     </div>
+                                                    {isOfficeFile(file) && <p className="mt-1 text-xs text-amber-600">Download to open in Microsoft {officeApplication(file)}.</p>}
                                                 </div>
                                             </div>
                                             <div className="flex gap-2 shrink-0">
-                                                <button
+                                                {!isOfficeFile(file) && <button
                                                     onClick={() => viewFile(file, idx)}
                                                     className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                                                 >
                                                     <EyeIcon className="w-4 h-4" /> View
-                                                </button>
+                                                </button>}
                                                 <button
                                                     onClick={() => downloadFile(file, idx)}
                                                     className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"
@@ -135,6 +164,9 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                                 </button>
                                             </div>
                                         </div>
+                                    ))}
+                                            </div>
+                                        </section>
                                     ))}
 
                                     {/* Legacy single file */}
@@ -147,15 +179,16 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                                         {submission.file_name || 'File'}
                                                     </div>
                                                     <div className="text-sm text-gray-500">Legacy upload</div>
+                                                    {isOfficeFile({ name: submission.file_name, path: submission.file_path }) && <p className="mt-1 text-xs text-amber-600">Download to open in Microsoft {officeApplication({ name: submission.file_name, path: submission.file_path })}.</p>}
                                                 </div>
                                             </div>
                                             <div className="flex gap-2 shrink-0">
-                                                <button
+                                                {!isOfficeFile({ name: submission.file_name, path: submission.file_path }) && <button
                                                     onClick={() => viewFile({}, 0)}
                                                     className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
                                                 >
                                                     <EyeIcon className="w-4 h-4" /> View
-                                                </button>
+                                                </button>}
                                                 <button
                                                     onClick={() => downloadFile({}, 0)}
                                                     className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"

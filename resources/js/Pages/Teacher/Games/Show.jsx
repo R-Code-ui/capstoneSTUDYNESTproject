@@ -5,6 +5,7 @@ import StatusBadge from '@/Components/StatusBadge';
 import Table from '@/Components/Table';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -15,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function GamesShow({ game }) {
+    const handleNavigationError = () => toast.error('Unable to load that page. Please try again.');
     const getStatusBadge = (status) => {
         const statusMap = {
             assigned: 'not_started',
@@ -70,19 +72,19 @@ export default function GamesShow({ game }) {
                     </span>
                     <div className="flex flex-wrap gap-2">
                         {/* View Game button removed */}
-                        <Link href={route('teacher.games.results', game.id)}>
+                        <Link href={route('teacher.games.results', game.id)} onError={handleNavigationError}>
                             <SecondaryButton>
                                 <ChartBarIcon className="w-4 h-4 mr-1" />
                                 Results
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.games.edit', game.id)}>
+                        <Link href={route('teacher.games.edit', game.id)} onError={handleNavigationError}>
                             <SecondaryButton>
                                 <PencilSquareIcon className="w-4 h-4 mr-1" />
                                 Edit
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.games.index')}>
+                        <Link href={route('teacher.games.index')} onError={handleNavigationError}>
                             <PrimaryButton>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                 Back to List
@@ -122,6 +124,12 @@ export default function GamesShow({ game }) {
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Due Date</div>
                                     <div className="font-medium text-gray-800">{game.due_date || 'No deadline'}</div>
                                 </div>
+                                {game.deadline_status && (
+                                    <div>
+                                        <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Deadline</div>
+                                        <StatusBadge status={game.deadline_status} size="sm" />
+                                    </div>
+                                )}
                                 <div>
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Publish Date</div>
                                     <div className="font-medium text-gray-800">{game.publish_date}</div>

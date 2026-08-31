@@ -6,6 +6,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Pagination from '@/Components/Pagination';
+import { toast } from 'sonner';
 import {
     MegaphoneIcon,
     MapPinIcon,
@@ -61,6 +62,7 @@ export default function AnnouncementsIndex({
                 ...additional,
             },
             preserveState: true,
+            onError: () => toast.error('Unable to load announcements. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };
@@ -117,19 +119,20 @@ export default function AnnouncementsIndex({
             <div className="student-announcements-page py-12">
                 <style>{`
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone="pinned"] {
-                        background-image: linear-gradient(135deg, rgb(87 70 25), rgb(91 42 50)) !important;
-                        background-color: rgb(87 70 25) !important;
-                        border-color: rgb(180 120 30) !important;
+                        background-image: linear-gradient(135deg, rgb(30 41 59), rgb(15 23 42)) !important;
+                        background-color: rgb(30 41 59) !important;
+                        border-color: rgb(161 98 7) !important;
                     }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone="0"] { background-image: linear-gradient(135deg, rgb(30 58 95), rgb(74 41 70)) !important; background-color: rgb(30 58 95) !important; border-color: rgb(71 98 133) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="1"] { background-image: linear-gradient(135deg, rgb(91 57 31), rgb(75 70 27)) !important; background-color: rgb(91 57 31) !important; border-color: rgb(133 105 53) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="2"] { background-image: linear-gradient(135deg, rgb(67 45 100), rgb(83 43 72)) !important; background-color: rgb(67 45 100) !important; border-color: rgb(112 83 143) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="3"] { background-image: linear-gradient(135deg, rgb(25 82 70), rgb(30 58 95)) !important; background-color: rgb(25 82 70) !important; border-color: rgb(55 123 104) !important; }
-                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="4"] { background-image: linear-gradient(135deg, rgb(87 70 25), rgb(91 42 50)) !important; background-color: rgb(87 70 25) !important; border-color: rgb(137 111 52) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="1"] { background-image: linear-gradient(135deg, rgb(45 55 72), rgb(30 41 59)) !important; background-color: rgb(45 55 72) !important; border-color: rgb(100 116 139) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="2"] { background-image: linear-gradient(135deg, rgb(49 46 129), rgb(30 41 59)) !important; background-color: rgb(49 46 129) !important; border-color: rgb(99 102 241) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="3"] { background-image: linear-gradient(135deg, rgb(19 78 74), rgb(30 41 59)) !important; background-color: rgb(19 78 74) !important; border-color: rgb(45 212 191 / 0.55) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="4"] { background-image: linear-gradient(135deg, rgb(51 65 85), rgb(30 41 59)) !important; background-color: rgb(51 65 85) !important; border-color: rgb(100 116 139) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-800,
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-700 { color: rgb(241 245 249) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-600,
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] .text-gray-500 { color: rgb(203 213 225) !important; }
+                    .studynest-layout.theme-dark .student-announcements-page [data-card-tone="pinned"] .text-yellow-600 { color: rgb(253 230 138) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-blue-100"] { background-color: rgb(30 64 175 / 0.35) !important; color: rgb(191 219 254) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-purple-100"] { background-color: rgb(107 33 168 / 0.35) !important; color: rgb(233 213 255) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-yellow-100"] { background-color: rgb(146 64 14 / 0.4) !important; color: rgb(253 230 138) !important; }
@@ -187,6 +190,7 @@ export default function AnnouncementsIndex({
                                             <Link
                                                 key={announcement.id}
                                                 href={route('student.announcements.show', announcement.id)}
+                                                onError={() => toast.error('Unable to open this announcement. Please try again.')}
                                                 className="block"
                                             >
                                                 <div data-card-tone="pinned" className={`bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border-2 border-yellow-400 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
@@ -244,6 +248,7 @@ export default function AnnouncementsIndex({
                                                 <Link
                                                     key={announcement.id}
                                                     href={route('student.announcements.show', announcement.id)}
+                                                    onError={() => toast.error('Unable to open this announcement. Please try again.')}
                                                     className="block"
                                                 >
                                                     <div data-card-tone={index % 5} className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
@@ -296,7 +301,10 @@ export default function AnnouncementsIndex({
 
                             {/* Pagination */}
                             <div className="mt-6">
-                                <Pagination pagination={pagination} />
+                                <Pagination
+                                    pagination={pagination}
+                                    onError={() => toast.error('Unable to load that announcement page. Please try again.')}
+                                />
                             </div>
                         </div>
                     </div>

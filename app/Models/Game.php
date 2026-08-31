@@ -56,4 +56,18 @@ class Game extends Model
     {
         return $this->hasMany(GameResult::class);
     }
+
+    public function deadlineStatus(): ?string
+    {
+        if (!$this->due_date) {
+            return null;
+        }
+
+        return $this->due_date->copy()->endOfDay()->isPast() ? 'expired' : 'open';
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->deadlineStatus() === 'expired';
+    }
 }

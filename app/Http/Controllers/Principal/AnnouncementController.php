@@ -23,9 +23,20 @@ class AnnouncementController extends Controller
         $search = $request->input('search');
         $categoryFilter = $request->input('category');
         $statusFilter = $request->input('status');
+        $showExpired = $statusFilter === 'expired';
 
         $announcements = Announcement::with('user')
             ->where('user_role', 'principal')
+            ->when($showExpired, function ($query) {
+                return $query->whereNotNull('expiration_date')
+                    ->where('expiration_date', '<=', now());
+            })
+            ->when(!$showExpired, function ($query) {
+                return $query->where(function ($query) {
+                    $query->whereNull('expiration_date')
+                        ->orWhere('expiration_date', '>', now());
+                });
+            })
             ->when($search, function ($query, $search) {
                 return $query->where(function ($query) use ($search) {
                     $query->where('title', 'like', "%{$search}%")
@@ -35,7 +46,7 @@ class AnnouncementController extends Controller
             ->when($categoryFilter, function ($query, $category) {
                 return $query->where('category', $category);
             })
-            ->when($statusFilter, function ($query, $status) {
+            ->when($statusFilter && !$showExpired, function ($query, $status) {
                 return $query->where('status', $status);
             })
             ->orderBy('created_at', 'desc')
@@ -61,6 +72,7 @@ class AnnouncementController extends Controller
                     'publish_date_short' => $announcement->publish_date?->format('M d, g:i A'),
                     'expiration_date' => $announcement->expiration_date?->format('Y-m-d\TH:i'),
                     'expiration_date_label' => $announcement->expiration_date?->format('M d, Y g:i A'),
+                    'is_expired' => $announcement->expiration_date?->lessThanOrEqualTo(now()) ?? false,
                     'view_count' => $announcement->view_count,
                     'created_at' => $announcement->publish_date
                         ? $announcement->publish_date->diffForHumans()
@@ -198,8 +210,10 @@ class AnnouncementController extends Controller
             'expiration_date' => $expirationDate,
         ]);
 
-        if (!$wasVisible && $announcement->isCurrentlyVisible()) {
+        if ($announcement->isCurrentlyVisible()) {
             app(StudyNestNotificationService::class)->announcementPublished($announcement);
+        } elseif ($wasVisible) {
+            app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
         }
 
         $message = $announcement->status === 'scheduled'
@@ -217,6 +231,7 @@ class AnnouncementController extends Controller
         Gate::authorize('announcement.delete');
 
         $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
+        app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
         $announcement->delete();
 
         return redirect()->back()->with('success', 'Announcement deleted successfully!');
@@ -230,6 +245,7 @@ class AnnouncementController extends Controller
         Gate::authorize('announcement.edit');
 
         $announcement = Announcement::where('user_role', 'principal')->findOrFail($id);
+        app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
         $announcement->update(['status' => 'archived']);
 
         return redirect()->back()->with('success', 'Announcement archived successfully!');
@@ -248,9 +264,7 @@ class AnnouncementController extends Controller
             'publish_date' => now(),
         ]);
 
-        if ($this->isCurrentlyVisible($announcement)) {
-            app(StudyNestNotificationService::class)->announcementPublished($announcement);
-        }
+        app(StudyNestNotificationService::class)->announcementPublished($announcement);
 
         return redirect()->back()->with('success', 'Announcement published successfully!');
     }

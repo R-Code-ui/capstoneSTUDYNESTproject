@@ -6,7 +6,9 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Pagination from '@/Components/Pagination';
+import StatusBadge from '@/Components/StatusBadge';
 import { getGameArt } from '@/GameEngines/gameArt';
+import { toast } from 'sonner';
 import {
     BookOpenIcon,
     CalculatorIcon,
@@ -62,6 +64,7 @@ export default function GamesIndex({
                 ...additional,
             },
             preserveState: true,
+            onError: () => toast.error('Unable to load games. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };
@@ -281,6 +284,7 @@ export default function GamesIndex({
                                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(game.status)}`}>
                                                                 {getStatusLabel(game.status)}
                                                             </span>
+                                                            {game.deadline_status && <StatusBadge status={game.deadline_status} size="sm" />}
                                                         </div>
 
                                                         <h3 className="mt-3 text-lg font-semibold text-gray-800 truncate max-w-full" title={game.title}>
@@ -313,6 +317,7 @@ export default function GamesIndex({
                                                                 <>
                                                                     <Link
                                                                         href={route('student.games.results', game.latest_completed_attempt_id)}
+                                                                        onError={() => toast.error('Unable to open the game results. Please try again.')}
                                                                         className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full shadow-sm"
                                                                     >
                                                                         View Results
@@ -320,6 +325,7 @@ export default function GamesIndex({
                                                                     {game.attempts_remaining > 0 && (
                                                                         <Link
                                                                             href={route('student.games.show', game.id)}
+                                                                            onError={() => toast.error('Unable to open this game. Please try again.')}
                                                                             className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors w-full shadow-sm"
                                                                         >
                                                                             Play Again
@@ -331,6 +337,7 @@ export default function GamesIndex({
                                                             {game.status === 'started' && (
                                                                 <Link
                                                                     href={route('student.games.show', game.id)}
+                                                                    onError={() => toast.error('Unable to continue this game. Please try again.')}
                                                                     className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full shadow-sm"
                                                                 >
                                                                     Continue
@@ -340,6 +347,7 @@ export default function GamesIndex({
                                                             {game.status === 'assigned' && (
                                                                 <Link
                                                                     href={route('student.games.show', game.id)}
+                                                                    onError={() => toast.error('Unable to open this game. Please try again.')}
                                                                     className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full shadow-sm"
                                                                 >
                                                                     Play Game
@@ -356,7 +364,10 @@ export default function GamesIndex({
 
                             {/* Pagination */}
                             <div className="mt-6">
-                                <Pagination pagination={pagination} />
+                                <Pagination
+                                    pagination={pagination}
+                                    onError={() => toast.error('Unable to load that game page. Please try again.')}
+                                />
                             </div>
                         </div>
                     </div>

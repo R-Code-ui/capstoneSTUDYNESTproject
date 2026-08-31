@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import StudentResources from '@/Components/StudentResources';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -27,6 +29,7 @@ import {
 
 export default function LessonsShow({ lesson, related_activities }) {
     const [isLoading, setIsLoading] = useState(false);
+    const [confirmingCompletion, setConfirmingCompletion] = useState(false);
 
     const getResourceIcon = (type) => {
         switch (type) {
@@ -51,22 +54,26 @@ export default function LessonsShow({ lesson, related_activities }) {
     };
 
     const isUrlResource = (type) => type === 'url';
-    const handleMarkComplete = () => {
-        if (confirm('Mark this lesson as completed?')) {
-            setIsLoading(true);
-            router.post(route('student.lessons.complete', lesson.id), {}, {
-                preserveState: true,
-                onFinish: () => setIsLoading(false),
-            });
+    const handleMarkComplete = () => setConfirmingCompletion(true);
+
+    const completeLesson = () => {
+        setConfirmingCompletion(false);
+        setIsLoading(true);
+        router.post(route('student.lessons.complete', lesson.id), {}, {
+            preserveState: true,
+            onSuccess: () => toast.success('Lesson marked as completed.'),
+            onError: () => toast.error('Unable to mark this lesson as completed. Please try again.'),
+            onFinish: () => setIsLoading(false),
+        });
+    };
+
+    const openResource = (url, action) => {
+        const resourceWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!resourceWindow) {
+            toast.error(`Your browser blocked the resource ${action}. Please allow pop-ups and try again.`);
+            return;
         }
-    };
-
-    const handleDownload = (resourceId) => {
-        window.open(route('student.lessons.download-resource', resourceId), '_blank');
-    };
-
-    const handleView = (resourceId) => {
-        window.open(route('student.lessons.view-resource', resourceId), '_blank');
+        resourceWindow.opener = null;
     };
 
     return (
@@ -83,7 +90,9 @@ export default function LessonsShow({ lesson, related_activities }) {
                                 {isLoading ? 'Marking...' : 'Mark as Completed'}
                             </PrimaryButton>
                         )}
-                        <SecondaryButton onClick={() => router.visit(route('student.lessons.index'))}>
+                        <SecondaryButton onClick={() => router.visit(route('student.lessons.index'), {
+                            onError: () => toast.error('Unable to return to lessons. Please try again.'),
+                        })}>
                             <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Lessons
                         </SecondaryButton>
@@ -214,7 +223,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                                         Learning Resources
                                     </h3>
                                 </div>
-                                <div className="p-4 sm:p-6"><StudentResources resources={lesson.resources} viewUrl={(id) => route('student.lessons.view-resource', id)} downloadUrl={(id) => route('student.lessons.download-resource', id)} /></div>
+                                <div className="p-4 sm:p-6"><StudentResources resources={lesson.resources} viewUrl={(id) => route('student.lessons.view-resource', id)} downloadUrl={(id) => route('student.lessons.download-resource', id)} onView={(url) => openResource(url, 'viewer')} onDownload={(url) => openResource(url, 'download')} /></div>
                             </div>
                         </div>
                     )}
@@ -232,22 +241,22 @@ export default function LessonsShow({ lesson, related_activities }) {
                                 <div className="p-6">
                                     <div className="flex flex-wrap gap-3">
                                         {related_activities.assignment && (
-                                            <a href={related_activities.assignment?.id ? route('student.assignments.show', related_activities.assignment.id) : '#'} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors">
+                                            <Link href={route('student.assignments.show', related_activities.assignment.id)} onError={() => toast.error('Unable to open the related assignment. Please try again.')} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors">
                                                 <ClipboardDocumentListIcon className="w-4 h-4" />
                                                 Open Assignment: {related_activities.assignment.title}
-                                            </a>
+                                            </Link>
                                         )}
                                         {related_activities.quiz && (
-                                            <a href={related_activities.quiz?.id ? route('student.quizzes.show', related_activities.quiz.id) : '#'} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors">
+                                            <Link href={route('student.quizzes.show', related_activities.quiz.id)} onError={() => toast.error('Unable to open the related quiz. Please try again.')} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors">
                                                 <ChartBarIcon className="w-4 h-4" />
                                                 Take Quiz: {related_activities.quiz.title}
-                                            </a>
+                                            </Link>
                                         )}
                                         {related_activities.game && (
-                                            <a href={related_activities.game?.id ? route('student.games.show', related_activities.game.id) : '#'} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors">
+                                            <Link href={route('student.games.show', related_activities.game.id)} onError={() => toast.error('Unable to open the related game. Please try again.')} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors">
                                                 <PuzzlePieceIcon className="w-4 h-4" />
                                                 Play Game: {related_activities.game.title}
-                                            </a>
+                                            </Link>
                                         )}
                                     </div>
                                 </div>
@@ -281,6 +290,16 @@ export default function LessonsShow({ lesson, related_activities }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmingCompletion}
+                onClose={() => setConfirmingCompletion(false)}
+                onConfirm={completeLesson}
+                title="Mark lesson as completed?"
+                message="Mark this lesson as completed? You can review the lesson again at any time."
+                confirmText="Mark completed"
+                cancelText="Cancel"
+                confirmColor="green"
+            />
         </AuthenticatedLayout>
     );
 }

@@ -7,6 +7,8 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -31,6 +33,7 @@ export default function LessonsIndex({
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [trimesterFilter, setTrimesterFilter] = useState(filters?.trimester || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [lessonToDelete, setLessonToDelete] = useState(null);
 
     const handleSearch = (value) => {
         setSearch(value);
@@ -64,15 +67,23 @@ export default function LessonsIndex({
         });
     };
 
-    const handleDelete = (lesson) => {
-        if (confirm(`Delete "${lesson.title}"? This action cannot be undone.`)) {
-            router.delete(route('teacher.lessons.destroy', lesson.id), { preserveState: true });
-        }
+    const handleDelete = () => {
+        if (!lessonToDelete) return;
+
+        const lesson = lessonToDelete;
+        setLessonToDelete(null);
+        router.delete(route('teacher.lessons.destroy', lesson.id), {
+            preserveState: true,
+            onSuccess: () => toast.success('Lesson deleted successfully.'),
+            onError: () => toast.error('Unable to delete this lesson. Please try again.'),
+        });
     };
 
     const statusOptions = [
         { value: '', label: 'All Status' },
-        ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
+        ...statuses
+            .filter((status) => status !== 'archived')
+            .map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
     const gradeOptions = [
@@ -168,7 +179,7 @@ export default function LessonsIndex({
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
-            onClick: () => handleDelete(row),
+            onClick: () => setLessonToDelete(row),
         },
     ];
 
@@ -249,6 +260,18 @@ export default function LessonsIndex({
                     </div>
                 </div>
             </div>
+
+            {lessonToDelete && (
+                <ConfirmModal
+                    show
+                    onClose={() => setLessonToDelete(null)}
+                    onConfirm={handleDelete}
+                    title="Delete lesson?"
+                    message={`“${lessonToDelete.title}” and its resources will be permanently deleted. This action cannot be undone.`}
+                    confirmText="Delete permanently"
+                    danger
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

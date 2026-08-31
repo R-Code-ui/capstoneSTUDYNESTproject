@@ -9,6 +9,8 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import ExternalLinksInput from '@/Components/ExternalLinksInput';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -34,8 +36,10 @@ export default function AssignmentsEdit({
     const [fileErrors, setFileErrors] = useState([]);
     const [existingResources, setExistingResources] = useState((assignment.resources || []).filter((resource) => resource.type !== 'url'));
     const [deletedResourceIds, setDeletedResourceIds] = useState([]);
+    const [resourceToRemove, setResourceToRemove] = useState(null);
+    const [newFileIndexToRemove, setNewFileIndexToRemove] = useState(null);
 
-    const { data, setData, errors, put } = useForm({
+    const { data, setData, errors, setError, clearErrors } = useForm({
         grade_level: assignment.grade_level || '',
         subject: assignment.subject || '',
         school_year: assignment.school_year || '',
@@ -82,6 +86,26 @@ export default function AssignmentsEdit({
         }
     };
 
+    const relatedLessonsForSelectedGrade = related_lessons.filter(
+        (lesson) => lesson.grade_level === data.grade_level
+    );
+
+    const handleGradeLevelChange = (e) => {
+        const gradeLevel = e.target.value;
+        const selectedLesson = related_lessons.find(
+            (lesson) => lesson.id === parseInt(data.related_lesson_id)
+        );
+
+        setData('grade_level', gradeLevel);
+
+        if (selectedLesson && selectedLesson.grade_level !== gradeLevel) {
+            setData('related_lesson_id', '');
+            setData('bow_code', '');
+            setData('learning_competency', '');
+            setData('learning_objective', '');
+        }
+    };
+
     useEffect(() => {
         if (data.related_lesson_id) {
             const selectedLesson = related_lessons.find(
@@ -99,12 +123,11 @@ export default function AssignmentsEdit({
         e.preventDefault();
         const dueDateTime = new Date(`${data.due_date}T${data.due_time}`);
         if (!data.due_date || !data.due_time || dueDateTime <= new Date()) {
-            alert('The due date and time must be in the future.');
+            toast.error('The due date and time must be in the future.');
             return;
         }
         setIsSubmitting(true);
-
-        setData('deleted_resource_ids', deletedResourceIds.join(','));
+        clearErrors();
 
         const formData = new FormData();
 
@@ -119,19 +142,29 @@ export default function AssignmentsEdit({
                 data.submission_methods.forEach((method) => {
                     formData.append('submission_methods[]', method);
                 });
-            } else if (key === 'allow_late_submission') {
+            } else if (key === 'allow_late_submission' || key === 'resource_urls_present') {
                 formData.append(key, data[key] ? '1' : '0');
             } else if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
                 formData.append(key, data[key]);
             }
         });
 
+        formData.append('deleted_resource_ids', deletedResourceIds.join(','));
+
         formData.append('_method', 'PUT');
 
-        put(route('teacher.assignments.update', assignment.id), {
-            data: formData,
+        router.post(route('teacher.assignments.update', assignment.id), formData, {
             forceFormData: true,
             preserveState: true,
+            onSuccess: () => {
+                setDeletedResourceIds([]);
+                toast.success('Assignment updated successfully.');
+            },
+            onError: (validationErrors) => {
+                setError(validationErrors);
+                const firstError = Object.values(validationErrors)[0];
+                toast.error(Array.isArray(firstError) ? firstError[0] : firstError || 'Please correct the highlighted fields and try again.');
+            },
             onFinish: () => setIsSubmitting(false),
         });
     };
@@ -161,14 +194,15 @@ export default function AssignmentsEdit({
             'video/mp4',
         ];
 
-        const maxSize = 100 * 1024 * 1024;
-        const maxFiles = 4;
+        const maxSize = 50 * 1024 * 1024;
+        const maxFiles = 8;
         const currentTotal = existingResources.length + data.resources.length;
 
         if (files.length + currentTotal > maxFiles) {
             errors.push(`You can only have a maximum of ${maxFiles} files per assignment.`);
             e.target.value = '';
             setFileErrors(errors);
+            toast.error(errors[0]);
             return;
         }
 
@@ -178,7 +212,7 @@ export default function AssignmentsEdit({
                 return;
             }
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 100MB limit.`);
+                errors.push(`"${file.name}" exceeds the 50MB limit.`);
                 return;
             }
             validFiles.push(file);
@@ -186,6 +220,7 @@ export default function AssignmentsEdit({
 
         if (errors.length > 0) {
             setFileErrors(errors);
+            toast.error('Some files could not be added. Please review the file requirements.');
         } else {
             setFileErrors([]);
         }
@@ -195,15 +230,22 @@ export default function AssignmentsEdit({
         e.target.value = '';
     };
 
-    const removeNewFile = (index) => {
+    const removeNewFile = () => {
+        if (newFileIndexToRemove === null) return;
         const newResourcesList = [...data.resources];
-        newResourcesList.splice(index, 1);
+        newResourcesList.splice(newFileIndexToRemove, 1);
         setData('resources', newResourcesList);
+        setNewFileIndexToRemove(null);
+        toast.success('Selected file removed.');
     };
 
-    const removeExistingResource = (resourceId) => {
-        setDeletedResourceIds((prev) => [...prev, resourceId]);
-        setExistingResources((prev) => prev.filter(r => r.id !== resourceId));
+    const removeExistingResource = () => {
+        if (!resourceToRemove) return;
+
+        setDeletedResourceIds((prev) => [...prev, resourceToRemove.id]);
+        setExistingResources((prev) => prev.filter((resource) => resource.id !== resourceToRemove.id));
+        setResourceToRemove(null);
+        toast.success('Resource marked for removal. Save the assignment to apply this change.');
     };
 
     const getFileIcon = (fileName) => {
@@ -278,7 +320,7 @@ export default function AssignmentsEdit({
                                         <select
                                             id="grade_level"
                                             value={data.grade_level}
-                                            onChange={(e) => setData('grade_level', e.target.value)}
+                                            onChange={handleGradeLevelChange}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
@@ -361,7 +403,7 @@ export default function AssignmentsEdit({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
-                                            {related_lessons.map((lesson) => (
+                                            {relatedLessonsForSelectedGrade.map((lesson) => (
                                                 <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
                                             ))}
                                         </select>
@@ -575,7 +617,7 @@ export default function AssignmentsEdit({
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeExistingResource(resource.id)}
+                                                        onClick={() => setResourceToRemove(resource)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />
@@ -584,14 +626,14 @@ export default function AssignmentsEdit({
                                             ))}
                                         </div>
                                         <p className="text-xs text-gray-500 mt-1">
-                                            Total: {existingResources.length} of 4 files
+                                            Total: {existingResources.length} of 8 files
                                         </p>
                                     </div>
                                 )}
 
                                 {/* New Resources Upload */}
                                 <div>
-                                            <InputLabel htmlFor="resources" value="Add New Resources (Max 4 files, 100MB each)" />
+                                            <InputLabel htmlFor="resources" value="Add New Resources (Max 8 files, 50MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
@@ -619,7 +661,7 @@ export default function AssignmentsEdit({
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeNewFile(index)}
+                                                        onClick={() => setNewFileIndexToRemove(index)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />
@@ -627,12 +669,12 @@ export default function AssignmentsEdit({
                                                 </div>
                                             ))}
                                             <p className="text-xs text-gray-500">
-                                                New files: {data.resources.length} of {4 - existingResources.length} remaining
+                                                New files: {data.resources.length} of {8 - existingResources.length} remaining
                                             </p>
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPTX, MP4 (Max 100MB per file, Max 4 files total)
+                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPTX, MP4 (Max 50MB per file, Max 8 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>
@@ -662,6 +704,28 @@ export default function AssignmentsEdit({
                     </div>
                 </div>
             </div>
+
+            {resourceToRemove && (
+                <ConfirmModal
+                    show
+                    onClose={() => setResourceToRemove(null)}
+                    onConfirm={removeExistingResource}
+                    title="Remove assignment resource?"
+                    message={`“${resourceToRemove.name}” will be removed when you save this assignment.`}
+                    confirmText="Remove file"
+                    danger
+                />
+            )}
+            <ConfirmModal
+                show={newFileIndexToRemove !== null}
+                onClose={() => setNewFileIndexToRemove(null)}
+                onConfirm={removeNewFile}
+                title="Remove selected file?"
+                message="This file will not be added when you save the assignment."
+                confirmText="Remove file"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

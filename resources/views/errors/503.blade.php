@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 503, 'title' => 'StudyNest is taking a short break', 'message' => 'The service is temporarily unavailable. Please check back soon—we will be ready for you again shortly.'])

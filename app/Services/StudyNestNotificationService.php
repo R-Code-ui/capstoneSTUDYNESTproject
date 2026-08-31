@@ -17,11 +17,20 @@ use App\Models\GameResult;
 use App\Notifications\StudyNestNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Gate;
 
 class StudyNestNotificationService
 {
     public function announcementPublished(Announcement $announcement): void
     {
+        // Keep one current notification per announcement. This also removes
+        // notifications from users who are no longer part of an edited audience.
+        $this->forgetFor('announcement', $announcement->id);
+
+        if (!$announcement->isCurrentlyVisible()) {
+            return;
+        }
+
         foreach ($this->announcementRecipients($announcement) as $recipient) {
             $url = $recipient->isStudent()
                 ? route('student.announcements.show', $announcement->id)
@@ -117,7 +126,9 @@ class StudyNestNotificationService
             $message->sender->name . ' sent you a message.',
             'normal',
             $url,
-            'message'
+            'message',
+            'message',
+            $message->id
         ));
     }
 
@@ -141,7 +152,9 @@ class StudyNestNotificationService
                 $message->sender->name . ' sent a message in "' . $group->name . '".',
                 'normal',
                 $url,
-                'message'
+                'message',
+                'group_message',
+                $message->id
             ));
         }
     }
@@ -234,7 +247,12 @@ class StudyNestNotificationService
                 ->get();
         }
 
-        return $query->get();
+        if ($audience === 'all_users') {
+            return $query->get();
+        }
+
+        // Unknown/legacy audience values must never notify every user.
+        return collect();
     }
 
     private function send(Collection $recipients, StudyNestNotification $notification): void
@@ -253,8 +271,8 @@ class StudyNestNotificationService
 
     public function pruneStaleFor(User $user): void
     {
-        $user->notifications()->get()->each(function (DatabaseNotification $notification) {
-            if ($this->notificationIsStale($notification)) {
+        $user->notifications()->get()->each(function (DatabaseNotification $notification) use ($user) {
+            if ($this->notificationIsStale($user, $notification)) {
                 $notification->delete();
             }
         });
@@ -270,20 +288,23 @@ class StudyNestNotificationService
         return $this->legacyUrlMatches($data['url'] ?? null, $entityType, $entityId);
     }
 
-    private function notificationIsStale(DatabaseNotification $notification): bool
+    private function notificationIsStale(User $user, DatabaseNotification $notification): bool
     {
         $data = $notification->data ?? [];
         $entityType = $data['entity_type'] ?? null;
         $entityId = (int) ($data['entity_id'] ?? 0);
-
-        if ($entityType && $entityId && !$this->entityExists($entityType, $entityId)) {
-            return true;
+        if ($entityType && $entityId) {
+            if (!$this->notificationTargetIsAvailable($user, $entityType, $entityId)) {
+                return true;
+            }
         }
 
-        foreach (['assignment', 'lesson', 'quiz', 'game', 'announcement'] as $type) {
-            if (preg_match($this->legacyPattern($type), (string) ($data['url'] ?? ''), $matches)
-                && !$this->entityExists($type, (int) $matches[1])) {
-                return true;
+        foreach (['assignment', 'lesson', 'quiz', 'game', 'announcement', 'message', 'group_message', 'message_group'] as $type) {
+            if (preg_match($this->legacyPattern($type), (string) ($data['url'] ?? ''), $matches)) {
+                $id = (int) $matches[1];
+                if (!$this->notificationTargetIsAvailable($user, $type, $id)) {
+                    return true;
+                }
             }
         }
 
@@ -298,6 +319,14 @@ class StudyNestNotificationService
 
     private function legacyPattern(string $entityType): string
     {
+        if ($entityType === 'message') {
+            return '#/(?:student|teacher)/messages/(\\d+)(?:/|$)#';
+        }
+
+        if ($entityType === 'message_group') {
+            return '#/(?:student|teacher)/messages/groups/(\\d+)(?:/|$)#';
+        }
+
         $segments = [
             'assignment' => 'assignments',
             'lesson' => 'lessons',
@@ -309,7 +338,7 @@ class StudyNestNotificationService
         return '#/(?:student|teacher)/' . ($segments[$entityType] ?? preg_quote($entityType, '#')) . '/(\\d+)(?:/|$)#';
     }
 
-    private function entityExists(string $entityType, int $entityId): bool
+    private function notificationTargetIsAvailable(User $user, string $entityType, int $entityId): bool
     {
         $models = [
             'assignment' => Assignment::class,
@@ -317,8 +346,68 @@ class StudyNestNotificationService
             'quiz' => Quiz::class,
             'game' => Game::class,
             'announcement' => Announcement::class,
+            'message' => Message::class,
+            'group_message' => GroupMessage::class,
+            'message_group' => MessageGroup::class,
         ];
 
-        return isset($models[$entityType]) && $models[$entityType]::query()->whereKey($entityId)->exists();
+        if (!isset($models[$entityType])) {
+            return false;
+        }
+
+        $entity = $models[$entityType]::query()->find($entityId);
+        if (!$entity) {
+            return false;
+        }
+
+        if ($entity instanceof Message) {
+            if (!Gate::forUser($user)->allows('view', $entity)) {
+                return false;
+            }
+
+            if (!$entity->sender?->is_active || !$entity->receiver?->is_active) {
+                return false;
+            }
+
+            return $user->isTeacher()
+                ? $entity->teacher_deleted_at === null
+                : ($user->isStudent() && $entity->student_deleted_at === null);
+        }
+
+        if ($entity instanceof GroupMessage) {
+            $group = $entity->group;
+
+            return $group
+                && Gate::forUser($user)->allows('view', $group)
+                && !$entity->deletedByUsers()->whereKey($user->id)->exists();
+        }
+
+        if ($entity instanceof MessageGroup) {
+            return Gate::forUser($user)->allows('view', $entity);
+        }
+
+        if (!Gate::forUser($user)->allows('view', $entity)) {
+            return false;
+        }
+
+        // Announcements are only actionable while published and within their
+        // expiration period, including for an old principal notification.
+        if ($entity instanceof Announcement && !$entity->isCurrentlyVisible()) {
+            return false;
+        }
+
+        // A closed assignment is no longer actionable for students unless late
+        // submission is enabled. Teacher grading notifications stay available.
+        if ($entity instanceof Assignment && $user->isStudent() && $entity->deadlineStatus() === 'expired') {
+            return false;
+        }
+
+        // An expired game cannot be opened to play by a student. Teacher result
+        // notifications remain available for monitoring.
+        if ($entity instanceof Game && $user->isStudent() && $entity->isExpired()) {
+            return false;
+        }
+
+        return true;
     }
 }

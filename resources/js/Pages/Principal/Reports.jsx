@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { toast } from 'sonner';
 import {
     AcademicCapIcon,
     ChartBarIcon,
@@ -21,15 +22,35 @@ export default function PrincipalReports({ grade_levels = [], school_years = [] 
     const [gradeLevel, setGradeLevel] = useState('all');
     const [status, setStatus] = useState('active');
     const [schoolYear, setSchoolYear] = useState(school_years[0] || '');
+    const [isGenerating, setIsGenerating] = useState(false);
     const selectedReport = reports.find((report) => report.key === reportType);
     const needsSchoolYear = reportType !== 'student_directory';
     const needsStudentStatus = reportType !== 'teacher_activity';
 
     const generatePdf = () => {
+        if (isGenerating) return;
+
         const params = new URLSearchParams({ report_type: reportType, grade_level: gradeLevel });
         if (needsStudentStatus) params.set('status', status);
         if (needsSchoolYear && schoolYear) params.set('school_year', schoolYear);
-        window.open(`${route('principal.reports.pdf')}?${params.toString()}`, '_blank', 'noopener,noreferrer');
+
+        setIsGenerating(true);
+        const toastId = toast.loading('Preparing your report download...');
+        const reportWindow = window.open(
+            `${route('principal.reports.pdf')}?${params.toString()}`,
+            '_blank',
+        );
+
+        if (!reportWindow) {
+            toast.dismiss(toastId);
+            toast.error('Your browser blocked the report window. Please allow pop-ups and try again.');
+            setIsGenerating(false);
+            return;
+        }
+
+        reportWindow.opener = null;
+        toast.success('Your report download has started.', { id: toastId });
+        setIsGenerating(false);
     };
 
     return (
@@ -80,7 +101,7 @@ export default function PrincipalReports({ grade_levels = [], school_years = [] 
                             {needsStudentStatus && <label className="block text-sm font-medium text-slate-700">Student Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600"><option value="active">Active Students</option><option value="inactive">Inactive Students</option><option value="all">All Students</option></select></label>}
                             {needsSchoolYear && <label className="block text-sm font-medium text-slate-700">School Year<select value={schoolYear} onChange={(event) => setSchoolYear(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600">{school_years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>}
                         </div>
-                        <div className="mt-6 flex justify-end border-t border-slate-200 pt-5"><PrimaryButton onClick={generatePdf} className="inline-flex items-center gap-2"><DocumentTextIcon className="h-5 w-5" />Generate PDF</PrimaryButton></div>
+                        <div className="mt-6 flex justify-end border-t border-slate-200 pt-5"><PrimaryButton onClick={generatePdf} disabled={isGenerating} className="inline-flex items-center gap-2"><DocumentTextIcon className="h-5 w-5" />{isGenerating ? 'Generating...' : 'Generate PDF'}</PrimaryButton></div>
                     </section>
                 </div>
             </div>

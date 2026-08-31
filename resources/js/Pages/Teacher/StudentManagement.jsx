@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table, { StatusBadge } from '@/Components/Table';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
-import Modal from '@/Components/Modal';
+import Modal, { ConfirmModal } from '@/Components/Modal';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -12,6 +12,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PasswordInput from '@/Components/PasswordInput';
+import { toast } from 'sonner';
 
 export default function StudentManagement({
     students,
@@ -36,6 +37,8 @@ export default function StudentManagement({
     const [gender, setGender] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState('');
+    const [confirmation, setConfirmation] = useState(null);
+    const [isExporting, setIsExporting] = useState(false);
 
     const { errors } = usePage().props;
 
@@ -95,39 +98,84 @@ export default function StudentManagement({
     };
 
     const handleExport = () => {
+        if (isExporting) return;
+
         const params = new URLSearchParams({ search: search || '', grade_level: gradeFilter || '', school_year: schoolYearFilter || '', gender: genderFilter || '', status: statusFilter || '' });
-        window.open(`${route('teacher.students.export')}?${params.toString()}`, '_blank');
-    };
+        setIsExporting(true);
+        const toastId = toast.loading('Preparing your student export download...');
+        const exportWindow = window.open(`${route('teacher.students.export')}?${params.toString()}`, '_blank');
 
-    const handleArchive = (user) => {
-        if (confirm(`Are you sure you want to archive ${user.name}?`)) {
-            router.delete(route('teacher.students.archive', user.id), {
-                preserveState: true,
-            });
+        if (!exportWindow) {
+            toast.dismiss(toastId);
+            toast.error('Your browser blocked the export download. Please allow pop-ups and try again.');
+            setIsExporting(false);
+            return;
         }
+
+        exportWindow.opener = null;
+        toast.success('Your student export download has started.', { id: toastId });
+        setIsExporting(false);
     };
 
-    const handleRestore = (user) => {
-        if (confirm(`Are you sure you want to restore ${user.name}? This student will become active again.`)) {
-            router.post(route('teacher.students.restore', user.id), {}, {
-                preserveState: true,
-            });
-        }
+    const openConfirmation = (action, user) => setConfirmation({ action, user });
+
+    const confirmationDetails = {
+        reset: {
+            title: 'Reset password?',
+            message: (user) => `You are about to set a new password for ${user.name}.`,
+            confirmText: 'Continue',
+            confirmColor: 'yellow',
+        },
+        archive: {
+            title: 'Archive student?',
+            message: (user) => `${user.name} will no longer be able to access their account. You can restore the account later.`,
+            confirmText: 'Archive',
+            danger: true,
+        },
+        restore: {
+            title: 'Restore student?',
+            message: (user) => `${user.name} will be able to access their account again.`,
+            confirmText: 'Restore',
+            confirmColor: 'green',
+        },
+        delete: {
+            title: 'Permanently delete student?',
+            message: (user) => `${user.name} will be permanently deleted. This action cannot be undone.`,
+            confirmText: 'Delete permanently',
+            danger: true,
+        },
     };
 
-    const handleDelete = (user) => {
-        if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
-            router.delete(route('teacher.students.destroy', user.id), {
-                preserveState: true,
-            });
-        }
-    };
+    const executeConfirmedAction = () => {
+        if (!confirmation) return;
 
-    const openResetConfirmation = (user) => {
-        if (confirm(`Are you sure you want to reset ${user.name}'s password?`)) {
+        const { action, user } = confirmation;
+        setConfirmation(null);
+
+        if (action === 'reset') {
             setSelectedUser(user);
             setShowResetModal(true);
+            return;
         }
+
+        const requests = {
+            archive: { method: 'delete', url: route('teacher.students.archive', user.id), success: 'Student archived successfully.' },
+            restore: { method: 'post', url: route('teacher.students.restore', user.id), success: 'Student restored successfully.' },
+            delete: { method: 'delete', url: route('teacher.students.destroy', user.id), success: 'Student deleted successfully.' },
+        };
+        const request = requests[action];
+        const options = {
+            preserveState: true,
+            onSuccess: () => toast.success(request.success),
+            onError: () => toast.error('Unable to complete this action. Please try again.'),
+        };
+
+        if (request.method === 'post') {
+            router.post(request.url, {}, options);
+            return;
+        }
+
+        router.delete(request.url, options);
     };
 
     const gradeOptions = [
@@ -214,12 +262,12 @@ export default function StudentManagement({
     const studentActions = (row) => [
         { label: 'View', icon: <ViewIcon />, color: 'secondary', onClick: () => { setSelectedUser(row); setShowViewModal(true); } },
         { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setGender((row.gender || '').toLowerCase()); setShowEditModal(true); } },
-        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => openResetConfirmation(row) },
+        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => openConfirmation('reset', row) },
         ...(row.is_active
-            ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
-            : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
+            ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => openConfirmation('archive', row) }]
+            : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => openConfirmation('restore', row) }]
         ),
-        { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => handleDelete(row) },
+        { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => openConfirmation('delete', row) },
     ];
 
     return (
@@ -227,11 +275,11 @@ export default function StudentManagement({
             header={
                 <div className="flex w-full items-center justify-between gap-4">
                     <h2 className="text-xl font-bold text-gray-800">Student Management</h2>
-                    <PrimaryButton onClick={handleExport} className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <PrimaryButton onClick={handleExport} disabled={isExporting} className="inline-flex items-center gap-2 whitespace-nowrap">
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" />
                         </svg>
-                        Export CSV
+                        {isExporting ? 'Preparing Export...' : 'Export CSV'}
                     </PrimaryButton>
                 </div>
             }
@@ -446,7 +494,11 @@ export default function StudentManagement({
                         const method = showCreateModal ? 'post' : 'put';
                         router[method](url, data, {
                             preserveState: true,
-                            onSuccess: handleSuccess,
+                            onSuccess: () => {
+                                handleSuccess();
+                                toast.success(showCreateModal ? 'Student created successfully.' : 'Student updated successfully.');
+                            },
+                            onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
                     className="space-y-4"
@@ -603,7 +655,9 @@ export default function StudentManagement({
                                 setShowResetModal(false);
                                 setSelectedUser(null);
                                 setPassword('');
-                            }
+                                toast.success('Password reset successfully.');
+                            },
+                            onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
                     className="space-y-4"
@@ -630,6 +684,19 @@ export default function StudentManagement({
                     </div>
                 </form>
             </Modal>
+
+            {confirmation && (
+                <ConfirmModal
+                    show
+                    onClose={() => setConfirmation(null)}
+                    onConfirm={executeConfirmedAction}
+                    title={confirmationDetails[confirmation.action].title}
+                    message={confirmationDetails[confirmation.action].message(confirmation.user)}
+                    confirmText={confirmationDetails[confirmation.action].confirmText}
+                    confirmColor={confirmationDetails[confirmation.action].confirmColor}
+                    danger={confirmationDetails[confirmation.action].danger}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

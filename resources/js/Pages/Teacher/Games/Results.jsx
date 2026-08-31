@@ -1,21 +1,15 @@
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import Table, { StatusBadge } from '@/Components/Table';
-import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
     ArrowLeftIcon,
-    ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 
-export default function GameResults({ game, results, statistics }) {
-    const handleExport = () => {
-        window.open(route('teacher.games.export', game.id), '_blank');
-    };
-
+export default function GameResults({ game, results, pagination, statistics }) {
     const getStatusBadge = (status) => {
         const statusMap = {
             assigned: 'not_started',
@@ -80,11 +74,9 @@ export default function GameResults({ game, results, statistics }) {
                         Game Results: {game.title}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <PrimaryButton onClick={handleExport}>
-                            <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
-                            Export CSV
-                        </PrimaryButton>
-                        <SecondaryButton onClick={() => router.visit(route('teacher.games.index'))}>
+                        <SecondaryButton onClick={() => router.visit(route('teacher.games.index'), {
+                            onError: () => toast.error('Unable to return to games. Please try again.'),
+                        })}>
                             <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Games
                         </SecondaryButton>
@@ -150,6 +142,7 @@ export default function GameResults({ game, results, statistics }) {
                                         emptyMessage="No results found."
                                         hoverable
                                         striped
+                                        pagination={pagination}
                                     />
                                 </div>
                             </div>

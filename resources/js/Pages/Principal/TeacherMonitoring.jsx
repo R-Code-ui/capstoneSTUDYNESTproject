@@ -6,6 +6,7 @@ import Table, { StatusBadge } from '@/Components/Table';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { toast } from 'sonner';
 
 export default function TeacherMonitoring({
     teachers,
@@ -25,6 +26,7 @@ export default function TeacherMonitoring({
         router.visit(route('principal.teachers.index'), {
             data: { search: value, grade_level: gradeFilter, status: statusFilter },
             preserveState: true,
+            onError: () => toast.error('Unable to load teacher monitoring data. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };
@@ -41,12 +43,15 @@ export default function TeacherMonitoring({
                 status: type === 'status' ? value : statusFilter,
             },
             preserveState: true,
+            onError: () => toast.error('Unable to apply the teacher monitoring filters. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };
 
     const handleViewProfile = (teacher) => {
-        router.visit(route('principal.teachers.show', teacher.id));
+        router.visit(route('principal.teachers.show', teacher.id), {
+            onError: () => toast.error('Unable to load this teacher profile. Please try again.'),
+        });
     };
 
     const gradeOptions = [
@@ -100,7 +105,20 @@ export default function TeacherMonitoring({
             render: (row) => row.quizzes_count ?? 0
         },
         { key: 'last_activity', label: 'Last Activity' },
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status?.toLowerCase().replace(' ', '_') || 'inactive'} /> },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => {
+                const status = row.status?.toLowerCase().replace(' ', '_') || 'inactive';
+
+                return (
+                    <StatusBadge
+                        status={status}
+                        className={`principal-teacher-status ${status === 'active' ? 'principal-teacher-status-active' : 'principal-teacher-status-inactive'}`}
+                    />
+                );
+            },
+        },
     ];
 
     const actions = (row) => [
@@ -117,6 +135,17 @@ export default function TeacherMonitoring({
             header={<h2 className="text-xl font-bold text-gray-800">Teacher Monitoring</h2>}
         >
             <Head title="Teacher Monitoring" />
+
+            <style>{`
+                .studynest-layout.theme-dark .principal-teacher-status-inactive {
+                    background-color: rgb(71 85 105) !important;
+                    color: rgb(226 232 240) !important;
+                }
+                .studynest-layout.theme-dark .principal-teacher-status-active {
+                    background-color: rgb(167 243 208) !important;
+                    color: rgb(6 78 59) !important;
+                }
+            `}</style>
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

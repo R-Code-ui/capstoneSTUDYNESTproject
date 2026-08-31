@@ -84,6 +84,7 @@ class GameController extends Controller
                     'game_type' => $game->game_type,
                     'max_attempts' => $game->max_attempts,
                     'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
+                    'deadline_status' => $game->deadlineStatus(),
                     'teacher' => $game->teacher->name,
                     'status' => $status,
                     'score' => $latestCompleted ? $latestCompleted->score : null,
@@ -117,7 +118,7 @@ class GameController extends Controller
         $currentResult = $results->where('status', 'started')->first();
 
         $attemptsUsed = $results->whereIn('status', ['started', 'completed'])->count();
-        $canPlay = $attemptsUsed < $game->max_attempts;
+        $canPlay = $attemptsUsed < $game->max_attempts && !$game->isExpired();
         $attemptsRemaining = max(0, $game->max_attempts - $attemptsUsed);
 
         $gameData = $game->game_data;
@@ -135,6 +136,7 @@ class GameController extends Controller
                 'game_type' => $game->game_type,
                 'max_attempts' => $game->max_attempts,
                 'due_date' => $game->due_date ? $game->due_date->format('Y-m-d') : null,
+                'deadline_status' => $game->deadlineStatus(),
                 'teacher' => $game->teacher->name,
                 'instructions' => $gameData['instructions'] ?? 'Play and do your best!',
                 'difficulty' => $gameData['difficulty'] ?? 'standard',
@@ -164,6 +166,11 @@ class GameController extends Controller
                 ->lockForUpdate()
                 ->orderByDesc('attempt_number')
                 ->get();
+
+            if ($game->isExpired()) {
+                abort(422, 'This game is past its due date.');
+            }
+
             $current = $results->where('status', 'started')->first();
 
             if ($current) {
@@ -173,10 +180,6 @@ class GameController extends Controller
             $attemptsUsed = $results->whereIn('status', ['started', 'completed'])->count();
             if ($attemptsUsed >= $game->max_attempts) {
                 abort(422, 'You have reached the maximum number of attempts.');
-            }
-
-            if ($game->due_date && $game->due_date->lt(today())) {
-                abort(422, 'This game is past its due date.');
             }
 
             $assigned = $results->where('status', 'assigned')->first();
@@ -215,6 +218,7 @@ class GameController extends Controller
         Gate::authorize('view', $result->game);
 
         $game = $result->game;
+        abort_if($game->isExpired(), 422, 'This game is past its due date.');
 
         $gameData = $game->game_data;
         if (is_string($gameData)) {
@@ -275,6 +279,7 @@ class GameController extends Controller
         abort_unless($result->student_id === auth()->id(), 403);
         abort_unless($result->status === 'started', 409);
         Gate::authorize('view', $result->game);
+        abort_if($result->game->isExpired(), 422, 'This game is past its due date.');
 
         $validated = $request->validate([
             'score' => 'required|integer|min:0|max:100',

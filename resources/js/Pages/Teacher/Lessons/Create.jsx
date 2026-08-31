@@ -9,6 +9,8 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import ExternalLinksInput from '@/Components/ExternalLinksInput';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -31,6 +33,7 @@ export default function LessonsCreate({
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileErrors, setFileErrors] = useState([]);
+    const [fileIndexToRemove, setFileIndexToRemove] = useState(null);
 
     const { data, setData, errors, post } = useForm({
         grade_level: '',
@@ -75,6 +78,8 @@ export default function LessonsCreate({
             data: formData,
             forceFormData: true,
             preserveState: true,
+            onSuccess: () => toast.success('Lesson created successfully.'),
+            onError: () => toast.error('Please correct the highlighted fields and try again.'),
             onFinish: () => setIsSubmitting(false),
         });
     };
@@ -96,13 +101,14 @@ export default function LessonsCreate({
             'video/mp4',
         ];
 
-        const maxSize = 100 * 1024 * 1024;
-        const maxFiles = 4;
+        const maxSize = 50 * 1024 * 1024;
+        const maxFiles = 8;
 
         if (files.length + data.resources.length > maxFiles) {
             errors.push(`You can only upload a maximum of ${maxFiles} files.`);
             e.target.value = '';
             setFileErrors(errors);
+            toast.error(errors[0]);
             return;
         }
 
@@ -112,7 +118,7 @@ export default function LessonsCreate({
                 return;
             }
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 100MB limit.`);
+                errors.push(`"${file.name}" exceeds the 50MB limit.`);
                 return;
             }
             validFiles.push(file);
@@ -120,6 +126,7 @@ export default function LessonsCreate({
 
         if (errors.length > 0) {
             setFileErrors(errors);
+            toast.error('Some files could not be added. Please review the file requirements.');
         } else {
             setFileErrors([]);
         }
@@ -129,10 +136,13 @@ export default function LessonsCreate({
         e.target.value = '';
     };
 
-    const removeFile = (index) => {
+    const removeFile = () => {
+        if (fileIndexToRemove === null) return;
         const newResources = [...data.resources];
-        newResources.splice(index, 1);
+        newResources.splice(fileIndexToRemove, 1);
         setData('resources', newResources);
+        setFileIndexToRemove(null);
+        toast.success('Selected file removed.');
     };
 
     const getFileIcon = (fileName) => {
@@ -379,7 +389,7 @@ export default function LessonsCreate({
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
                                 <div className="mb-5"><ExternalLinksInput value={data.resource_urls} onChange={(urls) => setData('resource_urls', urls)} errors={errors} /></div>
                                 <div>
-                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 4 files, 100MB each)" />
+                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 8 files, 50MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
@@ -407,7 +417,7 @@ export default function LessonsCreate({
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeFile(index)}
+                                                        onClick={() => setFileIndexToRemove(index)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />
@@ -415,12 +425,12 @@ export default function LessonsCreate({
                                                 </div>
                                             ))}
                                             <p className="text-xs text-gray-500">
-                                                Total: {data.resources.length} of 4 files
+                                                Total: {data.resources.length} of 8 files
                                             </p>
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPT, PPTX, MP4 (Max 100MB per file, Max 4 files total)
+                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPT, PPTX, MP4 (Max 50MB per file, Max 8 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>
@@ -498,6 +508,16 @@ export default function LessonsCreate({
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={fileIndexToRemove !== null}
+                onClose={() => setFileIndexToRemove(null)}
+                onConfirm={removeFile}
+                title="Remove selected file?"
+                message="This file will not be included when you create the lesson."
+                confirmText="Remove file"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

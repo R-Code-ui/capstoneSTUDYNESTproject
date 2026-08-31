@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { toast } from 'sonner';
 
 export default function AnnouncementsCreate({
     assigned_grades,
@@ -39,6 +40,8 @@ export default function AnnouncementsCreate({
                 is_pinned: data.is_pinned ? 1 : 0,
             },
             preserveState: true,
+            onSuccess: () => toast.success('Announcement created successfully.'),
+            onError: () => toast.error('Please correct the highlighted fields and try again.'),
             onFinish: () => setIsSubmitting(false),
         });
     };

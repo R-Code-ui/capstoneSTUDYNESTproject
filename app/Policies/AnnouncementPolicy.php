@@ -45,6 +45,7 @@ class AnnouncementPolicy
             return $announcement->target_audience === $user->grade_level
                 || $announcement->target_audience === $gradeAudience
                 || $announcement->target_audience === 'all_users'
+                || $announcement->target_audience === 'all_grades'
                 || ($announcement->target_audience === 'all_assigned_students'
                     && $announcement->user?->gradeAssignments()->where('grade_level', $user->grade_level)->exists());
         }

@@ -8,6 +8,7 @@ import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Modal from '@/Components/Modal';
 import { EyeIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 export default function ActivityLogs({
     logs,
@@ -58,6 +59,7 @@ export default function ActivityLogs({
                 ...additional,
             },
             preserveState: true,
+            onError: () => toast.error('Unable to load activity logs. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };

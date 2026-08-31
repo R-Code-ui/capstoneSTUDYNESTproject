@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
+import { toast } from 'sonner';
 import {
     BookOpenIcon,
     ClipboardDocumentListIcon,
@@ -23,6 +24,7 @@ export default function ProgressTracker({
     pending_activities,
     participation_rate,
     pending_count,
+    pagination,
 }) {
     const getStatusColor = (progress) => {
         if (progress >= 80) return 'text-emerald-600';
@@ -92,6 +94,17 @@ export default function ProgressTracker({
             game: 'Game',
         };
         return labels[type] || type;
+    };
+
+    const changePendingPage = (page) => {
+        if (page < 1 || page > (pagination?.last_page || 1)) return;
+
+        router.visit(route('student.progress.index'), {
+            data: { page },
+            preserveState: true,
+            preserveScroll: true,
+            onError: () => toast.error('Unable to load that progress page. Please try again.'),
+        });
     };
 
     return (
@@ -437,6 +450,7 @@ export default function ProgressTracker({
                                                 <Link
                                                     key={index}
                                                     href={getActivityRoute(activity.type, activity.id)}
+                                                    onError={() => toast.error('Unable to open this activity. Please try again.')}
                                                     className="block"
                                                 >
                                                     <div data-progress-tone={index % 10} className="progress-pending-card rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden">
@@ -471,6 +485,18 @@ export default function ProgressTracker({
                                                 </Link>
                                             );
                                         })}
+                                    </div>
+                                )}
+                                {pagination?.total > 0 && (
+                                    <div className="mt-5 flex flex-col gap-4 border-t border-gray-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                                        <p className="text-sm text-gray-500">
+                                            Showing <span className="font-semibold text-gray-800">{(pagination.current_page - 1) * pagination.per_page + 1}</span> to <span className="font-semibold text-gray-800">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> of <span className="font-semibold text-gray-800">{pagination.total}</span> activities
+                                        </p>
+                                        <nav aria-label="Pending activities pagination" className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
+                                            <button type="button" onClick={() => changePendingPage(pagination.current_page - 1)} disabled={pagination.current_page === 1} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-white hover:text-gray-800 disabled:cursor-not-allowed disabled:text-gray-400">Previous</button>
+                                            <span className="min-w-[36px] rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm">{pagination.current_page}</span>
+                                            <button type="button" onClick={() => changePendingPage(pagination.current_page + 1)} disabled={pagination.current_page === pagination.last_page} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-white hover:text-gray-800 disabled:cursor-not-allowed disabled:text-gray-400">Next</button>
+                                        </nav>
                                     </div>
                                 )}
                             </div>

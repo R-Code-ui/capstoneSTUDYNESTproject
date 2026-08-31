@@ -33,6 +33,7 @@
         "@tiptap/extension-table-row": "^3.27.1",
         "@tiptap/react": "^3.27.1",
         "@tiptap/starter-kit": "^3.27.1",
-        "recharts": "^3.10.1"
+        "recharts": "^3.10.1",
+        "sonner": "^2.0.8"
     }
 }

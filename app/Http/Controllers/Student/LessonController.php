@@ -203,6 +203,10 @@ class LessonController extends Controller
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) abort(404, 'File not found.');
 
+        if (preg_match('/\.(doc|docx|ppt|pptx)$/i', $resource->file_name ?? '')) {
+            return response()->download($filePath, $resource->file_name);
+        }
+
         return response()->file($filePath, [
             'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),
         ]);

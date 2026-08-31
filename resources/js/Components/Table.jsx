@@ -334,7 +334,7 @@ export default function Table({
                             max-width: 62%;
                         }
                         .teacher-responsive-table td:last-child > div {
-                            justify-content: flex-end;
+                            justify-content: flex-start;
                         }
                         .studynest-layout.theme-dark .teacher-responsive-table tr {
                             border-color: rgb(51 65 85);
@@ -373,7 +373,7 @@ export default function Table({
                             );
                         })}
                         {hasActions() && (
-                            <th className={`px-4 py-3 text-right ${compact ? 'px-3 py-2' : ''}`}>
+                            <th className={`px-4 py-3 text-left ${compact ? 'px-3 py-2' : ''}`}>
                                 Actions
                             </th>
                         )}
@@ -435,9 +435,9 @@ export default function Table({
                                         );
                                     })}
                                     {hasActions() && (
-                                        <td data-label="Actions" className={`px-4 py-3 text-right ${compact ? 'px-3 py-2' : ''}`}>
+                                        <td data-label="Actions" className={`px-4 py-3 text-left ${compact ? 'px-3 py-2' : ''}`}>
                                             {rowActions.length > 0 ? (
-                                                <div className="flex flex-wrap justify-end gap-1">
+                                                <div className="flex flex-wrap justify-start gap-1">
                                                     {rowActions.map((action, actionIndex) => (
                                                     <button
                                                         key={actionIndex}
@@ -496,6 +496,7 @@ export function StatusBadge({ status, className = '' }) {
         scheduled: 'bg-indigo-100 text-indigo-800',
         draft: 'bg-amber-100 text-amber-800',
         archived: 'bg-gray-100 text-gray-800',
+        expired: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200',
         pending: 'bg-amber-100 text-amber-800',
         submitted: 'bg-sky-100 text-sky-800',
         graded: 'bg-emerald-100 text-emerald-800',

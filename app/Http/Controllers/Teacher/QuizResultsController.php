@@ -7,6 +7,7 @@ use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -15,7 +16,7 @@ class QuizResultsController extends Controller
     /**
      * Display quiz results and statistics.
      */
-    public function index(Quiz $quiz)
+    public function index(Request $request, Quiz $quiz)
     {
         Gate::authorize('view', $quiz);
 
@@ -93,6 +94,15 @@ class QuizResultsController extends Controller
 
         // Score distribution (based on official scores)
         $distribution = $this->getScoreDistribution($officialScores);
+        $perPage = 10;
+        $currentPage = $request->integer('page', 1);
+        $attemptsPaginator = new LengthAwarePaginator(
+            $allStudents->forPage($currentPage, $perPage)->values(),
+            $allStudents->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return Inertia::render('Teacher/Quizzes/Results', [
             'quiz' => [
@@ -103,7 +113,8 @@ class QuizResultsController extends Controller
                 'total_questions' => $quiz->total_questions,
                 'passing_score'   => $passingScore,
             ],
-            'attempts'     => $allStudents,
+            'attempts'     => $attemptsPaginator->items(),
+            'pagination'   => $attemptsPaginator->toArray(),
             'statistics'   => $statistics,
             'distribution' => $distribution,
         ]);
@@ -123,48 +134,26 @@ class QuizResultsController extends Controller
 
         $attempt->load('student');
 
-        $answers = json_decode($attempt->answers, true) ?? [];
-
-        // Get all questions for this quiz
-        $questions = $quiz->questions()->orderBy('question_number')->get();
+        $answers = is_array($attempt->answers) ? $attempt->answers : (json_decode($attempt->answers, true) ?? []);
+        $questions = $attempt->questionData();
 
         // Map answers to questions
         $questionResults = $questions->map(function ($question) use ($answers) {
-            $userAnswer = $answers[$question->id] ?? null;
-
-            $isCorrect = false;
-            if ($userAnswer !== null) {
-                if ($question->question_type === 'true_false') {
-                    $isCorrect = strtolower($userAnswer) === strtolower($question->correct_answer);
-                } elseif ($question->question_type === 'identification') {
-                    $correct = strtolower(trim($question->correct_answer));
-                    $user = strtolower(trim($userAnswer));
-                    $isCorrect = $user === $correct;
-
-                    // Check alternative answers
-                    if (!$isCorrect && $question->alternative_answers) {
-                        $alternatives = json_decode($question->alternative_answers, true);
-                        if (is_array($alternatives)) {
-                            $isCorrect = in_array($user, array_map('strtolower', array_map('trim', $alternatives)));
-                        }
-                    }
-                } else {
-                    $isCorrect = $userAnswer === $question->correct_answer;
-                }
-            }
+            $userAnswer = $answers[$question['id']] ?? null;
+            $isCorrect = QuizAttempt::answerIsCorrect($question, $userAnswer);
 
             return [
-                'question_number' => $question->question_number,
-                'question_text'   => $question->question_text,
-                'question_type'   => $question->question_type,
-                'choices'         => $question->question_type === 'multiple_choice' ? [
-                    'A' => $question->choice_a,
-                    'B' => $question->choice_b,
-                    'C' => $question->choice_c,
-                    'D' => $question->choice_d,
+                'question_number' => $question['question_number'],
+                'question_text'   => $question['question_text'],
+                'question_type'   => $question['question_type'],
+                'choices'         => $question['question_type'] === 'multiple_choice' ? [
+                    'A' => $question['choice_a'],
+                    'B' => $question['choice_b'],
+                    'C' => $question['choice_c'],
+                    'D' => $question['choice_d'],
                 ] : null,
                 'user_answer'     => $userAnswer,
-                'correct_answer'  => $question->correct_answer,
+                'correct_answer'  => $question['correct_answer'],
                 'is_correct'      => $isCorrect,
             ];
         });

@@ -3,6 +3,8 @@ import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 import gameDefinitions from '@/GameEngines/gameDefinitions';
 
@@ -171,6 +173,7 @@ function sanitizeProgress(progress, content) {
 export default function GamesPlay({ result, game, preview = false }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewComplete, setPreviewComplete] = useState(false);
+    const [confirmingExit, setConfirmingExit] = useState(false);
     const isLeavingRef = useRef(false);
     const isCompletingRef = useRef(false);
 
@@ -204,21 +207,38 @@ export default function GamesPlay({ result, game, preview = false }) {
 
     const handleProgress = (progress) => setCurrentProgress(progress);
 
-    const handleExit = () => {
+    const exitGame = () => {
         isLeavingRef.current = true;
         if (preview) {
-            router.visit(route('teacher.games.show', game.id));
+            router.visit(route('teacher.games.show', game.id), {
+                onError: () => toast.error('Unable to return to the game details. Please try again.'),
+            });
             return;
         }
         if (!currentProgress) {
-            router.visit(route('student.games.index'));
+            router.visit(route('student.games.index'), {
+                onError: () => toast.error('Unable to return to games. Please try again.'),
+            });
             return;
         }
         setIsSubmitting(true);
         router.post(route('student.games.save-progress', result.id), { progress: currentProgress }, {
             preserveState: true,
+            onSuccess: () => toast.success('Game progress saved.'),
+            onError: () => {
+                isLeavingRef.current = false;
+                toast.error('Unable to save your game progress. Please try again.');
+            },
             onFinish: () => setIsSubmitting(false),
         });
+    };
+
+    const handleExit = () => {
+        if (!preview && currentProgress) {
+            setConfirmingExit(true);
+            return;
+        }
+        exitGame();
     };
 
     const handleComplete = (score) => {
@@ -230,20 +250,25 @@ export default function GamesPlay({ result, game, preview = false }) {
         }
         setIsSubmitting(true);
         router.post(route('student.games.submit-result', result.id), { score }, {
+            onSuccess: () => toast.success('Game completed successfully.'),
+            onError: () => {
+                isCompletingRef.current = false;
+                toast.error('Unable to submit the game result. Please try again.');
+            },
             onFinish: () => setIsSubmitting(false),
         });
     };
 
     if (!definition || !EngineComponent || definition.comingSoon) {
         return (
-            <AuthenticatedLayout header={<div className="flex justify-between"><h2>{game.title}</h2><SecondaryButton onClick={() => router.visit(route('student.games.index'))}>Back to Games</SecondaryButton></div>}>
+            <AuthenticatedLayout header={<div className="flex justify-between"><h2>{game.title}</h2><SecondaryButton onClick={() => router.visit(route('student.games.index'), { onError: () => toast.error('Unable to return to games. Please try again.') })}>Back to Games</SecondaryButton></div>}>
                 <Head title={`Playing: ${game.title}`} />
                 <div className="min-h-screen p-6 flex items-center justify-center bg-white">
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm max-w-md w-full text-center p-10">
                         <div className="text-6xl mb-6">🚀</div>
                         <h3 className="text-2xl font-bold text-gray-800 mb-2">Coming Soon!</h3>
                         <p className="text-gray-600 mb-8">This game isn't available to play yet. Check back later or ask your teacher!</p>
-                        <SecondaryButton onClick={() => router.visit(route('student.games.index'))} className="px-8 py-3 rounded-full font-bold hover:scale-105">Back to Games</SecondaryButton>
+                        <SecondaryButton onClick={() => router.visit(route('student.games.index'), { onError: () => toast.error('Unable to return to games. Please try again.') })} className="px-8 py-3 rounded-full font-bold hover:scale-105">Back to Games</SecondaryButton>
                     </div>
                 </div>
             </AuthenticatedLayout>
@@ -322,6 +347,19 @@ export default function GamesPlay({ result, game, preview = false }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmingExit}
+                onClose={() => setConfirmingExit(false)}
+                onConfirm={() => {
+                    setConfirmingExit(false);
+                    exitGame();
+                }}
+                title="Leave this game?"
+                message="Your current progress will be saved before you leave."
+                confirmText="Save and leave"
+                cancelText="Keep playing"
+                confirmColor="blue"
+            />
         </AuthenticatedLayout>
     );
 }

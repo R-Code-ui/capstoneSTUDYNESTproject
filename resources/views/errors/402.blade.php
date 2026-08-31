@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 402, 'title' => 'This feature needs attention', 'message' => 'A payment or account requirement is needed before this page can be used. Please contact your school administrator.'])

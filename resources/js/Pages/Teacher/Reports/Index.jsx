@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { toast } from 'sonner';
 import { ChartBarIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, DocumentTextIcon, UsersIcon } from '@heroicons/react/24/outline';
 
 const reports = [
@@ -22,14 +23,28 @@ export default function TeacherReports({ assigned_grades = [], subjects = [], sc
     const needsLearningFilters = reportType !== 'student_directory';
 
     const generatePdf = () => {
-        if (!gradeLevel) return;
+        if (!gradeLevel) {
+            toast.error('Please select a grade level before downloading a report.');
+            return;
+        }
         const params = new URLSearchParams({ report_type: reportType, grade_level: gradeLevel, status });
         if (needsLearningFilters) {
             if (schoolYear) params.set('school_year', schoolYear);
             if (subject !== 'all') params.set('subject', subject);
             if (trimester !== 'all') params.set('trimester', trimester);
         }
-        window.open(`${route('teacher.reports.pdf')}?${params.toString()}`, '_blank', 'noopener,noreferrer');
+        const toastId = toast.loading('Preparing your report download…');
+        try {
+            const reportWindow = window.open(`${route('teacher.reports.pdf')}?${params.toString()}`, '_blank');
+            if (!reportWindow) {
+                toast.error('Your browser blocked the report download. Please allow pop-ups and try again.', { id: toastId });
+                return;
+            }
+            reportWindow.opener = null;
+            toast.success('Your report download has started.', { id: toastId });
+        } catch {
+            toast.error('Unable to start the report download. Please try again.', { id: toastId });
+        }
     };
 
     return <AuthenticatedLayout header={<h2 className="text-xl font-bold text-gray-800">Reports</h2>}>

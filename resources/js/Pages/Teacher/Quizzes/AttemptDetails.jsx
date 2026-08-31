@@ -4,6 +4,7 @@ import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -46,7 +47,7 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         Attempt Details: {quiz_title}
                     </span>
-                    <Link href={route('teacher.quizzes.results', attempt.quiz_id)}>
+                    <Link href={route('teacher.quizzes.results', attempt.quiz_id)} onError={() => toast.error('Unable to return to quiz results. Please try again.')}>
                         <SecondaryButton>
                             <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Results

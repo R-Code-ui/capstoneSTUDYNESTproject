@@ -1,6 +1,7 @@
 import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 import {
     MapPinIcon,
     StarIcon,
@@ -58,7 +59,9 @@ export default function AnnouncementsShow({ announcement }) {
                     <h2 className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={announcement.title}>
                         {announcement.title}
                     </h2>
-                    <SecondaryButton onClick={() => router.visit(route('student.announcements.index'))}>
+                    <SecondaryButton onClick={() => router.visit(route('student.announcements.index'), {
+                        onError: () => toast.error('Unable to return to announcements. Please try again.'),
+                    })}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Announcements
                     </SecondaryButton>
@@ -69,15 +72,16 @@ export default function AnnouncementsShow({ announcement }) {
 
             <div className="student-announcement-show-page py-12">
                 <style>{`
-                    .studynest-layout.theme-dark .student-announcement-show-page > div > .bg-white { background-image: linear-gradient(135deg, rgb(255 251 235), rgb(254 243 199)) !important; background-color: rgb(255 251 235) !important; border-color: rgb(245 158 11) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page > div > .bg-white { background-image: linear-gradient(135deg, rgb(30 41 59), rgb(15 23 42)) !important; background-color: rgb(30 41 59) !important; border-color: rgb(100 116 139) !important; }
                     .studynest-layout.theme-dark .student-announcement-show-page .text-gray-800,
-                    .studynest-layout.theme-dark .student-announcement-show-page .text-gray-700 { color: rgb(30 41 59) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page .text-gray-700 { color: rgb(241 245 249) !important; }
                     .studynest-layout.theme-dark .student-announcement-show-page .text-gray-600,
-                    .studynest-layout.theme-dark .student-announcement-show-page .text-gray-500 { color: rgb(71 85 105) !important; }
-                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-blue-100"] { background-color: rgb(219 234 254) !important; color: rgb(30 64 175) !important; }
-                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-purple-100"] { background-color: rgb(243 232 255) !important; color: rgb(107 33 168) !important; }
-                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-yellow-100"] { background-color: rgb(254 249 195) !important; color: rgb(146 64 14) !important; }
-                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-red-100"] { background-color: rgb(254 226 226) !important; color: rgb(185 28 28) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page .text-gray-500 { color: rgb(203 213 225) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page .border-gray-200 { border-color: rgb(71 85 105) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-blue-100"] { background-color: rgb(30 58 138 / 0.55) !important; color: rgb(191 219 254) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-purple-100"] { background-color: rgb(88 28 135 / 0.45) !important; color: rgb(233 213 255) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-yellow-100"] { background-color: rgb(120 53 15 / 0.45) !important; color: rgb(253 230 138) !important; }
+                    .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-red-100"] { background-color: rgb(127 29 29 / 0.45) !important; color: rgb(254 202 202) !important; }
                     .student-announcement-show-page .break-words { overflow-wrap: anywhere; word-break: break-word; }
                     @media (max-width: 640px) { .student-announcement-show-page .p-6 { padding: 1rem; } }
                 `}</style>

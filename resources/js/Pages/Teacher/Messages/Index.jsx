@@ -4,16 +4,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import SearchBar from '@/Components/SearchBar';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import PrimaryButton from '@/Components/PrimaryButton';
 import Pagination from '@/Components/Pagination';
 import ConversationListItem from '@/Components/ConversationListItem';
 import MessageGroupList from '@/Components/MessageGroupList';
-import { PlusIcon, ChatBubbleLeftRightIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
+import { ChatBubbleLeftRightIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-export default function MessagesIndex({ conversations, unread_count, filters, pagination, groups = [], assigned_grades = [] }) {
+export default function MessagesIndex({ conversations, unread_count, filters, pagination, groups = [], group_pagination, assigned_grades = [] }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [gradeLevel, setGradeLevel] = useState(filters?.grade_level || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [conversationToRemove, setConversationToRemove] = useState(null);
 
     const handleSearch = (value) => {
         setSearch(value);
@@ -35,20 +37,24 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
         });
     };
 
-    const handleDeleteConversation = (studentId, studentName) => {
-        if (!confirm(`Remove the conversation with ${studentName} from your messages? The student will still see it.`)) {
-            return;
-        }
-        router.delete(route('teacher.messages.destroy-conversation', studentId), {
+    const removeConversation = () => {
+        if (!conversationToRemove) return;
+
+        router.delete(route('teacher.messages.destroy-conversation', conversationToRemove.studentId), {
             preserveState: true,
             preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Conversation removed from your messages.');
+                setConversationToRemove(null);
+            },
+            onError: () => toast.error('Unable to remove the conversation. Please try again.'),
         });
     };
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                <div className="flex items-center gap-2 w-full">
                     <div className="flex items-center gap-2">
                         <span className="text-xl font-semibold leading-tight text-gray-800">
                             Messages
@@ -59,18 +65,30 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                             </span>
                         )}
                     </div>
-                    <Link href={route('teacher.messages.create')}>
-                        <PrimaryButton>
-                            <PlusIcon className="w-4 h-4 mr-1" />
-                            New Message
-                        </PrimaryButton>
-                    </Link>
                 </div>
             }
         >
             <Head title="Messages" />
 
-            <div className="py-12">
+            <style>{`
+                /* Scope these control colors to Messages so light mode and other pages keep their existing UI. */
+                .studynest-layout.theme-dark .teacher-messages-index #message-grade-filter {
+                    color-scheme: dark;
+                    background-color: rgb(30 41 59) !important;
+                    color: rgb(226 232 240) !important;
+                    border-color: rgb(71 85 105) !important;
+                }
+                .studynest-layout.theme-dark .teacher-messages-index #message-grade-filter option {
+                    background-color: rgb(30 41 59);
+                    color: rgb(226 232 240);
+                }
+                @keyframes message-action-float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-8px); }
+                }
+            `}</style>
+
+            <div className="teacher-messages-index py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
@@ -95,7 +113,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                 </div>
                             )}
 
-                            <MessageGroupList groups={groups} routeName="teacher.messages.groups.show" canCreate canManage createGrade={gradeLevel} />
+                            <MessageGroupList groups={groups} pagination={group_pagination} routeName="teacher.messages.groups.show" canCreate canManage createGrade={gradeLevel} />
 
                             <h2 className="mb-3 text-sm font-bold tracking-wide text-slate-500 uppercase">Direct Messages</h2>
 
@@ -126,7 +144,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteConversation(conv.student_id, conv.name);
+                                                    setConversationToRemove({ studentId: conv.student_id, studentName: conv.name });
                                                 }}
                                                 aria-label="Remove conversation from your messages"
                                                 className="group relative ml-2 inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-all duration-150 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:text-slate-400 dark:hover:bg-red-950/40 dark:hover:text-red-400 dark:focus-visible:ring-offset-slate-900"
@@ -150,7 +168,25 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                         </div>
                     </div>
                 </div>
+                <Link
+                    href={route('teacher.messages.create')}
+                    aria-label="Compose a message"
+                    className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 motion-safe:animate-[message-action-float_2.75s_ease-in-out_infinite] dark:focus-visible:ring-offset-slate-950"
+                >
+                    <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                    Compose
+                </Link>
             </div>
+            <ConfirmModal
+                show={Boolean(conversationToRemove)}
+                onClose={() => setConversationToRemove(null)}
+                onConfirm={removeConversation}
+                title="Remove conversation?"
+                message={`Remove the conversation with ${conversationToRemove?.studentName || 'this student'} from your messages? The student will still see it.`}
+                confirmText="Remove"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

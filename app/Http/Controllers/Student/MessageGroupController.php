@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\GroupMessage;
 use App\Models\MessageGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,7 +20,7 @@ class MessageGroupController extends Controller
             'owner:id,name',
             'subject:id,name,grade_level',
             'members:id,name,grade_level',
-            'messages' => fn ($query) => $query->with('sender:id,name')->oldest(),
+            'messages' => fn ($query) => $query->notDeletedBy(auth()->id())->with('sender:id,name')->oldest(),
         ]);
 
         return Inertia::render('Student/Messages/Groups/Show', [
@@ -42,6 +43,7 @@ class MessageGroupController extends Controller
                     'body' => $message->body,
                     'sender_id' => $message->sender_id,
                     'sender_name' => $message->sender->name,
+                    'can_delete' => $message->sender_id === auth()->id(),
                     'created_at' => $message->created_at->format('M d, Y g:i A'),
                 ])->values(),
             ],
@@ -65,5 +67,20 @@ class MessageGroupController extends Controller
 
         return redirect()->route('student.messages.groups.show', $messageGroup)
             ->with('message', 'Message sent.');
+    }
+
+    public function destroyMessage(MessageGroup $messageGroup, GroupMessage $groupMessage)
+    {
+        Gate::authorize('view', $messageGroup);
+
+        abort_unless(
+            $groupMessage->message_group_id === $messageGroup->id
+                && $groupMessage->sender_id === auth()->id(),
+            403
+        );
+
+        $groupMessage->deletedByUsers()->syncWithoutDetaching([auth()->id()]);
+
+        return back()->with('message', 'Message removed from your messages.');
     }
 }

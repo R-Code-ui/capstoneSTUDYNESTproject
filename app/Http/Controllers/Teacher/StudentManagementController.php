@@ -295,7 +295,7 @@ class StudentManagementController extends Controller
 
         $user->update([
             'password' => Hash::make($validated['new_password']),
-            'must_change_password' => true,
+            'must_change_password' => false,
         ]);
 
         return redirect()->back()->with('success', 'Password reset successfully!');

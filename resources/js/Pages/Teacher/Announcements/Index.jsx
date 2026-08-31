@@ -7,6 +7,8 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -57,6 +59,7 @@ export default function AnnouncementsIndex({
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [authorFilter, setAuthorFilter] = useState(filters?.author || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [announcementToDelete, setAnnouncementToDelete] = useState(null);
 
     const handleSearch = (value) => {
         setSearch(value);
@@ -93,15 +96,24 @@ export default function AnnouncementsIndex({
         });
     };
 
-    const handleDelete = (announcement) => {
-        if (confirm(`Delete "${announcement.title}"? This action cannot be undone.`)) {
-            router.delete(route('teacher.announcements.destroy', announcement.id), { preserveState: true });
-        }
+    const handleDelete = () => {
+        if (!announcementToDelete) return;
+
+        const announcement = announcementToDelete;
+        setAnnouncementToDelete(null);
+        router.delete(route('teacher.announcements.destroy', announcement.id), {
+            preserveState: true,
+            onSuccess: () => toast.success('Announcement deleted successfully.'),
+            onError: () => toast.error('Unable to delete this announcement. Please try again.'),
+        });
     };
 
     const statusOptions = [
         { value: '', label: 'All Status' },
-        ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
+        { value: 'expired', label: 'Expired' },
+        ...statuses
+            .filter((status) => status !== 'archived')
+            .map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
     const categoryOptions = [
@@ -182,7 +194,12 @@ export default function AnnouncementsIndex({
         {
             key: 'status',
             label: 'Status',
-            render: (row) => <StatusBadge status={row.status} />,
+            render: (row) => (
+                <div className="flex flex-wrap gap-1.5">
+                    <StatusBadge status={row.status} />
+                    {row.is_expired && <StatusBadge status="expired" />}
+                </div>
+            ),
         },
         {
             key: 'created_at',
@@ -229,7 +246,7 @@ export default function AnnouncementsIndex({
                             key="delete"
                             label="Delete"
                             color="danger"
-                            onClick={() => handleDelete(row)}
+                            onClick={() => setAnnouncementToDelete(row)}
                         >
                             <TrashIcon className="w-4 h-4" />
                         </AnnouncementActionButton>
@@ -248,12 +265,8 @@ export default function AnnouncementsIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                <div className="flex items-center w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">Announcements</span>
-                    <PrimaryButton onClick={() => router.visit(route('teacher.announcements.create'))}>
-                        <PlusIcon className="w-4 h-4 mr-1" />
-                        Create Announcement
-                    </PrimaryButton>
                 </div>
             }
         >
@@ -264,7 +277,7 @@ export default function AnnouncementsIndex({
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                         <div className="p-6">
                             {/* Filters */}
-                            <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex flex-col gap-4 lg:flex-row">
                                 <div className="flex-1">
                                     <SearchBar
                                         value={search}
@@ -273,7 +286,7 @@ export default function AnnouncementsIndex({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex flex-wrap gap-3 lg:justify-end">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
@@ -306,6 +319,13 @@ export default function AnnouncementsIndex({
                                         size="md"
                                         className="w-40"
                                     />
+                                    <PrimaryButton
+                                        onClick={() => router.visit(route('teacher.announcements.create'))}
+                                        className="shrink-0"
+                                    >
+                                        <PlusIcon className="mr-1 h-4 w-4" />
+                                        Create Announcement
+                                    </PrimaryButton>
                                 </div>
                             </div>
 
@@ -332,6 +352,18 @@ export default function AnnouncementsIndex({
                     </div>
                 </div>
             </div>
+
+            {announcementToDelete && (
+                <ConfirmModal
+                    show
+                    onClose={() => setAnnouncementToDelete(null)}
+                    onConfirm={handleDelete}
+                    title="Delete announcement?"
+                    message={`“${announcementToDelete.title}” will be permanently deleted. This action cannot be undone.`}
+                    confirmText="Delete permanently"
+                    danger
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

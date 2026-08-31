@@ -9,6 +9,8 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import ExternalLinksInput from '@/Components/ExternalLinksInput';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -36,8 +38,10 @@ export default function LessonsEdit({
 
     const [existingResources, setExistingResources] = useState(existingFileResources);
     const [deletedResourceIds, setDeletedResourceIds] = useState([]);
+    const [resourceToRemove, setResourceToRemove] = useState(null);
+    const [newFileIndexToRemove, setNewFileIndexToRemove] = useState(null);
 
-    const { data, setData, errors, put } = useForm({
+    const { data, setData, errors, setError, clearErrors } = useForm({
         grade_level: lesson.grade_level || '',
         subject: lesson.subject || '',
         school_year: lesson.school_year || '',
@@ -64,8 +68,7 @@ export default function LessonsEdit({
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-
-        setData('deleted_resource_ids', deletedResourceIds.join(','));
+        clearErrors();
 
         const formData = new FormData();
         Object.keys(data).forEach((key) => {
@@ -73,17 +76,29 @@ export default function LessonsEdit({
                 data.resources.forEach((file) => formData.append('resources[]', file));
             } else if (key === 'resource_urls') {
                 data.resource_urls.filter(Boolean).forEach((url) => formData.append('resource_urls[]', url));
+            } else if (key === 'resource_urls_present') {
+                formData.append(key, data[key] ? '1' : '0');
             } else if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
                 formData.append(key, data[key]);
             }
         });
 
+        formData.append('deleted_resource_ids', deletedResourceIds.join(','));
+
         formData.append('_method', 'PUT');
 
-        put(route('teacher.lessons.update', lesson.id), {
-            data: formData,
+        router.post(route('teacher.lessons.update', lesson.id), formData, {
             forceFormData: true,
             preserveState: true,
+            onSuccess: () => {
+                setDeletedResourceIds([]);
+                toast.success('Lesson updated successfully.');
+            },
+            onError: (validationErrors) => {
+                setError(validationErrors);
+                const firstError = Object.values(validationErrors)[0];
+                toast.error(Array.isArray(firstError) ? firstError[0] : firstError || 'Please correct the highlighted fields and try again.');
+            },
             onFinish: () => setIsSubmitting(false),
         });
     };
@@ -105,14 +120,15 @@ export default function LessonsEdit({
             'video/mp4',
         ];
 
-        const maxSize = 100 * 1024 * 1024;
-        const maxFiles = 4;
+        const maxSize = 50 * 1024 * 1024;
+        const maxFiles = 8;
         const currentTotal = existingResources.length + data.resources.length;
 
         if (files.length + currentTotal > maxFiles) {
             errors.push(`You can only have a maximum of ${maxFiles} files per lesson.`);
             e.target.value = '';
             setFileErrors(errors);
+            toast.error(errors[0]);
             return;
         }
 
@@ -122,7 +138,7 @@ export default function LessonsEdit({
                 return;
             }
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 100MB limit.`);
+                errors.push(`"${file.name}" exceeds the 50MB limit.`);
                 return;
             }
             validFiles.push(file);
@@ -130,6 +146,7 @@ export default function LessonsEdit({
 
         if (errors.length > 0) {
             setFileErrors(errors);
+            toast.error('Some files could not be added. Please review the file requirements.');
         } else {
             setFileErrors([]);
         }
@@ -139,15 +156,22 @@ export default function LessonsEdit({
         e.target.value = '';
     };
 
-    const removeNewFile = (index) => {
+    const removeNewFile = () => {
+        if (newFileIndexToRemove === null) return;
         const newResourcesList = [...data.resources];
-        newResourcesList.splice(index, 1);
+        newResourcesList.splice(newFileIndexToRemove, 1);
         setData('resources', newResourcesList);
+        setNewFileIndexToRemove(null);
+        toast.success('Selected file removed.');
     };
 
-    const removeExistingResource = (resourceId) => {
-        setDeletedResourceIds((prev) => [...prev, resourceId]);
-        setExistingResources((prev) => prev.filter(r => r.id !== resourceId));
+    const removeExistingResource = () => {
+        if (!resourceToRemove) return;
+
+        setDeletedResourceIds((prev) => [...prev, resourceToRemove.id]);
+        setExistingResources((prev) => prev.filter((resource) => resource.id !== resourceToRemove.id));
+        setResourceToRemove(null);
+        toast.success('Resource marked for removal. Save the lesson to apply this change.');
     };
 
     const getFileIcon = (fileName) => {
@@ -404,7 +428,7 @@ export default function LessonsEdit({
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeExistingResource(resource.id)}
+                                                        onClick={() => setResourceToRemove(resource)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />
@@ -413,14 +437,14 @@ export default function LessonsEdit({
                                             ))}
                                         </div>
                                         <p className="text-xs text-gray-500 mt-1">
-                                            Files: {existingResources.length} of 4
+                                            Files: {existingResources.length} of 8
                                         </p>
                                     </div>
                                 )}
 
                                 {/* New Files Upload */}
                                 <div className="mb-4">
-                                    <InputLabel htmlFor="resources" value="Add New Files (Max 4 files total, 100MB each)" />
+                                    <InputLabel htmlFor="resources" value="Add New Files (Max 8 files total, 50MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
@@ -448,7 +472,7 @@ export default function LessonsEdit({
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeNewFile(index)}
+                                                        onClick={() => setNewFileIndexToRemove(index)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />
@@ -456,12 +480,12 @@ export default function LessonsEdit({
                                                 </div>
                                             ))}
                                             <p className="text-xs text-gray-500">
-                                                New files: {data.resources.length} of {4 - existingResources.length} remaining
+                                                New files: {data.resources.length} of {8 - existingResources.length} remaining
                                             </p>
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPT, PPTX, MP4 (Max 100MB per file, Max 4 files total)
+                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPT, PPTX, MP4 (Max 50MB per file, Max 8 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>
@@ -535,6 +559,28 @@ export default function LessonsEdit({
                     </div>
                 </div>
             </div>
+
+            {resourceToRemove && (
+                <ConfirmModal
+                    show
+                    onClose={() => setResourceToRemove(null)}
+                    onConfirm={removeExistingResource}
+                    title="Remove lesson resource?"
+                    message={`“${resourceToRemove.name}” will be removed when you save this lesson.`}
+                    confirmText="Remove file"
+                    danger
+                />
+            )}
+            <ConfirmModal
+                show={newFileIndexToRemove !== null}
+                onClose={() => setNewFileIndexToRemove(null)}
+                onConfirm={removeNewFile}
+                title="Remove selected file?"
+                message="This file will not be added when you save the lesson."
+                confirmText="Remove file"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

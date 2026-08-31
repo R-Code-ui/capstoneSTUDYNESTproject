@@ -7,6 +7,8 @@ import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import StatusBadge from '@/Components/StatusBadge';
 import Pagination from '@/Components/Pagination';
+import useDeadlineStatuses from '@/Hooks/useDeadlineStatuses';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -42,6 +44,7 @@ export default function AssignmentsIndex({
     const [search, setSearch] = useState(filters?.search || '');
     const [subjectFilter, setSubjectFilter] = useState(filters?.subject || '');
     const [isLoading, setIsLoading] = useState(false);
+    const getDeadlineStatus = useDeadlineStatuses(assignments);
 
     const handleSearch = (value) => {
         setSearch(value);
@@ -62,6 +65,7 @@ export default function AssignmentsIndex({
                 ...additional,
             },
             preserveState: true,
+            onError: () => toast.error('Unable to load assignments. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };
@@ -217,9 +221,12 @@ export default function AssignmentsIndex({
                                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
                                                                 {assignment.subject}
                                                             </span>
-                                                            <span className={`text-xs font-medium ${getStatusColor(assignment.status)} bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm`}>
-                                                                {getStatusLabel(assignment.status)}
-                                                            </span>
+                                                            <div className="flex flex-wrap justify-end gap-1.5">
+                                                                <span className={`text-xs font-medium ${getStatusColor(assignment.status)} bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm`}>
+                                                                    {getStatusLabel(assignment.status)}
+                                                                </span>
+                                                                <StatusBadge status={getDeadlineStatus(assignment)} size="sm" />
+                                                            </div>
                                                         </div>
                                                         <h3 className="mt-3 text-lg font-semibold text-gray-800 truncate max-w-full" title={assignment.title}>
                                                             {assignment.title}
@@ -244,6 +251,7 @@ export default function AssignmentsIndex({
                                                         <div className="mt-4 flex items-center justify-between">
                                                             <Link
                                                                 href={route('student.assignments.show', assignment.id)}
+                                                                onError={() => toast.error('Unable to open this assignment. Please try again.')}
                                                                 className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                                             >
                                                                 <DocumentTextIcon className="w-4 h-4 mr-1" />
@@ -260,7 +268,10 @@ export default function AssignmentsIndex({
 
                             {/* Pagination */}
                             <div className="mt-6">
-                                <Pagination pagination={pagination} />
+                                <Pagination
+                                    pagination={pagination}
+                                    onError={() => toast.error('Unable to load that assignment page. Please try again.')}
+                                />
                             </div>
                         </div>
                     </div>

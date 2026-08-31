@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\GroupMessage;
 use App\Models\MessageGroup;
-use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +23,7 @@ class MessageGroupController extends Controller
         $requestedGrade = request()->query('grade_level');
         $gradeLevel = in_array($requestedGrade, $assignedGrades, true) ? $requestedGrade : null;
 
-        return Inertia::render('Teacher/Messages/Groups/Create', $this->formData($gradeLevel));
+        return Inertia::render('Teacher/Messages/Groups/Create', $this->formData($gradeLevel ? [$gradeLevel] : []));
     }
 
     public function store(Request $request)
@@ -33,13 +32,12 @@ class MessageGroupController extends Controller
 
         $validated = $this->validateGroup($request);
         $teacher = auth()->user();
-        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids'], $validated['grade_level'] ?? null);
-        $this->authorizeSubject($teacher, $validated['subject_id'] ?? null, $validated['grade_level'] ?? null);
+        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids'], $validated['grade_levels']);
 
         $group = DB::transaction(function () use ($validated, $teacher, $studentIds) {
             $group = MessageGroup::create([
                 'teacher_id' => $teacher->id,
-                'subject_id' => $validated['subject_id'] ?? null,
+                'subject_id' => null,
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
             ]);
@@ -60,7 +58,7 @@ class MessageGroupController extends Controller
         $messageGroup->load([
             'subject:id,name,grade_level',
             'members:id,name,lrn,grade_level',
-            'messages' => fn ($query) => $query->with('sender:id,name')->oldest(),
+            'messages' => fn ($query) => $query->notDeletedBy(auth()->id())->with('sender:id,name')->oldest(),
         ]);
 
         return Inertia::render('Teacher/Messages/Groups/Show', [
@@ -80,12 +78,19 @@ class MessageGroupController extends Controller
                 'id' => $messageGroup->id,
                 'name' => $messageGroup->name,
                 'description' => $messageGroup->description,
-                'subject_id' => $messageGroup->subject_id,
                 'member_ids' => $messageGroup->members
                     ->where('id', '!=', auth()->id())
                     ->pluck('id')->values(),
             ]],
-            $this->formData($messageGroup->members->where('id', '!=', auth()->id())->first()?->grade_level)
+            $this->formData(
+                $messageGroup->members
+                    ->where('id', '!=', auth()->id())
+                    ->pluck('grade_level')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all()
+            )
         ));
     }
 
@@ -95,12 +100,10 @@ class MessageGroupController extends Controller
 
         $validated = $this->validateGroup($request);
         $teacher = auth()->user();
-        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids'], $validated['grade_level'] ?? null);
-        $this->authorizeSubject($teacher, $validated['subject_id'] ?? null, $validated['grade_level'] ?? null);
+        $studentIds = $this->authorizedStudentIds($teacher, $validated['member_ids'], $validated['grade_levels']);
 
         DB::transaction(function () use ($validated, $messageGroup, $teacher, $studentIds) {
             $messageGroup->update([
-                'subject_id' => $validated['subject_id'] ?? null,
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
             ]);
@@ -141,6 +144,21 @@ class MessageGroupController extends Controller
             ->with('message', 'Message sent.');
     }
 
+    public function destroyMessage(MessageGroup $messageGroup, GroupMessage $groupMessage)
+    {
+        Gate::authorize('view', $messageGroup);
+
+        abort_unless(
+            $groupMessage->message_group_id === $messageGroup->id
+                && $groupMessage->sender_id === auth()->id(),
+            403
+        );
+
+        $groupMessage->deletedByUsers()->syncWithoutDetaching([auth()->id()]);
+
+        return back()->with('message', 'Message removed from your messages.');
+    }
+
     public function archive(MessageGroup $messageGroup)
     {
         Gate::authorize('manage', $messageGroup);
@@ -168,28 +186,23 @@ class MessageGroupController extends Controller
             ->with('message', 'Group deleted.');
     }
 
-    private function formData(?string $gradeLevel = null): array
+    private function formData(array $selectedGradeLevels = []): array
     {
         $teacher = auth()->user();
-        $grades = $teacher->gradeAssignments()->pluck('grade_level');
-        $selectedGrades = $gradeLevel ? collect([$gradeLevel]) : $grades;
-        $defaultSubjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
-
-        foreach ($selectedGrades as $grade) {
-            foreach ($defaultSubjects as $name) {
-                Subject::firstOrCreate(['name' => $name, 'grade_level' => $grade]);
-            }
-        }
-
+        $grades = $teacher->gradeAssignments()
+            ->orderBy('grade_level')
+            ->pluck('grade_level')
+            ->unique()
+            ->values();
+        $selectedGrades = $grades->filter(fn ($grade) => in_array($grade, $selectedGradeLevels, true))->values();
         return [
-            'grade_level' => $gradeLevel,
+            'assigned_grades' => $grades,
+            'selected_grade_levels' => $selectedGrades,
             'students' => User::role('student')
-                ->whereIn('grade_level', $selectedGrades)
+                ->whereIn('grade_level', $grades)
+                ->orderBy('grade_level')
                 ->orderBy('name')
                 ->get(['id', 'name', 'lrn', 'grade_level']),
-            'subjects' => Subject::whereIn('grade_level', $selectedGrades)
-                ->orderBy('grade_level')->orderBy('name')
-                ->get(['id', 'name', 'grade_level']),
         ];
     }
 
@@ -198,20 +211,24 @@ class MessageGroupController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'grade_level' => ['nullable', 'string'],
-            'subject_id' => ['nullable', 'integer', 'exists:subjects,id'],
+            'grade_levels' => ['required', 'array', 'min:1'],
+            'grade_levels.*' => ['required', 'string', 'distinct'],
             'member_ids' => ['required', 'array', 'min:1'],
             'member_ids.*' => ['integer', 'distinct', 'exists:users,id'],
         ]);
     }
 
-    private function authorizedStudentIds(User $teacher, array $ids, ?string $gradeLevel = null): array
+    private function authorizedStudentIds(User $teacher, array $ids, array $gradeLevels): array
     {
-        $grades = $teacher->gradeAssignments()->pluck('grade_level');
-        if ($gradeLevel) {
-            abort_unless($grades->contains($gradeLevel), 403, 'You are not assigned to this grade level.');
-            $grades = collect([$gradeLevel]);
-        }
+        $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level');
+        $grades = collect($gradeLevels)->unique()->values();
+
+        abort_unless(
+            $grades->isNotEmpty() && $grades->every(fn ($grade) => $assignedGrades->contains($grade)),
+            403,
+            'One or more selected grades are not assigned to you.'
+        );
+
         $students = User::role('student')
             ->whereIn('id', $ids)
             ->whereIn('grade_level', $grades)
@@ -221,21 +238,6 @@ class MessageGroupController extends Controller
         abort_unless(count($students) === count($ids), 403, 'One or more students are outside your assigned grades.');
 
         return $students;
-    }
-
-    private function authorizeSubject(User $teacher, ?int $subjectId, ?string $gradeLevel = null): void
-    {
-        if (!$subjectId) {
-            return;
-        }
-
-        $subject = Subject::findOrFail($subjectId);
-        abort_unless(
-            $teacher->gradeAssignments()->where('grade_level', $subject->grade_level)->exists()
-                && (!$gradeLevel || $subject->grade_level === $gradeLevel),
-            403,
-            'You are not assigned to this subject grade.'
-        );
     }
 
     private function groupPayload(MessageGroup $group): array
@@ -258,6 +260,7 @@ class MessageGroupController extends Controller
                 'body' => $message->body,
                 'sender_id' => $message->sender_id,
                 'sender_name' => $message->sender->name,
+                'can_delete' => $message->sender_id === auth()->id(),
                 'created_at' => $message->created_at->format('M d, Y g:i A'),
             ])->values(),
         ];

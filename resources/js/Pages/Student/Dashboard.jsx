@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
+import { toast } from 'sonner';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 // Heroicons
@@ -15,6 +16,8 @@ import {
     EnvelopeIcon,
     UserIcon,
     CalendarIcon,
+    SparklesIcon,
+    TrophyIcon,
 } from '@heroicons/react/24/outline';
 
 export default function StudentDashboard({
@@ -27,6 +30,8 @@ export default function StudentDashboard({
     progress_summary,
     unread_messages,
 }) {
+    const handleNavigationError = () => toast.error('Unable to load that module. Please try again.');
+
     // Array of gentle falling emoji background particles
     const particles = [
         { emoji: '🍃', left: '5%', duration: '12s', delay: '0s', size: '14px' },
@@ -83,6 +88,113 @@ export default function StudentDashboard({
             {/* FALLING PARTICLES (Leaves & School Supplies)               */}
             {/* ========================================================= */}
             <style>{`
+                .student-dashboard-page {
+                    background:
+                        radial-gradient(circle at 8% 5%, rgb(224 231 255 / 0.72), transparent 22rem),
+                        radial-gradient(circle at 94% 14%, rgb(207 250 254 / 0.72), transparent 24rem),
+                        linear-gradient(180deg, rgb(248 250 252) 0%, rgb(255 255 255) 42%, rgb(248 250 252) 100%);
+                }
+                .student-dashboard-hero {
+                    position: relative;
+                    isolation: isolate;
+                    overflow: hidden;
+                    background: linear-gradient(118deg, rgb(37 99 235), rgb(99 102 241) 54%, rgb(168 85 247));
+                    box-shadow: 0 18px 38px rgb(79 70 229 / 0.2);
+                }
+                .student-dashboard-hero::before,
+                .student-dashboard-hero::after {
+                    content: '';
+                    position: absolute;
+                    z-index: -1;
+                    border-radius: 999px;
+                    background: rgb(255 255 255 / 0.14);
+                }
+                .student-dashboard-hero::before { width: 15rem; height: 15rem; right: -5rem; top: -9rem; }
+                .student-dashboard-hero::after { width: 9rem; height: 9rem; right: 27%; bottom: -6rem; }
+                .student-dashboard-section {
+                    overflow: hidden;
+                    border-color: rgb(226 232 240);
+                    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+                }
+                .student-dashboard-section:hover {
+                    transform: translateY(-3px);
+                    border-color: rgb(191 219 254);
+                    box-shadow: 0 16px 32px rgb(15 23 42 / 0.08);
+                }
+                .student-dashboard-item {
+                    position: relative;
+                    overflow: hidden;
+                    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+                }
+                .student-dashboard-item::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0 auto 0 0;
+                    width: 3px;
+                    background: currentColor;
+                    opacity: 0;
+                    transition: opacity 160ms ease;
+                }
+                .student-dashboard-item:hover {
+                    transform: translateX(4px);
+                    box-shadow: 0 8px 18px rgb(15 23 42 / 0.06);
+                }
+                .student-dashboard-item:hover::after { opacity: 1; }
+                .student-dashboard-link {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.35rem;
+                    border-radius: 9999px;
+                    padding: 0.45rem 0.8rem;
+                    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+                }
+                .student-dashboard-link:hover { transform: translateX(2px); }
+                .studynest-layout.theme-dark .student-dashboard-page {
+                    background: radial-gradient(circle at 8% 5%, rgb(30 27 75 / 0.4), transparent 24rem), rgb(2 6 23);
+                }
+                .studynest-layout.theme-dark .student-dashboard-hero {
+                    background: linear-gradient(118deg, rgb(30 64 175), rgb(67 56 202) 54%, rgb(107 33 168));
+                }
+                .studynest-layout.theme-dark .student-dashboard-section {
+                    background-color: rgb(15 23 42) !important;
+                    border-color: rgb(51 65 85) !important;
+                    box-shadow: 0 16px 32px rgb(0 0 0 / 0.18);
+                }
+                .studynest-layout.theme-dark .student-dashboard-section > div:first-child {
+                    background: linear-gradient(100deg, rgb(30 41 59), rgb(15 23 42)) !important;
+                    border-color: rgb(51 65 85) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-section > div:first-child .text-gray-800,
+                .studynest-layout.theme-dark .student-dashboard-section > div:first-child .text-gray-700 {
+                    color: rgb(241 245 249) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-section:hover {
+                    border-color: rgb(99 102 241) !important;
+                    box-shadow: 0 20px 40px rgb(0 0 0 / 0.28);
+                }
+                .studynest-layout.theme-dark .student-dashboard-page .student-dashboard-item {
+                    border-color: rgb(51 65 85) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page .student-dashboard-link {
+                    color: rgb(165 180 252) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page .student-dashboard-link:hover {
+                    background-color: rgb(49 46 129 / 0.35) !important;
+                    color: rgb(224 231 255) !important;
+                }
+                @media (hover: none) {
+                    .student-dashboard-section:hover,
+                    .student-dashboard-item:hover { transform: none; }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .student-dashboard-page *,
+                    .student-dashboard-page *::before,
+                    .student-dashboard-page *::after {
+                        animation-duration: 0.01ms !important;
+                        animation-iteration-count: 1 !important;
+                        transition-duration: 0.01ms !important;
+                    }
+                }
                 @keyframes fallAndRotate {
                     0% {
                         transform: translateY(-20px) rotate(0deg);
@@ -182,10 +294,12 @@ export default function StudentDashboard({
                         {unread_messages > 0 && (
                             <Link
                                 href={route('student.messages.index')}
-                                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                                onError={handleNavigationError}
+                                className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100 hover:text-blue-800"
                             >
                                 <EnvelopeIcon className="w-5 h-5" />
-                                <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full">
+                                <span>Messages</span>
+                                <span className="inline-flex min-w-5 items-center justify-center px-1.5 py-0.5 text-xs font-bold bg-rose-500 text-white rounded-full">
                                     {unread_messages}
                                 </span>
                             </Link>
@@ -199,24 +313,41 @@ export default function StudentDashboard({
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                         {/* ===== Welcome Section ===== */}
-                        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-blue-50/80 to-purple-50/80 p-5 rounded-xl border border-blue-100 shadow-sm">
+                        <div className="student-dashboard-hero mb-6 rounded-3xl border border-indigo-300/40 p-5 text-white sm:p-7 sm:pr-[20rem]">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800">
+                                <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-50 ring-1 ring-white/20">
+                                    <SparklesIcon className="h-4 w-4" />
+                                    Learning space
+                                </div>
+                                <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
                                     Welcome back! 👋
                                 </h2>
                                 {/* 🔧 FIX: Changed "Grade {grade_level}" to "{grade_level} Student" */}
-                                <p className="text-sm text-gray-600 flex items-center gap-1 mt-0.5">
-                                    <UserIcon className="inline-block w-4 h-4 text-blue-500" />
+                                <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-indigo-100">
+                                    <UserIcon className="inline-block w-4 h-4" />
                                     {grade_level} Student
                                 </p>
+                            </div>
+                            <div className="mt-5 grid grid-cols-2 gap-2 sm:absolute sm:right-7 sm:top-1/2 sm:mt-0 sm:min-w-[17rem] sm:-translate-y-1/2">
+                                <div className="rounded-2xl bg-white/14 px-3 py-3 ring-1 ring-white/15 backdrop-blur-sm">
+                                    <div className="text-xl font-extrabold">{progress_summary?.lessons?.completed || 0}</div>
+                                    <div className="text-[11px] font-semibold text-indigo-100">Lessons done</div>
+                                </div>
+                                <div className="rounded-2xl bg-white/14 px-3 py-3 ring-1 ring-white/15 backdrop-blur-sm">
+                                    <div className="flex items-center gap-1 text-xl font-extrabold"><TrophyIcon className="h-5 w-5 text-amber-200" />{progress_summary?.quizzes?.average || 0}%</div>
+                                    <div className="text-[11px] font-semibold text-indigo-100">Quiz average</div>
+                                </div>
                             </div>
                         </div>
 
                         {/* ===== Recent Announcements ===== */}
                         <Card
+                            className="student-dashboard-section"
+                            headerClassName="bg-gradient-to-r from-rose-50 to-white"
+                            bodyClassName="p-4 sm:p-5"
                             title={
-                                <div className="flex items-center gap-2">
-                                    <MegaphoneIcon className="w-5 h-5 text-rose-500" />
+                                <div className="flex items-center gap-2 text-base">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100"><MegaphoneIcon className="w-4 h-4 text-rose-600" /></span>
                                     Recent Announcements
                                 </div>
                             }
@@ -226,7 +357,7 @@ export default function StudentDashboard({
                                     {recent_announcements.map((announcement) => (
                                         <div
                                             key={announcement.id}
-                                            className="p-3 bg-rose-50/50 rounded-lg border-l-4 border-rose-500 hover:bg-rose-50 transition-colors"
+                                            className="student-dashboard-item p-3.5 text-rose-500 bg-rose-50/50 rounded-xl border border-rose-100 hover:bg-rose-50"
                                         >
                                             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
                                                 <div className="min-w-0">
@@ -251,7 +382,8 @@ export default function StudentDashboard({
                                     <div className="text-center pt-2">
                                         <Link
                                             href={route('student.announcements.index')}
-                                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                            onError={handleNavigationError}
+                                            className="student-dashboard-link text-sm text-rose-700 hover:bg-rose-100 hover:text-rose-900 font-bold"
                                         >
                                             View All Announcements →
                                         </Link>
@@ -268,9 +400,12 @@ export default function StudentDashboard({
                         <div className="mt-6 grid gap-6 md:grid-cols-2">
                             {/* Recent Lessons */}
                             <Card
+                                className="student-dashboard-section"
+                                headerClassName="bg-gradient-to-r from-blue-50 to-white"
+                                bodyClassName="p-4 sm:p-5"
                                 title={
-                                    <div className="flex items-center gap-2">
-                                        <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                                    <div className="flex items-center gap-2 text-base">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100"><BookOpenIcon className="w-4 h-4 text-blue-600" /></span>
                                         Recent Lessons
                                     </div>
                                 }
@@ -280,7 +415,7 @@ export default function StudentDashboard({
                                         {recent_lessons.map((lesson) => (
                                             <div
                                                 key={lesson.id}
-                                                className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors"
+                                                className="student-dashboard-item p-3.5 text-blue-500 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50"
                                             >
                                                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
                                                     <div className="min-w-0">
@@ -297,6 +432,7 @@ export default function StudentDashboard({
                                                         </span>
                                                         <Link
                                                             href={route('student.lessons.show', lesson.id)}
+                                                            onError={handleNavigationError}
                                                             className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
                                                         >
                                                             View →
@@ -308,6 +444,7 @@ export default function StudentDashboard({
                                         <div className="text-center pt-2">
                                             <Link
                                                 href={route('student.lessons.index')}
+                                                onError={handleNavigationError}
                                                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                                             >
                                                 View All Lessons →
@@ -323,9 +460,12 @@ export default function StudentDashboard({
 
                             {/* Upcoming Assignments */}
                             <Card
+                                className="student-dashboard-section"
+                                headerClassName="bg-gradient-to-r from-emerald-50 to-white"
+                                bodyClassName="p-4 sm:p-5"
                                 title={
-                                    <div className="flex items-center gap-2">
-                                        <ClipboardDocumentListIcon className="w-5 h-5 text-emerald-500" />
+                                    <div className="flex items-center gap-2 text-base">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100"><ClipboardDocumentListIcon className="w-4 h-4 text-emerald-600" /></span>
                                         Upcoming Assignments
                                     </div>
                                 }
@@ -335,7 +475,7 @@ export default function StudentDashboard({
                                         {upcoming_assignments.map((assignment) => (
                                             <div
                                                 key={assignment.id}
-                                                className="p-3 bg-emerald-50/50 rounded-lg border border-emerald-100 hover:bg-emerald-50 transition-colors"
+                                                className="student-dashboard-item p-3.5 text-emerald-500 bg-emerald-50/50 rounded-xl border border-emerald-100 hover:bg-emerald-50"
                                             >
                                                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
                                                     <div className="min-w-0">
@@ -357,6 +497,7 @@ export default function StudentDashboard({
                                                         {getStatusBadge(assignment.status)}
                                                         <Link
                                                             href={route('student.assignments.show', assignment.id)}
+                                                            onError={handleNavigationError}
                                                             className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
                                                         >
                                                             View →
@@ -368,6 +509,7 @@ export default function StudentDashboard({
                                         <div className="text-center pt-2">
                                             <Link
                                                 href={route('student.assignments.index')}
+                                                onError={handleNavigationError}
                                                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                                             >
                                                 View All Assignments →
@@ -386,9 +528,12 @@ export default function StudentDashboard({
                         <div className="mt-6 grid gap-6 md:grid-cols-2">
                             {/* Available Quizzes */}
                             <Card
+                                className="student-dashboard-section"
+                                headerClassName="bg-gradient-to-r from-purple-50 to-white"
+                                bodyClassName="p-4 sm:p-5"
                                 title={
-                                    <div className="flex items-center gap-2">
-                                        <DocumentTextIcon className="w-5 h-5 text-purple-500" />
+                                    <div className="flex items-center gap-2 text-base">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-100"><DocumentTextIcon className="w-4 h-4 text-purple-600" /></span>
                                         Available Quizzes
                                     </div>
                                 }
@@ -398,7 +543,7 @@ export default function StudentDashboard({
                                         {available_quizzes.map((quiz) => (
                                             <div
                                                 key={quiz.id}
-                                                className="p-3 bg-purple-50/50 rounded-lg border border-purple-100 hover:bg-purple-50 transition-colors"
+                                                className="student-dashboard-item p-3.5 text-purple-500 bg-purple-50/50 rounded-xl border border-purple-100 hover:bg-purple-50"
                                             >
                                                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
                                                     <div className="min-w-0">
@@ -417,6 +562,7 @@ export default function StudentDashboard({
                                                                 </span>
                                                                 <Link
                                                                     href={route('student.quizzes.show', quiz.id)}
+                                                                    onError={handleNavigationError}
                                                                     className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
                                                                 >
                                                                     View Results →
@@ -425,6 +571,7 @@ export default function StudentDashboard({
                                                         ) : (
                                                             <Link
                                                                 href={route('student.quizzes.show', quiz.id)}
+                                                                onError={handleNavigationError}
                                                                 className="mt-1 text-xs text-emerald-600 hover:text-emerald-800 font-medium"
                                                             >
                                                                 Start Quiz →
@@ -437,6 +584,7 @@ export default function StudentDashboard({
                                         <div className="text-center pt-2">
                                             <Link
                                                 href={route('student.quizzes.index')}
+                                                onError={handleNavigationError}
                                                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                                             >
                                                 View All Quizzes →
@@ -452,9 +600,12 @@ export default function StudentDashboard({
 
                             {/* Assigned Games */}
                             <Card
+                                className="student-dashboard-section"
+                                headerClassName="bg-gradient-to-r from-amber-50 to-white"
+                                bodyClassName="p-4 sm:p-5"
                                 title={
-                                    <div className="flex items-center gap-2">
-                                        <PuzzlePieceIcon className="w-5 h-5 text-amber-500" />
+                                    <div className="flex items-center gap-2 text-base">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100"><PuzzlePieceIcon className="w-4 h-4 text-amber-600" /></span>
                                         Assigned Games
                                     </div>
                                 }
@@ -464,7 +615,7 @@ export default function StudentDashboard({
                                         {assigned_games.map((game) => (
                                             <div
                                                 key={game.id}
-                                                className="p-3 bg-amber-50/50 rounded-lg border border-amber-100 hover:bg-amber-50 transition-colors"
+                                                className="student-dashboard-item p-3.5 text-amber-500 bg-amber-50/50 rounded-xl border border-amber-100 hover:bg-amber-50"
                                             >
                                                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-start sm:items-center">
                                                     <div className="min-w-0">
@@ -483,6 +634,7 @@ export default function StudentDashboard({
                                                                 </span>
                                                                 <Link
                                                                     href={route('student.games.show', game.id)}
+                                                                    onError={handleNavigationError}
                                                                     className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
                                                                 >
                                                                     Play Again →
@@ -491,6 +643,7 @@ export default function StudentDashboard({
                                                         ) : (
                                                             <Link
                                                                 href={route('student.games.show', game.id)}
+                                                                onError={handleNavigationError}
                                                                 className="mt-1 text-xs text-emerald-600 hover:text-emerald-800 font-medium"
                                                             >
                                                                 Play Game →
@@ -503,6 +656,7 @@ export default function StudentDashboard({
                                         <div className="text-center pt-2">
                                             <Link
                                                 href={route('student.games.index')}
+                                                onError={handleNavigationError}
                                                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                                             >
                                                 View All Games →
@@ -520,33 +674,36 @@ export default function StudentDashboard({
                         {/* ===== Learning Progress Summary ===== */}
                         <div className="mt-6">
                             <Card
+                                className="student-dashboard-section"
+                                headerClassName="bg-gradient-to-r from-indigo-50 to-white"
+                                bodyClassName="p-4 sm:p-6"
                                 title={
-                                    <div className="flex items-center gap-2">
-                                        <ChartBarIcon className="w-5 h-5 text-indigo-500" />
+                                    <div className="flex items-center gap-2 text-base">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100"><ChartBarIcon className="w-4 h-4 text-indigo-600" /></span>
                                         Learning Progress Summary
                                     </div>
                                 }
                             >
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                    <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3 text-center transition hover:-translate-y-0.5 hover:shadow-sm">
                                         <div className="text-2xl font-bold text-blue-600">
                                             {progress_summary?.lessons?.completed || 0}/{progress_summary?.lessons?.total || 0}
                                         </div>
                                         <div className="text-xs font-medium text-gray-500">Lessons Completed</div>
                                     </div>
-                                    <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3 text-center transition hover:-translate-y-0.5 hover:shadow-sm">
                                         <div className="text-2xl font-bold text-emerald-600">
                                             {progress_summary?.assignments?.submitted || 0}/{progress_summary?.assignments?.total || 0}
                                         </div>
                                         <div className="text-xs font-medium text-gray-500">Assignments Submitted</div>
                                     </div>
-                                    <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                                    <div className="rounded-2xl border border-purple-100 bg-purple-50 p-3 text-center transition hover:-translate-y-0.5 hover:shadow-sm">
                                         <div className="text-2xl font-bold text-purple-600">
                                             {progress_summary?.quizzes?.average || 0}%
                                         </div>
                                         <div className="text-xs font-medium text-gray-500">Quiz Average</div>
                                     </div>
-                                    <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                    <div className="rounded-2xl border border-amber-100 bg-amber-50 p-3 text-center transition hover:-translate-y-0.5 hover:shadow-sm">
                                         <div className="text-2xl font-bold text-amber-600">
                                             {progress_summary?.games?.completed || 0}/{progress_summary?.games?.total || 0}
                                         </div>
@@ -583,7 +740,7 @@ export default function StudentDashboard({
 
                         {/* ===== Quick Access Buttons ===== */}
                         <div className="mt-6">
-                            <Card title={<span className="font-semibold text-gray-700">Quick Access</span>}>
+                            <Card className="student-dashboard-section" headerClassName="bg-gradient-to-r from-slate-50 to-white" bodyClassName="p-4 sm:p-5" title={<span className="font-semibold text-gray-700">Quick Access</span>}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                                     {[
                                         { icon: BookOpenIcon, color: 'blue', bg: 'bg-blue-50', hover: 'hover:bg-blue-100', text: 'text-blue-600', label: 'Lessons', route: 'student.lessons.index' },
@@ -596,9 +753,10 @@ export default function StudentDashboard({
                                         <Link
                                             key={idx}
                                             href={route(item.route)}
-                                            className={`flex flex-col items-center justify-center p-4 ${item.bg} ${item.hover} ${quickLinkStyles[item.color].border} rounded-xl border border-gray-100 transition-all duration-200 hover:scale-105 hover:shadow-md`}
+                                            onError={handleNavigationError}
+                                            className={`group flex flex-col items-center justify-center rounded-2xl border border-gray-100 p-4 ${item.bg} ${item.hover} ${quickLinkStyles[item.color].border} transition duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-lg`}
                                         >
-                                            <item.icon className={`w-8 h-8 ${item.text}`} />
+                                            <span className="rounded-2xl bg-white/70 p-2.5 shadow-sm transition duration-200 group-hover:scale-110 group-hover:rotate-3"><item.icon className={`h-7 w-7 ${item.text}`} /></span>
                                             <span className="text-xs font-medium text-gray-700 text-center mt-2">
                                                 {item.label}
                                             </span>

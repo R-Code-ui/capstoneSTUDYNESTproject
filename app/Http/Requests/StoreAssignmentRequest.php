@@ -50,8 +50,8 @@ class StoreAssignmentRequest extends FormRequest
             'publish_date' => 'required|date',
 
             // ===== Resources =====
-            'resources' => 'nullable|array|max:4',
-            'resources.*' => 'file|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4|max:102400',
+            'resources' => 'nullable|array|max:8',
+            'resources.*' => 'file|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4|max:51200',
         ];
     }
 
@@ -101,9 +101,9 @@ class StoreAssignmentRequest extends FormRequest
             'publish_date.date' => 'Please enter a valid date.',
 
             // Resources
-            'resources.max' => 'You can only upload a maximum of 4 resources.',
+            'resources.max' => 'You can only upload a maximum of 8 resources.',
             'resources.*.mimes' => 'Only PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG, and MP4 files are allowed.',
-            'resources.*.max' => 'Each file must not exceed 100MB.',
+            'resources.*.max' => 'Each file must not exceed 50MB.',
         ];
     }
 

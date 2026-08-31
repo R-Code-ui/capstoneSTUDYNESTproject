@@ -6,6 +6,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Modal from '@/Components/Modal';
+import { toast } from 'sonner';
 import { EyeIcon } from '@heroicons/react/24/outline';
 
 export default function Index({ logs, summary, activity_types = [], grade_levels = [], filters = {}, pagination }) {
@@ -23,6 +24,7 @@ export default function Index({ logs, summary, activity_types = [], grade_levels
             data: { search, activity_type: activityType, grade_level: grade, date_from: dateFrom, date_to: dateTo, ...additional },
             preserveState: true,
             replace: true,
+            onError: () => toast.error('Unable to load student activity logs. Please try again.'),
             onFinish: () => setLoading(false),
         });
     };

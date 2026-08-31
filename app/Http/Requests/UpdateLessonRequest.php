@@ -52,8 +52,8 @@ class UpdateLessonRequest extends FormRequest
             'publish_date' => 'required|date',
 
             // ===== Resources =====
-            'resources' => 'nullable|array|max:4',
-            'resources.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4|max:102400',
+            'resources' => 'nullable|array|max:8',
+            'resources.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4|max:51200',
         ];
     }
 
@@ -82,9 +82,9 @@ class UpdateLessonRequest extends FormRequest
             'status.in' => 'Invalid status selected.',
             'publish_date.required' => 'Publish date is required.',
             'publish_date.date' => 'Please enter a valid date.',
-            'resources.max' => 'You can only upload a maximum of 4 resources.',
+            'resources.max' => 'You can only upload a maximum of 8 resources.',
             'resources.*.mimes' => 'Only PDF, JPG, JPEG, PNG, DOC, DOCX, PPT, PPTX, and MP4 files are allowed.',
-            'resources.*.max' => 'Each file must not exceed 100MB.',
+            'resources.*.max' => 'Each file must not exceed 50MB.',
         ];
     }
 

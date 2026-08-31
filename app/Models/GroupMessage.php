@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class GroupMessage extends Model
@@ -23,5 +24,16 @@ class GroupMessage extends Model
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function deletedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'group_message_deletions')
+            ->withTimestamps();
+    }
+
+    public function scopeNotDeletedBy(Builder $query, int $userId): Builder
+    {
+        return $query->whereDoesntHave('deletedByUsers', fn (Builder $deletedByUsers) => $deletedByUsers->whereKey($userId));
     }
 }

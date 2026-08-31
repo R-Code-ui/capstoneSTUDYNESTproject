@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
+import { toast } from 'sonner';
 import {
     Area,
     AreaChart,
@@ -42,6 +43,8 @@ export default function PrincipalDashboard({
     recent_announcements,
     academic_summary
 }) {
+    const handleNavigationError = () => toast.error('Unable to load that page. Please try again.');
+
     const shortenChartLabel = (value, maxLength = 12) => {
         const label = String(value || 'Teacher');
         return label.length > maxLength ? `${label.slice(0, maxLength)}…` : label;
@@ -281,7 +284,7 @@ export default function PrincipalDashboard({
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-gray-700">Recent Announcements</h3>
-                                    <Link href={route('principal.announcements.index')} className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                                    <Link href={route('principal.announcements.index')} onError={handleNavigationError} className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
                                         View All <ArrowRightIcon className="w-3 h-3" />
                                     </Link>
                                 </div>
@@ -335,6 +338,7 @@ export default function PrincipalDashboard({
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                 <Link
                                     href={route('principal.users.index')}
+                                    onError={handleNavigationError}
                                     className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-amber-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-amber-700 dark:hover:text-amber-300"
                                 >
                                     <UserGroupIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-amber-600" />
@@ -343,6 +347,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.teachers.index')}
+                                    onError={handleNavigationError}
                                     className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-emerald-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-emerald-700 dark:hover:text-emerald-300"
                                 >
                                     <UsersIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-emerald-600" />
@@ -351,6 +356,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.announcements.index')}
+                                    onError={handleNavigationError}
                                     className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-purple-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-purple-700 dark:hover:text-purple-300"
                                 >
                                     <MegaphoneIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-purple-600" />
@@ -359,6 +365,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.reports.index')}
+                                    onError={handleNavigationError}
                                     className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-slate-100 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-sky-200 dark:hover:border-sky-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-sky-700 dark:hover:text-sky-300"
                                 >
                                     <DocumentDuplicateIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-sky-600" />
@@ -367,6 +374,7 @@ export default function PrincipalDashboard({
 
                                 <Link
                                     href={route('principal.logs.index')}
+                                    onError={handleNavigationError}
                                     className="group flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800/70 hover:bg-rose-50 dark:hover:bg-gray-700/60 border border-gray-200 dark:border-gray-700 hover:border-rose-200 dark:hover:border-rose-400/30 rounded-xl transition-all text-gray-700 dark:text-gray-200 hover:text-rose-700 dark:hover:text-rose-300"
                                 >
                                     <EyeIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-rose-600" />

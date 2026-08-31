@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 403, 'title' => 'This space is not available to you', 'message' => 'Your account does not have permission to open this page. Please return to a page you can access.'])

@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { toast } from 'sonner';
 
 export default function GamesEdit({
     game,
@@ -75,6 +76,8 @@ export default function GamesEdit({
                 game_data: data.game_data,
             },
             preserveState: true,
+            onSuccess: () => toast.success('Game updated successfully.'),
+            onError: () => toast.error('Please correct the highlighted fields and try again.'),
             onFinish: () => setIsSubmitting(false),
         });
     };

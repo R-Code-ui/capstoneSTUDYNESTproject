@@ -1,6 +1,6 @@
 import Table, { StatusBadge } from '@/Components/Table';
 
-export default function LessonMonitoring({ lessons }) {
+export default function LessonMonitoring({ lessons, pagination }) {
     const columns = [
         { key: 'title', label: 'Title' },
         { key: 'grade', label: 'Grade' },
@@ -15,6 +15,7 @@ export default function LessonMonitoring({ lessons }) {
             emptyMessage="No lessons found."
             hoverable
             striped
+            pagination={pagination}
         />
     );
 }

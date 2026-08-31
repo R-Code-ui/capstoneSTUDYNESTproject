@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
+import { toast } from 'sonner';
 import {
     ResponsiveContainer,
     BarChart,
@@ -83,6 +84,7 @@ export default function TeacherDashboard({
     };
 
     const messagesRoute = safeRoute('teacher.messages.index');
+    const handleNavigationError = () => toast.error('Unable to load that module. Please try again.');
     const participationChartData = [
         { name: 'Lessons', value: Number(participation.lesson_completion_rate) || 0, color: '#3b82f6' },
         { name: 'Assignments', value: Number(participation.assignment_completion_rate) || 0, color: '#10b981' },
@@ -460,6 +462,7 @@ export default function TeacherDashboard({
                                     <div className="text-center pt-2">
                                         <Link
                                             href={route('teacher.announcements.index')}
+                                            onError={handleNavigationError}
                                             className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                                         >
                                             View All Announcements →
@@ -521,6 +524,7 @@ export default function TeacherDashboard({
                                 <div className="text-center pt-2">
                                     <Link
                                         href={messagesRoute}
+                                        onError={handleNavigationError}
                                         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                     >
                                         <InboxIcon className="w-4 h-4" />
@@ -538,6 +542,7 @@ export default function TeacherDashboard({
                                 {/* Create Lesson */}
                                 <Link
                                     href={safeRoute('teacher.lessons.create')}
+                                    onError={handleNavigationError}
                                     className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-blue-700"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-blue-600" />
@@ -549,6 +554,7 @@ export default function TeacherDashboard({
                                 {/* Create Assignment */}
                                 <Link
                                     href={safeRoute('teacher.assignments.create')}
+                                    onError={handleNavigationError}
                                     className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-emerald-700"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-emerald-600" />
@@ -560,6 +566,7 @@ export default function TeacherDashboard({
                                 {/* Create Quiz */}
                                 <Link
                                     href={safeRoute('teacher.quizzes.create')}
+                                    onError={handleNavigationError}
                                     className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-700"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-purple-600" />
@@ -571,6 +578,7 @@ export default function TeacherDashboard({
                                 {/* Assign Game */}
                                 <Link
                                     href={safeRoute('teacher.games.create')}
+                                    onError={handleNavigationError}
                                     className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-amber-700"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-amber-600" />
@@ -581,6 +589,7 @@ export default function TeacherDashboard({
 
                                 <Link
                                     href={safeRoute('teacher.reports.index')}
+                                    onError={handleNavigationError}
                                     className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-rose-50 border border-gray-200 hover:border-rose-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-rose-700"
                                 >
                                     <ChartBarIcon className="w-8 h-8 text-gray-500 group-hover:text-rose-600" />
@@ -590,6 +599,7 @@ export default function TeacherDashboard({
                                 {/* Open Inbox */}
                                 <Link
                                     href={messagesRoute}
+                                    onError={handleNavigationError}
                                     className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 hover:border-teal-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-teal-700"
                                 >
                                     <InboxIcon className="w-8 h-8 text-gray-500 group-hover:text-teal-600" />

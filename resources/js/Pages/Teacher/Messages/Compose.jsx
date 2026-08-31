@@ -7,6 +7,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { toast } from 'sonner';
 
 import {
     ArrowLeftIcon,
@@ -24,7 +25,7 @@ const CATEGORY_OPTIONS = [
     { value: 'general_academic_concern', label: 'Concern', emoji: '💬' },
 ];
 
-export default function MessagesCompose({ assigned_grades, students_by_grade, categories, subjects_by_grade = {} }) {
+export default function MessagesCompose({ assigned_grades, students_by_grade, categories }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedGrade, setSelectedGrade] = useState('');
     const [studentQuery, setStudentQuery] = useState('');
@@ -34,7 +35,6 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
 
     const { data, setData, errors, post } = useForm({
         receiver_id: '',
-        subject: '',
         category: '',
         message: '',
     });
@@ -46,8 +46,6 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
         const q = studentQuery.toLowerCase();
         return gradeStudents.filter((s) => s.name.toLowerCase().includes(q));
     }, [selectedGrade, studentQuery, students_by_grade]);
-
-    const availableSubjects = subjects_by_grade?.[selectedStudent?.grade_level || selectedGrade] || [];
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -82,9 +80,15 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!data.receiver_id || !data.category || !data.message.trim()) {
+            toast.error('Please select a recipient, category, and enter a message.');
+            return;
+        }
         setIsSubmitting(true);
         post(route('teacher.messages.store'), {
             preserveState: true,
+            onSuccess: () => toast.success('Message sent successfully.'),
+            onError: () => toast.error('Unable to send the message. Please check the highlighted fields.'),
             onFinish: () => setIsSubmitting(false),
         });
     };
@@ -121,6 +125,27 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                 .studynest-layout.theme-dark .message-compose-shell .message-choice:not(.is-selected):hover {
                     background-color: rgb(30 41 59);
                     border-color: rgb(96 165 250);
+                }
+                .studynest-layout.theme-dark .message-compose-shell .selected-student-chip {
+                    background-color: rgb(30 41 59) !important;
+                    border-color: rgb(59 130 246 / 0.55) !important;
+                }
+                .studynest-layout.theme-dark .message-compose-shell .selected-student-avatar {
+                    background-color: rgb(30 58 138) !important;
+                    color: rgb(191 219 254) !important;
+                }
+                .studynest-layout.theme-dark .message-compose-shell .selected-student-chip .text-gray-800 {
+                    color: rgb(241 245 249) !important;
+                }
+                .studynest-layout.theme-dark .message-compose-shell .selected-student-chip .text-gray-500,
+                .studynest-layout.theme-dark .message-compose-shell .selected-student-chip .text-gray-400 {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .message-compose-shell .selected-student-remove {
+                    color: rgb(148 163 184) !important;
+                }
+                .studynest-layout.theme-dark .message-compose-shell .selected-student-remove:hover {
+                    color: rgb(226 232 240) !important;
                 }
             `}</style>
 
@@ -160,9 +185,9 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                     <div className="relative mt-2" ref={dropdownRef}>
                                         {selectedStudent ? (
                                             // Selected student chip
-                                            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                                            <div className="selected-student-chip flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-700">
+                                                    <div className="selected-student-avatar w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-700">
                                                         {selectedStudent.name.charAt(0)}
                                                     </div>
                                                     <div>
@@ -175,7 +200,7 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                                 <button
                                                     type="button"
                                                     onClick={clearStudent}
-                                                    className="p-1 text-gray-400 hover:text-gray-600"
+                                                    className="selected-student-remove p-1 text-gray-400 hover:text-gray-600"
                                                 >
                                                     <XMarkIcon className="w-4 h-4" />
                                                 </button>
@@ -269,16 +294,6 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                     ))}
                                 </div>
                                 <InputError message={errors.category} className="mt-2" />
-                            </div>
-
-                            {/* ===== Subject (optional) ===== */}
-                            <div>
-                                <InputLabel htmlFor="subject" value="Subject (optional)" />
-                                <select id="subject" value={data.subject} onChange={(e) => setData('subject', e.target.value)} className="mt-1 block w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 text-gray-800">
-                                    <option value="">No subject</option>
-                                    {availableSubjects.map((subject) => <option key={subject.id} value={subject.name}>{subject.name}</option>)}
-                                </select>
-                                <InputError message={errors.subject} className="mt-2" />
                             </div>
 
                             {/* ===== Message ===== */}

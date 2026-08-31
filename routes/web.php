@@ -185,6 +185,7 @@ Route::middleware(['auth', 'force.password.change'])->group(function () {
         Route::get('/messages/groups/{messageGroup}/edit', [TeacherMessageGroupController::class, 'edit'])->name('messages.groups.edit');
         Route::put('/messages/groups/{messageGroup}', [TeacherMessageGroupController::class, 'update'])->name('messages.groups.update');
         Route::post('/messages/groups/{messageGroup}/send', [TeacherMessageGroupController::class, 'send'])->name('messages.groups.send');
+        Route::delete('/messages/groups/{messageGroup}/messages/{groupMessage}', [TeacherMessageGroupController::class, 'destroyMessage'])->name('messages.groups.messages.destroy');
         Route::delete('/messages/groups/{messageGroup}/members/{user}', [TeacherMessageGroupController::class, 'removeMember'])->name('messages.groups.members.remove');
         Route::post('/messages/groups/{messageGroup}/archive', [TeacherMessageGroupController::class, 'archive'])->name('messages.groups.archive');
         Route::post('/messages/groups/{messageGroup}/restore', [TeacherMessageGroupController::class, 'restore'])->name('messages.groups.restore');
@@ -276,6 +277,7 @@ Route::middleware(['auth', 'force.password.change'])->group(function () {
         Route::post('/messages', [StudentMessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/groups/{messageGroup}', [StudentMessageGroupController::class, 'show'])->name('messages.groups.show');
         Route::post('/messages/groups/{messageGroup}/send', [StudentMessageGroupController::class, 'send'])->name('messages.groups.send');
+        Route::delete('/messages/groups/{messageGroup}/messages/{groupMessage}', [StudentMessageGroupController::class, 'destroyMessage'])->name('messages.groups.messages.destroy');
         Route::get('/messages/{message}', [StudentMessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{message}/reply', [StudentMessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{message}', [StudentMessageController::class, 'destroy'])->name('messages.destroy');

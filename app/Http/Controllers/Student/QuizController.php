@@ -195,13 +195,20 @@ class QuizController extends Controller
             ->where('student_id', $user->id)
             ->max('attempt_number') + 1;
 
+        $questions = $quiz->activeQuestions()->orderBy('question_number')->get();
+        if ($questions->isEmpty()) {
+            return redirect()->back()->with('error', 'This quiz does not have any active questions.');
+        }
+        $questionSnapshot = QuizAttempt::snapshotFromQuestions($questions);
+
         $attempt = QuizAttempt::create([
             'quiz_id'        => $quiz->id,
             'student_id'     => $user->id,
             'attempt_number' => $attemptNumber,
             'score'          => 0,
-            'total_questions'=> $quiz->total_questions,
-            'answers'        => json_encode([]),
+            'total_questions'=> count($questionSnapshot),
+            'answers'        => [],
+            'question_snapshot' => $questionSnapshot,
             'status'         => 'started',
         ]);
 
@@ -232,8 +239,11 @@ class QuizController extends Controller
         }
 
         $quiz = $attempt->quiz;
-        $questions = $quiz->questions()->orderBy('question_number')->get();
-        $answers = json_decode($attempt->answers, true) ?? [];
+        $questions = $attempt->questionData();
+        if (empty($attempt->question_snapshot)) {
+            $attempt->update(['question_snapshot' => $questions->all()]);
+        }
+        $answers = is_array($attempt->answers) ? $attempt->answers : (json_decode($attempt->answers, true) ?? []);
 
         return Inertia::render('Student/Quizzes/Take', [
             'attempt' => [
@@ -244,21 +254,21 @@ class QuizController extends Controller
             'quiz' => [
                 'id'              => $quiz->id,
                 'title'           => $quiz->quiz_title,
-                'total_questions' => $quiz->total_questions,
+                'total_questions' => $questions->count(),
             ],
             'questions' => $questions->map(function ($question) use ($answers) {
                 return [
-                    'id'      => $question->id,
-                    'number'  => $question->question_number,
-                    'text'    => $question->question_text,
-                    'type'    => $question->question_type,
-                    'choices' => $question->question_type === 'multiple_choice' ? [
-                        'A' => $question->choice_a,
-                        'B' => $question->choice_b,
-                        'C' => $question->choice_c,
-                        'D' => $question->choice_d,
+                    'id'      => $question['id'],
+                    'number'  => $question['question_number'],
+                    'text'    => $question['question_text'],
+                    'type'    => $question['question_type'],
+                    'choices' => $question['question_type'] === 'multiple_choice' ? [
+                        'A' => $question['choice_a'],
+                        'B' => $question['choice_b'],
+                        'C' => $question['choice_c'],
+                        'D' => $question['choice_d'],
                     ] : null,
-                    'user_answer' => $answers[$question->id] ?? null,
+                    'user_answer' => $answers[$question['id']] ?? null,
                 ];
             }),
         ]);
@@ -289,7 +299,7 @@ class QuizController extends Controller
 
         $answers = $validated['answers'];
         $quiz = $attempt->quiz;
-        $questions = $quiz->questions()->get();
+        $questions = $attempt->questionData();
 
         $answers = collect($validated['answers'])
             ->filter(fn ($answer, $questionId) => $questions->contains('id', (int) $questionId))
@@ -299,35 +309,14 @@ class QuizController extends Controller
         $totalQuestions = $questions->count();
 
         foreach ($questions as $question) {
-            $userAnswer = $answers[$question->id] ?? null;
-            $isCorrect = false;
-
-            if ($userAnswer !== null && $userAnswer !== '') {
-                if ($question->question_type === 'true_false') {
-                    $isCorrect = strtolower($userAnswer) === strtolower($question->correct_answer);
-                } elseif ($question->question_type === 'identification') {
-                    $correct = strtolower(trim($question->correct_answer));
-                    $userAnswer = strtolower(trim($userAnswer));
-                    $isCorrect = $userAnswer === $correct;
-
-                    if (!$isCorrect && $question->alternative_answers) {
-                        $alternatives = json_decode($question->alternative_answers, true);
-                        if (is_array($alternatives)) {
-                            $isCorrect = in_array($userAnswer, array_map('strtolower', array_map('trim', $alternatives)));
-                        }
-                    }
-                } else {
-                    $isCorrect = $userAnswer === $question->correct_answer;
-                }
-            }
-
-            if ($isCorrect) {
+            $userAnswer = $answers[$question['id']] ?? null;
+            if (QuizAttempt::answerIsCorrect($question, $userAnswer)) {
                 $score++;
             }
         }
 
         $attempt->update([
-            'answers'         => json_encode($answers),
+            'answers'         => $answers,
             'score'           => $score,
             'total_questions' => $totalQuestions,
             'completed_at'    => now(),
@@ -364,8 +353,8 @@ class QuizController extends Controller
         }
 
         $quiz = $attempt->quiz;
-        $questions = $quiz->questions()->orderBy('question_number')->get();
-        $answers = json_decode($attempt->answers, true) ?? [];
+        $questions = $attempt->questionData();
+        $answers = is_array($attempt->answers) ? $attempt->answers : (json_decode($attempt->answers, true) ?? []);
 
         $score = $attempt->score;
         $total = $attempt->total_questions;
@@ -375,33 +364,14 @@ class QuizController extends Controller
         $passed = $percentage >= $passingScore;
 
         $questionResults = $questions->map(function ($question) use ($answers) {
-            $userAnswer = $answers[$question->id] ?? null;
-            $isCorrect = false;
-
-            if ($userAnswer !== null && $userAnswer !== '') {
-                if ($question->question_type === 'true_false') {
-                    $isCorrect = strtolower($userAnswer) === strtolower($question->correct_answer);
-                } elseif ($question->question_type === 'identification') {
-                    $correct = strtolower(trim($question->correct_answer));
-                    $userAnswer = strtolower(trim($userAnswer));
-                    $isCorrect = $userAnswer === $correct;
-
-                    if (!$isCorrect && $question->alternative_answers) {
-                        $alternatives = json_decode($question->alternative_answers, true);
-                        if (is_array($alternatives)) {
-                            $isCorrect = in_array($userAnswer, array_map('strtolower', array_map('trim', $alternatives)));
-                        }
-                    }
-                } else {
-                    $isCorrect = $userAnswer === $question->correct_answer;
-                }
-            }
+            $userAnswer = $answers[$question['id']] ?? null;
+            $isCorrect = QuizAttempt::answerIsCorrect($question, $userAnswer);
 
             return [
-                'number'         => $question->question_number,
-                'text'           => $question->question_text,
+                'number'         => $question['question_number'],
+                'text'           => $question['question_text'],
                 'user_answer'    => $userAnswer,
-                'correct_answer' => $question->correct_answer,
+                'correct_answer' => $question['correct_answer'],
                 'is_correct'     => $isCorrect,
             ];
         });

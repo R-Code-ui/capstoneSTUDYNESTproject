@@ -4,18 +4,16 @@ import Card from '@/Components/Card';
 import Table, { StatusBadge } from '@/Components/Table';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import Pagination from '@/Components/Pagination';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
     ArrowLeftIcon,
-    ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 
-export default function QuizResults({ quiz, attempts, statistics, distribution }) {
+export default function QuizResults({ quiz, attempts, statistics, distribution, pagination }) {
     const distributionMax = Math.max(...Object.values(distribution), 0);
-    const handleExport = () => {
-        window.open(route('teacher.quizzes.export', quiz.id), '_blank');
-    };
 
     const getStatusBadge = (status) => {
         const statusMap = {
@@ -89,11 +87,9 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                         Results: {quiz.title}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <PrimaryButton onClick={handleExport}>
-                            <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
-                            Export CSV
-                        </PrimaryButton>
-                        <SecondaryButton onClick={() => router.visit(route('teacher.quizzes.index'))}>
+                        <SecondaryButton onClick={() => router.visit(route('teacher.quizzes.index'), {
+                            onError: () => toast.error('Unable to return to quizzes. Please try again.'),
+                        })}>
                             <ArrowLeftIcon className="w-4 h-4 mr-1" />
                             Back to Quizzes
                         </SecondaryButton>
@@ -186,11 +182,11 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                         </div>
                     )}
 
-                    {/* ===== Student Informations Table ===== */}
+                    {/* ===== Student Progress Table ===== */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-200">
-                                <h3 className="text-sm font-semibold text-gray-700">Student Informations</h3>
+                                <h3 className="text-sm font-semibold text-gray-700">Student Progress</h3>
                             </div>
                             <div className="p-6">
                                 <Table
@@ -200,6 +196,7 @@ export default function QuizResults({ quiz, attempts, statistics, distribution }
                                     hoverable
                                     striped
                                 />
+                                <Pagination pagination={pagination} />
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 505, 'title' => 'This connection is not supported', 'message' => 'Your browser or connection used an unsupported HTTP version. Please try again with an updated browser.'])

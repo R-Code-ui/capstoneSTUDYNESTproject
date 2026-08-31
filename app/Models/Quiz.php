@@ -72,6 +72,11 @@ class Quiz extends Model
         return $this->hasMany(QuizQuestion::class);
     }
 
+    public function activeQuestions()
+    {
+        return $this->questions()->where('is_active', true);
+    }
+
     /**
      * Get the attempts for this quiz.
      */

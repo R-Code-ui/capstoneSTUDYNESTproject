@@ -6,6 +6,8 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -30,6 +32,7 @@ export default function QuizzesIndex({
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [typeFilter, setTypeFilter] = useState(filters?.quiz_type || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [quizToDelete, setQuizToDelete] = useState(null);
 
     const handleSearch = (value) => {
         setSearch(value);
@@ -64,15 +67,23 @@ export default function QuizzesIndex({
         });
     };
 
-    const handleDelete = (quiz) => {
-        if (confirm(`Delete "${quiz.title}"? This action cannot be undone.`)) {
-            router.delete(route('teacher.quizzes.destroy', quiz.id), { preserveState: true });
-        }
+    const handleDelete = () => {
+        if (!quizToDelete) return;
+
+        const quiz = quizToDelete;
+        setQuizToDelete(null);
+        router.delete(route('teacher.quizzes.destroy', quiz.id), {
+            preserveState: true,
+            onSuccess: () => toast.success('Quiz deleted successfully.'),
+            onError: () => toast.error('Unable to delete this quiz. Please try again.'),
+        });
     };
 
     const statusOptions = [
         { value: '', label: 'All Status' },
-        ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
+        ...statuses
+            .filter((status) => status !== 'archived')
+            .map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
     const gradeOptions = [
@@ -162,7 +173,7 @@ export default function QuizzesIndex({
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
-            onClick: () => handleDelete(row),
+            onClick: () => setQuizToDelete(row),
         },
     ];
 
@@ -243,6 +254,18 @@ export default function QuizzesIndex({
                     </div>
                 </div>
             </div>
+
+            {quizToDelete && (
+                <ConfirmModal
+                    show
+                    onClose={() => setQuizToDelete(null)}
+                    onConfirm={handleDelete}
+                    title="Delete quiz?"
+                    message={`“${quizToDelete.title}” and its questions will be permanently deleted. This action cannot be undone.`}
+                    confirmText="Delete permanently"
+                    danger
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

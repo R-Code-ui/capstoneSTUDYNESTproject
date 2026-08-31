@@ -5,13 +5,14 @@ import Card from '@/Components/Card';
 import Table, { StatusBadge } from '@/Components/Table';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
-import Modal from '@/Components/Modal';
+import Modal, { ConfirmModal } from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { toast } from 'sonner';
 
 const manilaDateTimeInput = (date = new Date()) => new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Asia/Manila',
@@ -41,6 +42,8 @@ export default function PrincipalAnnouncements({
     const [isLoading, setIsLoading] = useState(false);
     const [publicationMode, setPublicationMode] = useState('draft');
     const [scheduledAt, setScheduledAt] = useState('');
+    const [confirmation, setConfirmation] = useState(null);
+    const [pendingSubmission, setPendingSubmission] = useState(null);
 
     const { errors } = usePage().props;
 
@@ -70,9 +73,81 @@ export default function PrincipalAnnouncements({
         });
     };
 
-    const handleDelete = (announcement) => {
-        if (confirm(`Are you sure you want to delete "${announcement.title}"?`)) {
-            router.delete(route('principal.announcements.destroy', announcement.id), { preserveState: true });
+    const submitAnnouncement = ({ data, isCreating, announcementId }) => {
+        const successMessage = data.status === 'scheduled'
+            ? (isCreating ? 'Announcement scheduled successfully.' : 'Announcement schedule updated successfully.')
+            : data.status === 'published' && (isCreating || selectedAnnouncement?.status !== 'published')
+                ? 'Announcement published successfully.'
+                : isCreating
+                    ? 'Announcement saved as draft.'
+                    : 'Announcement updated successfully.';
+
+        const options = {
+            preserveState: true,
+            onSuccess: () => {
+                setShowCreateModal(false);
+                setShowEditModal(false);
+                setSelectedAnnouncement(null);
+                toast.success(successMessage);
+            },
+            onError: () => toast.error('Please correct the highlighted fields and try again.'),
+        };
+
+        if (isCreating) {
+            router.post(route('principal.announcements.store'), data, options);
+            return;
+        }
+
+        router.put(route('principal.announcements.update', announcementId), data, options);
+    };
+
+    const handleAnnouncementSubmit = (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        const isCreating = showCreateModal;
+        data.status = publicationMode;
+
+        if (publicationMode !== 'scheduled') {
+            delete data.publish_date;
+        }
+
+        const submission = {
+            data,
+            isCreating,
+            announcementId: selectedAnnouncement?.id,
+        };
+        const isPublishingNow = publicationMode === 'published'
+            && (isCreating || selectedAnnouncement?.status !== 'published');
+
+        if (isPublishingNow) {
+            setPendingSubmission(submission);
+            setConfirmation({ type: 'publish' });
+            return;
+        }
+
+        submitAnnouncement(submission);
+    };
+
+    const executeConfirmedAction = () => {
+        if (!confirmation) return;
+
+        if (confirmation.type === 'publish' && pendingSubmission) {
+            const submission = pendingSubmission;
+            setConfirmation(null);
+            setPendingSubmission(null);
+            submitAnnouncement(submission);
+            return;
+        }
+
+        if (confirmation.type === 'delete') {
+            const announcement = confirmation.announcement;
+            setConfirmation(null);
+            router.delete(route('principal.announcements.destroy', announcement.id), {
+                preserveState: true,
+                onSuccess: () => toast.success('Announcement deleted successfully.'),
+                onError: () => toast.error('Unable to delete this announcement. Please try again.'),
+            });
         }
     };
 
@@ -83,6 +158,7 @@ export default function PrincipalAnnouncements({
 
     const statusOptions = [
         { value: '', label: 'All Status' },
+        { value: 'expired', label: 'Expired' },
         ...(statuses || []).map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
@@ -144,7 +220,16 @@ export default function PrincipalAnnouncements({
                 return 'Not published';
             },
         },
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (row) => (
+                <div className="flex flex-wrap gap-1.5">
+                    <StatusBadge status={row.status} />
+                    {row.is_expired && <StatusBadge status="expired" />}
+                </div>
+            ),
+        },
     ];
 
     const actions = (row) => [
@@ -172,7 +257,7 @@ export default function PrincipalAnnouncements({
             label: 'Delete',
             icon: <DeleteIcon />,
             color: 'danger',
-            onClick: () => handleDelete(row)
+            onClick: () => setConfirmation({ type: 'delete', announcement: row })
         },
     ];
 
@@ -257,35 +342,7 @@ export default function PrincipalAnnouncements({
                 size="2xl"
             >
                 <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        const form = e.target;
-                        const formData = new FormData(form);
-                        const data = Object.fromEntries(formData.entries());
-                        data.status = publicationMode;
-
-                        if (publicationMode !== 'scheduled') {
-                            delete data.publish_date;
-                        }
-
-                        const handleSuccess = () => {
-                            setShowCreateModal(false);
-                            setShowEditModal(false);
-                            setSelectedAnnouncement(null);
-                        };
-
-                        if (showCreateModal) {
-                            router.post(route('principal.announcements.store'), data, {
-                                preserveState: true,
-                                onSuccess: handleSuccess,
-                            });
-                        } else {
-                            router.put(route('principal.announcements.update', selectedAnnouncement?.id), data, {
-                                preserveState: true,
-                                onSuccess: handleSuccess,
-                            });
-                        }
-                    }}
+                    onSubmit={handleAnnouncementSubmit}
                     className="space-y-4"
                 >
                     {/* Title – full width */}
@@ -474,6 +531,24 @@ export default function PrincipalAnnouncements({
                 </form>
             </Modal>
 
+            {confirmation && (
+                <ConfirmModal
+                    show
+                    onClose={() => {
+                        setConfirmation(null);
+                        setPendingSubmission(null);
+                    }}
+                    onConfirm={executeConfirmedAction}
+                    title={confirmation.type === 'delete' ? 'Delete announcement?' : 'Publish announcement now?'}
+                    message={confirmation.type === 'delete'
+                        ? `“${confirmation.announcement.title}” will be permanently deleted. This action cannot be undone.`
+                        : 'This announcement will become visible to its selected audience immediately.'}
+                    confirmText={confirmation.type === 'delete' ? 'Delete permanently' : 'Publish now'}
+                    confirmColor={confirmation.type === 'delete' ? 'red' : 'blue'}
+                    danger={confirmation.type === 'delete'}
+                />
+            )}
+
             {/* ===== VIEW ANNOUNCEMENT MODAL ===== */}
             <Modal
                 show={showViewModal}
@@ -495,7 +570,10 @@ export default function PrincipalAnnouncements({
                                         ? 'All Students'
                                         : selectedAnnouncement.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                     <span>•</span>
-                                    <span>Status: <StatusBadge status={selectedAnnouncement.status} /></span>
+                                    <span className="inline-flex items-center gap-1.5">
+                                        Status: <StatusBadge status={selectedAnnouncement.status} />
+                                        {selectedAnnouncement.is_expired && <StatusBadge status="expired" />}
+                                    </span>
                                 </div>
                             </div>
                             <div className="shrink-0 text-right text-sm text-gray-500">

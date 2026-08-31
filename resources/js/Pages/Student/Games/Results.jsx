@@ -4,6 +4,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 import {
     BookOpenIcon,
     CalculatorIcon,
@@ -15,6 +17,7 @@ import {
 
 export default function GamesResults({ result, game, can_play_again }) {
     const [isLoading, setIsLoading] = useState(false);
+    const [confirmingRetry, setConfirmingRetry] = useState(false);
 
     const getTypeIcon = (type) => {
         return type === 'literacy' ? (
@@ -59,9 +62,12 @@ export default function GamesResults({ result, game, can_play_again }) {
     };
 
     const handlePlayAgain = () => {
+        setConfirmingRetry(false);
         setIsLoading(true);
         router.post(route('student.games.play', game.id), {}, {
             preserveState: true,
+            onSuccess: () => toast.success('New game attempt started.'),
+            onError: () => toast.error('Unable to start another game attempt. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };
@@ -73,7 +79,9 @@ export default function GamesResults({ result, game, can_play_again }) {
                     <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         Game Results: {game.title}
                     </h2>
-                    <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
+                    <SecondaryButton onClick={() => router.visit(route('student.games.index'), {
+                        onError: () => toast.error('Unable to return to games. Please try again.'),
+                    })}>
                         Back to Games
                     </SecondaryButton>
                 </div>
@@ -118,7 +126,7 @@ export default function GamesResults({ result, game, can_play_again }) {
                     {/* ===== Actions ===== */}
                     <div className="mt-6 flex flex-wrap justify-center gap-3">
                         {can_play_again && (
-                            <PrimaryButton onClick={handlePlayAgain} disabled={isLoading}>
+                            <PrimaryButton onClick={() => setConfirmingRetry(true)} disabled={isLoading}>
                                 <ArrowPathIcon className="w-4 h-4 mr-1" />
                                 {isLoading ? 'Loading...' : 'Play Again'}
                             </PrimaryButton>
@@ -126,6 +134,16 @@ export default function GamesResults({ result, game, can_play_again }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmingRetry}
+                onClose={() => setConfirmingRetry(false)}
+                onConfirm={handlePlayAgain}
+                title="Start another game attempt?"
+                message="Starting another attempt uses one of your remaining game attempts."
+                confirmText="Start attempt"
+                cancelText="Cancel"
+                confirmColor="blue"
+            />
         </AuthenticatedLayout>
     );
 }

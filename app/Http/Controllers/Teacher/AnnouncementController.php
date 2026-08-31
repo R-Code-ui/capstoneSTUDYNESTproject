@@ -29,6 +29,7 @@ class AnnouncementController extends Controller
         $search = $request->input('search');
         $categoryFilter = $request->input('category');
         $statusFilter = $request->input('status');
+        $showExpired = $statusFilter === 'expired';
         $gradeFilter = $request->input('grade_level');
         $assignedGrades = $user->gradeAssignments()->pluck('grade_level')->toArray();
         $gradeAudiences = array_merge(
@@ -38,14 +39,30 @@ class AnnouncementController extends Controller
         $authorFilter = $request->input('author'); // ✅ ADDED
 
         // ✅ FIX: Get teacher's own announcements + principal's school-wide announcements
-        $announcements = Announcement::where(function ($query) use ($user, $gradeAudiences) {
+        $announcements = Announcement::where(function ($query) use ($user, $gradeAudiences, $showExpired) {
                 $query->where(function ($query) use ($user) {
                     $query->where('user_id', $user->id)
                         ->where('user_role', 'teacher');
-                })->orWhere(function ($query) use ($gradeAudiences) {
+                })->orWhere(function ($query) use ($gradeAudiences, $showExpired) {
                     $query->where('user_role', 'principal')
-                        ->whereIn('target_audience', array_merge(['all_users', 'teachers_only'], $gradeAudiences))
-                        ->currentlyVisible();
+                        ->whereIn('target_audience', array_merge(['all_users', 'teachers_only'], $gradeAudiences));
+
+                    if ($showExpired) {
+                        $query->whereNotNull('expiration_date')
+                            ->where('expiration_date', '<=', now());
+                    } else {
+                        $query->currentlyVisible();
+                    }
+                });
+            })
+            ->when($showExpired, function ($query) {
+                return $query->whereNotNull('expiration_date')
+                    ->where('expiration_date', '<=', now());
+            })
+            ->when(!$showExpired, function ($query) {
+                return $query->where(function ($query) {
+                    $query->whereNull('expiration_date')
+                        ->orWhere('expiration_date', '>', now());
                 });
             })
             ->when($search, function ($query, $search) {
@@ -57,7 +74,7 @@ class AnnouncementController extends Controller
             ->when($categoryFilter, function ($query, $category) {
                 return $query->where('category', $category);
             })
-            ->when($statusFilter, function ($query, $status) {
+            ->when($statusFilter && !$showExpired, function ($query, $status) {
                 return $query->where('status', $status);
             })
             ->when($gradeFilter, function ($query, $grade) {
@@ -95,6 +112,7 @@ class AnnouncementController extends Controller
                     'status' => $announcement->status,
                     'publish_date' => $announcement->publish_date?->format('Y-m-d\TH:i') ?? '',
                     'expiration_date' => $announcement->expiration_date?->format('Y-m-d\TH:i') ?? '',
+                    'is_expired' => $announcement->expiration_date?->lessThanOrEqualTo(now()) ?? false,
                     'view_count' => $announcement->view_count,
                     'created_at' => $announcement->created_at->diffForHumans(),
                     'posted_by' => $announcement->user_role === 'principal' ? 'Principal' : 'Teacher', // ✅ ADDED
@@ -214,6 +232,7 @@ class AnnouncementController extends Controller
                 'status' => $announcement->status,
                 'publish_date' => $announcement->publish_date?->format('M d, Y g:i A') ?? 'Not published',
                 'expiration_date' => $announcement->expiration_date?->format('M d, Y g:i A') ?? '',
+                'is_expired' => $announcement->expiration_date?->lessThanOrEqualTo(now()) ?? false,
                 'view_count' => $announcement->view_count,
                 'created_at' => $announcement->created_at->format('Y-m-d H:i'),
                 'posted_by' => $announcement->user_role === 'principal' ? 'Principal' : 'Teacher',
@@ -285,7 +304,7 @@ class AnnouncementController extends Controller
             app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
         }
 
-        if (!$wasPublished && $this->isCurrentlyVisible($announcement)) {
+        if ($this->isCurrentlyVisible($announcement)) {
             app(StudyNestNotificationService::class)->announcementPublished($announcement);
         }
 
@@ -332,16 +351,12 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('update', $announcement);
 
-        $wasPublished = $announcement->status === 'published';
-
         $announcement->update([
             'status' => 'published',
             'publish_date' => now(),
         ]);
 
-        if (!$wasPublished) {
-            app(StudyNestNotificationService::class)->announcementPublished($announcement);
-        }
+        app(StudyNestNotificationService::class)->announcementPublished($announcement);
 
         // Log publish
         ActivityLog::create([
@@ -362,6 +377,7 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('update', $announcement);
 
+        app(StudyNestNotificationService::class)->forgetFor('announcement', $announcement->id);
         $announcement->update(['status' => 'archived']);
 
         // Log archive

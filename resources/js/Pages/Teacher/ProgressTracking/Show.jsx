@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -37,7 +38,9 @@ export default function ProgressShow({ student, progress }) {
                     <span className="text-xl font-semibold leading-tight text-gray-800">
                         Student Progress: {student.name}
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('teacher.progress.index'))}>
+                    <SecondaryButton onClick={() => router.visit(route('teacher.progress.index'), {
+                        onError: () => toast.error('Unable to return to progress tracking. Please try again.'),
+                    })}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Progress List
                     </SecondaryButton>

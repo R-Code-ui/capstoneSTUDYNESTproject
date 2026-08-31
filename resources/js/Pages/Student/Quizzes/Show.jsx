@@ -5,6 +5,7 @@ import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -32,10 +33,15 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
         setIsLoading(true);
 
         if (current_attempt) {
-            router.visit(route('student.quizzes.take', current_attempt.id));
+            router.visit(route('student.quizzes.take', current_attempt.id), {
+                onError: () => toast.error('Unable to continue this quiz. Please try again.'),
+                onFinish: () => setIsLoading(false),
+            });
         } else {
             router.post(route('student.quizzes.start', quiz.id), {}, {
                 preserveState: true,
+                onSuccess: () => toast.success('Quiz started.'),
+                onError: () => toast.error('Unable to start the quiz. Please try again.'),
                 onFinish: () => setIsLoading(false),
             });
         }
@@ -48,7 +54,9 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
                     <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
                         {quiz.title}
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
+                    <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'), {
+                        onError: () => toast.error('Unable to return to quizzes. Please try again.'),
+                    })}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Quizzes
                     </SecondaryButton>
@@ -148,7 +156,9 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
                             )}
 
                             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                                <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
+                                <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'), {
+                                    onError: () => toast.error('Unable to return to quizzes. Please try again.'),
+                                })}>
                                     Cancel
                                 </SecondaryButton>
                                 {can_take && (

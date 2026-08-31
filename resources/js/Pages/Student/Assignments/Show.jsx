@@ -8,6 +8,9 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import StudentResources from '@/Components/StudentResources';
+import useDeadlineStatuses from '@/Hooks/useDeadlineStatuses';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 import {
     ArrowLeftIcon,
@@ -36,13 +39,17 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
     });
     const [fileErrors, setFileErrors] = useState([]);
     const [formErrors, setFormErrors] = useState({});
+    const [confirmingSubmission, setConfirmingSubmission] = useState(false);
+    const [fileIndexToRemove, setFileIndexToRemove] = useState(null);
+    const getDeadlineStatus = useDeadlineStatuses(assignment);
+    const deadlineStatus = getDeadlineStatus(assignment);
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
         const errorsList = [];
         const validFiles = [];
-        const maxFiles = 4;
-        const maxSize = 100 * 1024 * 1024;
+        const maxFiles = 8;
+        const maxSize = 50 * 1024 * 1024;
         const allowedTypes = [
             'application/pdf',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -59,6 +66,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
             errorsList.push(`You can only upload a maximum of ${maxFiles} files.`);
             e.target.value = '';
             setFileErrors(errorsList);
+            toast.error(errorsList[0]);
             return;
         }
 
@@ -68,21 +76,25 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                 return;
             }
             if (file.size > maxSize) {
-                errorsList.push(`"${file.name}" exceeds the 100MB limit.`);
+                errorsList.push(`"${file.name}" exceeds the 50MB limit.`);
                 return;
             }
             validFiles.push(file);
         });
 
         setFileErrors(errorsList);
+        errorsList.forEach((error) => toast.error(error));
         if (validFiles.length > 0) {
             setSelectedFiles((prev) => [...prev, ...validFiles]);
         }
         e.target.value = '';
     };
 
-    const removeFile = (index) => {
-        setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    const removeFile = () => {
+        if (fileIndexToRemove === null) return;
+        setSelectedFiles((prev) => prev.filter((_, index) => index !== fileIndexToRemove));
+        setFileIndexToRemove(null);
+        toast.success('Selected file removed.');
     };
 
     const handleMethodSelect = (method) => {
@@ -93,17 +105,23 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
         e.preventDefault();
 
         if (!selectedMethod) {
-            alert('Please select a submission method.');
+            toast.error('Please select a submission method.');
             return;
         }
         if (selectedMethod !== 'digital') {
-            alert('Paper hand-ins are confirmed by your teacher after you submit the physical work.');
+            toast.info('Paper hand-ins are confirmed by your teacher after you submit the physical work.');
             return;
         }
         if (selectedFiles.length === 0) {
-            alert('Please select at least one file to upload.');
+            toast.error('Please select at least one file to upload.');
             return;
         }
+
+        setConfirmingSubmission(true);
+    };
+
+    const submitAssignment = () => {
+        setConfirmingSubmission(false);
 
         setIsSubmitting(true);
         setFormErrors({});
@@ -127,17 +145,16 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                 setSelectedFiles([]);
                 setSelectedMethod('');
                 setFileErrors([]);
+                toast.success(submission ? 'Assignment resubmitted successfully.' : 'Assignment submitted successfully.');
                 router.reload(); // reload to show updated submission status
             },
             onError: (errors) => {
                 setFormErrors(errors);
+                toast.error('Unable to submit the assignment. Please review the highlighted fields and try again.');
                 setIsSubmitting(false);
             },
             onFinish: () => {
-                // Only set false if we didn't already reload (i.e., on error)
-                if (Object.keys(formErrors).length === 0) {
-                    setIsSubmitting(false);
-                }
+                setIsSubmitting(false);
             },
         });
     };
@@ -170,16 +187,18 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
     };
 
     const canSubmit = () => {
+        if (deadlineStatus === 'expired' || !assignment.can_submit) return false;
         if (!submission) return true;
         return submission.status === 'returned_for_revision' || submission.status === 'not_submitted';
     };
 
-    const handleDownload = (resourceId) => {
-        window.open(route('student.assignments.download-resource', resourceId), '_blank');
-    };
-
-    const handleView = (resourceId) => {
-        window.open(route('student.assignments.view-resource', resourceId), '_blank');
+    const openResource = (url, action) => {
+        const resourceWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!resourceWindow) {
+            toast.error(`Your browser blocked the resource ${action}. Please allow pop-ups and try again.`);
+            return;
+        }
+        resourceWindow.opener = null;
     };
 
     const availableMethods = (assignment.submission_methods || []).filter((method) => ['digital', 'paper'].includes(method));
@@ -189,7 +208,9 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                     <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>{assignment.title}</span>
-                    <SecondaryButton onClick={() => router.visit(route('student.assignments.index'))}>
+                    <SecondaryButton onClick={() => router.visit(route('student.assignments.index'), {
+                        onError: () => toast.error('Unable to return to assignments. Please try again.'),
+                    })}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" /> Back to Assignments
                     </SecondaryButton>
                 </div>
@@ -218,6 +239,42 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     .studynest-layout.theme-dark .student-assignment-show-page [class~="border-gray-200"],
                     .studynest-layout.theme-dark .student-assignment-show-page [class~="border-gray-100"] {
                         border-color: rgb(51 65 85) !important;
+                    }
+                    .student-assignment-show-page .submission-method-option {
+                        background-color: white;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .submission-method-option {
+                        background-color: rgb(15 23 42) !important;
+                        border-color: rgb(71 85 105) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .submission-method-option:hover {
+                        background-color: rgb(30 41 59) !important;
+                        border-color: rgb(96 165 250) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .submission-method-option.is-selected {
+                        background-color: rgb(30 41 59) !important;
+                        border-color: rgb(37 99 235) !important;
+                        box-shadow: inset 0 0 0 1px rgb(37 99 235);
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .submission-method-label {
+                        color: rgb(226 232 240) !important;
+                    }
+                    .student-assignment-show-page .assignment-file-input::file-selector-button {
+                        cursor: pointer;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .assignment-file-input::file-selector-button {
+                        background-color: rgb(30 41 59) !important;
+                        color: rgb(147 197 253) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .assignment-file-input::file-selector-button:hover {
+                        background-color: rgb(51 65 85) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .paper-submission-notice {
+                        background-color: rgb(120 53 15 / 0.2) !important;
+                        border-color: rgb(180 83 9) !important;
+                    }
+                    .studynest-layout.theme-dark .student-assignment-show-page .paper-submission-notice p {
+                        color: rgb(251 191 36) !important;
                     }
                     .student-assignment-show-page .break-words {
                         overflow-wrap: anywhere;
@@ -255,6 +312,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                     {assignment.assignment_type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </span>
                                 {submission && <StatusBadge status={getSubmissionStatusBadge(submission.status)} />}
+                                <StatusBadge status={deadlineStatus} size="sm" />
                             </div>
 
                             <h3 className="max-w-full truncate text-2xl font-bold text-gray-800" title={assignment.title}>{assignment.title}</h3>
@@ -293,6 +351,20 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                         </div>
                     </div>
 
+                    {deadlineStatus === 'expired' && (
+                        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-5 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                            <div className="font-semibold">This assignment has expired.</div>
+                            <p className="mt-1 text-sm">The deadline was {assignment.due_at_label}. New submissions are no longer accepted.</p>
+                        </div>
+                    )}
+
+                    {deadlineStatus === 'late_submission_allowed' && (
+                        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                            <div className="font-semibold">Late submission allowed</div>
+                            <p className="mt-1 text-sm">The deadline was {assignment.due_at_label}, but your teacher is still accepting submissions.</p>
+                        </div>
+                    )}
+
                     {/* Resources */}
                     {resources && resources.length > 0 && (
                         <div className="mt-6">
@@ -302,7 +374,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                         <PaperClipIcon className="w-5 h-5 text-gray-500" /> Learning Resources
                                     </h3>
                                 </div>
-                                <div className="p-4 sm:p-6"><StudentResources resources={resources} viewUrl={(id) => route('student.assignments.view-resource', id)} downloadUrl={(id) => route('student.assignments.download-resource', id)} /></div>
+                                <div className="p-4 sm:p-6"><StudentResources resources={resources} viewUrl={(id) => route('student.assignments.view-resource', id)} downloadUrl={(id) => route('student.assignments.download-resource', id)} onView={(url) => openResource(url, 'viewer')} onDownload={(url) => openResource(url, 'download')} /></div>
                             </div>
                         </div>
                     )}
@@ -378,20 +450,20 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 {availableMethods.includes('digital') && (
                                                     <button type="button" onClick={() => handleMethodSelect('digital')}
-                                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition ${
-                                                            selectedMethod === 'digital' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                                                        className={`submission-method-option flex flex-col items-center justify-center p-4 border-2 rounded-lg transition ${
+                                                            selectedMethod === 'digital' ? 'is-selected border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
                                                         }`}>
                                                         <CloudArrowUpIcon className={`w-8 h-8 ${selectedMethod === 'digital' ? 'text-blue-600' : 'text-gray-400'}`} />
-                                                        <span className="mt-2 text-sm font-medium text-gray-700">Digital Upload</span>
+                                                        <span className="submission-method-label mt-2 text-sm font-medium text-gray-700">Digital Upload</span>
                                                     </button>
                                                 )}
                                                 {availableMethods.includes('paper') && (
                                                     <button type="button" onClick={() => handleMethodSelect('paper')}
-                                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition ${
-                                                            selectedMethod === 'paper' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                                                        className={`submission-method-option flex flex-col items-center justify-center p-4 border-2 rounded-lg transition ${
+                                                            selectedMethod === 'paper' ? 'is-selected border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
                                                         }`}>
                                                         <DocumentTextIcon className={`w-8 h-8 ${selectedMethod === 'paper' ? 'text-blue-600' : 'text-gray-400'}`} />
-                                                        <span className="mt-2 text-sm font-medium text-gray-700">Paper-Based</span>
+                                                        <span className="submission-method-label mt-2 text-sm font-medium text-gray-700">Paper-Based</span>
                                                     </button>
                                                 )}
                                             </div>
@@ -401,9 +473,9 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
                                         {selectedMethod === 'digital' && (
                                             <div>
-                                                <InputLabel htmlFor="files" value="Select Files (Max 4 files, 100MB each)" required />
+                                                <InputLabel htmlFor="files" value="Select Files (Max 8 files, 50MB each)" required />
                                                 <input id="files" type="file" multiple onChange={handleFileChange}
-                                                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                    className="assignment-file-input mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                                     accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.mp4" />
                                                 {fileErrors.length > 0 && (
                                                     <div className="mt-2 space-y-1">
@@ -419,21 +491,21 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                                                     <span>{file.name}</span>
                                                                     <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(1)} KB)</span>
                                                                 </div>
-                                                                <button type="button" onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700">
+                                                                <button type="button" onClick={() => setFileIndexToRemove(index)} className="text-red-500 hover:text-red-700" aria-label={`Remove ${file.name}`}>
                                                                     <XCircleIcon className="w-4 h-4" />
                                                                 </button>
                                                             </div>
                                                         ))}
-                                                        <p className="text-xs text-gray-500">{selectedFiles.length} of 4 files selected</p>
+                                                        <p className="text-xs text-gray-500">{selectedFiles.length} of 8 files selected</p>
                                                     </div>
                                                 )}
-                                                <p className="mt-1 text-xs text-gray-500">Accepted: PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG, MP4 (Max 100MB per file)</p>
+                                                <p className="mt-1 text-xs text-gray-500">Accepted: PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG, MP4 (Max 50MB per file)</p>
                                                 {formErrors.files && <InputError message={formErrors.files} className="mt-2" />}
                                             </div>
                                         )}
 
                                         {selectedMethod === 'paper' && (
-                                            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                            <div className="paper-submission-notice p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                                                 <p className="text-yellow-700">
                                                     <CheckCircleIcon className="inline-block w-5 h-5 mr-2" />
                                                     Hand your completed work directly to your teacher. StudyNest will not mark it as submitted until your teacher confirms receipt.
@@ -442,7 +514,9 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                         )}
 
                                         <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                                            <SecondaryButton type="button" onClick={() => router.visit(route('student.assignments.index'))}>
+                                            <SecondaryButton type="button" onClick={() => router.visit(route('student.assignments.index'), {
+                                                onError: () => toast.error('Unable to return to assignments. Please try again.'),
+                                            })}>
                                                 Cancel
                                             </SecondaryButton>
                                             {selectedMethod === 'digital' ? (
@@ -476,6 +550,26 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     )}
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmingSubmission}
+                onClose={() => setConfirmingSubmission(false)}
+                onConfirm={submitAssignment}
+                title={submission ? 'Resubmit assignment?' : 'Submit assignment?'}
+                message={submission ? 'Your new files will replace the previous submission for your teacher to review.' : 'Submit your selected files for your teacher to review?'}
+                confirmText={submission ? 'Resubmit' : 'Submit'}
+                cancelText="Cancel"
+                confirmColor="blue"
+            />
+            <ConfirmModal
+                show={fileIndexToRemove !== null}
+                onClose={() => setFileIndexToRemove(null)}
+                onConfirm={removeFile}
+                title="Remove selected file?"
+                message="This file will not be included in your assignment submission."
+                confirmText="Remove file"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

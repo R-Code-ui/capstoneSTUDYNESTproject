@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasScheduledPublication;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -59,5 +60,33 @@ class Assignment extends Model
     public function submissions()
     {
         return $this->hasMany(AssignmentSubmission::class);
+    }
+
+    public function dueAt(): ?Carbon
+    {
+        if (!$this->due_date || !$this->due_time) {
+            return null;
+        }
+
+        return Carbon::parse(
+            $this->due_date->format('Y-m-d') . ' ' . $this->due_time,
+            config('app.timezone')
+        );
+    }
+
+    public function deadlineStatus(): string
+    {
+        $dueAt = $this->dueAt();
+
+        if (!$dueAt || now()->lessThanOrEqualTo($dueAt)) {
+            return 'open';
+        }
+
+        return $this->allow_late_submission ? 'late_submission_allowed' : 'expired';
+    }
+
+    public function canAcceptSubmissions(): bool
+    {
+        return $this->deadlineStatus() !== 'expired';
     }
 }

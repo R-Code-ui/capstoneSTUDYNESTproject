@@ -6,6 +6,7 @@ import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import Pagination from '@/Components/Pagination';
+import { toast } from 'sonner';
 
 import {
     ChartBarIcon,
@@ -64,6 +65,7 @@ export default function QuizzesIndex({
                 ...additional,
             },
             preserveState: true,
+            onError: () => toast.error('Unable to load quizzes. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
     };
@@ -273,6 +275,7 @@ export default function QuizzesIndex({
                                                                         ? route('student.quizzes.results', quiz.latest_attempt_id)
                                                                         : route('student.quizzes.show', quiz.id)
                                                                 }
+                                                                onError={() => toast.error('Unable to open this quiz. Please try again.')}
                                                                 className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full shadow-sm"
                                                             >
                                                                 {quiz.status === 'completed' ? (
@@ -297,6 +300,7 @@ export default function QuizzesIndex({
                                                             {quiz.status === 'completed' && hasRemainingAttempts && (
                                                                 <Link
                                                                     href={route('student.quizzes.show', quiz.id)}
+                                                                    onError={() => toast.error('Unable to open this quiz. Please try again.')}
                                                                     className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors w-full shadow-sm"
                                                                 >
                                                                     <DocumentTextIcon className="w-4 h-4 mr-1" />
@@ -314,7 +318,10 @@ export default function QuizzesIndex({
 
                             {/* Pagination */}
                             <div className="mt-6">
-                                <Pagination pagination={pagination} />
+                                <Pagination
+                                    pagination={pagination}
+                                    onError={() => toast.error('Unable to load that quiz page. Please try again.')}
+                                />
                             </div>
                         </div>
                     </div>

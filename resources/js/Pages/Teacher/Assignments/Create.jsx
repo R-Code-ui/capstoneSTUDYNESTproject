@@ -9,6 +9,8 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import ExternalLinksInput from '@/Components/ExternalLinksInput';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -31,6 +33,7 @@ export default function AssignmentsCreate({
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileErrors, setFileErrors] = useState([]);
+    const [fileIndexToRemove, setFileIndexToRemove] = useState(null);
 
     const { data, setData, errors, post } = useForm({
         grade_level: '',
@@ -77,11 +80,31 @@ export default function AssignmentsCreate({
         }
     };
 
+    const relatedLessonsForSelectedGrade = related_lessons.filter(
+        (lesson) => lesson.grade_level === data.grade_level
+    );
+
+    const handleGradeLevelChange = (e) => {
+        const gradeLevel = e.target.value;
+        const selectedLesson = related_lessons.find(
+            (lesson) => lesson.id === parseInt(data.related_lesson_id)
+        );
+
+        setData('grade_level', gradeLevel);
+
+        if (selectedLesson && selectedLesson.grade_level !== gradeLevel) {
+            setData('related_lesson_id', '');
+            setData('bow_code', '');
+            setData('learning_competency', '');
+            setData('learning_objective', '');
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const dueDateTime = new Date(`${data.due_date}T${data.due_time}`);
         if (!data.due_date || !data.due_time || dueDateTime <= new Date()) {
-            alert('The due date and time must be in the future.');
+            toast.error('The due date and time must be in the future.');
             return;
         }
         setIsSubmitting(true);
@@ -110,6 +133,8 @@ export default function AssignmentsCreate({
             data: formData,
             forceFormData: true,
             preserveState: true,
+            onSuccess: () => toast.success('Assignment created successfully.'),
+            onError: () => toast.error('Please correct the highlighted fields and try again.'),
             onFinish: () => setIsSubmitting(false),
         });
     };
@@ -130,13 +155,14 @@ export default function AssignmentsCreate({
             'video/mp4',
         ];
 
-        const maxSize = 100 * 1024 * 1024;
-        const maxFiles = 4;
+        const maxSize = 50 * 1024 * 1024;
+        const maxFiles = 8;
 
         if (files.length + data.resources.length > maxFiles) {
             errors.push(`You can only upload a maximum of ${maxFiles} files.`);
             e.target.value = '';
             setFileErrors(errors);
+            toast.error(errors[0]);
             return;
         }
 
@@ -146,7 +172,7 @@ export default function AssignmentsCreate({
                 return;
             }
             if (file.size > maxSize) {
-                errors.push(`"${file.name}" exceeds the 100MB limit.`);
+                errors.push(`"${file.name}" exceeds the 50MB limit.`);
                 return;
             }
             validFiles.push(file);
@@ -154,6 +180,7 @@ export default function AssignmentsCreate({
 
         if (errors.length > 0) {
             setFileErrors(errors);
+            toast.error('Some files could not be added. Please review the file requirements.');
         } else {
             setFileErrors([]);
         }
@@ -163,10 +190,13 @@ export default function AssignmentsCreate({
         e.target.value = '';
     };
 
-    const removeFile = (index) => {
+    const removeFile = () => {
+        if (fileIndexToRemove === null) return;
         const newResources = [...data.resources];
-        newResources.splice(index, 1);
+        newResources.splice(fileIndexToRemove, 1);
         setData('resources', newResources);
+        setFileIndexToRemove(null);
+        toast.success('Selected file removed.');
     };
 
     const toggleSubmissionMethod = (method) => {
@@ -243,7 +273,7 @@ export default function AssignmentsCreate({
                                         <select
                                             id="grade_level"
                                             value={data.grade_level}
-                                            onChange={(e) => setData('grade_level', e.target.value)}
+                                            onChange={handleGradeLevelChange}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
@@ -326,7 +356,7 @@ export default function AssignmentsCreate({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
-                                            {related_lessons.map((lesson) => (
+                                            {relatedLessonsForSelectedGrade.map((lesson) => (
                                                 <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
                                             ))}
                                         </select>
@@ -525,7 +555,7 @@ export default function AssignmentsCreate({
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Learning Resources</h3>
                                 <div className="mb-5"><ExternalLinksInput value={data.resource_urls} onChange={(urls) => setData('resource_urls', urls)} errors={errors} /></div>
                                 <div>
-                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 4 files, 100MB each)" />
+                                    <InputLabel htmlFor="resources" value="Upload Resources (Max 8 files, 50MB each)" />
                                     <input
                                         id="resources"
                                         type="file"
@@ -553,7 +583,7 @@ export default function AssignmentsCreate({
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeFile(index)}
+                                                        onClick={() => setFileIndexToRemove(index)}
                                                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                     >
                                                         <XMarkIcon className="w-4 h-4" />
@@ -561,12 +591,12 @@ export default function AssignmentsCreate({
                                                 </div>
                                             ))}
                                             <p className="text-xs text-gray-500">
-                                                Total: {data.resources.length} of 4 files
+                                                Total: {data.resources.length} of 8 files
                                             </p>
                                         </div>
                                     )}
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPTX, MP4 (Max 100MB per file, Max 4 files total)
+                                        Accepted: PDF, JPG, JPEG, DOC, DOCX, PPTX, MP4 (Max 50MB per file, Max 8 files total)
                                     </p>
                                     <InputError message={errors.resources} className="mt-2" />
                                 </div>
@@ -591,6 +621,16 @@ export default function AssignmentsCreate({
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={fileIndexToRemove !== null}
+                onClose={() => setFileIndexToRemove(null)}
+                onConfirm={removeFile}
+                title="Remove selected file?"
+                message="This file will not be included when you create the assignment."
+                confirmText="Remove file"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

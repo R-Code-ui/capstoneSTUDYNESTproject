@@ -6,8 +6,21 @@ import PriorityBadge from '@/Components/PriorityBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { MapPinIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 export default function AnnouncementShow({ announcement }) {
+    const handleBackToList = () => {
+        router.visit(route('principal.announcements.index'), {
+            onError: () => toast.error('Unable to return to the announcements list. Please try again.'),
+        });
+    };
+
+    const handleEdit = () => {
+        router.visit(route('principal.announcements.edit', announcement.id), {
+            onError: () => toast.error('Unable to open this announcement for editing. Please try again.'),
+        });
+    };
+
     const getAudienceLabel = (audience) => {
         return audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown';
     };
@@ -20,7 +33,7 @@ export default function AnnouncementShow({ announcement }) {
                         Announcement Details
                     </h2>
                     <div className="flex gap-2">
-                        <SecondaryButton onClick={() => router.visit(route('principal.announcements.index'))}>
+                        <SecondaryButton onClick={handleBackToList}>
                             Back to List
                         </SecondaryButton>
                     </div>
@@ -102,10 +115,10 @@ export default function AnnouncementShow({ announcement }) {
 
                             {/* Actions */}
                             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                                <SecondaryButton onClick={() => router.visit(route('principal.announcements.edit', announcement.id))}>
+                                <SecondaryButton onClick={handleEdit}>
                                     Edit
                                 </SecondaryButton>
-                                <PrimaryButton onClick={() => router.visit(route('principal.announcements.index'))}>
+                                <PrimaryButton onClick={handleBackToList}>
                                     Back to List
                                 </PrimaryButton>
                             </div>

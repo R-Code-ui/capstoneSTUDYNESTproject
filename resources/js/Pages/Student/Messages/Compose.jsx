@@ -1,43 +1,60 @@
 import { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import InputLabel from '@/Components/InputLabel';
-import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { toast } from 'sonner';
 import {
     UserIcon,
     PaperAirplaneIcon,
     ArrowLeftIcon,
+    BookOpenIcon,
+    DocumentTextIcon,
+    AcademicCapIcon,
+    PuzzlePieceIcon,
+    ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 
 const CATEGORY_OPTIONS = [
-    { value: 'lesson', label: 'Lesson', emoji: '📘' },
-    { value: 'assignment', label: 'Assignment', emoji: '📝' },
-    { value: 'quiz', label: 'Quiz', emoji: '🧠' },
-    { value: 'educational_game', label: 'Game', emoji: '🎮' },
-    { value: 'general_academic_concern', label: 'Concern', emoji: '💬' },
+    { value: 'lesson', label: 'Lesson', icon: BookOpenIcon },
+    { value: 'assignment', label: 'Assignment', icon: DocumentTextIcon },
+    { value: 'quiz', label: 'Quiz', icon: AcademicCapIcon },
+    { value: 'educational_game', label: 'Game', icon: PuzzlePieceIcon },
+    { value: 'general_academic_concern', label: 'Concern', icon: ChatBubbleLeftRightIcon },
 ];
 
-export default function MessagesCompose({ teachers, subjects = [] }) {
+export default function MessagesCompose({ teachers }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { data, setData, errors, post } = useForm({
         receiver_id: '',
-        subject: '',
         category: '',
         message: '',
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!data.receiver_id) {
+            toast.error('Please select a teacher.');
+            return;
+        }
+        if (!data.category) {
+            toast.error('Please select a category.');
+            return;
+        }
+        if (!data.message.trim()) {
+            toast.error('Please enter a message.');
+            return;
+        }
         setIsSubmitting(true);
 
         post(route('student.messages.store'), {
             preserveState: true,
+            onSuccess: () => toast.success('Message sent.'),
+            onError: () => toast.error('Unable to send the message. Please review the highlighted fields and try again.'),
             onFinish: () => setIsSubmitting(false),
         });
     };
@@ -105,38 +122,27 @@ export default function MessagesCompose({ teachers, subjects = [] }) {
                             <div>
                                 <InputLabel value="What is this about?" required />
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                    {CATEGORY_OPTIONS.map((cat) => (
-                                        <button
-                                            key={cat.value}
-                                            type="button"
-                                            onClick={() => setData('category', cat.value)}
-                                            className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition ${
-                                                data.category === cat.value
-                                                    ? 'bg-blue-600 text-white border-blue-600'
-                                                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-                                            }`}
-                                        >
-                                            <span>{cat.emoji}</span>
-                                            {cat.label}
-                                        </button>
-                                    ))}
+                                    {CATEGORY_OPTIONS.map((cat) => {
+                                        const CategoryIcon = cat.icon;
+
+                                        return (
+                                            <button
+                                                key={cat.value}
+                                                type="button"
+                                                onClick={() => setData('category', cat.value)}
+                                                className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition ${
+                                                    data.category === cat.value
+                                                        ? 'bg-blue-600 text-white border-blue-600'
+                                                        : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                                                }`}
+                                            >
+                                                <CategoryIcon className="h-4 w-4" />
+                                                {cat.label}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                                 <InputError message={errors.category} className="mt-2" />
-                            </div>
-
-                            {/* ===== Subject (optional) ===== */}
-                            <div>
-                                <InputLabel htmlFor="subject" value="Subject (optional)" />
-                                <select
-                                    id="subject"
-                                    value={data.subject}
-                                    onChange={(e) => setData('subject', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-800"
-                                >
-                                    <option value="">No subject</option>
-                                    {subjects.map((subject) => <option key={subject.id} value={subject.name}>{subject.name}</option>)}
-                                </select>
-                                <InputError message={errors.subject} className="mt-2" />
                             </div>
 
                             {/* ===== Message ===== */}
@@ -156,7 +162,9 @@ export default function MessagesCompose({ teachers, subjects = [] }) {
 
                             {/* ===== Actions ===== */}
                             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
-                                <SecondaryButton type="button" onClick={() => router.visit(route('student.messages.index'))}>
+                                <SecondaryButton type="button" onClick={() => router.visit(route('student.messages.index'), {
+                                    onError: () => toast.error('Unable to return to messages. Please try again.'),
+                                })}>
                                     <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                     Cancel
                                 </SecondaryButton>

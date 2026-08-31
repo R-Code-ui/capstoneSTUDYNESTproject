@@ -1,9 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -23,13 +24,23 @@ import {
 
 export default function LessonsShow({ lesson, completion_records = [], student_completion = [] }) {
     const [completionFilter, setCompletionFilter] = useState('all');
+    const [completionPage, setCompletionPage] = useState(1);
+    const completionPageSize = 10;
     const completedStudents = student_completion.filter((student) => student.status === 'completed');
     const incompleteStudents = student_completion.filter((student) => student.status === 'not_completed');
-    const visibleStudents = completionFilter === 'completed'
+    const filteredStudents = completionFilter === 'completed'
         ? completedStudents
         : completionFilter === 'not_completed'
             ? incompleteStudents
             : student_completion;
+    const completionPageCount = Math.max(1, Math.ceil(filteredStudents.length / completionPageSize));
+    const paginatedStudents = filteredStudents.slice((completionPage - 1) * completionPageSize, completionPage * completionPageSize);
+    const completionStart = filteredStudents.length === 0 ? 0 : (completionPage - 1) * completionPageSize + 1;
+    const completionEnd = Math.min(completionPage * completionPageSize, filteredStudents.length);
+
+    useEffect(() => {
+        setCompletionPage(1);
+    }, [completionFilter]);
     const getResourceIcon = (type) => {
         switch (type) {
             case 'pdf_module': return <DocumentIcon className="w-6 h-6 text-red-500" />;
@@ -61,10 +72,30 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
 
     const isUrlResource = (type) => type === 'url';
     const isVideoResource = (type) => type === 'video';
+    const isOfficeDocument = (resource) => /\.(doc|docx|ppt|pptx)$/i.test(resource.name || resource.path || '')
+        || /(msword|wordprocessingml|ms-powerpoint|presentationml)/i.test(resource.mime || '');
+    const officeApplication = (resource) => /\.(ppt|pptx)$/i.test(resource.name || resource.path || '')
+        || /(powerpoint|presentationml)/i.test(resource.mime || '') ? 'PowerPoint' : 'Word';
 
     const handleView = (resourceId) => {
-        window.open(route('teacher.lessons.view-resource', resourceId), '_blank');
+        const resourceWindow = window.open(route('teacher.lessons.view-resource', resourceId), '_blank');
+        if (!resourceWindow) {
+            toast.error('Your browser blocked the resource viewer. Please allow pop-ups and try again.');
+            return;
+        }
+        resourceWindow.opener = null;
     };
+
+    const handleDownload = (resourceId) => {
+        const downloadWindow = window.open(route('teacher.lessons.download-resource', resourceId), '_blank');
+        if (!downloadWindow) {
+            toast.error('Your browser blocked the resource download. Please allow pop-ups and try again.');
+            return;
+        }
+        downloadWindow.opener = null;
+    };
+
+    const handleNavigationError = () => toast.error('Unable to load that page. Please try again.');
 
     return (
         <AuthenticatedLayout
@@ -74,13 +105,13 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                         {lesson.lesson_title}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <Link href={route('teacher.lessons.edit', lesson.id)}>
+                        <Link href={route('teacher.lessons.edit', lesson.id)} onError={handleNavigationError}>
                             <SecondaryButton>
                                 <PencilSquareIcon className="w-4 h-4 mr-1" />
                                 Edit
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.lessons.index')}>
+                        <Link href={route('teacher.lessons.index')} onError={handleNavigationError}>
                             <PrimaryButton>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                 Back to List
@@ -121,6 +152,19 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                     max-width: 100%;
                     overflow-wrap: anywhere;
                     word-break: break-word;
+                }
+                .completion-filter {
+                    background-color: white;
+                    color: rgb(31 41 55);
+                }
+                .studynest-layout.theme-dark .lesson-show-page .completion-filter {
+                    background-color: rgb(30 41 59) !important;
+                    border-color: rgb(71 85 105) !important;
+                    color: rgb(226 232 240) !important;
+                }
+                .studynest-layout.theme-dark .lesson-show-page .completion-filter option {
+                    background-color: rgb(15 23 42);
+                    color: rgb(226 232 240);
                 }
             `}</style>
             <div className="lesson-show-page py-12">
@@ -253,6 +297,9 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                                                             {getResourceLabel(resource.type)} • {formatFileSize(resource.size)}
                                                         </div>
                                                     )}
+                                                    {isOfficeDocument(resource) && (
+                                                        <div className="text-sm text-gray-500">Download to open in Microsoft {officeApplication(resource)}.</div>
+                                                    )}
                                                     {isUrlResource(resource.type) && (
                                                         <div className="text-sm text-gray-500">External Link</div>
                                                     )}
@@ -271,12 +318,12 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                                                     </a>
                                                 ) : (
                                                     <div className="flex gap-2">
-                                                        <button onClick={() => handleView(resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
+                                                        {!isOfficeDocument(resource) && <button onClick={() => handleView(resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
                                                             <EyeIcon className="w-4 h-4" /> View
-                                                        </button>
-                                                        <a href={route('teacher.lessons.download-resource', resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                                                        </button>}
+                                                        <button type="button" onClick={() => handleDownload(resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
                                                             <ArrowDownTrayIcon className="w-4 h-4" /> Download
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
@@ -290,24 +337,34 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                     <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <h3 className="text-sm font-semibold text-gray-700">Student Completion ({completedStudents.length}/{student_completion.length})</h3>
-                            <select value={completionFilter} onChange={(event) => setCompletionFilter(event.target.value)} className="rounded-md border-gray-300 text-sm">
+                            <select value={completionFilter} onChange={(event) => setCompletionFilter(event.target.value)} className="completion-filter rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="all">All Students</option>
                                 <option value="completed">Completed</option>
                                 <option value="not_completed">Not Completed</option>
                             </select>
                         </div>
                         <div className="p-6">
-                            {visibleStudents.length === 0 ? (
+                            {filteredStudents.length === 0 ? (
                                 <p className="text-sm text-gray-500">No students match this filter.</p>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full text-sm">
                                         <thead><tr className="border-b text-left text-gray-500"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Grade Level</th><th className="py-2 pr-4">Status</th><th className="py-2">Completed At</th></tr></thead>
-                                        <tbody>{visibleStudents.map((student) => <tr key={student.id} className="border-b last:border-0"><td className="py-3 pr-4 font-medium text-gray-800">{student.name}</td><td className="py-3 pr-4 text-gray-600">{student.grade_level}</td><td className={`py-3 pr-4 ${student.status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}`}>{student.status === 'completed' ? 'Completed' : 'Not completed'}</td><td className="py-3 text-gray-600">{student.completed_at || '—'}</td></tr>)}</tbody>
+                                        <tbody>{paginatedStudents.map((student) => <tr key={student.id} className="border-b last:border-0"><td className="py-3 pr-4 font-medium text-gray-800">{student.name}</td><td className="py-3 pr-4 text-gray-600">{student.grade_level}</td><td className={`py-3 pr-4 ${student.status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}`}>{student.status === 'completed' ? 'Completed' : 'Not completed'}</td><td className="py-3 text-gray-600">{student.completed_at || '—'}</td></tr>)}</tbody>
                                     </table>
                                 </div>
                             )}
                         </div>
+                        {filteredStudents.length > 0 && (
+                            <div className="flex flex-col gap-3 border-t border-gray-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-sm text-gray-500">Showing <span className="font-semibold text-gray-800">{completionStart}</span> to <span className="font-semibold text-gray-800">{completionEnd}</span> of <span className="font-semibold text-gray-800">{filteredStudents.length}</span> results</p>
+                                <nav aria-label="Student completion pagination" className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <button type="button" onClick={() => setCompletionPage((page) => Math.max(1, page - 1))} disabled={completionPage === 1} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700">Previous</button>
+                                    {Array.from({ length: completionPageCount }, (_, index) => index + 1).map((page) => <button key={page} type="button" onClick={() => setCompletionPage(page)} aria-current={page === completionPage ? 'page' : undefined} className={`min-w-9 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${page === completionPage ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-700'}`}>{page}</button>)}
+                                    <button type="button" onClick={() => setCompletionPage((page) => Math.min(completionPageCount, page + 1))} disabled={completionPage === completionPageCount} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700">Next</button>
+                                </nav>
+                            </div>
+                        )}
                     </div>
 
                     {/* Related Activities */}
@@ -322,6 +379,7 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                                         {lesson.related_assignment_id && (
                                             <Link
                                                 href={route('teacher.assignments.show', lesson.related_assignment_id)}
+                                                onError={handleNavigationError}
                                                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors"
                                             >
                                                 <DocumentTextIcon className="w-4 h-4" />
@@ -331,6 +389,7 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                                         {lesson.related_quiz_id && (
                                             <Link
                                                 href={route('teacher.quizzes.show', lesson.related_quiz_id)}
+                                                onError={handleNavigationError}
                                                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
                                             >
                                                 <ChartBarIcon className="w-4 h-4" />
@@ -340,6 +399,7 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                                         {lesson.related_game_id && (
                                             <Link
                                                 href={route('teacher.games.show', lesson.related_game_id)}
+                                                onError={handleNavigationError}
                                                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"
                                             >
                                                 <PuzzlePieceIcon className="w-4 h-4" />

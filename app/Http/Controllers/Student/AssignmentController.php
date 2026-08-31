@@ -47,6 +47,10 @@ class AssignmentController extends Controller
                 'subject'         => $assignment->subject,
                 'assignment_type' => $assignment->assignment_type,
                 'due_date'        => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : null,
+                'due_time'        => $assignment->due_time,
+                'due_at'          => $assignment->dueAt()?->toIso8601String(),
+                'allow_late_submission' => $assignment->allow_late_submission,
+                'deadline_status' => $assignment->deadlineStatus(),
                 'status'          => $submission ? $submission->status : 'not_submitted',
                 'score'           => $submission ? $submission->score : null,
                 'is_graded'       => $submission && $submission->status === 'graded',
@@ -111,8 +115,12 @@ class AssignmentController extends Controller
                 'total_points'        => $assignment->total_points,
                 'due_date'            => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : null,
                 'due_time'            => $assignment->due_time,
+                'due_at'              => $assignment->dueAt()?->toIso8601String(),
                 'submission_methods'  => $submissionMethods,
                 'allow_late_submission' => $assignment->allow_late_submission,
+                'due_at_label'          => $assignment->dueAt()?->format('M d, Y g:i A'),
+                'deadline_status'       => $assignment->deadlineStatus(),
+                'can_submit'            => $assignment->canAcceptSubmissions(),
             ],
             'resources'  => $resources,
             'submission' => $submission ? [
@@ -145,8 +153,8 @@ class AssignmentController extends Controller
 
         $validated = $request->validate([
             'submission_method' => 'required|in:digital',
-            'files'             => 'nullable|array|max:4',
-            'files.*'           => 'file|max:102400|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4',
+            'files'             => 'nullable|array|max:8',
+            'files.*'           => 'file|max:51200|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4',
         ]);
 
         $configuredMethods = $assignment->submission_methods ?? [];
@@ -169,13 +177,11 @@ class AssignmentController extends Controller
 
         // Check late submission
         $isLate = false;
-        $dueAt = $assignment->due_date
-            ? \Carbon\Carbon::parse($assignment->due_date->format('Y-m-d') . ' ' . $assignment->due_time)
-            : null;
+        $dueAt = $assignment->dueAt();
 
         if ($dueAt && now()->gt($dueAt)) {
-            if (!$assignment->allow_late_submission) {
-                return redirect()->back()->with('error', 'Late submissions are not allowed.');
+            if (!$assignment->canAcceptSubmissions()) {
+                return redirect()->back()->with('error', 'This assignment has expired. Late submissions are not allowed.');
             }
             $isLate = true;
         }
@@ -268,6 +274,10 @@ class AssignmentController extends Controller
 
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        if (preg_match('/\.(doc|docx|ppt|pptx)$/i', $resource->file_name ?? '')) {
+            return response()->download($filePath, $resource->file_name);
+        }
 
         return response()->file($filePath, [
             'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),

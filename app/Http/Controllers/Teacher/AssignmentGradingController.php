@@ -7,6 +7,7 @@ use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\User;
 use App\Services\StudyNestNotificationService;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -37,17 +38,30 @@ class AssignmentGradingController extends Controller
             return [
                 'student_id'       => $student->id,
                 'student_name'     => $student->name,
-                'lrn'              => $student->lrn,
                 'submission_id'    => $submission ? $submission->id : null,
                 'status'           => $submission ? $submission->status : 'not_submitted',
                 'score'            => $submission ? $submission->score : null,
                 'feedback'         => $submission ? $submission->feedback : null,
                 'submission_method'=> $submission ? $submission->submission_method : null,
                 'files'            => $submission ? $submission->files : [],
+                'file_path'        => $submission ? $submission->file_path : null,
                 'submitted_at'     => $submission && $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : null,
                 'graded_at'        => $submission && $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i') : null,
             ];
         });
+
+        $perPage = 10;
+        $lastPage = max(1, (int) ceil($allStudents->count() / $perPage));
+        $currentPage = min($lastPage, max(1, (int) request()->query('page', 1)));
+        $paginator = new LengthAwarePaginator(
+            $allStudents->forPage($currentPage, $perPage)->values(),
+            $allStudents->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+        $pagination = $paginator->toArray();
+        unset($pagination['data']);
 
         return Inertia::render('Teacher/Assignments/Grading', [
             'assignment' => [
@@ -57,9 +71,15 @@ class AssignmentGradingController extends Controller
                 'subject'            => $assignment->subject,
                 'total_points'       => $assignment->total_points,
                 'due_date'           => $assignment->due_date,
+                'due_time'           => $assignment->due_time,
+                'due_at'             => $assignment->dueAt()?->toIso8601String(),
+                'allow_late_submission' => $assignment->allow_late_submission,
+                'due_at_label'       => $assignment->dueAt()?->format('M d, Y g:i A'),
+                'deadline_status'    => $assignment->deadlineStatus(),
                 'submission_methods' => $submissionMethods,
             ],
-            'submissions' => $allStudents,
+            'submissions' => $paginator->items(),
+            'pagination' => $pagination,
             'statistics' => [
                 'total_students' => $allStudents->count(),
                 'submitted'      => $allStudents->filter(fn($s) => in_array($s['status'], ['submitted', 'late_submission', 'graded', 'reviewed']))->count(),
@@ -181,6 +201,10 @@ class AssignmentGradingController extends Controller
         $file = $this->getFileFromSubmission($submission, $index);
         $filePath = storage_path('app/public/' . $file['path']);
         if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        if (preg_match('/\.(doc|docx|ppt|pptx)$/i', $file['name'] ?? '')) {
+            return response()->download($filePath, $file['name']);
+        }
 
         return response()->file($filePath, [
             'Content-Type' => $file['mime'] ?? mime_content_type($filePath),

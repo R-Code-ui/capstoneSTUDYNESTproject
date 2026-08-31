@@ -9,6 +9,7 @@ import QuizMonitoring from '@/Components/QuizMonitoring';
 import StudentEngagement from '@/Components/StudentEngagement';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 
 // Helper: Ensure numeric values show 0 if null/undefined
 const safeNumber = (value) => {
@@ -24,7 +25,22 @@ const formatDate = (dateString) => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-export default function TeacherProfilePage({ teacher, lessons, assignments, quizzes, classroom_stats }) {
+export default function TeacherProfilePage({
+    teacher,
+    lessons,
+    lessons_pagination,
+    assignments,
+    assignments_pagination,
+    quizzes,
+    quizzes_pagination,
+    classroom_stats,
+}) {
+    const handleBackToList = () => {
+        router.visit(route('principal.teachers.index'), {
+            onError: () => toast.error('Unable to return to teacher monitoring. Please try again.'),
+        });
+    };
+
     // Format data with safeNumber for numeric values
     const formattedTeacher = {
         ...teacher,
@@ -68,7 +84,7 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
                         Teacher Profile: {teacher.name}
                     </h2>
                     <div className="flex gap-2">
-                        <SecondaryButton onClick={() => router.visit(route('principal.teachers.index'))}>
+                        <SecondaryButton onClick={handleBackToList}>
                             Back to List
                         </SecondaryButton>
                     </div>
@@ -117,7 +133,7 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
                             <h3 className="text-sm font-semibold text-gray-700">Lesson Monitoring</h3>
                         </div>
                         <div className="p-6">
-                            <LessonMonitoring lessons={formattedLessons} />
+                            <LessonMonitoring lessons={formattedLessons} pagination={lessons_pagination} />
                         </div>
                     </div>
 
@@ -127,7 +143,7 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
                             <h3 className="text-sm font-semibold text-gray-700">Assignment Monitoring</h3>
                         </div>
                         <div className="p-6">
-                            <AssignmentMonitoring assignments={formattedAssignments} />
+                            <AssignmentMonitoring assignments={formattedAssignments} pagination={assignments_pagination} />
                         </div>
                     </div>
 
@@ -137,7 +153,7 @@ export default function TeacherProfilePage({ teacher, lessons, assignments, quiz
                             <h3 className="text-sm font-semibold text-gray-700">Quiz Monitoring</h3>
                         </div>
                         <div className="p-6">
-                            <QuizMonitoring quizzes={formattedQuizzes} />
+                            <QuizMonitoring quizzes={formattedQuizzes} pagination={quizzes_pagination} />
                         </div>
                     </div>
 

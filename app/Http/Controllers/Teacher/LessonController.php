@@ -162,8 +162,8 @@ class LessonController extends Controller
             'publish_date' => 'nullable|required_if:status,scheduled|date',
             'resource_urls' => 'nullable|array|max:10',
             'resource_urls.*' => 'nullable|url|max:2048',
-            'resources' => 'nullable|array|max:4',
-            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
+            'resources' => 'nullable|array|max:8',
+            'resources.*' => 'file|max:51200|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
         ]);
 
         $this->validateLessonRelationships($validated);
@@ -190,9 +190,9 @@ class LessonController extends Controller
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
-            if (count($files) > 4) {
+            if (count($files) > 8) {
                 return redirect()->back()
-                    ->withErrors(['resources' => 'You can only upload a maximum of 4 files.'])
+                    ->withErrors(['resources' => 'You can only upload a maximum of 8 files.'])
                     ->withInput();
             }
 
@@ -367,8 +367,8 @@ class LessonController extends Controller
             'resource_urls' => 'nullable|array|max:10',
             'resource_urls.*' => 'nullable|url|max:2048',
             'resource_urls_present' => 'nullable|boolean',
-            'resources' => 'nullable|array|max:4',
-            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
+            'resources' => 'nullable|array|max:8',
+            'resources.*' => 'file|max:51200|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
         ]);
 
         $this->validateLessonRelationships($validated);
@@ -378,7 +378,8 @@ class LessonController extends Controller
 
         $resourceUrls = array_values(array_filter($validated['resource_urls'] ?? []));
         $resourceUrlsPresent = $request->boolean('resource_urls_present');
-        unset($validated['resources'], $validated['resource_urls'], $validated['resource_urls_present']);
+        $deletedResourceIds = $validated['deleted_resource_ids'] ?? null;
+        unset($validated['resources'], $validated['resource_urls'], $validated['resource_urls_present'], $validated['deleted_resource_ids']);
 
         $validated['lesson_content'] = $this->sanitizeLessonContent($validated['lesson_content']);
         $lesson->update($validated);
@@ -387,8 +388,8 @@ class LessonController extends Controller
             app(StudyNestNotificationService::class)->lessonPublished($lesson);
         }
 
-        if (!empty($validated['deleted_resource_ids'])) {
-            $deletedIds = explode(',', $validated['deleted_resource_ids']);
+        if (!empty($deletedResourceIds)) {
+            $deletedIds = explode(',', $deletedResourceIds);
             $deletedIds = array_filter($deletedIds);
 
             if (!empty($deletedIds)) {
@@ -418,7 +419,7 @@ class LessonController extends Controller
             $currentResourceCount = $lesson->resources()
                 ->where('resource_type', '!=', 'url')
                 ->count();
-            $maxNewFiles = 4 - $currentResourceCount;
+            $maxNewFiles = 8 - $currentResourceCount;
 
             if (count($files) > $maxNewFiles) {
                 return redirect()->back()
@@ -537,6 +538,10 @@ class LessonController extends Controller
 
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        if (preg_match('/\.(doc|docx|ppt|pptx)$/i', $resource->file_name ?? '')) {
+            return response()->download($filePath, $resource->file_name);
+        }
 
         return response()->file($filePath, [
             'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),

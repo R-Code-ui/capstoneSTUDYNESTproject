@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { toast } from 'sonner';
 
 export default function AnnouncementsEdit({
     announcement,
@@ -40,6 +41,8 @@ export default function AnnouncementsEdit({
                 is_pinned: data.is_pinned ? 1 : 0,
             },
             preserveState: true,
+            onSuccess: () => toast.success('Announcement updated successfully.'),
+            onError: () => toast.error('Please correct the highlighted fields and try again.'),
             onFinish: () => setIsSubmitting(false),
         });
     };

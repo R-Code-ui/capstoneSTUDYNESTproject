@@ -3,10 +3,14 @@ import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import Table, { StatusBadge } from '@/Components/Table';
+import DeadlineBadge from '@/Components/StatusBadge';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
+import useDeadlineStatuses from '@/Hooks/useDeadlineStatuses';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -31,6 +35,8 @@ export default function AssignmentsIndex({
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [typeFilter, setTypeFilter] = useState(filters?.assignment_type || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+    const getDeadlineStatus = useDeadlineStatuses(assignments);
 
     const handleSearch = (value) => {
         setSearch(value);
@@ -65,15 +71,23 @@ export default function AssignmentsIndex({
         });
     };
 
-    const handleDelete = (assignment) => {
-        if (confirm(`Delete "${assignment.title}"? This action cannot be undone.`)) {
-            router.delete(route('teacher.assignments.destroy', assignment.id), { preserveState: true });
-        }
+    const handleDelete = () => {
+        if (!assignmentToDelete) return;
+
+        const assignment = assignmentToDelete;
+        setAssignmentToDelete(null);
+        router.delete(route('teacher.assignments.destroy', assignment.id), {
+            preserveState: true,
+            onSuccess: () => toast.success('Assignment deleted successfully.'),
+            onError: () => toast.error('Unable to delete this assignment. Please try again.'),
+        });
     };
 
     const statusOptions = [
         { value: '', label: 'All Status' },
-        ...statuses.map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
+        ...statuses
+            .filter((status) => status !== 'archived')
+            .map((status) => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) })),
     ];
 
     const gradeOptions = [
@@ -128,8 +142,9 @@ export default function AssignmentsIndex({
             key: 'due_date',
             label: 'Due Date',
             render: (row) => (
-                <div className="max-w-[90px] truncate" title={row.due_date}>
-                    {row.due_date}
+                <div className="space-y-1" title={`${row.due_date} ${row.due_time || ''}`}>
+                    <div className="whitespace-nowrap">{row.due_date}</div>
+                    <DeadlineBadge status={getDeadlineStatus(row)} size="sm" />
                 </div>
             ),
         },
@@ -175,7 +190,7 @@ export default function AssignmentsIndex({
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
-            onClick: () => handleDelete(row),
+            onClick: () => setAssignmentToDelete(row),
         },
     ];
 
@@ -257,6 +272,18 @@ export default function AssignmentsIndex({
                     </div>
                 </div>
             </div>
+
+            {assignmentToDelete && (
+                <ConfirmModal
+                    show
+                    onClose={() => setAssignmentToDelete(null)}
+                    onConfirm={handleDelete}
+                    title="Delete assignment?"
+                    message={`“${assignmentToDelete.title}” and its resources will be permanently deleted. This action cannot be undone.`}
+                    confirmText="Delete permanently"
+                    danger
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

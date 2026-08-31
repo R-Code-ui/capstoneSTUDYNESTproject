@@ -4,7 +4,7 @@ import {
     ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 
-export default function Pagination({ pagination, className = '' }) {
+export default function Pagination({ pagination, className = '', onError }) {
     if (!pagination || pagination.total === 0) {
         return null;
     }
@@ -127,6 +127,7 @@ export default function Pagination({ pagination, className = '' }) {
                                 href={link.url}
                                 preserveScroll
                                 preserveState
+                                onError={onError}
                                 className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                             >
                                 <ChevronLeftIcon className="w-4 h-4" />
@@ -143,6 +144,7 @@ export default function Pagination({ pagination, className = '' }) {
                                 href={link.url}
                                 preserveScroll
                                 preserveState
+                                onError={onError}
                                 className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                             >
                                 Next
@@ -158,6 +160,7 @@ export default function Pagination({ pagination, className = '' }) {
                             href={link.url}
                             preserveScroll
                             preserveState
+                            onError={onError}
                                 className={`
                                 min-w-[36px] rounded-lg px-3 py-2 text-center text-sm font-semibold transition-colors
                                 ${

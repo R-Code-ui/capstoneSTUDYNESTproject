@@ -30,6 +30,10 @@ class NotificationController extends Controller
         }
         $item->markAsRead();
 
+        if (!$request->boolean('open')) {
+            return redirect()->back();
+        }
+
         $url = data_get($item->data, 'url');
         return $url ? redirect()->to($url) : redirect()->route('notifications.index');
     }

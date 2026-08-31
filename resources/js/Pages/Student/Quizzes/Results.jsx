@@ -4,6 +4,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -15,9 +17,20 @@ import {
 
 export default function QuizzesResults({ attempt, quiz, questions }) {
     const [showAnswers, setShowAnswers] = useState(false);
+    const [confirmingRetry, setConfirmingRetry] = useState(false);
+    const [isRetrying, setIsRetrying] = useState(false);
     const passed = attempt.passed;
     const percentage = attempt.percentage;
     const canRetry = attempt.attempt_number < quiz.attempts_allowed;
+    const startRetry = () => {
+        setConfirmingRetry(false);
+        setIsRetrying(true);
+        router.post(route('student.quizzes.start', quiz.id), {}, {
+            onSuccess: () => toast.success('New quiz attempt started.'),
+            onError: () => toast.error('Unable to start another attempt. Please try again.'),
+            onFinish: () => setIsRetrying(false),
+        });
+    };
 
     return (
         <AuthenticatedLayout
@@ -26,7 +39,9 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                     <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
                         Quiz Results: {quiz.title}
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'))}>
+                    <SecondaryButton onClick={() => router.visit(route('student.quizzes.index'), {
+                        onError: () => toast.error('Unable to return to quizzes. Please try again.'),
+                    })}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" />
                         Back to Quizzes
                     </SecondaryButton>
@@ -164,14 +179,24 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                     <div className="mt-6 flex justify-center gap-3">
                         {/* ✅ Only one back button here – header already has one, so we removed the duplicate */}
                         {canRetry && (
-                            <PrimaryButton onClick={() => router.post(route('student.quizzes.start', quiz.id))}>
+                            <PrimaryButton onClick={() => setConfirmingRetry(true)} disabled={isRetrying}>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                                Retry Quiz
+                                {isRetrying ? 'Starting...' : 'Retry Quiz'}
                             </PrimaryButton>
                         )}
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmingRetry}
+                onClose={() => setConfirmingRetry(false)}
+                onConfirm={startRetry}
+                title="Start another attempt?"
+                message="Starting another attempt uses one of your remaining quiz attempts."
+                confirmText="Start attempt"
+                cancelText="Cancel"
+                confirmColor="blue"
+            />
         </AuthenticatedLayout>
     );
 }

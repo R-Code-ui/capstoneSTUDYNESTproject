@@ -109,6 +109,7 @@ class QuizController extends Controller
             return [
                 'id' => $lesson->id,
                 'title' => $lesson->lesson_title,
+                'grade_level' => $lesson->grade_level,
             ];
         });
 
@@ -206,7 +207,7 @@ class QuizController extends Controller
                 'choice_c' => $question['choice_c'] ?? null,
                 'choice_d' => $question['choice_d'] ?? null,
                 'correct_answer' => $question['correct_answer'],
-                'alternative_answers' => isset($question['alternative_answers']) ? json_encode($question['alternative_answers']) : null,
+                'alternative_answers' => $question['alternative_answers'] ?? null,
             ]);
         }
         });
@@ -222,11 +223,13 @@ class QuizController extends Controller
     /**
      * Display the specified quiz.
      */
-    public function show(Quiz $quiz)
+    public function show(Request $request, Quiz $quiz)
     {
         Gate::authorize('view', $quiz);
 
-        $quiz->load('questions');
+        $questions = $quiz->activeQuestions()
+            ->orderBy('question_number')
+            ->paginate(10, ['*'], 'page', $request->integer('page', 1));
 
         return Inertia::render('Teacher/Quizzes/Show', [
             'quiz' => [
@@ -246,7 +249,8 @@ class QuizController extends Controller
                 'status' => $quiz->status,
                 'publish_date' => $quiz->publish_date?->format('M d, Y g:i A') ?? 'Not published',
                 'created_at' => $quiz->created_at->format('Y-m-d H:i'),
-                'questions' => $quiz->questions->map(function ($question) {
+            ],
+            'questions' => $questions->map(function ($question) {
                     return [
                         'id' => $question->id,
                         'question_number' => $question->question_number,
@@ -257,10 +261,12 @@ class QuizController extends Controller
                         'choice_c' => $question->choice_c,
                         'choice_d' => $question->choice_d,
                         'correct_answer' => $question->correct_answer,
-                        'alternative_answers' => json_decode($question->alternative_answers, true),
+                        'alternative_answers' => is_array($question->alternative_answers)
+                            ? $question->alternative_answers
+                            : (json_decode($question->alternative_answers ?: '[]', true) ?: []),
                     ];
                 }),
-            ],
+            'questionsPagination' => $questions->toArray(),
         ]);
     }
 
@@ -288,10 +294,13 @@ class QuizController extends Controller
             return [
                 'id' => $lesson->id,
                 'title' => $lesson->lesson_title,
+                'grade_level' => $lesson->grade_level,
             ];
         });
 
-        $quiz->load('questions');
+        $quiz->load(['questions' => fn ($query) => $query
+            ->where('is_active', true)
+            ->orderBy('question_number')]);
 
         return Inertia::render('Teacher/Quizzes/Edit', [
             'quiz' => [
@@ -322,7 +331,9 @@ class QuizController extends Controller
                         'choice_c' => $question->choice_c,
                         'choice_d' => $question->choice_d,
                         'correct_answer' => $question->correct_answer,
-                        'alternative_answers' => json_decode($question->alternative_answers, true),
+                        'alternative_answers' => is_array($question->alternative_answers)
+                            ? $question->alternative_answers
+                            : (json_decode($question->alternative_answers ?: '[]', true) ?: []),
                     ];
                 }),
             ],
@@ -423,7 +434,8 @@ class QuizController extends Controller
                 'choice_c' => $question['choice_c'] ?? null,
                 'choice_d' => $question['choice_d'] ?? null,
                 'correct_answer' => $question['correct_answer'],
-                'alternative_answers' => isset($question['alternative_answers']) ? json_encode($question['alternative_answers']) : null,
+                'alternative_answers' => $question['alternative_answers'] ?? null,
+                'is_active' => true,
             ];
 
             $existingQuestion = !empty($question['id']) ? $existingQuestions->get((int) $question['id']) : null;
@@ -438,10 +450,14 @@ class QuizController extends Controller
             }
         }
 
-        // Keep question records that are already referenced by past attempts.
-        // This lets teachers update/publish a quiz without corrupting attempt data.
-        if (! $hasAttempts) {
-            $quiz->questions()->whereNotIn('id', $activeQuestionIds)->delete();
+        $removedQuestions = $quiz->questions()
+            ->where('is_active', true)
+            ->whereNotIn('id', $activeQuestionIds);
+
+        if ($hasAttempts) {
+            $removedQuestions->update(['is_active' => false]);
+        } else {
+            $removedQuestions->delete();
         }
         });
 

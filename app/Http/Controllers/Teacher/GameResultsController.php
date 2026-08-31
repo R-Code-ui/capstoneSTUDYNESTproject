@@ -20,10 +20,14 @@ class GameResultsController extends Controller
         Gate::authorize('view', $game);
 
         // Get all students for this grade level
-        $students = User::role('student')
+        $studentsQuery = User::role('student')
             ->where('grade_level', $game->grade_level)
-            ->where('is_active', true)
-            ->get();
+            ->where('is_active', true);
+        $students = (clone $studentsQuery)->get();
+        $participationStudents = $studentsQuery
+            ->orderBy('name')
+            ->paginate(10, ['*'], 'participation_page')
+            ->withQueryString();
 
         // Get all results for this game
         $results = GameResult::where('game_id', $game->id)
@@ -36,7 +40,7 @@ class GameResultsController extends Controller
         $resultsByStudent = $results->groupBy('student_id');
 
         // Merge to show all students (including those who haven't played)
-        $allStudents = $students->map(function ($student) use ($resultsByStudent) {
+        $participationRows = $participationStudents->getCollection()->map(function ($student) use ($resultsByStudent) {
             $studentResults = $resultsByStudent->get($student->id, collect());
             $result = $studentResults->where('status', 'completed')->first()
                 ?? $studentResults->where('status', 'started')->first()
@@ -85,7 +89,8 @@ class GameResultsController extends Controller
                 'game_type' => $game->game_type,
                 'grade_level' => $game->grade_level,
             ],
-            'results' => $allStudents,
+            'results' => $participationRows,
+            'pagination' => $participationStudents->toArray(),
             'statistics' => $statistics,
         ]);
     }

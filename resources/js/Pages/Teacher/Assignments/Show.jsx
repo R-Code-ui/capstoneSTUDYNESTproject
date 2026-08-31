@@ -4,44 +4,21 @@ import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import StudentResources from '@/Components/StudentResources';
+import useDeadlineStatuses from '@/Hooks/useDeadlineStatuses';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
-    DocumentIcon,
-    PhotoIcon,
-    PaperClipIcon,
     ArrowLeftIcon,
     PencilSquareIcon,
     ClipboardDocumentListIcon,
-    ArrowDownTrayIcon,
-    VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AssignmentsShow({ assignment }) {
-    const getResourceIcon = (type) => {
-        switch (type) {
-            case 'pdf_module':
-                return <DocumentIcon className="w-6 h-6 text-red-500" />;
-            case 'image':
-                return <PhotoIcon className="w-6 h-6 text-emerald-500" />;
-            case 'worksheet':
-                return <PaperClipIcon className="w-6 h-6 text-blue-500" />;
-            case 'video':
-                return <VideoCameraIcon className="w-6 h-6 text-indigo-500" />;
-            default:
-                return <PaperClipIcon className="w-6 h-6 text-gray-500" />;
-        }
-    };
-
-    const getResourceLabel = (type) => {
-        const labels = {
-            pdf_module: 'PDF Module',
-            worksheet: 'Worksheet',
-            image: 'Image',
-            video: 'Video',
-        };
-        return labels[type] || type;
-    };
+    const getDeadlineStatus = useDeadlineStatuses(assignment);
+    const deadlineStatus = getDeadlineStatus(assignment);
+    const handleNavigationError = () => toast.error('Unable to load that page. Please try again.');
 
     return (
         <AuthenticatedLayout
@@ -52,19 +29,19 @@ export default function AssignmentsShow({ assignment }) {
                         {assignment.assignment_title}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <Link href={route('teacher.assignments.grade', assignment.id)}>
+                        <Link href={route('teacher.assignments.grade', assignment.id)} onError={handleNavigationError}>
                             <SecondaryButton>
                                 <ClipboardDocumentListIcon className="w-4 h-4 mr-1" />
                                 Grade
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.assignments.edit', assignment.id)}>
+                        <Link href={route('teacher.assignments.edit', assignment.id)} onError={handleNavigationError}>
                             <SecondaryButton>
                                 <PencilSquareIcon className="w-4 h-4 mr-1" />
                                 Edit
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.assignments.index')}>
+                        <Link href={route('teacher.assignments.index')} onError={handleNavigationError}>
                             <PrimaryButton>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                 Back to List
@@ -136,6 +113,10 @@ export default function AssignmentsShow({ assignment }) {
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Allow Late Submission</div>
                                     <div className="font-medium text-gray-800">{assignment.allow_late_submission ? 'Yes' : 'No'}</div>
                                 </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Deadline</div>
+                                    <StatusBadge status={deadlineStatus} size="sm" />
+                                </div>
                                 {assignment.estimated_time && (
                                     <div>
                                         <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Estimated Time</div>
@@ -153,6 +134,13 @@ export default function AssignmentsShow({ assignment }) {
                             </div>
                         </div>
                     </div>
+
+                    {deadlineStatus !== 'open' && (
+                        <div className={`mt-6 rounded-xl border p-4 ${deadlineStatus === 'expired' ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200' : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200'}`}>
+                            <div className="font-semibold">{deadlineStatus === 'expired' ? 'Assignment expired' : 'Late submissions are allowed'}</div>
+                            <p className="mt-1 text-sm">The deadline was {assignment.due_at_label}. Existing submissions remain available for grading.</p>
+                        </div>
+                    )}
 
                     {/* ===== Instructions ===== */}
                     <div className="mt-6">
@@ -199,40 +187,12 @@ export default function AssignmentsShow({ assignment }) {
                                 <div className="px-6 py-4 border-b border-gray-200">
                                     <h3 className="text-sm font-semibold text-gray-700">Learning Resources</h3>
                                 </div>
-                                <div className="p-6 space-y-3">
-                                    {assignment.resources.map((resource) => (
-                                        <div
-                                            key={resource.id}
-                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 gap-3"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                {getResourceIcon(resource.type)}
-                                                <div>
-                                                    <div className="font-medium text-gray-800">
-                                                        {resource.name}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {getResourceLabel(resource.type)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {resource.type === 'url' ? (
-                                                <a href={resource.path} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700">
-                                                    Open Link
-                                                </a>
-                                            ) : (
-                                                <div className="flex gap-2">
-                                                    <a
-                                                        href={route('teacher.assignments.download-resource', resource.id)}
-                                                        className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                                                    >
-                                                        <ArrowDownTrayIcon className="w-4 h-4" />
-                                                        Download
-                                                    </a>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                                <div className="p-4 sm:p-6">
+                                    <StudentResources
+                                        resources={assignment.resources}
+                                        viewUrl={(id) => route('teacher.assignments.view-resource', id)}
+                                        downloadUrl={(id) => route('teacher.assignments.download-resource', id)}
+                                    />
                                 </div>
                             </div>
                         </div>

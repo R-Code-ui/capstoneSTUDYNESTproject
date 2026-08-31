@@ -4,6 +4,8 @@ import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import Pagination from '@/Components/Pagination';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -13,7 +15,8 @@ import {
     CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
-export default function QuizzesShow({ quiz }) {
+export default function QuizzesShow({ quiz, questions = [], questionsPagination }) {
+    const handleNavigationError = () => toast.error('Unable to load that page. Please try again.');
     const getTypeLabel = (type) => {
         const labels = {
             multiple_choice: 'Multiple Choice',
@@ -31,19 +34,19 @@ export default function QuizzesShow({ quiz }) {
                         {quiz.quiz_title}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <Link href={route('teacher.quizzes.results', quiz.id)}>
+                        <Link href={route('teacher.quizzes.results', quiz.id)} onError={handleNavigationError}>
                             <SecondaryButton>
                                 <ChartBarIcon className="w-4 h-4 mr-1" />
                                 Results
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.quizzes.edit', quiz.id)}>
+                        <Link href={route('teacher.quizzes.edit', quiz.id)} onError={handleNavigationError}>
                             <SecondaryButton>
                                 <PencilSquareIcon className="w-4 h-4 mr-1" />
                                 Edit
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.quizzes.index')}>
+                        <Link href={route('teacher.quizzes.index')} onError={handleNavigationError}>
                             <PrimaryButton>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                 Back to List
@@ -142,18 +145,18 @@ export default function QuizzesShow({ quiz }) {
                                 <h3 className="text-sm font-semibold text-gray-700">Questions</h3>
                             </div>
                             <div className="p-6">
-                                {quiz.questions?.length === 0 ? (
+                                {questions.length === 0 ? (
                                     <p className="text-gray-500">No questions available.</p>
                                 ) : (
                                     <div className="space-y-4">
-                                        {quiz.questions?.map((question, index) => (
+                                        {questions.map((question, index) => (
                                             <div
                                                 key={question.id || index}
                                                 className="bg-gray-50 p-4 rounded-lg border border-gray-200"
                                             >
                                                 <div className="flex items-start gap-3">
                                                     <span className="font-medium text-gray-800">
-                                                        {index + 1}.
+                                                        {question.question_number || ((questionsPagination?.current_page - 1) * (questionsPagination?.per_page || 10)) + index + 1}.
                                                     </span>
                                                     <div className="flex-1">
                                                         <div className="quiz-readable-text font-medium text-gray-800" title={question.question_text}>
@@ -208,6 +211,7 @@ export default function QuizzesShow({ quiz }) {
                                         ))}
                                     </div>
                                 )}
+                                <Pagination pagination={questionsPagination} />
                             </div>
                         </div>
                     </div>

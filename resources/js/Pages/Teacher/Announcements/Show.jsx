@@ -4,6 +4,7 @@ import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -18,6 +19,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function AnnouncementsShow({ announcement }) {
+    const handleNavigationError = () => toast.error('Unable to load that page. Please try again.');
+
     const getPriorityBadge = (priority) => {
         const classes = {
             normal: 'bg-blue-100 text-blue-800',
@@ -37,14 +40,14 @@ export default function AnnouncementsShow({ announcement }) {
                     </span>
                     <div className="flex flex-wrap gap-2">
                         {announcement.can_modify && (
-                            <Link href={route('teacher.announcements.edit', announcement.id)}>
+                            <Link href={route('teacher.announcements.edit', announcement.id)} onError={handleNavigationError}>
                                 <SecondaryButton>
                                     <PencilSquareIcon className="w-4 h-4 mr-1" />
                                     Edit
                                 </SecondaryButton>
                             </Link>
                         )}
-                        <Link href={route('teacher.announcements.index')}>
+                        <Link href={route('teacher.announcements.index')} onError={handleNavigationError}>
                             <PrimaryButton>
                                 <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                 Back to List
@@ -103,6 +106,7 @@ export default function AnnouncementsShow({ announcement }) {
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     <StatusBadge status={announcement.status} />
+                                    {announcement.is_expired && <StatusBadge status="expired" />}
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityBadge(announcement.priority)}`}>
                                         {announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1)}
                                     </span>

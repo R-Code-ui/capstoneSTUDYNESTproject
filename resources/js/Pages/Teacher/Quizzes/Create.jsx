@@ -9,7 +9,9 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PublishingOptions from '@/Components/PublishingOptions';
+import { ConfirmModal } from '@/Components/Modal';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 export default function QuizzesCreate({
     assigned_grades,
@@ -35,6 +37,7 @@ export default function QuizzesCreate({
             alternative_answers: [],
         },
     ]);
+    const [questionIndexToRemove, setQuestionIndexToRemove] = useState(null);
 
     const { data, setData, errors, post } = useForm({
         grade_level: '',
@@ -77,20 +80,37 @@ export default function QuizzesCreate({
         setQuestions(updatedQuestions);
     };
 
+    const relatedLessonsForSelectedGrade = related_lessons.filter(
+        (lesson) => lesson.grade_level === data.grade_level
+    );
+
+    const handleGradeLevelChange = (e) => {
+        const gradeLevel = e.target.value;
+        const selectedLesson = related_lessons.find(
+            (lesson) => lesson.id === parseInt(data.related_lesson_id)
+        );
+
+        setData('grade_level', gradeLevel);
+
+        if (selectedLesson && selectedLesson.grade_level !== gradeLevel) {
+            setData('related_lesson_id', '');
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         const hasEmptyQuestion = questions.some(q => !q.question_text.trim());
         if (hasEmptyQuestion) {
-            alert('Please fill in all question text fields.');
+            toast.error('Please fill in all question text fields.');
             setIsSubmitting(false);
             return;
         }
 
         const hasNoCorrectAnswer = questions.some(q => !q.correct_answer);
         if (hasNoCorrectAnswer) {
-            alert('Please select a correct answer for all questions.');
+            toast.error('Please select a correct answer for all questions.');
             setIsSubmitting(false);
             return;
         }
@@ -102,10 +122,12 @@ export default function QuizzesCreate({
             preserveState: true,
             onSuccess: () => {
                 setIsSubmitting(false);
+                toast.success('Quiz created successfully.');
             },
             onError: (err) => {
                 console.error('Validation errors:', err);
                 setIsSubmitting(false);
+                toast.error('Please correct the highlighted fields and try again.');
             },
             onFinish: () => {},
         });
@@ -130,11 +152,18 @@ export default function QuizzesCreate({
 
     const removeQuestion = (index) => {
         if (questions.length <= 1) {
-            alert('You must have at least one question.');
+            toast.error('A quiz must have at least one question.');
             return;
         }
-        const newQuestions = questions.filter((_, i) => i !== index);
+        setQuestionIndexToRemove(index);
+    };
+
+    const confirmRemoveQuestion = () => {
+        if (questionIndexToRemove === null) return;
+        const newQuestions = questions.filter((_, index) => index !== questionIndexToRemove);
         setQuestions(newQuestions);
+        setQuestionIndexToRemove(null);
+        toast.success('Question removed.');
     };
 
     const updateQuestion = (index, field, value) => {
@@ -321,7 +350,7 @@ export default function QuizzesCreate({
                                         <select
                                             id="grade_level"
                                             value={data.grade_level}
-                                            onChange={(e) => setData('grade_level', e.target.value)}
+                                            onChange={handleGradeLevelChange}
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                             required
                                         >
@@ -404,7 +433,7 @@ export default function QuizzesCreate({
                                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
                                         >
                                             <option value="">None</option>
-                                            {related_lessons.map((lesson) => (
+                                            {relatedLessonsForSelectedGrade.map((lesson) => (
                                                 <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
                                             ))}
                                         </select>
@@ -553,6 +582,16 @@ export default function QuizzesCreate({
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={questionIndexToRemove !== null}
+                onClose={() => setQuestionIndexToRemove(null)}
+                onConfirm={confirmRemoveQuestion}
+                title="Remove question?"
+                message="This question will be removed from the quiz."
+                confirmText="Remove question"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

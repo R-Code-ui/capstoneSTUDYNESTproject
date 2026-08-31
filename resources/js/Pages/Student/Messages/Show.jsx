@@ -6,6 +6,8 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import ChatBubble from '@/Components/ChatBubble';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 import {
     ArrowLeftIcon,
     PaperAirplaneIcon,
@@ -22,6 +24,7 @@ const CATEGORIES = [
 
 export default function MessagesShow({ teacher, messages }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [messageToRemove, setMessageToRemove] = useState(null);
     const bottomRef = useRef(null);
 
     const lastCategory = messages.length > 0
@@ -41,29 +44,48 @@ export default function MessagesShow({ teacher, messages }) {
 
     const handleSend = (e) => {
         e.preventDefault();
-        if (!data.message.trim()) return;
+        if (!data.receiver_id) {
+            toast.error('Please select a recipient.');
+            return;
+        }
+        if (!data.category) {
+            toast.error('Please select a message category.');
+            return;
+        }
+        if (!data.message.trim()) {
+            toast.error('Please enter a message.');
+            return;
+        }
 
         setIsSubmitting(true);
         post(route('student.messages.store'), {
             preserveScroll: true,
-            onSuccess: () => reset('message'),
+            onSuccess: () => {
+                reset('message');
+                toast.success('Message sent.');
+            },
+            onError: () => toast.error('Unable to send the message. Please review the highlighted fields and try again.'),
             onFinish: () => setIsSubmitting(false),
         });
     };
 
-    const handleDeleteMessage = (messageId) => {
-        if (confirm('Remove this message from your messages? The teacher will still see it.')) {
-            router.delete(route('student.messages.destroy', messageId), {
-                preserveScroll: true,
-            });
-        }
+    const handleDeleteMessage = () => {
+        if (!messageToRemove) return;
+        router.delete(route('student.messages.destroy', messageToRemove), {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Message removed from your messages.'),
+            onError: () => toast.error('Unable to remove the message. Please try again.'),
+            onFinish: () => setMessageToRemove(null),
+        });
     };
 
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3">
-                    <SecondaryButton onClick={() => router.visit(route('student.messages.index'))}>
+                    <SecondaryButton onClick={() => router.visit(route('student.messages.index'), {
+                        onError: () => toast.error('Unable to return to messages. Please try again.'),
+                    })}>
                         <ArrowLeftIcon className="w-4 h-4" />
                     </SecondaryButton>
                     <div>
@@ -124,7 +146,7 @@ export default function MessagesShow({ teacher, messages }) {
                                             {msg.is_mine && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDeleteMessage(msg.id)}
+                                                    onClick={() => setMessageToRemove(msg.id)}
                                                     className="hidden group-hover:flex absolute -right-1 top-0 text-gray-300 hover:text-red-500"
                                                     title="Remove message from your messages"
                                                 >
@@ -180,6 +202,16 @@ export default function MessagesShow({ teacher, messages }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={Boolean(messageToRemove)}
+                onClose={() => setMessageToRemove(null)}
+                onConfirm={handleDeleteMessage}
+                title="Remove message?"
+                message="Remove this message from your messages? The teacher will still see it."
+                confirmText="Remove"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

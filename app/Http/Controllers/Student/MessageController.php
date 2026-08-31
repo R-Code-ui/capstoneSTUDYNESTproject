@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
-use App\Models\Subject;
 use App\Models\ActivityLog;
 use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
@@ -58,7 +57,7 @@ class MessageController extends Controller
             })
             ->orderBy('messages.created_at', 'desc');
 
-        $paginator = $conversationsQuery->paginate(10);
+        $paginator = $conversationsQuery->paginate(10)->withQueryString();
 
         $conversations = $paginator->through(function ($msg) use ($user) {
             $otherUser = $msg->sender_id === $user->id ? $msg->receiver : $msg->sender;
@@ -92,11 +91,18 @@ class MessageController extends Controller
             ->where('status', 'unread')
             ->count();
 
-        $groups = $user->messageGroups()
+        $groupsPaginator = $user->messageGroups()
             ->withCount('members')
-            ->with(['owner:id,name', 'subject:id,name,grade_level', 'latestMessage.sender:id,name'])
+            ->with([
+                'owner:id,name',
+                'subject:id,name,grade_level',
+                'messages' => fn ($query) => $query->notDeletedBy($user->id)->latest()->limit(1),
+            ])
             ->latest('message_groups.created_at')
-            ->get()
+            ->paginate(4, ['*'], 'group_page')
+            ->withQueryString();
+
+        $groups = $groupsPaginator
             ->map(fn ($group) => [
                 'id' => $group->id,
                 'name' => $group->name,
@@ -105,8 +111,8 @@ class MessageController extends Controller
                 'members_count' => $group->members_count,
                 'owner_name' => $group->owner->name,
                 'subject' => $group->subject,
-                'last_message' => $group->latestMessage?->body,
-                'last_message_time' => $group->latestMessage?->created_at?->diffForHumans(),
+                'last_message' => $group->messages->first()?->body,
+                'last_message_time' => $group->messages->first()?->created_at?->diffForHumans(),
             ]);
 
         return Inertia::render('Student/Messages/Index', [
@@ -115,6 +121,7 @@ class MessageController extends Controller
             'filters'       => ['search' => $search],
             'pagination'    => $paginator->toArray(),
             'groups'         => $groups,
+            'group_pagination' => $groupsPaginator->toArray(),
         ]);
     }
 
@@ -140,16 +147,8 @@ class MessageController extends Controller
                 'name' => $t->name,
             ]);
 
-        $defaultSubjects = ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'];
-        $subjects = Subject::where('grade_level', $studentGrade)
-            ->orderBy('name')->get(['id', 'name', 'grade_level']);
-        $subjectNames = $subjects->pluck('name')->all();
-        $subjects = $subjects->concat(collect($defaultSubjects)->reject(fn ($name) => in_array($name, $subjectNames, true))
-            ->map(fn ($name, $index) => ['id' => 'default-' . $index, 'name' => $name, 'grade_level' => $studentGrade]))->values();
-
         return Inertia::render('Student/Messages/Compose', [
             'teachers' => $teachers,
-            'subjects' => $subjects,
         ]);
     }
 
@@ -165,7 +164,6 @@ class MessageController extends Controller
 
         $validated = $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'subject'     => 'nullable|string|max:255',
             'category'    => 'required|in:lesson,assignment,quiz,educational_game,general_academic_concern',
             'message'     => 'required|string',
         ]);
@@ -178,17 +176,10 @@ class MessageController extends Controller
             })
             ->firstOrFail();
 
-        if (!empty($validated['subject'])) {
-            abort_unless(Subject::where('name', $validated['subject'])
-                ->where('grade_level', $studentGrade)->exists()
-                || in_array($validated['subject'], ['English', 'Filipino', 'Mathematics', 'Science', 'Araling Panlipunan', 'MAPEH', 'GMRC', 'EPP/TLE'], true), 422,
-                'The selected subject is not available for your grade level.');
-        }
-
         $message = Message::create([
             'sender_id'   => $student->id,
             'receiver_id' => $teacher->id,
-            'subject'     => $validated['subject'] ?: ucfirst(str_replace('_', ' ', $validated['category'])),
+            'subject'     => ucfirst(str_replace('_', ' ', $validated['category'])),
             'category'    => $validated['category'],
             'message'     => $validated['message'],
             'status'      => 'unread',

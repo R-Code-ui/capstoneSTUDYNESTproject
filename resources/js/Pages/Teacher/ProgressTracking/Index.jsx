@@ -6,12 +6,11 @@ import Table, { StatusBadge } from '@/Components/Table';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import PrimaryButton from '@/Components/PrimaryButton';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
     EyeIcon,
-    ArrowDownTrayIcon,
     UserIcon,
     BookOpenIcon,
     ClipboardDocumentListIcon,
@@ -68,18 +67,9 @@ export default function ProgressIndex({
                 ...additional,
             },
             preserveState: true,
+            onError: () => toast.error('Unable to load student progress. Please try again.'),
             onFinish: () => setIsLoading(false),
         });
-    };
-
-    const handleExport = () => {
-        const query = new URLSearchParams({
-            search: search || '',
-            grade_level: gradeFilter || '',
-            subject: subjectFilter || '',
-            trimester: trimesterFilter || '',
-        });
-        window.open(`${route('teacher.progress.export')}?${query.toString()}`, '_blank');
     };
 
     const changeAtRiskPage = (page) => {
@@ -96,7 +86,14 @@ export default function ProgressIndex({
             },
             preserveState: true,
             preserveScroll: true,
+            onError: () => toast.error('Unable to load students requiring support. Please try again.'),
             onFinish: () => setIsLoading(false),
+        });
+    };
+
+    const viewStudentProgress = (studentId) => {
+        router.visit(route('teacher.progress.show', studentId), {
+            onError: () => toast.error('Unable to load this student’s progress. Please try again.'),
         });
     };
 
@@ -218,20 +215,15 @@ export default function ProgressIndex({
             label: 'View',
             icon: <EyeIcon className="w-4 h-4" />,
             color: 'primary',
-            onClick: () => router.visit(route('teacher.progress.show', row.student_id)),
+            onClick: () => viewStudentProgress(row.student_id),
         },
     ];
 
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                <div className="flex items-center w-full">
                     <span className="text-xl font-semibold leading-tight text-gray-800">Progress Tracking</span>
-                    <PrimaryButton onClick={handleExport}>
-                        <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
-                        Export CSV
-                    </PrimaryButton>
                 </div>
             }
         >
@@ -272,8 +264,15 @@ export default function ProgressIndex({
                     color: rgb(248 113 113) !important;
                 }
                 .studynest-layout.theme-dark .progress-page .support-student-card {
-                    border-color: transparent !important;
+                    background-color: rgb(69 10 10 / 0.28) !important;
+                    border-color: rgb(127 29 29 / 0.58) !important;
                     box-shadow: none !important;
+                }
+                .studynest-layout.theme-dark .progress-page .support-student-card .bg-red-600 {
+                    background-color: rgb(185 28 28) !important;
+                }
+                .studynest-layout.theme-dark .progress-page .support-student-card .bg-red-600:hover {
+                    background-color: rgb(153 27 27) !important;
                 }
                 .studynest-layout.theme-dark .progress-page .support-pagination {
                     background-color: rgb(15 23 42) !important;
@@ -338,7 +337,7 @@ export default function ProgressIndex({
                                                     </div>
                                                 </div>
                                                 <button
-                                                    onClick={() => router.visit(route('teacher.progress.show', student.student_id))}
+                                                    onClick={() => viewStudentProgress(student.student_id)}
                                                     className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
                                                 >
                                                     View

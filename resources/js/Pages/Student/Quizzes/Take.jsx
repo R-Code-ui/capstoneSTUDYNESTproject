@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -20,6 +22,8 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState(null);
     const [timeUp, setTimeUp] = useState(false);
+    const [confirmingSubmission, setConfirmingSubmission] = useState(false);
+    const submittingRef = useRef(false);
 
     const totalQuestions = questions.length;
 
@@ -92,18 +96,36 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     };
 
     const handleSubmit = (autoSubmit = false) => {
-        if (!autoSubmit && !confirm('Are you sure you want to submit your answers?')) {
+        if (!autoSubmit) {
+            if (answeredCount < totalQuestions) {
+                toast.warning(`You still have ${totalQuestions - answeredCount} unanswered question${totalQuestions - answeredCount === 1 ? '' : 's'}.`);
+            }
+            setConfirmingSubmission(true);
             return;
         }
 
+        submitQuiz(true);
+    };
+
+    const submitQuiz = (autoSubmit = false) => {
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+        setConfirmingSubmission(false);
         setIsSubmitting(true);
         sessionStorage.removeItem(`quiz_${attempt.id}_start`);
+
+        if (autoSubmit) toast.info("Time's up. Submitting your quiz automatically.");
 
         router.post(route('student.quizzes.submit', attempt.id), {
             answers: answers,
         }, {
             preserveState: true,
-            onFinish: () => setIsSubmitting(false),
+            onSuccess: () => toast.success(autoSubmit ? 'Quiz submitted automatically.' : 'Quiz submitted successfully.'),
+            onError: () => toast.error('Unable to submit the quiz. Please try again.'),
+            onFinish: () => {
+                submittingRef.current = false;
+                setIsSubmitting(false);
+            },
         });
     };
 
@@ -228,6 +250,8 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                     .studynest-layout.theme-dark .student-quiz-take-page .text-gray-700 { color: rgb(226 232 240) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page .text-gray-600,
                     .studynest-layout.theme-dark .student-quiz-take-page .text-gray-500 { color: rgb(148 163 184) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page label.bg-blue-50 { background-color: rgb(30 58 138) !important; border-color: rgb(96 165 250) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page label.bg-blue-50 .text-gray-700 { color: rgb(239 246 255) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page input[type="text"] { background-color: rgb(30 41 59) !important; color: rgb(226 232 240) !important; border-color: rgb(71 85 105) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page input[type="radio"] { accent-color: rgb(59 130 246); }
                     .student-quiz-take-page .break-words { overflow-wrap: anywhere; word-break: break-word; }
@@ -342,6 +366,16 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={confirmingSubmission}
+                onClose={() => setConfirmingSubmission(false)}
+                onConfirm={() => submitQuiz(false)}
+                title="Submit your answers?"
+                message={answeredCount < totalQuestions ? `You have ${totalQuestions - answeredCount} unanswered question${totalQuestions - answeredCount === 1 ? '' : 's'}. Do you still want to submit?` : 'Are you ready to submit your answers?'}
+                confirmText="Submit quiz"
+                cancelText="Review answers"
+                confirmColor="blue"
+            />
         </AuthenticatedLayout>
     );
 }

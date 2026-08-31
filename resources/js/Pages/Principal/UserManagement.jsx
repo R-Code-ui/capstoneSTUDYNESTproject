@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table, { StatusBadge } from '@/Components/Table';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
-import Modal from '@/Components/Modal';
+import Modal, { ConfirmModal } from '@/Components/Modal';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -12,6 +12,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PasswordInput from '@/Components/PasswordInput';
+import { toast } from 'sonner';
 
 export default function UserManagement({
     teachers,
@@ -32,6 +33,7 @@ export default function UserManagement({
     const [selectedUser, setSelectedUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState('');
+    const [confirmation, setConfirmation] = useState(null);
 
     const { errors } = usePage().props;
 
@@ -64,35 +66,78 @@ export default function UserManagement({
         applyFilters({ sort: value });
     };
 
-    const openResetConfirmation = (user) => {
-        if (confirm(`Are you sure you want to reset ${user.name}'s password?`)) {
+    const openConfirmation = (action, user) => setConfirmation({ action, user });
+
+    const confirmationDetails = {
+        reset: {
+            title: 'Reset password?',
+            message: (user) => `You are about to set a new password for ${user.name}.`,
+            confirmText: 'Continue',
+            confirmColor: 'yellow',
+        },
+        archive: {
+            title: 'Archive teacher?',
+            message: (user) => `${user.name} will no longer be able to access their account. You can restore the account later.`,
+            confirmText: 'Archive',
+            danger: true,
+        },
+        restore: {
+            title: 'Restore teacher?',
+            message: (user) => `${user.name} will be able to access their account again.`,
+            confirmText: 'Restore',
+            confirmColor: 'green',
+        },
+        delete: {
+            title: 'Permanently delete teacher?',
+            message: (user) => `${user.name} and their grade assignments will be permanently deleted. This cannot be undone.`,
+            confirmText: 'Delete permanently',
+            danger: true,
+        },
+    };
+
+    const executeConfirmedAction = () => {
+        if (!confirmation) return;
+
+        const { action, user } = confirmation;
+        setConfirmation(null);
+
+        if (action === 'reset') {
             setSelectedUser(user);
             setShowResetModal(true);
+            return;
         }
-    };
 
-    const handleArchive = (user) => {
-        if (confirm(`Are you sure you want to archive ${user.name}?`)) {
-            router.delete(route('principal.users.archive', user.id), {
-                preserveState: true,
-            });
-        }
-    };
+        const requests = {
+            archive: {
+                method: 'delete',
+                url: route('principal.users.archive', user.id),
+                success: 'Teacher archived successfully.',
+            },
+            restore: {
+                method: 'post',
+                url: route('principal.users.restore', user.id),
+                success: 'Teacher restored successfully.',
+            },
+            delete: {
+                method: 'delete',
+                url: route('principal.users.destroy', user.id),
+                success: 'Teacher deleted successfully.',
+            },
+        };
+        const request = requests[action];
 
-    const handleRestore = (user) => {
-        if (confirm(`Are you sure you want to restore ${user.name}? This teacher will become active again.`)) {
-            router.post(route('principal.users.restore', user.id), {}, {
-                preserveState: true,
-            });
-        }
-    };
+        const options = {
+            preserveState: true,
+            onSuccess: () => toast.success(request.success),
+            onError: () => toast.error('Unable to complete this action. Please try again.'),
+        };
 
-    const handleDelete = (user) => {
-        if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
-            router.delete(route('principal.users.destroy', user.id), {
-                preserveState: true,
-            });
+        if (request.method === 'post') {
+            router.post(request.url, {}, options);
+            return;
         }
+
+        router.delete(request.url, options);
     };
 
     const gradeOptions = [
@@ -179,12 +224,12 @@ export default function UserManagement({
     const teacherActions = (row) => [
         { label: 'View', icon: <ViewIcon />, color: 'secondary', onClick: () => { setSelectedUser(row); setShowViewModal(true); } },
         { label: 'Edit', icon: <EditIcon />, color: 'primary', onClick: () => { setSelectedUser(row); setShowEditModal(true); } },
-        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => openResetConfirmation(row) },
+        { label: 'Reset', icon: <KeyIcon />, color: 'warning', onClick: () => openConfirmation('reset', row) },
         ...(row.is_active
-            ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => handleArchive(row) }]
-            : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => handleRestore(row) }]
+            ? [{ label: 'Archive', icon: <ArchiveIcon />, color: 'danger', onClick: () => openConfirmation('archive', row) }]
+            : [{ label: 'Restore', icon: <RestoreIcon />, color: 'success', onClick: () => openConfirmation('restore', row) }]
         ),
-        { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => handleDelete(row) },
+        { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => openConfirmation('delete', row) },
     ];
 
     return (
@@ -365,7 +410,11 @@ export default function UserManagement({
                         const method = showCreateModal ? 'post' : 'put';
                         router[method](url, data, {
                             preserveState: true,
-                            onSuccess: handleSuccess,
+                            onSuccess: () => {
+                                handleSuccess();
+                                toast.success(showCreateModal ? 'Teacher created successfully.' : 'Teacher updated successfully.');
+                            },
+                            onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
                     className="space-y-3"
@@ -459,7 +508,9 @@ export default function UserManagement({
                                 setShowResetModal(false);
                                 setSelectedUser(null);
                                 setPassword('');
-                            }
+                                toast.success('Password reset successfully.');
+                            },
+                            onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
                     className="space-y-4"
@@ -486,6 +537,19 @@ export default function UserManagement({
                     </div>
                 </form>
             </Modal>
+
+            {confirmation && (
+                <ConfirmModal
+                    show
+                    onClose={() => setConfirmation(null)}
+                    onConfirm={executeConfirmedAction}
+                    title={confirmationDetails[confirmation.action].title}
+                    message={confirmationDetails[confirmation.action].message(confirmation.user)}
+                    confirmText={confirmationDetails[confirmation.action].confirmText}
+                    confirmColor={confirmationDetails[confirmation.action].confirmColor}
+                    danger={confirmationDetails[confirmation.action].danger}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

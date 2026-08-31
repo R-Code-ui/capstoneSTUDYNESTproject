@@ -5,7 +5,9 @@ import Card from '@/Components/Card';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import StatusBadge from '@/Components/StatusBadge';
 import gameDefinitions from '@/GameEngines/gameDefinitions';
+import { toast } from 'sonner';
 import {
     BookOpenIcon,
     CalculatorIcon,
@@ -46,9 +48,14 @@ export default function GamesShow({
     const handleStart = () => {
         setIsLoading(true);
         if (current_result) {
-            router.visit(route('student.games.play.show', current_result.id));
+            router.visit(route('student.games.play.show', current_result.id), {
+                onError: () => toast.error('Unable to continue this game. Please try again.'),
+                onFinish: () => setIsLoading(false),
+            });
         } else {
             router.post(route('student.games.play', game.id), {}, {
+                onSuccess: () => toast.success('Game started.'),
+                onError: () => toast.error('Unable to start the game. Please try again.'),
                 onFinish: () => setIsLoading(false),
             });
         }
@@ -63,14 +70,16 @@ export default function GamesShow({
                     </h2>
                     <div className="flex flex-wrap gap-2">
                         {latest_completed_attempt_id && (
-                            <Link href={route('student.games.results', latest_completed_attempt_id)}>
+                            <Link href={route('student.games.results', latest_completed_attempt_id)} onError={() => toast.error('Unable to open the game results. Please try again.')}>
                                 <PrimaryButton>
                                     <ChartBarIcon className="w-4 h-4 mr-1" />
                                     View Results
                                 </PrimaryButton>
                             </Link>
                         )}
-                        <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
+                        <SecondaryButton onClick={() => router.visit(route('student.games.index'), {
+                            onError: () => toast.error('Unable to return to games. Please try again.'),
+                        })}>
                             Back to Games
                         </SecondaryButton>
                     </div>
@@ -105,6 +114,7 @@ export default function GamesShow({
                                         Due: {game.due_date}
                                     </span>
                                 )}
+                                {game.deadline_status && <StatusBadge status={game.deadline_status} size="sm" />}
                             </div>
 
                             <div>
@@ -139,7 +149,15 @@ export default function GamesShow({
                                 </div>
                             )}
 
-                            {!can_play && (
+                            {game.deadline_status === 'expired' && (
+                                <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/40">
+                                    <p className="font-medium text-red-700 dark:text-red-200">
+                                        This game has expired. New and in-progress attempts can no longer be played.
+                                    </p>
+                                </div>
+                            )}
+
+                            {!can_play && game.deadline_status !== 'expired' && (
                                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                                     <p className="text-red-600 font-medium">
                                         You have reached the maximum number of attempts for this game.
@@ -156,7 +174,9 @@ export default function GamesShow({
                             )}
 
                             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                                <SecondaryButton onClick={() => router.visit(route('student.games.index'))}>
+                                <SecondaryButton onClick={() => router.visit(route('student.games.index'), {
+                                    onError: () => toast.error('Unable to return to games. Please try again.'),
+                                })}>
                                     Cancel
                                 </SecondaryButton>
                                 {can_play && (

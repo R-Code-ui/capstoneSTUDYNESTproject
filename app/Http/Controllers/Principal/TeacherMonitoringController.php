@@ -145,9 +145,21 @@ class TeacherMonitoringController extends Controller
         $isActive = $teacher->is_active;
         $status = $isActive ? 'Active' : 'Inactive';
 
-        $lessons = $teacher->lessons()->orderBy('created_at', 'desc')->get();
-        $assignments = $teacher->assignments()->orderBy('created_at', 'desc')->get();
-        $quizzes = $teacher->quizzes()->orderBy('created_at', 'desc')->get();
+        $perPage = 10;
+        $lessons = $teacher->lessons()
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'lessons_page')
+            ->withQueryString();
+        $assignments = $teacher->assignments()
+            ->withCount('submissions')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'assignments_page')
+            ->withQueryString();
+        $quizzes = $teacher->quizzes()
+            ->withCount('attempts')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'quizzes_page')
+            ->withQueryString();
 
         $gradeLevels = $teacher->gradeAssignments->pluck('grade_level')->toArray();
         $students = User::role('student')
@@ -165,11 +177,11 @@ class TeacherMonitoringController extends Controller
                 'status' => $status,
                 'is_active' => $isActive,
                 'last_login' => $teacher->last_login_at ? $teacher->last_login_at->format('Y-m-d H:i') : 'Never',
-                'total_lessons' => $lessons->count(),
-                'total_assignments' => $assignments->count(),
-                'total_quizzes' => $quizzes->count(),
+                'total_lessons' => $lessons->total(),
+                'total_assignments' => $assignments->total(),
+                'total_quizzes' => $quizzes->total(),
             ],
-            'lessons' => $lessons->map(function ($lesson) {
+            'lessons' => $lessons->getCollection()->map(function ($lesson) {
                 return [
                     'id' => $lesson->id,
                     'title' => $lesson->lesson_title,
@@ -180,24 +192,28 @@ class TeacherMonitoringController extends Controller
                         : $lesson->created_at->format('Y-m-d'),
                 ];
             }),
-            'assignments' => $assignments->map(function ($assignment) {
+            'lessons_pagination' => $lessons->toArray(),
+            'assignments' => $assignments->getCollection()->map(function ($assignment) {
                 return [
                     'id' => $assignment->id,
                     'title' => $assignment->assignment_title,
                     'grade' => $assignment->grade_level,
                     'due_date' => $assignment->due_date,
-                    'submissions' => $assignment->submissions()->count(),
+                    'deadline_status' => $assignment->deadlineStatus(),
+                    'submissions' => $assignment->submissions_count,
                 ];
             }),
-            'quizzes' => $quizzes->map(function ($quiz) {
+            'assignments_pagination' => $assignments->toArray(),
+            'quizzes' => $quizzes->getCollection()->map(function ($quiz) {
                 return [
                     'id' => $quiz->id,
                     'title' => $quiz->quiz_title,
                     'grade' => $quiz->grade_level,
                     'type' => $quiz->quiz_type,
-                    'attempts' => $quiz->attempts()->count(),
+                    'attempts' => $quiz->attempts_count,
                 ];
             }),
+            'quizzes_pagination' => $quizzes->toArray(),
             'classroom_stats' => $classroomStats,
         ]);
     }

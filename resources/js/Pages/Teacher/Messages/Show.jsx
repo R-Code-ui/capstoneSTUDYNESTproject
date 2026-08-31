@@ -6,6 +6,8 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import ChatBubble from '@/Components/ChatBubble';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 import {
     ArrowLeftIcon,
     PaperAirplaneIcon,
@@ -22,6 +24,7 @@ const CATEGORIES = [
 
 export default function MessagesShow({ student, messages }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [messageToRemove, setMessageToRemove] = useState(null);
     const bottomRef = useRef(null);
 
     const lastCategory = messages.length > 0
@@ -41,22 +44,34 @@ export default function MessagesShow({ student, messages }) {
 
     const handleSend = (e) => {
         e.preventDefault();
-        if (!data.message.trim()) return;
+        if (!data.message.trim()) {
+            toast.error('Message content is required.');
+            return;
+        }
 
         setIsSubmitting(true);
         post(route('teacher.messages.store'), {
             preserveScroll: true,
-            onSuccess: () => reset('message'),
+            onSuccess: () => {
+                reset('message');
+                toast.success('Message sent successfully.');
+            },
+            onError: () => toast.error('Unable to send the message. Please check the highlighted fields.'),
             onFinish: () => setIsSubmitting(false),
         });
     };
 
-    const handleDeleteMessage = (messageId) => {
-        if (confirm('Remove this message from your messages? The student will still see it.')) {
-            router.delete(route('teacher.messages.destroy', messageId), {
-                preserveScroll: true,
-            });
-        }
+    const removeMessage = () => {
+        if (!messageToRemove) return;
+
+        router.delete(route('teacher.messages.destroy', messageToRemove), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Message removed from your messages.');
+                setMessageToRemove(null);
+            },
+            onError: () => toast.error('Unable to remove the message. Please try again.'),
+        });
     };
 
     return (
@@ -127,7 +142,7 @@ export default function MessagesShow({ student, messages }) {
                                             {msg.is_mine && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDeleteMessage(msg.id)}
+                                                    onClick={() => setMessageToRemove(msg.id)}
                                                     className="hidden group-hover:flex absolute -right-1 top-0 text-gray-300 hover:text-red-500"
                                                     title="Remove message from your messages"
                                                 >
@@ -183,6 +198,16 @@ export default function MessagesShow({ student, messages }) {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                show={Boolean(messageToRemove)}
+                onClose={() => setMessageToRemove(null)}
+                onConfirm={removeMessage}
+                title="Remove message?"
+                message="Remove this message from your messages? The student will still see it."
+                confirmText="Remove"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

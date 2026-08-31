@@ -4,10 +4,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 import { ArrowLeftIcon, ArchiveBoxIcon, PencilSquareIcon, PaperAirplaneIcon, TrashIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 
 export default function MessageGroupConversation({ group, isTeacher = false, canManage = false }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [confirmation, setConfirmation] = useState(null);
     const bottomRef = useRef(null);
     const { data, setData, errors, post, reset } = useForm({ body: '' });
 
@@ -18,25 +21,52 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
     const routePrefix = isTeacher ? 'teacher' : 'student';
     const send = (event) => {
         event.preventDefault();
-        if (!data.body.trim() || group.is_archived) return;
+        if (!data.body.trim()) {
+            toast.error('Message content is required.');
+            return;
+        }
+        if (group.is_archived) return;
         setIsSubmitting(true);
         post(route(`${routePrefix}.messages.groups.send`, group.id), {
             preserveScroll: true,
-            onSuccess: () => reset('body'),
+            onSuccess: () => {
+                reset('body');
+                toast.success('Message sent successfully.');
+            },
+            onError: () => toast.error('Unable to send the message. Please check the highlighted fields.'),
             onFinish: () => setIsSubmitting(false),
         });
     };
 
-    const archive = () => {
-        if (confirm('Archive this group? Members will still see existing messages but cannot send new ones.')) {
-            router.post(route('teacher.messages.groups.archive', group.id), {}, { preserveScroll: true });
-        }
-    };
+    const confirmAction = () => {
+        if (!confirmation) return;
 
-    const restore = () => router.post(route('teacher.messages.groups.restore', group.id), {}, { preserveScroll: true });
-    const remove = () => {
-        if (confirm('Delete this archived group and all of its messages? This cannot be undone.')) {
-            router.delete(route('teacher.messages.groups.destroy', group.id));
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => {
+                const messages = {
+                    archive: 'Group archived successfully.',
+                    restore: 'Group restored successfully.',
+                    deleteGroup: 'Group deleted successfully.',
+                    deleteMessage: 'Message removed successfully.',
+                    removeMember: 'Member removed successfully.',
+                };
+                toast.success(messages[confirmation.action]);
+                setConfirmation(null);
+            },
+            onError: () => toast.error('Unable to complete this action. Please try again.'),
+        };
+
+        if (confirmation.action === 'archive') {
+            router.post(route('teacher.messages.groups.archive', group.id), {}, options);
+        } else if (confirmation.action === 'restore') {
+            router.post(route('teacher.messages.groups.restore', group.id), {}, options);
+        } else if (confirmation.action === 'deleteGroup') {
+            router.delete(route('teacher.messages.groups.destroy', group.id), options);
+        } else if (confirmation.action === 'deleteMessage') {
+            router.delete(route(`${routePrefix}.messages.groups.messages.destroy`, [group.id, confirmation.messageId]), options);
+        } else if (confirmation.action === 'removeMember') {
+            router.delete(route('teacher.messages.groups.members.remove', [group.id, confirmation.member.id]), options);
         }
     };
 
@@ -54,8 +84,8 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                     {canManage && (
                         <div className="flex gap-2">
                             <SecondaryButton onClick={() => router.visit(route('teacher.messages.groups.edit', group.id))}><PencilSquareIcon className="h-4 w-4" /></SecondaryButton>
-                            {group.is_archived ? <SecondaryButton onClick={restore}>Restore</SecondaryButton> : <SecondaryButton onClick={archive}><ArchiveBoxIcon className="mr-1 h-4 w-4" />Archive</SecondaryButton>}
-                            {group.is_archived && <button onClick={remove} className="rounded-md p-2 text-red-500 hover:bg-red-50"><TrashIcon className="h-4 w-4" /></button>}
+                            {group.is_archived ? <SecondaryButton onClick={() => setConfirmation({ action: 'restore' })}>Restore</SecondaryButton> : <SecondaryButton onClick={() => setConfirmation({ action: 'archive' })}><ArchiveBoxIcon className="mr-1 h-4 w-4" />Archive</SecondaryButton>}
+                            {group.is_archived && <button onClick={() => setConfirmation({ action: 'deleteGroup' })} className="rounded-md p-2 text-red-500 hover:bg-red-50"><TrashIcon className="h-4 w-4" /></button>}
                         </div>
                     )}
                 </div>
@@ -93,6 +123,12 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                         background: #334155 !important;
                         color: #e2e8f0 !important;
                     }
+                    .group-message-delete { color: rgb(148 163 184); }
+                    .group-message-delete:hover,
+                    .group-message-delete:focus-visible { color: rgb(220 38 38); }
+                    .studynest-layout.theme-dark .group-message-delete { color: rgb(148 163 184); }
+                    .studynest-layout.theme-dark .group-message-delete:hover,
+                    .studynest-layout.theme-dark .group-message-delete:focus-visible { color: rgb(248 113 113); }
                     @media (max-width: 640px) {
                         .teacher-group-conversation { gap: 1rem; }
                         .teacher-group-conversation .group-conversation-panel,
@@ -108,7 +144,14 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                         {group.messages.length === 0 ? <p className="py-10 text-center text-sm text-slate-400">No messages yet.</p> : group.messages.map((message) => (
                             <div key={message.id} className={`flex ${message.sender_id === group.owner_id ? 'justify-start' : 'justify-end'}`}>
                                 <div className={`group-message-bubble ${message.sender_id === group.owner_id ? 'is-owner bg-blue-50 text-blue-950' : 'is-member bg-slate-100 text-slate-800'} max-w-[85%] min-w-0 rounded-2xl px-4 py-3`}>
-                                    <p className="mb-1 text-xs font-bold text-slate-500">{message.sender_name}{message.sender_id === group.owner_id ? ' · Teacher' : ''}</p>
+                                    <div className="mb-1 flex items-center gap-2">
+                                        <p className="min-w-0 break-words text-xs font-bold text-slate-500">{message.sender_name}{message.sender_id === group.owner_id ? ' · Teacher' : ''}</p>
+                                        {message.can_delete && (
+                                            <button type="button" onClick={() => setConfirmation({ action: 'deleteMessage', messageId: message.id })} className="group-message-delete shrink-0 rounded transition focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1" title="Delete message" aria-label="Delete message">
+                                                <TrashIcon className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </div>
                                     <p className="group-message-body whitespace-pre-wrap text-sm">{message.body}</p>
                                     <p className="mt-2 text-[11px] text-slate-400">{message.created_at}</p>
                                 </div>
@@ -128,10 +171,39 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                 <aside className="group-members-panel h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 className="flex items-center gap-2 font-semibold text-slate-800"><UserGroupIcon className="h-5 w-5" /> Members</h2>
                     <div className="mt-4 space-y-3">
-                        {group.members.map((member) => <div key={member.id} className="flex items-center justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-700">{member.name}</p><p className="text-xs text-slate-400">{member.is_owner ? 'Group owner' : member.grade_level}</p></div>{canManage && !member.is_owner && <button title="Remove member" onClick={() => { if (confirm(`Remove ${member.name} from this group?`)) router.delete(route('teacher.messages.groups.members.remove', [group.id, member.id]), { preserveScroll: true }); }} className="text-xs text-red-500 hover:text-red-700">Remove</button>}</div>)}
+                        {group.members.map((member) => <div key={member.id} className="flex items-center justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-700">{member.name}</p><p className="text-xs text-slate-400">{member.is_owner ? 'Group owner' : member.grade_level}</p></div>{canManage && !member.is_owner && <button title="Remove member" onClick={() => setConfirmation({ action: 'removeMember', member })} className="text-xs text-red-500 hover:text-red-700">Remove</button>}</div>)}
                     </div>
                 </aside>
             </div>
+            <ConfirmModal
+                show={Boolean(confirmation)}
+                onClose={() => setConfirmation(null)}
+                onConfirm={confirmAction}
+                title={{
+                    archive: 'Archive group?',
+                    restore: 'Restore group?',
+                    deleteGroup: 'Delete group permanently?',
+                    deleteMessage: 'Remove message?',
+                    removeMember: 'Remove member?',
+                }[confirmation?.action] || 'Confirm action'}
+                message={{
+                    archive: 'Archive this group? Members will still see existing messages but cannot send new ones.',
+                    restore: 'Restore this group? Members will be able to send new messages again.',
+                    deleteGroup: 'Delete this archived group and all of its messages? This action cannot be undone.',
+                    deleteMessage: 'Remove this message from your messages? Other group members will still see it.',
+                    removeMember: `Remove ${confirmation?.member?.name || 'this member'} from this group?`,
+                }[confirmation?.action] || ''}
+                confirmText={{
+                    archive: 'Archive',
+                    restore: 'Restore',
+                    deleteGroup: 'Delete permanently',
+                    deleteMessage: 'Remove',
+                    removeMember: 'Remove member',
+                }[confirmation?.action] || 'Confirm'}
+                cancelText="Cancel"
+                danger={['deleteGroup', 'deleteMessage', 'removeMember'].includes(confirmation?.action)}
+                confirmColor={confirmation?.action === 'archive' ? 'yellow' : 'blue'}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -18,6 +18,8 @@ export default function StatusBadge({
         graded: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Graded' },
         excellent: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', label: 'Excellent' },
         moderately_active: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Moderately Active' },
+        open: { bg: 'bg-emerald-100 dark:bg-emerald-950/60', text: 'text-emerald-800 dark:text-emerald-200', dot: 'bg-emerald-500', label: 'Open' },
+        late_submission_allowed: { bg: 'bg-amber-100 dark:bg-amber-950/60', text: 'text-amber-800 dark:text-amber-200', dot: 'bg-amber-500', label: 'Late Submission Allowed' },
 
         // Draft/Pending states
         draft: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', label: 'Draft' },
@@ -35,6 +37,7 @@ export default function StatusBadge({
         incomplete: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Incomplete' },
         not_submitted: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Not Submitted' },
         urgent: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', label: 'Urgent' },
+        expired: { bg: 'bg-red-100 dark:bg-red-950/60', text: 'text-red-800 dark:text-red-200', dot: 'bg-red-500', label: 'Expired' },
 
         // Info states
         submitted: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', label: 'Submitted' },

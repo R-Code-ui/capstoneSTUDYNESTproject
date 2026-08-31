@@ -33,7 +33,8 @@ export default function NotificationBell() {
     }, []);
 
     const openNotification = (notification) => {
-        router.post(route('notifications.read', notification.id), {}, { preserveScroll: true });
+        setOpen(false);
+        router.post(route('notifications.read', notification.id), { open: true }, { preserveScroll: true });
     };
 
     return <div className="relative">

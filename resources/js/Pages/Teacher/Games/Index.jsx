@@ -3,10 +3,13 @@ import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import Table, { StatusBadge } from '@/Components/Table';
+import DeadlineBadge from '@/Components/StatusBadge';
 import SearchBar from '@/Components/SearchBar';
 import FilterDropdown from '@/Components/FilterDropdown';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
 // Heroicons
 import {
@@ -30,6 +33,7 @@ export default function GamesIndex({
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [typeFilter, setTypeFilter] = useState(filters?.game_type || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [gameToDelete, setGameToDelete] = useState(null);
 
     const handleSearch = (value) => {
         setSearch(value);
@@ -64,10 +68,17 @@ export default function GamesIndex({
         });
     };
 
-    const handleDelete = (game) => {
-        if (confirm(`Delete "${game.title}"? This action cannot be undone.`)) {
-            router.delete(route('teacher.games.destroy', game.id), { preserveState: true });
-        }
+    const deleteGame = () => {
+        if (!gameToDelete) return;
+
+        router.delete(route('teacher.games.destroy', gameToDelete.id), {
+            preserveState: true,
+            onSuccess: () => {
+                toast.success('Game deleted successfully.');
+                setGameToDelete(null);
+            },
+            onError: () => toast.error('Unable to delete the game. Please try again.'),
+        });
     };
 
     const statusOptions = [
@@ -127,8 +138,9 @@ export default function GamesIndex({
             key: 'due_date',
             label: 'Due Date',
             render: (row) => (
-                <div className="max-w-[90px] truncate" title={row.due_date}>
-                    {row.due_date || '---'}
+                <div className="space-y-1" title={row.due_date}>
+                    <div className="whitespace-nowrap">{row.due_date || 'No deadline'}</div>
+                    {row.deadline_status && <DeadlineBadge status={row.deadline_status} size="sm" />}
                 </div>
             ),
         },
@@ -171,7 +183,7 @@ export default function GamesIndex({
             label: 'Delete',
             icon: <TrashIcon className="w-4 h-4" />,
             color: 'danger',
-            onClick: () => handleDelete(row),
+            onClick: () => setGameToDelete(row),
         },
     ];
 
@@ -252,6 +264,17 @@ export default function GamesIndex({
                     </div>
                 </div>
             </div>
+
+            <ConfirmModal
+                show={Boolean(gameToDelete)}
+                onClose={() => setGameToDelete(null)}
+                onConfirm={deleteGame}
+                title="Delete game?"
+                message={`Delete “${gameToDelete?.title || gameToDelete?.game_title || 'this game'}”? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                danger
+            />
         </AuthenticatedLayout>
     );
 }

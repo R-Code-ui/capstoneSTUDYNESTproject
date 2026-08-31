@@ -77,6 +77,10 @@ class AssignmentController extends Controller
                     'grade_level' => $assignment->grade_level,
                     'type' => $assignment->assignment_type,
                     'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
+                    'due_time' => $assignment->due_time,
+                    'due_at' => $assignment->dueAt()?->toIso8601String(),
+                    'allow_late_submission' => $assignment->allow_late_submission,
+                    'deadline_status' => $assignment->deadlineStatus(),
                     'total_points' => $assignment->total_points,
                     'status' => $assignment->status,
                     'submissions' => $submittedCount . '/' . ($studentCounts[$assignment->grade_level] ?? 0),
@@ -120,12 +124,13 @@ class AssignmentController extends Controller
         $submissionMethods = ['digital', 'paper'];
 
         $lessons = Lesson::where('teacher_id', $user->id)
-            ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
+            ->select('id', 'lesson_title as title', 'grade_level', 'bow_code', 'learning_competency', 'learning_objective')
             ->get()
             ->map(function ($lesson) {
                 return [
                     'id' => $lesson->id,
                     'title' => $lesson->title,
+                    'grade_level' => $lesson->grade_level,
                     'bow_code' => $lesson->bow_code,
                     'learning_competency' => $lesson->learning_competency,
                     'learning_objective' => $lesson->learning_objective,
@@ -171,13 +176,21 @@ class AssignmentController extends Controller
             'resource_urls.*' => 'nullable|url|max:2048',
             'submission_methods' => 'required|array|min:1|max:3',
             'submission_methods.*' => 'in:digital,paper',
-            'resources' => 'nullable|array|max:4',
-            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
+            'resources' => 'nullable|array|max:8',
+            'resources.*' => 'file|max:51200|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
             'status' => 'required|in:draft,scheduled,published,archived',
             'publish_date' => 'nullable|required_if:status,scheduled|date',
         ]);
 
         unset($validated['resources']);
+
+        if (!empty($validated['related_lesson_id']) && !Lesson::whereKey($validated['related_lesson_id'])
+            ->where('teacher_id', auth()->id())
+            ->where('grade_level', $validated['grade_level'])
+            ->exists()) {
+            return back()->withErrors(['related_lesson_id' => 'The selected lesson must belong to you and the selected grade level.'])->withInput();
+        }
+
         app(PublicationManager::class)->normalize($validated);
 
         if (Carbon::parse($validated['due_date'] . ' ' . $validated['due_time'])->lte(now())) {
@@ -216,9 +229,9 @@ class AssignmentController extends Controller
         if ($request->hasFile('resources')) {
             $files = $request->file('resources');
 
-            if (count($files) > 4) {
+            if (count($files) > 8) {
                 return redirect()->back()
-                    ->withErrors(['resources' => 'You can only upload a maximum of 4 files.'])
+                    ->withErrors(['resources' => 'You can only upload a maximum of 8 files.'])
                     ->withInput();
             }
 
@@ -270,6 +283,9 @@ class AssignmentController extends Controller
                 'allow_late_submission' => $assignment->allow_late_submission,
                 'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                 'due_time' => $assignment->due_time,
+                'due_at' => $assignment->dueAt()?->toIso8601String(),
+                'due_at_label' => $assignment->dueAt()?->format('M d, Y g:i A'),
+                'deadline_status' => $assignment->deadlineStatus(),
                 'submission_methods' => $submissionMethods,
                 'status' => $assignment->status,
                 'publish_date' => $assignment->publish_date?->format('M d, Y g:i A') ?? 'Not published',
@@ -309,12 +325,13 @@ class AssignmentController extends Controller
         $submissionMethods = ['digital', 'paper'];
 
         $lessons = Lesson::where('teacher_id', $user->id)
-            ->select('id', 'lesson_title as title', 'bow_code', 'learning_competency', 'learning_objective')
+            ->select('id', 'lesson_title as title', 'grade_level', 'bow_code', 'learning_competency', 'learning_objective')
             ->get()
             ->map(function ($lesson) {
                 return [
                     'id' => $lesson->id,
                     'title' => $lesson->title,
+                    'grade_level' => $lesson->grade_level,
                     'bow_code' => $lesson->bow_code,
                     'learning_competency' => $lesson->learning_competency,
                     'learning_objective' => $lesson->learning_objective,
@@ -399,14 +416,22 @@ class AssignmentController extends Controller
             'resource_urls_present' => 'nullable|boolean',
             'submission_methods' => 'required|array|min:1|max:3',
             'submission_methods.*' => 'in:digital,paper',
-            'resources' => 'nullable|array|max:4',
-            'resources.*' => 'file|max:102400|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
+            'resources' => 'nullable|array|max:8',
+            'resources.*' => 'file|max:51200|mimes:pdf,jpg,jpeg,png,doc,docx,ppt,pptx,mp4',
             'status' => 'required|in:draft,scheduled,published,archived',
             'publish_date' => 'nullable|required_if:status,scheduled|date',
             'deleted_resource_ids' => 'nullable|string',
         ]);
 
         unset($validated['resources']);
+
+        if (!empty($validated['related_lesson_id']) && !Lesson::whereKey($validated['related_lesson_id'])
+            ->where('teacher_id', auth()->id())
+            ->where('grade_level', $validated['grade_level'])
+            ->exists()) {
+            return back()->withErrors(['related_lesson_id' => 'The selected lesson must belong to you and the selected grade level.'])->withInput();
+        }
+
         $wasPublished = $assignment->isCurrentlyPublished();
         app(PublicationManager::class)->normalize($validated, $assignment);
 
@@ -466,7 +491,7 @@ class AssignmentController extends Controller
             $currentResourceCount = $assignment->resources()
                 ->where('resource_type', '!=', 'url')
                 ->count();
-            $maxNewFiles = 4 - $currentResourceCount;
+            $maxNewFiles = 8 - $currentResourceCount;
 
             if (count($files) > $maxNewFiles) {
                 return redirect()->back()
@@ -605,6 +630,10 @@ class AssignmentController extends Controller
 
         $filePath = storage_path('app/public/' . $resource->file_path);
         if (!file_exists($filePath)) abort(404, 'File not found.');
+
+        if (preg_match('/\.(doc|docx|ppt|pptx)$/i', $resource->file_name ?? '')) {
+            return response()->download($filePath, $resource->file_name);
+        }
 
         return response()->file($filePath, [
             'Content-Type' => $resource->mime_type ?: mime_content_type($filePath),

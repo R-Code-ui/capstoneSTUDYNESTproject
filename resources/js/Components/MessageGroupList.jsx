@@ -1,17 +1,37 @@
+import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { ChatBubbleLeftRightIcon, LockClosedIcon, TrashIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import Pagination from '@/Components/Pagination';
+import { ConfirmModal } from '@/Components/Modal';
+import { toast } from 'sonner';
 
-export default function MessageGroupList({ groups = [], routeName, canCreate = false, canManage = false, createGrade = '' }) {
-    const archive = (group) => {
-        if (confirm(`Archive "${group.name}"? Members will keep the history, but new messages will be disabled.`)) {
-            router.post(route('teacher.messages.groups.archive', group.id), {}, { preserveScroll: true });
-        }
-    };
+export default function MessageGroupList({ groups = [], pagination, routeName, canCreate = false, canManage = false, createGrade = '' }) {
+    const [confirmation, setConfirmation] = useState(null);
 
-    const remove = (group) => {
-        if (confirm(`Permanently delete "${group.name}" and all its messages? This cannot be undone.`)) {
-            router.delete(route('teacher.messages.groups.destroy', group.id), { preserveScroll: true });
+    const confirmAction = () => {
+        if (!confirmation) return;
+        const { action, group } = confirmation;
+
+        if (action === 'archive') {
+            router.post(route('teacher.messages.groups.archive', group.id), {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Group archived successfully.');
+                    setConfirmation(null);
+                },
+                onError: () => toast.error('Unable to archive the group. Please try again.'),
+            });
+            return;
         }
+
+        router.delete(route('teacher.messages.groups.destroy', group.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Group deleted successfully.');
+                setConfirmation(null);
+            },
+            onError: () => toast.error('Unable to delete the group. Please try again.'),
+        });
     };
 
     return (
@@ -63,11 +83,11 @@ export default function MessageGroupList({ groups = [], routeName, canCreate = f
                             {canManage && (
                                 <div className="mt-3 flex justify-end border-t border-slate-100 pt-3">
                                     {group.is_archived ? (
-                                        <button type="button" onClick={() => remove(group)} className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800">
+                                        <button type="button" onClick={() => setConfirmation({ action: 'delete', group })} className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800">
                                             <TrashIcon className="h-4 w-4" /> Delete permanently
                                         </button>
                                     ) : (
-                                        <button type="button" onClick={() => archive(group)} className="text-xs font-medium text-amber-700 hover:text-amber-900">
+                                        <button type="button" onClick={() => setConfirmation({ action: 'archive', group })} className="text-xs font-medium text-amber-700 hover:text-amber-900">
                                             Remove / Archive
                                         </button>
                                     )}
@@ -77,6 +97,23 @@ export default function MessageGroupList({ groups = [], routeName, canCreate = f
                     ))}
                 </div>
             )}
+
+            {pagination && pagination.total > 0 && (
+                <Pagination pagination={pagination} />
+            )}
+            <ConfirmModal
+                show={Boolean(confirmation)}
+                onClose={() => setConfirmation(null)}
+                onConfirm={confirmAction}
+                title={confirmation?.action === 'archive' ? 'Archive group?' : 'Delete group permanently?'}
+                message={confirmation?.action === 'archive'
+                    ? `Archive “${confirmation?.group?.name || 'this group'}”? Members will keep the history, but new messages will be disabled.`
+                    : `Permanently delete “${confirmation?.group?.name || 'this group'}” and all its messages? This action cannot be undone.`}
+                confirmText={confirmation?.action === 'archive' ? 'Archive' : 'Delete permanently'}
+                cancelText="Cancel"
+                danger={confirmation?.action === 'delete'}
+                confirmColor="yellow"
+            />
         </section>
     );
 }

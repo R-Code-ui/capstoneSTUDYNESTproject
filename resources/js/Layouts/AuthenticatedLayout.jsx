@@ -328,12 +328,13 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <ThemeToggle dark={darkMode} toggle={() => setDarkMode((value) => !value)} />
                         <NotificationBell />
+                        <ThemeToggle dark={darkMode} toggle={() => setDarkMode((value) => !value)} />
                     </div>
                 </div>
                 {/* ===== MOBILE NAVIGATION DRAWER ===== */}
-                <div className={`fixed inset-0 z-50 md:hidden ${showingNavigationDropdown ? '' : 'pointer-events-none'}`} aria-hidden={!showingNavigationDropdown}>
+                {showingNavigationDropdown && (
+                <div className="fixed inset-0 z-50 md:hidden">
                     <button
                         type="button"
                         aria-label="Close navigation"
@@ -362,6 +363,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
                     </aside>
                 </div>
+                )}
 
                 {/* ===== MAIN CONTENT AREA ===== */}
                 <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-slate-50 dark:bg-slate-950">
@@ -372,8 +374,8 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <ThemeToggle dark={darkMode} toggle={() => setDarkMode((value) => !value)} />
                             <NotificationBell />
+                            <ThemeToggle dark={darkMode} toggle={() => setDarkMode((value) => !value)} />
                             <Dropdown>
                                 <Dropdown.Trigger>
                                     <button

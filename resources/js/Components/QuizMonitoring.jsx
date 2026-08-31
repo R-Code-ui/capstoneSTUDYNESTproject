@@ -1,6 +1,6 @@
 import Table from '@/Components/Table';
 
-export default function QuizMonitoring({ quizzes }) {
+export default function QuizMonitoring({ quizzes, pagination }) {
     const getTypeLabel = (type) => {
         const labels = {
             multiple_choice: 'Multiple Choice',
@@ -24,6 +24,7 @@ export default function QuizMonitoring({ quizzes }) {
             emptyMessage="No quizzes found."
             hoverable
             striped
+            pagination={pagination}
         />
     );
 }
