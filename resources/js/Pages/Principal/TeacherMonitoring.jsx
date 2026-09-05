@@ -104,7 +104,15 @@ export default function TeacherMonitoring({
             label: 'Quizzes',
             render: (row) => row.quizzes_count ?? 0
         },
-        { key: 'last_activity', label: 'Last Activity' },
+        {
+            key: 'last_activity',
+            label: 'Last Activity',
+            render: (row) => (
+                <span className="block truncate" title={row.last_activity || '—'}>
+                    {row.last_activity || '—'}
+                </span>
+            ),
+        },
         {
             key: 'status',
             label: 'Status',
@@ -123,12 +131,20 @@ export default function TeacherMonitoring({
 
     const actions = (row) => [
         {
-            label: 'View',
+            label: 'View Details',
             icon: <ViewProfileIcon />,
             color: 'primary',
             onClick: () => handleViewProfile(row)
         },
     ];
+
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => {
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 150);
+    };
 
     return (
         <AuthenticatedLayout
@@ -147,13 +163,13 @@ export default function TeacherMonitoring({
                 }
             `}</style>
 
-            <div className="py-6 sm:py-10">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div className="p-4 sm:p-6" onFocusCapture={keepFocusedFieldVisible}>
                             {/* Filters */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
+                            <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-4">
+                                <div className="min-w-0">
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
@@ -161,14 +177,14 @@ export default function TeacherMonitoring({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex gap-3">
+                                <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
                                         onChange={(val) => handleFilterChange('grade', val)}
                                         placeholder="Grade Level"
                                         size="md"
-                                        className="w-48"
+                                        className="w-full xl:w-48"
                                     />
                                     <FilterDropdown
                                         options={statusOptions}
@@ -176,7 +192,7 @@ export default function TeacherMonitoring({
                                         onChange={(val) => handleFilterChange('status', val)}
                                         placeholder="Status"
                                         size="md"
-                                        className="w-48"
+                                        className="w-full xl:w-48"
                                     />
                                 </div>
                             </div>
@@ -193,6 +209,10 @@ export default function TeacherMonitoring({
                                     emptyMessage="No teachers found."
                                     hoverable
                                     striped
+                                    compact
+                                    responsive
+                                    responsiveAt="tablet"
+                                    tableClassName="table-fixed"
                                     pagination={pagination}
                                 />
                             </div>

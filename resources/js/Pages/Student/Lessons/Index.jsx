@@ -70,14 +70,36 @@ export default function LessonsIndex({
         ...subjects.map((subject) => ({ value: subject, label: subject })),
     ];
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => {
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<span className="text-xl font-semibold leading-tight text-gray-800">My Lessons</span>}
         >
             <Head title="My Lessons" />
 
-            <div className="student-lessons-page py-4">
+            <div onFocusCapture={keepFocusedFieldVisible} className="student-lessons-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6">
                 <style>{`
+                    .student-lessons-page input,
+                    .student-lessons-page select,
+                    .student-lessons-page textarea {
+                        scroll-margin-block: 7rem;
+                    }
+
+                    @media (max-width: 639px) {
+                        .student-lessons-page input,
+                        .student-lessons-page select,
+                        .student-lessons-page textarea {
+                            font-size: 16px;
+                        }
+                    }
+
                     .studynest-layout.theme-dark .student-lessons-page [data-card-tone="0"] {
                         background-image: linear-gradient(135deg, rgb(30 58 95), rgb(74 41 70)) !important;
                         background-color: rgb(30 58 95) !important;
@@ -176,7 +198,7 @@ export default function LessonsIndex({
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Filters */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1">
@@ -249,7 +271,7 @@ export default function LessonsIndex({
                                                             <Link
                                                                 href={route('student.lessons.show', lesson.id)}
                                                                 onError={() => toast.error('Unable to open this lesson. Please try again.')}
-                                                                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                                                                className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 sm:w-auto"
                                                             >
                                                                 <BookOpenIcon className="w-4 h-4 mr-1" />
                                                                 View Lesson

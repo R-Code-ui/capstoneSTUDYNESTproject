@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'sonner';
 
 // Heroicons
@@ -100,21 +99,26 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="lesson-show-title text-xl font-semibold leading-tight text-gray-800" title={lesson.lesson_title}>
-                        {lesson.lesson_title}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                        <Link href={route('teacher.lessons.edit', lesson.id)} onError={handleNavigationError}>
-                            <SecondaryButton>
-                                <PencilSquareIcon className="w-4 h-4 mr-1" />
-                                Edit
-                            </SecondaryButton>
+                <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="flex min-w-0 items-center gap-1.5 sm:flex-1 sm:gap-2">
+                        <Link
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950"
+                            href={route('teacher.lessons.index')}
+                            onError={handleNavigationError}
+                            aria-label="Back to Lessons"
+                            title="Back to Lessons"
+                        >
+                            <ArrowLeftIcon className="h-4 w-4" /> Back
                         </Link>
-                        <Link href={route('teacher.lessons.index')} onError={handleNavigationError}>
-                            <PrimaryButton>
-                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                                Back to List
+                        <span className="lesson-show-title min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-800" title={lesson.lesson_title}>
+                            {lesson.lesson_title}
+                        </span>
+                    </div>
+                    <div className="flex w-full justify-end sm:ml-auto sm:w-auto sm:shrink-0">
+                        <Link className="w-auto" href={route('teacher.lessons.edit', lesson.id)} onError={handleNavigationError}>
+                            <PrimaryButton className="min-h-11 w-auto justify-center">
+                                <PencilSquareIcon className="mr-1 h-4 w-4" />
+                                Edit Lesson
                             </PrimaryButton>
                         </Link>
                     </div>
@@ -167,42 +171,42 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                     color: rgb(226 232 240);
                 }
             `}</style>
-            <div className="lesson-show-page py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="lesson-show-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
                     {/* Basic Information */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div>
+                        <div className="p-4 sm:p-6">
+                            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Grade Level</div>
                                     <div className="font-medium text-gray-800">{lesson.grade_level}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Subject</div>
                                     <div className="font-medium text-gray-800">{lesson.subject}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Status</div>
                                     <StatusBadge status={lesson.status} />
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Publish Date</div>
                                     <div className="font-medium text-gray-800">{lesson.publish_date}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">School Year</div>
                                     <div className="font-medium text-gray-800">{lesson.school_year}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Term</div>
                                     <div className="font-medium text-gray-800">{lesson.trimester}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Week</div>
                                     <div className="font-medium text-gray-800">{lesson.week_number}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Created At</div>
                                     <div className="font-medium text-gray-800">{lesson.created_at}</div>
                                 </div>
@@ -286,10 +290,10 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                                             key={resource.id}
                                             className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 gap-3"
                                         >
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex min-w-0 items-center gap-3">
                                                 {getResourceIcon(resource.type)}
                                                 <div>
-                                                    <div className="font-medium text-gray-800">
+                                                    <div className="break-words font-medium text-gray-800">
                                                         {resource.name}
                                                     </div>
                                                     {!isUrlResource(resource.type) && (
@@ -317,11 +321,11 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                                                         Open Link
                                                     </a>
                                                 ) : (
-                                                    <div className="flex gap-2">
-                                                        {!isOfficeDocument(resource) && <button onClick={() => handleView(resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
+                                                    <div className="flex w-full gap-2 sm:w-auto">
+                                                        {!isOfficeDocument(resource) && <button onClick={() => handleView(resource.id)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 sm:flex-none sm:py-1">
                                                             <EyeIcon className="w-4 h-4" /> View
                                                         </button>}
-                                                        <button type="button" onClick={() => handleDownload(resource.id)} className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                                                        <button type="button" onClick={() => handleDownload(resource.id)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 sm:flex-none sm:py-1">
                                                             <ArrowDownTrayIcon className="w-4 h-4" /> Download
                                                         </button>
                                                     </div>
@@ -337,7 +341,7 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                     <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <h3 className="text-sm font-semibold text-gray-700">Student Completion ({completedStudents.length}/{student_completion.length})</h3>
-                            <select value={completionFilter} onChange={(event) => setCompletionFilter(event.target.value)} className="completion-filter rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <select value={completionFilter} onChange={(event) => setCompletionFilter(event.target.value)} className="completion-filter w-full rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-auto">
                                 <option value="all">All Students</option>
                                 <option value="completed">Completed</option>
                                 <option value="not_completed">Not Completed</option>
@@ -347,20 +351,25 @@ export default function LessonsShow({ lesson, completion_records = [], student_c
                             {filteredStudents.length === 0 ? (
                                 <p className="text-sm text-gray-500">No students match this filter.</p>
                             ) : (
-                                <div className="overflow-x-auto">
+                                <>
+                                <div className="hidden overflow-x-auto xl:block">
                                     <table className="min-w-full text-sm">
                                         <thead><tr className="border-b text-left text-gray-500"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Grade Level</th><th className="py-2 pr-4">Status</th><th className="py-2">Completed At</th></tr></thead>
                                         <tbody>{paginatedStudents.map((student) => <tr key={student.id} className="border-b last:border-0"><td className="py-3 pr-4 font-medium text-gray-800">{student.name}</td><td className="py-3 pr-4 text-gray-600">{student.grade_level}</td><td className={`py-3 pr-4 ${student.status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}`}>{student.status === 'completed' ? 'Completed' : 'Not completed'}</td><td className="py-3 text-gray-600">{student.completed_at || '—'}</td></tr>)}</tbody>
                                     </table>
                                 </div>
+                                <div className="space-y-3 xl:hidden">
+                                    {paginatedStudents.map((student) => <div key={student.id} className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm"><div className="font-semibold text-gray-800">{student.name}</div><dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2"><div><dt className="text-xs font-semibold uppercase text-gray-500">Grade</dt><dd className="text-gray-700">{student.grade_level}</dd></div><div><dt className="text-xs font-semibold uppercase text-gray-500">Status</dt><dd className={student.status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}>{student.status === 'completed' ? 'Completed' : 'Not completed'}</dd></div><div className="col-span-2"><dt className="text-xs font-semibold uppercase text-gray-500">Completed at</dt><dd className="text-gray-700">{student.completed_at || '—'}</dd></div></dl></div>)}
+                                </div>
+                                </>
                             )}
                         </div>
                         {filteredStudents.length > 0 && (
                             <div className="flex flex-col gap-3 border-t border-gray-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                                 <p className="text-sm text-gray-500">Showing <span className="font-semibold text-gray-800">{completionStart}</span> to <span className="font-semibold text-gray-800">{completionEnd}</span> of <span className="font-semibold text-gray-800">{filteredStudents.length}</span> results</p>
-                                <nav aria-label="Student completion pagination" className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/60">
+                                <nav aria-label="Student completion pagination" className="flex w-full items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-1 sm:w-auto dark:border-slate-700 dark:bg-slate-800/60">
                                     <button type="button" onClick={() => setCompletionPage((page) => Math.max(1, page - 1))} disabled={completionPage === 1} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700">Previous</button>
-                                    {Array.from({ length: completionPageCount }, (_, index) => index + 1).map((page) => <button key={page} type="button" onClick={() => setCompletionPage(page)} aria-current={page === completionPage ? 'page' : undefined} className={`min-w-9 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${page === completionPage ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-700'}`}>{page}</button>)}
+                                    {Array.from({ length: completionPageCount }, (_, index) => index + 1).map((page) => <button key={page} type="button" onClick={() => setCompletionPage(page)} aria-current={page === completionPage ? 'page' : undefined} className={`min-w-9 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${page === completionPage ? 'bg-indigo-600 text-white shadow-sm' : 'hidden sm:inline-block text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-700'}`}>{page}</button>)}
                                     <button type="button" onClick={() => setCompletionPage((page) => Math.min(completionPageCount, page + 1))} disabled={completionPage === completionPageCount} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700">Next</button>
                                 </nav>
                             </div>

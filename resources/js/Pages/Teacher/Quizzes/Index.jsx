@@ -177,20 +177,25 @@ export default function QuizzesIndex({
         },
     ];
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<span className="text-xl font-semibold leading-tight text-gray-800">My Quizzes</span>}
         >
             <Head title="Quizzes" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Filters */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
+                            <div onFocusCapture={keepFocusedFieldVisible} className="space-y-3">
+                                <div className="min-w-0">
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
@@ -199,14 +204,14 @@ export default function QuizzesIndex({
                                     />
                                 </div>
                                 {/* 🔧 FIX: Added items-center to align filters and button vertically */}
-                                <div className="flex flex-wrap gap-3 items-center">
+                                <div className="grid grid-cols-1 gap-3 min-[460px]:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
                                         onChange={(val) => handleFilterChange('grade', val)}
                                         placeholder="Grade"
                                         size="md"
-                                        className="w-36"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={statusOptions}
@@ -214,7 +219,7 @@ export default function QuizzesIndex({
                                         onChange={(val) => handleFilterChange('status', val)}
                                         placeholder="Status"
                                         size="md"
-                                        className="w-36"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={typeOptions}
@@ -222,12 +227,12 @@ export default function QuizzesIndex({
                                         onChange={(val) => handleFilterChange('type', val)}
                                         placeholder="Type"
                                         size="md"
-                                        className="w-40"
+                                        className="w-full"
                                     />
                                     {/* 🔧 FIX: Added py-2 and whitespace-nowrap to match filter height */}
                                     <PrimaryButton
                                         onClick={() => router.visit(route('teacher.quizzes.create'))}
-                                        className="py-2 whitespace-nowrap"
+                                        className="min-h-11 w-full justify-center whitespace-nowrap xl:col-auto xl:w-auto"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-1" />
                                         Create Quiz
@@ -247,6 +252,10 @@ export default function QuizzesIndex({
                                     emptyMessage="No quizzes found. Create your first quiz!"
                                     hoverable
                                     striped
+                                    compact
+                                    responsive
+                                    responsiveAt="tablet"
+                                    actionsClassName="flex-nowrap"
                                     pagination={pagination}
                                 />
                             </div>

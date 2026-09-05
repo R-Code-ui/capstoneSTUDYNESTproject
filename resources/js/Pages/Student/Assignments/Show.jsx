@@ -3,11 +3,10 @@ import { Head, router, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import StudentResources from '@/Components/StudentResources';
+import ProgressiveStudentResources from '@/Components/ProgressiveStudentResources';
 import useDeadlineStatuses from '@/Hooks/useDeadlineStatuses';
 import { ConfirmModal } from '@/Components/Modal';
 import { toast } from 'sonner';
@@ -41,6 +40,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
     const [formErrors, setFormErrors] = useState({});
     const [confirmingSubmission, setConfirmingSubmission] = useState(false);
     const [fileIndexToRemove, setFileIndexToRemove] = useState(null);
+    const [selectingResources, setSelectingResources] = useState(false);
     const getDeadlineStatus = useDeadlineStatuses(assignment);
     const deadlineStatus = getDeadlineStatus(assignment);
 
@@ -193,33 +193,56 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
     };
 
     const openResource = (url, action) => {
-        const resourceWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        // `noopener` makes some browsers return null even after opening the tab.
+        // Open first so a null result reliably indicates an actually blocked pop-up.
+        const resourceWindow = window.open(url, '_blank');
         if (!resourceWindow) {
             toast.error(`Your browser blocked the resource ${action}. Please allow pop-ups and try again.`);
             return;
         }
+        // Keep the opened resource isolated from this page.
         resourceWindow.opener = null;
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => {
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 150);
+    };
+
     const availableMethods = (assignment.submission_methods || []).filter((method) => ['digital', 'paper'].includes(method));
+    const hasDownloadableResources = resources?.some((resource) => resource.type !== 'url');
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>{assignment.title}</span>
-                    <SecondaryButton onClick={() => router.visit(route('student.assignments.index'), {
-                        onError: () => toast.error('Unable to return to assignments. Please try again.'),
-                    })}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-1" /> Back to Assignments
-                    </SecondaryButton>
+                <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+                    <Link
+                        href={route('student.assignments.index')}
+                        onError={() => toast.error('Unable to return to assignments. Please try again.')}
+                        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950"
+                        aria-label="Back to Assignments"
+                        title="Back to Assignments"
+                    >
+                        <ArrowLeftIcon className="h-4 w-4" /> Back
+                    </Link>
+                    <span className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>{assignment.title}</span>
                 </div>
             }
         >
             <Head title={assignment.title} />
 
-            <div className="student-assignment-show-page py-4">
+            <div onFocusCapture={keepFocusedFieldVisible} className="student-assignment-show-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6">
                 <style>{`
+                    .student-assignment-show-page input,
+                    .student-assignment-show-page select,
+                    .student-assignment-show-page textarea { scroll-margin-block: 8rem; }
+                    @media (max-width: 639px) {
+                        .student-assignment-show-page input:not([type="checkbox"]),
+                        .student-assignment-show-page select,
+                        .student-assignment-show-page textarea { font-size: 16px; }
+                    }
                     .studynest-layout.theme-dark .student-assignment-show-page .bg-white {
                         background-color: rgb(15 23 42) !important;
                         border-color: rgb(51 65 85) !important;
@@ -303,7 +326,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
                     {/* Assignment Information */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6 space-y-4">
+                        <div className="space-y-4 p-4 sm:p-6">
                             <div className="flex flex-wrap items-center gap-3">
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     {assignment.subject}
@@ -315,7 +338,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                 <StatusBadge status={deadlineStatus} size="sm" />
                             </div>
 
-                            <h3 className="max-w-full truncate text-2xl font-bold text-gray-800" title={assignment.title}>{assignment.title}</h3>
+                            <h3 className="max-w-full break-words text-2xl font-bold text-gray-800 xl:hidden" title={assignment.title}>{assignment.title}</h3>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
                                 <div>
@@ -346,7 +369,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
                             <div className="pt-4 border-t border-gray-200">
                                 <h4 className="font-semibold text-gray-800 mb-2">Instructions</h4>
-                                <div className="text-gray-700 whitespace-pre-wrap break-words line-clamp-5" title={assignment.instructions}>{assignment.instructions}</div>
+                                <div className="whitespace-pre-wrap break-words text-gray-700" title={assignment.instructions}>{assignment.instructions}</div>
                             </div>
                         </div>
                     </div>
@@ -369,12 +392,21 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     {resources && resources.length > 0 && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
-                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <PaperClipIcon className="w-5 h-5 text-gray-500" /> Learning Resources
+                                <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                        <PaperClipIcon className="h-5 w-5 text-blue-500" /> Learning Resources
                                     </h3>
+                                    {hasDownloadableResources && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectingResources((current) => !current)}
+                                            className={`inline-flex min-h-10 w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition-colors sm:w-auto ${selectingResources ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                                        >
+                                            {selectingResources ? 'Cancel selection' : 'Select files'}
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="p-4 sm:p-6"><StudentResources resources={resources} viewUrl={(id) => route('student.assignments.view-resource', id)} downloadUrl={(id) => route('student.assignments.download-resource', id)} onView={(url) => openResource(url, 'viewer')} onDownload={(url) => openResource(url, 'download')} /></div>
+                                <div className="p-3 sm:p-6"><ProgressiveStudentResources resources={resources} viewUrl={(id) => route('student.assignments.view-resource', id)} downloadUrl={(id) => route('student.assignments.download-resource', id)} onView={(url) => openResource(url, 'viewer')} onDownload={(url) => openResource(url, 'download')} selectionMode={selectingResources} onExitSelection={() => setSelectingResources(false)} /></div>
                             </div>
                         </div>
                     )}
@@ -383,10 +415,10 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     {submission && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
+                                <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                     <h3 className="text-sm font-semibold text-gray-700">Submission Status</h3>
                                 </div>
-                                <div className="p-6 space-y-4">
+                                <div className="space-y-4 p-4 sm:p-6">
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                         <div>
                                             <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Status</div>
@@ -423,7 +455,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     {/* Paper-only assignments are confirmed by the teacher, not submitted in the app. */}
                     {canSubmit() && availableMethods.includes('paper') && !availableMethods.includes('digital') && (
                         <div className="mt-6">
-                            <div className="bg-amber-50 rounded-xl border border-amber-200 p-6">
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-6">
                                 <div className="flex items-start gap-3 text-amber-800">
                                     <DocumentTextIcon className="w-6 h-6 shrink-0" />
                                     <div>
@@ -439,11 +471,11 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     {canSubmit() && availableMethods.includes('digital') && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
+                                <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                     <h3 className="text-sm font-semibold text-gray-700">Turn In Assignment</h3>
                                 </div>
-                                <div className="p-6">
-                                    <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="p-4 sm:p-6">
+                                    <form onSubmit={handleSubmit} className="space-y-6 pb-24 sm:pb-0">
                                         {availableMethods.length > 1 && (
                                         <div>
                                             <InputLabel value="Submission Method" required />
@@ -485,14 +517,14 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                                 {selectedFiles.length > 0 && (
                                                     <div className="mt-2 space-y-1">
                                                         {selectedFiles.map((file, index) => (
-                                                            <div key={index} className="flex items-center justify-between text-sm text-gray-600 p-2 bg-gray-50 rounded-lg border border-gray-100">
-                                                                <div className="flex items-center gap-2">
-                                                                    <PaperClipIcon className="w-4 h-4 text-gray-500" />
-                                                                    <span>{file.name}</span>
-                                                                    <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(1)} KB)</span>
+                                                            <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600">
+                                                                <div className="flex min-w-0 items-start gap-2">
+                                                                    <PaperClipIcon className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
+                                                                    <span className="min-w-0 break-all">{file.name}</span>
+                                                                    <span className="shrink-0 text-xs text-gray-400">({(file.size / 1024).toFixed(1)} KB)</span>
                                                                 </div>
-                                                                <button type="button" onClick={() => setFileIndexToRemove(index)} className="text-red-500 hover:text-red-700" aria-label={`Remove ${file.name}`}>
-                                                                    <XCircleIcon className="w-4 h-4" />
+                                                                <button type="button" onClick={() => setFileIndexToRemove(index)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30" aria-label={`Remove ${file.name}`}>
+                                                                    <XCircleIcon className="h-5 w-5" />
                                                                 </button>
                                                             </div>
                                                         ))}
@@ -513,18 +545,13 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                             </div>
                                         )}
 
-                                        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                                            <SecondaryButton type="button" onClick={() => router.visit(route('student.assignments.index'), {
-                                                onError: () => toast.error('Unable to return to assignments. Please try again.'),
-                                            })}>
-                                                Cancel
-                                            </SecondaryButton>
+                                        <div className="sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 border-t border-gray-200 bg-white/95 px-4 pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:static sm:mx-0 sm:flex-row sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0">
                                             {selectedMethod === 'digital' ? (
-                                                <PrimaryButton type="submit" disabled={isSubmitting}>
+                                                <PrimaryButton className="w-full justify-center sm:w-auto" type="submit" disabled={isSubmitting}>
                                                     {isSubmitting ? 'Submitting...' : 'Turn In Assignment'}
                                                 </PrimaryButton>
                                             ) : (
-                                                <span className="self-center text-sm text-gray-500">Hand the paper to your teacher to complete submission.</span>
+                                                <span className="self-center text-center text-sm text-gray-500 sm:text-left">Hand the paper to your teacher to complete submission.</span>
                                             )}
                                         </div>
                                     </form>
@@ -535,7 +562,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
 
                     {!canSubmit() && submission && submission.status !== 'returned_for_revision' && (
                         <div className="mt-6">
-                            <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-6">
+                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:p-6">
                                 <div className="flex items-center gap-3 text-emerald-700">
                                     <CheckCircleIcon className="w-6 h-6" />
                                     <div>

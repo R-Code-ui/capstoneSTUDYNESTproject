@@ -29,6 +29,11 @@ class UserSeeder extends Seeder
         );
         $principal->assignRole('principal');
 
+        $this->command->info('Users seeded successfully.');
+        $this->command->info('Principal: PRN-001 / Principal123');
+
+        return;
+
         // ========== CREATE TEACHERS ==========
 
         // Teacher 1 - Grade 4

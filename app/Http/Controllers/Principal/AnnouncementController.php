@@ -53,7 +53,7 @@ class AnnouncementController extends Controller
             ->paginate(10); // ✅ PAGINATION ADDED
 
         $categories = ['Reminder', 'Event Announcement', 'Class Suspension', 'Emergency Notice', 'Academic Notice', 'School Activity'];
-        $statuses = ['draft', 'scheduled', 'published', 'archived'];
+        $statuses = ['draft', 'scheduled', 'published'];
         $audienceOptions = ['all_users', 'all_grades', 'grade_4', 'grade_5', 'grade_6', 'teachers_only'];
 
         return Inertia::render('Principal/Announcements', [

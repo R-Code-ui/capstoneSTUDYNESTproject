@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
@@ -44,6 +44,7 @@ export default function PrincipalAnnouncements({
     const [scheduledAt, setScheduledAt] = useState('');
     const [confirmation, setConfirmation] = useState(null);
     const [pendingSubmission, setPendingSubmission] = useState(null);
+    const [announcementViewportHeight, setAnnouncementViewportHeight] = useState(null);
 
     const { errors } = usePage().props;
 
@@ -263,19 +264,81 @@ export default function PrincipalAnnouncements({
 
     const priorityOptions = ['normal', 'important', 'urgent'];
 
+    const isAnnouncementFormOpen = showCreateModal || showEditModal;
+
+    useEffect(() => {
+        if (!isAnnouncementFormOpen || !window.visualViewport) {
+            setAnnouncementViewportHeight(null);
+            return undefined;
+        }
+
+        const syncViewportHeight = () => setAnnouncementViewportHeight(window.visualViewport.height);
+        syncViewportHeight();
+
+        window.visualViewport.addEventListener('resize', syncViewportHeight);
+        window.visualViewport.addEventListener('scroll', syncViewportHeight);
+
+        return () => {
+            window.visualViewport.removeEventListener('resize', syncViewportHeight);
+            window.visualViewport.removeEventListener('scroll', syncViewportHeight);
+        };
+    }, [isAnnouncementFormOpen]);
+
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => {
+            const modalPanel = event.target.closest('.principal-announcement-modal');
+
+            if (modalPanel) {
+                const fieldTop = event.target.getBoundingClientRect().top
+                    - modalPanel.getBoundingClientRect().top
+                    + modalPanel.scrollTop;
+
+                modalPanel.scrollTo({
+                    top: Math.max(0, fieldTop - (modalPanel.clientHeight * 0.32)),
+                    behavior: 'smooth',
+                });
+                return;
+            }
+
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-bold text-gray-800">Announcements</h2>}
         >
             <Head title="Announcements" />
 
-            <div className="py-6 sm:py-10">
+            <style>{`
+                .principal-announcements-page input,
+                .principal-announcements-page select,
+                .principal-announcements-page textarea,
+                .principal-announcement-form input,
+                .principal-announcement-form select,
+                .principal-announcement-form textarea { scroll-margin-block: 8rem; }
+                .principal-announcement-modal {
+                    max-height: calc(${announcementViewportHeight ? `${announcementViewportHeight}px` : '100dvh'} - 1rem) !important;
+                }
+                @media (max-width: 639px) {
+                    .principal-announcements-page input,
+                    .principal-announcements-page select,
+                    .principal-announcements-page textarea,
+                    .principal-announcement-form input,
+                    .principal-announcement-form select,
+                    .principal-announcement-form textarea { font-size: 16px; }
+                }
+            `}</style>
+
+            <div className="principal-announcements-page py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                    <div className="overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div className="p-4 sm:p-6">
                             {/* Filters */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
+                            <div className="relative z-20 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-4" onFocusCapture={keepFocusedFieldVisible}>
+                                <div className="min-w-0">
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
@@ -283,14 +346,14 @@ export default function PrincipalAnnouncements({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[12rem_12rem_auto] xl:items-center">
                                     <FilterDropdown
                                         options={categoryOptions}
                                         value={categoryFilter}
                                         onChange={(val) => handleFilterChange('category', val)}
                                         placeholder="Category"
                                         size="md"
-                                        className="w-full sm:w-48"
+                                        className="w-full xl:w-48"
                                     />
                                     <FilterDropdown
                                         options={statusOptions}
@@ -298,7 +361,7 @@ export default function PrincipalAnnouncements({
                                         onChange={(val) => handleFilterChange('status', val)}
                                         placeholder="Status"
                                         size="md"
-                                        className="w-full sm:w-48"
+                                        className="w-full xl:w-48"
                                     />
                                     {/* 🔧 FIX: Button now matches filter height with py-2 and whitespace-nowrap */}
                                     <PrimaryButton
@@ -308,7 +371,7 @@ export default function PrincipalAnnouncements({
                                             setScheduledAt('');
                                             setShowCreateModal(true);
                                         }}
-                                        className="w-full justify-center py-2 whitespace-nowrap sm:w-auto"
+                                        className="min-h-11 w-full justify-center whitespace-nowrap sm:col-span-2 xl:col-span-1 xl:w-auto"
                                     >
                                         + Create Announcement
                                     </PrimaryButton>
@@ -318,7 +381,7 @@ export default function PrincipalAnnouncements({
                             {isLoading && <LoadingSpinner overlay size="lg" />}
 
                             {/* Table */}
-                            <div className="mt-6">
+                            <div className="relative z-0 mt-6">
                                 <Table
                                     columns={columns}
                                     rows={announcements}
@@ -326,6 +389,8 @@ export default function PrincipalAnnouncements({
                                     emptyMessage="No announcements found."
                                     hoverable
                                     striped
+                                    responsive
+                                    responsiveAt="tablet"
                                     pagination={pagination}
                                 />
                             </div>
@@ -339,11 +404,14 @@ export default function PrincipalAnnouncements({
                 show={showCreateModal || showEditModal}
                 onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedAnnouncement(null); }}
                 title={showCreateModal ? 'Create Announcement' : 'Edit Announcement'}
-                size="2xl"
+                size="3xl"
+                className="principal-announcement-modal"
+                bodyClassName="py-3 pb-0 sm:py-4"
             >
                 <form
                     onSubmit={handleAnnouncementSubmit}
-                    className="space-y-4"
+                    className="principal-announcement-form space-y-3 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:pb-4"
+                    onFocusCapture={keepFocusedFieldVisible}
                 >
                     {/* Title – full width */}
                     <div>
@@ -359,7 +427,7 @@ export default function PrincipalAnnouncements({
                     </div>
 
                     {/* Two columns: Category + Target Audience */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <InputLabel htmlFor="category" value="Category" />
                             <select
@@ -402,7 +470,7 @@ export default function PrincipalAnnouncements({
                             id="content"
                             name="content"
                             defaultValue={selectedAnnouncement?.content || ''}
-                            rows={4}
+                            rows={3}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                             required
                         />
@@ -410,7 +478,7 @@ export default function PrincipalAnnouncements({
                     </div>
 
                     {/* Two columns: Priority + Pin */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <InputLabel htmlFor="priority" value="Priority" />
                             <select
@@ -452,7 +520,7 @@ export default function PrincipalAnnouncements({
                                     : 'Archived'}
                             </div>
                         ) : (
-                            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3" role="group" aria-label="Publishing option">
+                            <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-3" role="group" aria-label="Publishing option">
                                 {[
                                     { value: 'draft', label: 'Save as draft', help: 'Only you can see it' },
                                     { value: 'published', label: 'Publish now', help: 'Visible immediately' },
@@ -463,7 +531,7 @@ export default function PrincipalAnnouncements({
                                         type="button"
                                         onClick={() => setPublicationMode(option.value)}
                                         aria-pressed={publicationMode === option.value}
-                                        className={`rounded-lg border px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-slate-900 ${publicationMode === option.value
+                                        className={`rounded-lg border px-3 py-1.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-slate-900 ${publicationMode === option.value
                                             ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600 dark:border-blue-400 dark:bg-blue-500/20 dark:ring-blue-400'
                                             : 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-900/40 dark:hover:border-slate-500 dark:hover:bg-slate-800'}`}
                                     >
@@ -481,7 +549,7 @@ export default function PrincipalAnnouncements({
                     </div>
 
                     {/* Schedule Date & Time + Expiration Date & Time */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {publicationMode === 'scheduled' && (
                             <div>
                                 <InputLabel htmlFor="publish_date" value="Schedule Date & Time" />
@@ -516,11 +584,11 @@ export default function PrincipalAnnouncements({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end gap-3 border-t border-gray-200 pt-4 dark:border-slate-700">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedAnnouncement(null); }}>
+                    <div className="sticky bottom-0 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_16px_-16px_rgba(15,23,42,0.45)] dark:border-slate-700 dark:bg-slate-900 sm:-mx-6 sm:px-6 sm:pb-3">
+                        <SecondaryButton className="w-full justify-center" type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedAnnouncement(null); }}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit">
+                        <PrimaryButton className="w-full justify-center" type="submit">
                             {publicationMode === 'scheduled'
                                 ? (showCreateModal ? 'Schedule Announcement' : 'Update Schedule')
                                 : publicationMode === 'draft'
@@ -554,16 +622,17 @@ export default function PrincipalAnnouncements({
                 show={showViewModal}
                 onClose={() => { setShowViewModal(false); setSelectedAnnouncement(null); }}
                 title="Announcement Details"
-                size="lg"
+                size="xl"
             >
                 {selectedAnnouncement && (
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-start">
+                    <div className="space-y-5">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
-                                <h3 className="max-w-[320px] truncate text-xl font-bold text-gray-800" title={selectedAnnouncement.title || ''}>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-300">Announcement</p>
+                                <h3 className="mt-1 break-words text-xl font-bold text-gray-800" title={selectedAnnouncement.title || ''}>
                                     {selectedAnnouncement.title}
                                 </h3>
-                                <div className="mt-1 flex flex-wrap gap-2 text-sm text-gray-500">
+                                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-500">
                                     <span>Category: {selectedAnnouncement.category}</span>
                                     <span>•</span>
                                     <span>Audience: {selectedAnnouncement.audience === 'all_grades'
@@ -576,23 +645,24 @@ export default function PrincipalAnnouncements({
                                     </span>
                                 </div>
                             </div>
-                            <div className="shrink-0 text-right text-sm text-gray-500">
-                                <div>
+                            <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-600 sm:w-auto sm:min-w-[190px] sm:text-right dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
+                                <div className="font-medium text-gray-700 dark:text-slate-200">
                                     {selectedAnnouncement.status === 'scheduled'
                                         ? `Scheduled: ${selectedAnnouncement.publish_date_label}`
                                         : selectedAnnouncement.publish_date_label
                                             ? `Published: ${selectedAnnouncement.publish_date_label}`
                                             : `Created: ${selectedAnnouncement.created_at}`}
                                 </div>
-                                <div>Views: {selectedAnnouncement.view_count}</div>
+                                <div className="mt-1 text-xs">Views: {selectedAnnouncement.view_count}</div>
                                 {selectedAnnouncement.expiration_date && (
-                                    <div>Expires: {selectedAnnouncement.expiration_date_label}</div>
+                                    <div className="mt-1 text-xs">Expires: {selectedAnnouncement.expiration_date_label}</div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-200">
-                            <div className="max-h-32 overflow-y-auto whitespace-pre-wrap break-words text-gray-700" title={selectedAnnouncement.content || ''}>
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">Message</div>
+                            <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700 dark:text-slate-200" title={selectedAnnouncement.content || ''}>
                                 {selectedAnnouncement.content}
                             </div>
                         </div>

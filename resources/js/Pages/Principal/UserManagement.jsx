@@ -232,6 +232,18 @@ export default function UserManagement({
         { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => openConfirmation('delete', row) },
     ];
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => {
+            event.target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest',
+            });
+        }, 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-bold text-gray-800">User Management</h2>}
@@ -281,15 +293,44 @@ export default function UserManagement({
                     outline: 3px solid rgb(147 197 253);
                     outline-offset: 2px;
                 }
+                .principal-user-management-page input,
+                .principal-user-management-page select,
+                .principal-user-management-page textarea {
+                    scroll-margin-block: 7rem;
+                }
+                .principal-teacher-form {
+                    scroll-padding-block: 5rem 8rem;
+                }
+                .principal-teacher-form input,
+                .principal-teacher-form select {
+                    scroll-margin-block: 5rem 8rem;
+                }
+                @media (max-width: 639px) {
+                    .principal-user-management-page input:not([type="checkbox"]),
+                    .principal-user-management-page select,
+                    .principal-user-management-page textarea {
+                        font-size: 16px;
+                    }
+                }
             `}</style>
 
-            <div className="py-6 sm:py-10">
+            <div className="principal-user-management-page py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div className="p-4 sm:p-6">
                             {/* Filters & Actions */}
-                            <div className="space-y-3">
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div className="space-y-3" onFocusCapture={keepFocusedFieldVisible}>
+                                <div className="min-w-0">
+                                    <div className="min-w-0">
+                                        <SearchBar
+                                            value={search}
+                                            onChange={handleSearch}
+                                            placeholder="Search teachers..."
+                                            size="md"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
@@ -314,22 +355,12 @@ export default function UserManagement({
                                         size="md"
                                         className="w-full"
                                     />
-                                </div>
-                                <div className="flex flex-col gap-3 sm:flex-row">
-                                    <div className="min-w-0 flex-1">
-                                        <SearchBar
-                                            value={search}
-                                            onChange={handleSearch}
-                                            placeholder="Search teachers..."
-                                            size="md"
-                                        />
-                                    </div>
-                                    <PrimaryButton
-                                        onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}
-                                        className="w-full justify-center py-2 whitespace-nowrap sm:w-auto"
-                                    >
-                                        + Add Teacher
-                                    </PrimaryButton>
+                                <PrimaryButton
+                                    onClick={() => { setSelectedUser(null); setShowCreateModal(true); }}
+                                    className="min-h-11 w-full justify-center whitespace-nowrap xl:w-auto"
+                                >
+                                    + Add Teacher
+                                </PrimaryButton>
                                 </div>
                             </div>
 
@@ -345,6 +376,8 @@ export default function UserManagement({
                                     emptyMessage="No teachers found."
                                     hoverable
                                     striped
+                                    responsive
+                                    responsiveAt="tablet"
                                     pagination={teachers_pagination}
                                 />
                             </div>
@@ -386,8 +419,9 @@ export default function UserManagement({
                 show={showCreateModal || showEditModal}
                 onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}
                 title={showCreateModal ? 'Add Teacher' : 'Edit Teacher'}
-                size="lg"
-                bodyClassName="py-3"
+                size="2xl"
+                className="max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)]"
+                bodyClassName="py-3 sm:py-4"
             >
                 <form
                     onSubmit={(e) => {
@@ -417,7 +451,8 @@ export default function UserManagement({
                             onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
-                    className="space-y-3"
+                    className="principal-teacher-form grid grid-cols-1 gap-x-5 gap-y-3 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] sm:grid-cols-2 sm:gap-y-4"
+                    onFocusCapture={keepFocusedFieldVisible}
                 >
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />
 
@@ -457,9 +492,9 @@ export default function UserManagement({
                         <InputError message={errors?.middle_name} className="mt-2" />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                         <InputLabel htmlFor="grade_levels" value="Assigned Grades" />
-                        <div className="mt-2 space-y-2">
+                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                             {grade_levels.map((grade) => (
                                 <label key={grade} className="principal-grade-option flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800 transition-colors hover:border-blue-300 hover:bg-blue-50">
                                     <input
@@ -476,11 +511,11 @@ export default function UserManagement({
                         <InputError message={errors?.grade_levels} className="mt-2" />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}>
+                    <div className="sticky bottom-0 z-10 col-span-full -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:-mx-6 sm:px-6 sm:pb-1">
+                        <SecondaryButton className="w-full justify-center" type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); }}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit">
+                        <PrimaryButton className="w-full justify-center" type="submit">
                             {showCreateModal ? 'Create' : 'Update'}
                         </PrimaryButton>
                     </div>
@@ -514,6 +549,7 @@ export default function UserManagement({
                         });
                     }}
                     className="space-y-4"
+                    onFocusCapture={keepFocusedFieldVisible}
                 >
                     <div>
                         <PasswordInput
@@ -529,11 +565,11 @@ export default function UserManagement({
                         />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                        <SecondaryButton type="button" onClick={() => { setShowResetModal(false); setSelectedUser(null); setPassword(''); }}>
+                    <div className="sticky bottom-0 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] dark:border-slate-700 dark:bg-slate-900 sm:-mx-6 sm:px-6 sm:pb-1">
+                        <SecondaryButton className="w-full justify-center" type="button" onClick={() => { setShowResetModal(false); setSelectedUser(null); setPassword(''); }}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit">Reset Password</PrimaryButton>
+                        <PrimaryButton className="w-full justify-center" type="submit">Reset Password</PrimaryButton>
                     </div>
                 </form>
             </Modal>

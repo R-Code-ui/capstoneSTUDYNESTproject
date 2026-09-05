@@ -124,15 +124,6 @@ export default function ProgressIndex({
             ),
         },
         {
-            key: 'lrn',
-            label: 'Student ID',
-            render: (row) => (
-                <div className="max-w-[100px] truncate" title={row.lrn}>
-                    {row.lrn}
-                </div>
-            ),
-        },
-        {
             key: 'grade_level',
             label: 'Grade',
             render: (row) => (
@@ -178,25 +169,6 @@ export default function ProgressIndex({
             ),
         },
         {
-            key: 'overall_progress',
-            label: 'Overall Progress',
-            render: (row) => (
-                <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2.5">
-                        <div
-                            className={`h-2.5 rounded-full ${
-                                row.overall_progress >= 80 ? 'bg-emerald-500' :
-                                row.overall_progress >= 60 ? 'bg-yellow-500' :
-                                'bg-red-500'
-                            }`}
-                            style={{ width: `${row.overall_progress}%` }}
-                        />
-                    </div>
-                    <span className="text-sm font-medium">{row.overall_progress}%</span>
-                </div>
-            ),
-        },
-        {
             key: 'status',
             label: 'Status',
             render: (row) => {
@@ -218,6 +190,11 @@ export default function ProgressIndex({
             onClick: () => viewStudentProgress(row.student_id),
         },
     ];
+
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
 
     return (
         <AuthenticatedLayout
@@ -287,10 +264,10 @@ export default function ProgressIndex({
                 }
             `}</style>
 
-            <div className="progress-page py-8 sm:py-12">
+            <div className="progress-page py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Statistics Cards ===== */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid gap-4 min-[480px]:grid-cols-2 xl:grid-cols-5">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-blue-600">{stats.total_students}</div>
                             <div className="text-sm font-medium text-gray-500">Total Students</div>
@@ -317,14 +294,14 @@ export default function ProgressIndex({
                     {at_risk_students.length > 0 && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
+                                <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                     <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                         <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
                                         Students Requiring Support
                                     </h3>
                                 </div>
-                                <div className="p-6">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div className="p-4 sm:p-6">
+                                    <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-3">
                                         {at_risk_students.map((student) => (
                                             <div
                                                 key={student.student_id}
@@ -350,7 +327,7 @@ export default function ProgressIndex({
                                             <p className="text-sm text-slate-500">
                                                 Showing <span className="font-semibold text-slate-800">{(at_risk_pagination.current_page - 1) * at_risk_pagination.per_page + 1}</span> to <span className="font-semibold text-slate-800">{Math.min(at_risk_pagination.current_page * at_risk_pagination.per_page, at_risk_pagination.total)}</span> of <span className="font-semibold text-slate-800">{at_risk_pagination.total}</span> results
                                             </p>
-                                            <nav aria-label="Students requiring support pagination" className="support-pagination flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1">
+                                            <nav aria-label="Students requiring support pagination" className="support-pagination flex w-full items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-1 sm:w-auto">
                                                 <button
                                                     type="button"
                                                     onClick={() => changeAtRiskPage(at_risk_pagination.current_page - 1)}
@@ -382,10 +359,10 @@ export default function ProgressIndex({
                     <div className="mt-6">
                         {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                            <div className="p-6">
+                            <div className="p-4 sm:p-6">
                                 {/* Filters */}
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <div className="flex-1">
+                                <div onFocusCapture={keepFocusedFieldVisible} className="space-y-3">
+                                    <div className="min-w-0">
                                         <SearchBar
                                             value={search}
                                             onChange={handleSearch}
@@ -393,14 +370,14 @@ export default function ProgressIndex({
                                             size="md"
                                         />
                                     </div>
-                                    <div className="flex flex-wrap gap-3">
+                                    <div className="grid grid-cols-1 gap-3 min-[460px]:grid-cols-2 xl:grid-cols-3">
                                         <FilterDropdown
                                             options={gradeOptions}
                                             value={gradeFilter}
                                             onChange={(val) => handleFilterChange('grade', val)}
                                             placeholder="Grade"
                                             size="md"
-                                            className="w-36"
+                                            className="w-full"
                                         />
                                         <FilterDropdown
                                             options={subjectOptions}
@@ -408,7 +385,7 @@ export default function ProgressIndex({
                                             onChange={(val) => handleFilterChange('subject', val)}
                                             placeholder="Subject"
                                             size="md"
-                                            className="w-40"
+                                            className="w-full"
                                         />
                                         <FilterDropdown
                                             options={trimesterOptions}
@@ -416,7 +393,7 @@ export default function ProgressIndex({
                                             onChange={(val) => handleFilterChange('trimester', val)}
                                             placeholder="Term"
                                             size="md"
-                                            className="w-40"
+                                            className="w-full"
                                         />
                                     </div>
                                 </div>
@@ -433,6 +410,9 @@ export default function ProgressIndex({
                                         emptyMessage="No students found."
                                         hoverable
                                         striped
+                                        responsive
+                                        responsiveAt="tablet"
+                                        actionsClassName="flex-nowrap"
                                         pagination={pagination}
                                     />
                                 </div>

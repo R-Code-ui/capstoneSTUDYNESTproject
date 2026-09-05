@@ -137,10 +137,10 @@ export default function Modal({
                 >
                     <DialogPanel
                         className={`
-                            mb-6 transform overflow-hidden rounded-xl
+                            mx-auto mb-6 w-full max-h-[calc(100dvh-3rem)] transform overflow-y-auto rounded-xl
                             studynest-modal-panel bg-white
                             shadow-xl transition-all
-                            sm:mx-auto sm:w-full
+                            sm:max-h-[calc(100dvh-4rem)]
                             ${maxWidthClass}
                             ${className}
                         `}
@@ -149,7 +149,7 @@ export default function Modal({
                         {(title || showCloseButton) && (
                             <div className={`
                                 flex items-center justify-between
-                                px-6 py-4
+                                px-4 py-4 sm:px-6
                                 border-b border-gray-200
                                 ${titleClassName}
                             `}>
@@ -176,14 +176,14 @@ export default function Modal({
                         )}
 
                         {/* Body */}
-                        <div className={`px-6 py-4 ${bodyClassName}`}>
+                        <div className={`px-4 py-4 sm:px-6 ${bodyClassName}`}>
                             {children}
                         </div>
 
                         {/* Footer */}
                         {footer && (
                             <div className={`
-                                px-6 py-4
+                                px-4 py-4 sm:px-6
                                 border-t border-gray-200
                                 ${footerClassName}
                             `}>

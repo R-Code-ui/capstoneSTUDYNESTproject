@@ -50,7 +50,6 @@ export default function AssignmentsEdit({
         assignment_type: assignment.assignment_type || '',
         instructions: assignment.instructions || '',
         total_points: assignment.total_points || '',
-        estimated_time: assignment.estimated_time || '',
         allow_late_submission: assignment.allow_late_submission || false,
         due_date: assignment.due_date || '',
         due_time: assignment.due_time || '',
@@ -122,7 +121,10 @@ export default function AssignmentsEdit({
     const handleSubmit = (e) => {
         e.preventDefault();
         const dueDateTime = new Date(`${data.due_date}T${data.due_time}`);
-        if (!data.due_date || !data.due_time || dueDateTime <= new Date()) {
+        const originalDueDateTime = new Date(`${assignment.due_date}T${assignment.due_time}`);
+        const deadlineChanged = dueDateTime.getTime() !== originalDueDateTime.getTime();
+
+        if (!data.due_date || !data.due_time || (deadlineChanged && dueDateTime <= new Date())) {
             toast.error('The due date and time must be in the future.');
             return;
         }
@@ -281,6 +283,11 @@ export default function AssignmentsEdit({
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<span className="text-xl font-semibold leading-tight text-gray-800">Edit Assignment</span>}
@@ -303,14 +310,21 @@ export default function AssignmentsEdit({
                     background-color: rgb(30 41 59);
                     color: rgb(226 232 240);
                 }
+                .assignment-form-shell input,
+                .assignment-form-shell select,
+                .assignment-form-shell textarea { scroll-margin-block: 7rem; }
+                .studynest-layout.theme-dark .assignment-form-actions {
+                    background-color: rgb(15 23 42 / 0.96);
+                    border-color: rgb(51 65 85);
+                }
             `}</style>
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     <div className="assignment-form-shell bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmit} onFocusCapture={keepFocusedFieldVisible} className="space-y-6 p-4 pb-24 sm:p-6 sm:pb-6">
                             {/* ===== Section 1: Academic Information ===== */}
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
@@ -502,7 +516,7 @@ export default function AssignmentsEdit({
                                         />
                                         <InputError message={errors.instructions} className="mt-2" />
                                     </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <InputLabel htmlFor="total_points" value="Total Points" required />
                                             <TextInput
@@ -515,18 +529,6 @@ export default function AssignmentsEdit({
                                                 min="1"
                                             />
                                             <InputError message={errors.total_points} className="mt-2" />
-                                        </div>
-                                        <div>
-                                            <InputLabel htmlFor="estimated_time" value="Est. Time (minutes) (optional)" />
-                                            <TextInput
-                                                id="estimated_time"
-                                                type="number"
-                                                value={data.estimated_time}
-                                                onChange={(e) => setData('estimated_time', e.target.value)}
-                                                className="mt-1 block w-full"
-                                                min="1"
-                                            />
-                                            <InputError message={errors.estimated_time} className="mt-2" />
                                         </div>
                                         <div>
                                             <InputLabel htmlFor="allow_late_submission" value="Allow Late Submission" />
@@ -550,7 +552,6 @@ export default function AssignmentsEdit({
                                                 type="date"
                                                 value={data.due_date}
                                                 onChange={(e) => setData('due_date', e.target.value)}
-                                                min={new Date().toLocaleDateString('en-CA')}
                                                 className="mt-1 block w-full"
                                                 required
                                             />
@@ -692,11 +693,11 @@ export default function AssignmentsEdit({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
-                                <SecondaryButton type="button" onClick={() => router.visit(route('teacher.assignments.index'))}>
+                            <div className="assignment-form-actions sticky bottom-3 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-10px_18px_-18px_rgba(15,23,42,0.55)] backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0 sm:shadow-none">
+                                <SecondaryButton type="button" onClick={() => router.visit(route('teacher.assignments.index'))} className="w-full justify-center sm:w-auto">
                                     Cancel
                                 </SecondaryButton>
-                                <PrimaryButton type="submit" disabled={isSubmitting}>
+                                <PrimaryButton type="submit" disabled={isSubmitting} className="w-full justify-center sm:w-auto">
                                     {isSubmitting ? 'Updating...' : 'Update Assignment'}
                                 </PrimaryButton>
                             </div>

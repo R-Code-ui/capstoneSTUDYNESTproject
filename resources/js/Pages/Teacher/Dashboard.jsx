@@ -29,6 +29,7 @@ import {
     ExclamationTriangleIcon,
     MegaphoneIcon,
     BuildingOfficeIcon,
+    SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 // ============================================================
@@ -98,19 +99,55 @@ export default function TeacherDashboard({
         >
             <Head title="Teacher Dashboard" />
 
-            <div className="py-4">
+            <div className="teacher-dashboard min-h-full py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6">
                 <style>{`
+                    .teacher-dashboard { scroll-padding-bottom: max(8rem, env(safe-area-inset-bottom)); background: radial-gradient(circle at 4% 2%, rgb(219 234 254 / 0.72), transparent 22rem), radial-gradient(circle at 96% 14%, rgb(233 213 255 / 0.62), transparent 24rem), #f8fafc; }
+                    .teacher-dashboard :focus-visible { scroll-margin-block: 1rem 9rem; }
+                    .teacher-dashboard-hero { position: relative; isolation: isolate; overflow: hidden; background: linear-gradient(118deg, rgb(37 99 235), rgb(79 70 229) 54%, rgb(126 34 206)); box-shadow: 0 18px 38px rgb(79 70 229 / 0.2); }
+                    .teacher-dashboard-hero::before, .teacher-dashboard-hero::after { content: ''; position: absolute; z-index: -1; border-radius: 999px; background: rgb(255 255 255 / 0.14); }
+                    .teacher-dashboard-hero::before { width: 15rem; height: 15rem; right: -5rem; top: -9rem; }
+                    .teacher-dashboard-hero::after { width: 9rem; height: 9rem; right: 27%; bottom: -6rem; }
+                    .teacher-dashboard-card { box-shadow: 0 8px 24px rgb(15 23 42 / 0.05); }
+                    .teacher-quick-action > svg { width: 2.75rem; height: 2.75rem; padding: 0.65rem; border-radius: 0.9rem; }
+                    .teacher-quick-action:nth-child(1) > svg { color: #2563eb; background: #dbeafe; }
+                    .teacher-quick-action:nth-child(2) > svg { color: #059669; background: #d1fae5; }
+                    .teacher-quick-action:nth-child(3) > svg { color: #7c3aed; background: #ede9fe; }
+                    .teacher-quick-action:nth-child(4) > svg { color: #d97706; background: #fef3c7; }
+                    .teacher-quick-action:nth-child(5) > svg { color: #e11d48; background: #ffe4e6; }
+                    .teacher-quick-action:nth-child(6) > svg { color: #0f766e; background: #ccfbf1; }
+                    @media (hover: hover) {
+                        .teacher-dashboard-card { transition: border-color 180ms ease, box-shadow 180ms ease; }
+                        .teacher-dashboard-card:hover { border-color: rgb(191 219 254); box-shadow: 0 16px 32px rgb(30 64 175 / 0.09); }
+                    }
                     .teacher-dashboard-chart { --teacher-chart-text: #475569; --teacher-chart-grid: #e2e8f0; --teacher-tooltip-bg: #ffffff; }
                     .studynest-layout.theme-dark .teacher-dashboard-chart { --teacher-chart-text: #94a3b8; --teacher-chart-grid: #334155; --teacher-tooltip-bg: #1e293b; }
-                    .studynest-layout.theme-dark .teacher-lesson-card { background-color: rgb(30 41 59) !important; border-color: rgb(71 85 105) !important; }
-                    .studynest-layout.theme-dark .teacher-lesson-card .teacher-progress-track { background-color: rgb(71 85 105) !important; }
-                    .studynest-layout.theme-dark .teacher-stat-card { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
-                    .studynest-layout.theme-dark .teacher-stat-icon { background-color: rgb(30 41 59) !important; }
+                    .studynest-layout.theme-dark .teacher-dashboard { background: radial-gradient(circle at 6% 2%, rgb(30 64 175 / 0.16), transparent 23rem), radial-gradient(circle at 96% 12%, rgb(88 28 135 / 0.12), transparent 24rem), rgb(15 23 42); }
+                    .studynest-layout.theme-dark .teacher-dashboard-card { background-color: rgb(23 32 51) !important; border-color: rgb(43 58 82) !important; box-shadow: 0 10px 24px rgb(2 6 23 / 0.16); }
+                    .studynest-layout.theme-dark .teacher-dashboard-card > div:first-child { background: linear-gradient(100deg, rgb(27 39 61), rgb(23 32 51)) !important; border-color: rgb(43 58 82) !important; }
+                    .studynest-layout.theme-dark .teacher-dashboard-card h3,
+                    .studynest-layout.theme-dark .teacher-dashboard-card .text-gray-800 { color: rgb(241 245 249) !important; }
+                    .studynest-layout.theme-dark .teacher-dashboard-card .teacher-dashboard-muted { color: rgb(167 180 202) !important; }
+                    .studynest-layout.theme-dark .teacher-dashboard-card .teacher-dashboard-item { background-color: rgb(29 41 62) !important; border-color: rgb(43 58 82) !important; }
+                    .studynest-layout.theme-dark .teacher-lesson-card { background-color: rgb(29 41 62) !important; border-color: rgb(56 73 99) !important; }
+                    .studynest-layout.theme-dark .teacher-lesson-card .teacher-progress-track { background-color: rgb(56 73 99) !important; }
+                    .studynest-layout.theme-dark .teacher-stat-card { background-color: rgb(23 32 51) !important; border-color: rgb(43 58 82) !important; }
+                    .studynest-layout.theme-dark .teacher-stat-icon { background-color: rgb(29 41 62) !important; }
                     .studynest-layout.theme-dark .teacher-stat-icon.teacher-stat-icon-blue { color: rgb(96 165 250) !important; }
-                    .studynest-layout.theme-dark .teacher-participation-card { border-color: transparent !important; box-shadow: none !important; }
+                    .studynest-layout.theme-dark .teacher-participation-card { border-color: rgb(51 65 85 / 0.8) !important; box-shadow: none !important; }
+                    .studynest-layout.theme-dark .teacher-lesson-card { background-color: rgb(30 50 91 / 0.62) !important; }
+                    .studynest-layout.theme-dark .teacher-participation-card.bg-emerald-50 { background-color: rgb(17 77 67 / 0.62) !important; }
+                    .studynest-layout.theme-dark .teacher-participation-card.bg-purple-50 { background-color: rgb(63 42 104 / 0.62) !important; }
+                    .studynest-layout.theme-dark .teacher-participation-card.bg-amber-50 { background-color: rgb(90 60 36 / 0.60) !important; }
                     .studynest-layout.theme-dark .teacher-chart-tooltip { color: rgb(226 232 240) !important; }
-                    .studynest-layout.theme-dark .teacher-announcement-item { background-color: rgb(30 41 59) !important; border-color: rgb(59 130 246) !important; }
-                    .studynest-layout.theme-dark .teacher-announcement-item:hover { background-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .teacher-announcement-item { background-color: rgb(29 41 62) !important; border-color: rgb(59 130 246 / 0.35) !important; }
+                    .studynest-layout.theme-dark .teacher-announcement-item:hover { background-color: rgb(36 50 74) !important; }
+                    .studynest-layout.theme-dark .teacher-quick-action { background-color: rgb(29 41 62) !important; border-color: rgb(43 58 82) !important; }
+                    .studynest-layout.theme-dark .teacher-quick-action:nth-child(1) > svg { color: #93c5fd; background: rgb(30 64 175 / 0.34); }
+                    .studynest-layout.theme-dark .teacher-quick-action:nth-child(2) > svg { color: #6ee7b7; background: rgb(6 78 59 / 0.35); }
+                    .studynest-layout.theme-dark .teacher-quick-action:nth-child(3) > svg { color: #d8b4fe; background: rgb(88 28 135 / 0.34); }
+                    .studynest-layout.theme-dark .teacher-quick-action:nth-child(4) > svg { color: #fcd34d; background: rgb(120 53 15 / 0.34); }
+                    .studynest-layout.theme-dark .teacher-quick-action:nth-child(5) > svg { color: #fda4af; background: rgb(136 19 55 / 0.34); }
+                    .studynest-layout.theme-dark .teacher-quick-action:nth-child(6) > svg { color: #99f6e4; background: rgb(15 118 110 / 0.30); }
                     .studynest-layout.theme-dark .teacher-announcement-title { color: rgb(226 232 240) !important; }
                     .studynest-layout.theme-dark .teacher-announcement-content { color: rgb(148 163 184) !important; }
                     .studynest-layout.theme-dark .teacher-announcement-date { color: rgb(148 163 184) !important; }
@@ -127,10 +164,23 @@ export default function TeacherDashboard({
                     }
                 `}</style>
                 <div className="mx-auto min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="teacher-dashboard-hero mb-5 rounded-3xl p-5 text-white sm:mb-6 sm:p-7">
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide"><SparklesIcon className="h-3.5 w-3.5" /> Teaching space</span>
+                                <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Welcome back!</h1>
+                                <p className="mt-1 text-sm text-blue-100">Your assigned classes: {assigned_grades.length ? assigned_grades.join(', ') : 'No grades assigned'}.</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 sm:min-w-64">
+                                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-2.5"><p className="text-xl font-bold">{stats.total_students}</p><p className="text-xs text-blue-100">Students</p></div>
+                                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-2.5"><p className="text-xl font-bold">{participation.lesson_completion_rate}%</p><p className="text-xs text-blue-100">Lesson progress</p></div>
+                            </div>
+                        </div>
+                    </div>
                     {/* ===== Assigned Grades Badge ===== */}
                     {assigned_grades && assigned_grades.length > 0 && (
-                        <div className="mb-6 flex flex-wrap gap-2">
-                            <span className="text-sm text-gray-500 mr-1">Assigned Grades:</span>
+                        <div className="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/70 p-3 dark:border-blue-400/20 dark:bg-blue-400/10 sm:mb-6">
+                            <span className="mr-1 text-sm font-medium text-gray-600 dark:text-gray-300">Assigned grades:</span>
                             {assigned_grades.map((grade) => (
                                 <span
                                     key={grade}
@@ -143,11 +193,11 @@ export default function TeacherDashboard({
                     )}
 
                     {/* ===== Section 1: Classroom Overview ===== */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
                         {/* Students */}
-                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition sm:p-4 sm:hover:-translate-y-0.5 sm:hover:shadow-md">
                             <div className="flex items-center gap-3">
-                                <div className="teacher-stat-icon teacher-stat-icon-blue p-2 bg-blue-50 rounded-lg">
+                                <div className="teacher-stat-icon teacher-stat-icon-blue rounded-xl bg-blue-50 p-2">
                                     <UsersIcon className="w-5 h-5 text-blue-600" />
                                 </div>
                                 <div>
@@ -158,7 +208,7 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Lessons */}
-                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition sm:p-4 sm:hover:-translate-y-0.5 sm:hover:shadow-md">
                             <div className="flex items-center gap-3">
                                 <div className="teacher-stat-icon p-2 bg-emerald-50 rounded-lg">
                                     <BookOpenIcon className="w-5 h-5 text-emerald-600" />
@@ -171,7 +221,7 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Assignments */}
-                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition sm:p-4 sm:hover:-translate-y-0.5 sm:hover:shadow-md">
                             <div className="flex items-center gap-3">
                                 <div className="teacher-stat-icon p-2 bg-purple-50 rounded-lg">
                                     <ClipboardDocumentListIcon className="w-5 h-5 text-purple-600" />
@@ -184,7 +234,7 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Quizzes */}
-                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition sm:p-4 sm:hover:-translate-y-0.5 sm:hover:shadow-md">
                             <div className="flex items-center gap-3">
                                 <div className="teacher-stat-icon p-2 bg-amber-50 rounded-lg">
                                     <DocumentTextIcon className="w-5 h-5 text-amber-600" />
@@ -197,7 +247,7 @@ export default function TeacherDashboard({
                         </div>
 
                         {/* Games */}
-                        <div className="teacher-stat-card bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="teacher-stat-card col-span-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition sm:col-span-1 sm:p-4 sm:hover:-translate-y-0.5 sm:hover:shadow-md">
                             <div className="flex items-center gap-3">
                                 <div className="teacher-stat-icon p-2 bg-rose-50 rounded-lg">
                                     <PuzzlePieceIcon className="w-5 h-5 text-rose-600" />
@@ -212,7 +262,7 @@ export default function TeacherDashboard({
 
                     {/* ===== Section 2: Student Participation Summary ===== */}
                     <div className="mt-6">
-                        <Card title="Participation Summary">
+                        <Card title="Participation Summary" className="teacher-dashboard-card" headerClassName="bg-gradient-to-r from-blue-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                 <div className="teacher-lesson-card text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
                                     <div className="text-2xl font-bold text-blue-600">
@@ -271,7 +321,7 @@ export default function TeacherDashboard({
 
                     {/* ===== Section 2b: Participation Chart ===== */}
                     <div className="mt-6">
-                        <Card title="Participation Overview">
+                        <Card title="Participation Overview" className="teacher-dashboard-card" headerClassName="bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
                             <div className="teacher-dashboard-chart h-64 w-full sm:h-72">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart
@@ -316,13 +366,14 @@ export default function TeacherDashboard({
 
                     {/* ===== Section 3: Students Requiring Attention ===== */}
                     <div className="mt-6">
-                        <Card title="Students Requiring Attention">
+                        <Card title="Students Requiring Attention" className="teacher-dashboard-card" headerClassName="bg-gradient-to-r from-amber-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
                             {students_requiring_attention.length === 0 ? (
                                 <p className="text-sm text-gray-500">
                                     ✅ All students are on track. No concerns detected.
                                 </p>
                             ) : (
-                                <div className="overflow-x-auto">
+                                <>
+                                <div className="hidden overflow-x-auto sm:block">
                                     <table className="w-full table-fixed text-left text-xs text-gray-600 sm:text-sm">
                                         <thead className="text-xs font-semibold text-gray-500 uppercase bg-gray-50">
                                             <tr>
@@ -351,13 +402,30 @@ export default function TeacherDashboard({
                                         </tbody>
                                     </table>
                                 </div>
+                                <div className="space-y-3 sm:hidden">
+                                    {students_requiring_attention.map((student) => (
+                                        <div key={student.id} className="teacher-dashboard-item rounded-xl border border-amber-100 bg-amber-50/60 p-3.5 dark:border-amber-400/20 dark:bg-amber-400/10">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-semibold text-gray-900 dark:text-white" title={student.name}>{student.name}</p>
+                                                    <div className="mt-1 flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-300">
+                                                        <ExclamationTriangleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                                                        <span>{student.concern}</span>
+                                                    </div>
+                                                </div>
+                                                <StatusBadge status="warning" label="Needs Attention" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                </>
                             )}
                         </Card>
                     </div>
 
                     {/* ===== Section 4: Upcoming Deadlines & Recent Activity ===== */}
                     <div className="mt-6 grid min-w-0 gap-6 md:grid-cols-2">
-                        <Card title="Upcoming Deadlines" className="min-w-0 overflow-hidden">
+                        <Card title="Upcoming Deadlines" className="teacher-dashboard-card min-w-0 overflow-hidden" headerClassName="bg-gradient-to-r from-amber-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
                             {upcoming_deadlines.length === 0 ? (
                                 <p className="text-sm text-gray-500">No upcoming deadlines.</p>
                             ) : (
@@ -365,7 +433,7 @@ export default function TeacherDashboard({
                                     {upcoming_deadlines.map((deadline) => (
                                         <div
                                             key={deadline.id}
-                                            className="flex min-w-0 max-w-full items-center justify-between overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
+                                            className="teacher-dashboard-item flex min-w-0 max-w-full flex-col gap-2 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
                                         >
                                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                                 <ClockIcon className="w-5 h-5 text-amber-500" />
@@ -378,7 +446,7 @@ export default function TeacherDashboard({
                                                     </div>
                                                 </div>
                                             </div>
-                                            <span className="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
+                                            <span className="self-start whitespace-nowrap rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-400/15 dark:text-amber-300 sm:self-auto">
                                                 {deadline.days_left === 0
                                                     ? 'Today'
                                                     : `${deadline.days_left} day${deadline.days_left > 1 ? 's' : ''} left`}
@@ -389,28 +457,31 @@ export default function TeacherDashboard({
                             )}
                         </Card>
 
-                        <Card title="Recent Activity" className="min-w-0 overflow-hidden">
+                        <Card title="Recent Student Activity" className="teacher-dashboard-card min-w-0 overflow-hidden" headerClassName="bg-gradient-to-r from-violet-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
                             {recent_activity.length === 0 ? (
-                                <p className="text-sm text-gray-500">No recent activity.</p>
+                                <p className="text-sm text-gray-500">No recent activity from your assigned students.</p>
                             ) : (
                                 <div className="space-y-3">
                                     {recent_activity.map((activity, index) => (
                                         <div
                                             key={index}
-                                            className="flex min-w-0 max-w-full items-center justify-between overflow-hidden rounded-lg border border-gray-100 bg-gray-50 p-3"
+                                            className="teacher-dashboard-item flex min-w-0 max-w-full flex-col gap-2 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
                                         >
                                             <div className="flex min-w-0 flex-1 items-center gap-3">
                                                 {getActivityIcon(activity.type)}
                                                 <div className="min-w-0">
-                                                    <div className="teacher-dashboard-clamp font-medium text-gray-800" title={activity.title}>
+                                                    <div className="truncate font-medium text-gray-800" title={activity.student}>
+                                                        {activity.student || 'Unknown student'}
+                                                    </div>
+                                                    <div className="teacher-dashboard-clamp mt-0.5 text-xs text-gray-500" title={activity.title}>
                                                         {activity.title}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 capitalize">
-                                                        {activity.type}
+                                                    <div className="mt-1 text-xs font-medium capitalize text-violet-600 dark:text-violet-300">
+                                                        {activity.grade_level} · {activity.type}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <span className="shrink-0 text-xs text-gray-500">
+                                            <span className="self-start text-xs text-gray-500 dark:text-gray-400 sm:self-auto">
                                                 {activity.date}
                                             </span>
                                         </div>
@@ -423,7 +494,9 @@ export default function TeacherDashboard({
                     {/* ===== Section 5: Recent Announcements ===== */}
                     <div className="mt-6">
                         <Card
-                            className="min-w-0 overflow-hidden"
+                            className="teacher-dashboard-card min-w-0 overflow-hidden"
+                            headerClassName="bg-gradient-to-r from-blue-50 to-white dark:from-slate-900 dark:to-slate-900"
+                            bodyClassName="p-4 sm:p-6"
                             title={
                                 <div className="flex items-center gap-2">
                                     <MegaphoneIcon className="w-5 h-5 text-blue-500" />
@@ -438,7 +511,7 @@ export default function TeacherDashboard({
                                             key={announcement.id}
                                             className="teacher-announcement-item min-w-0 max-w-full overflow-hidden rounded-lg border-l-4 border-blue-500 bg-blue-50/50 p-3 transition-colors hover:bg-blue-50"
                                         >
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                                 <div className="min-w-0 flex-1">
                                                     <div className="teacher-announcement-title flex min-w-0 items-center gap-2 font-medium text-gray-800">
                                                         <BuildingOfficeIcon className="w-4 h-4 text-blue-500" />
@@ -448,7 +521,7 @@ export default function TeacherDashboard({
                                                         {announcement.content}
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col items-end shrink-0">
+                                                <div className="flex flex-row items-center justify-between gap-3 text-left sm:flex-col sm:items-end sm:text-right">
                                                     <span className="text-xs text-blue-600 font-medium">
                                                         {announcement.posted_by}
                                                     </span>
@@ -479,7 +552,7 @@ export default function TeacherDashboard({
 
                     {/* ===== Section 6: Recent Messages ===== */}
                     <div className="mt-6">
-                        <Card title="Recent Messages">
+                        <Card title="Recent Messages" className="teacher-dashboard-card" headerClassName="bg-gradient-to-r from-teal-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
                             <div className="space-y-3">
                                 {/* Unread count */}
                                 <div className="flex items-center gap-2 mb-3">
@@ -497,23 +570,23 @@ export default function TeacherDashboard({
                                     messages.recent.map((msg, idx) => (
                                         <div
                                             key={idx}
-                                            className={`p-3 bg-gray-50 rounded-lg border ${
+                                            className={`teacher-dashboard-item min-w-0 rounded-xl border p-3 ${
                                                 msg.unread ? 'border-[#4ECDC4]' : 'border-gray-200'
                                             }`}
                                         >
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <div className="text-sm font-medium text-gray-800">
+                                            <div className="flex min-w-0 items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <div className="truncate text-sm font-medium text-gray-800" title={msg.from}>
                                                         {msg.from}
                                                     </div>
-                                                    <div className="text-xs text-gray-500">
+                                                    <div className="truncate text-xs text-gray-500" title={msg.subject}>
                                                         {msg.subject}
                                                     </div>
-                                                    <div className="text-xs text-gray-400 mt-1">
+                                                    <div className="teacher-dashboard-clamp mt-1 text-xs text-gray-400">
                                                         "{msg.message}"
                                                     </div>
                                                 </div>
-                                                <span className="text-xs text-gray-400">{msg.date}</span>
+                                                <span className="shrink-0 text-xs text-gray-400">{msg.date}</span>
                                             </div>
                                         </div>
                                     ))
@@ -537,13 +610,13 @@ export default function TeacherDashboard({
 
                     {/* ===== Section 7: Quick Actions ===== */}
                     <div className="mt-6">
-                        <Card title="Quick Actions">
+                        <Card title="Quick Actions" className="teacher-dashboard-card" headerClassName="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                                 {/* Create Lesson */}
                                 <Link
                                     href={safeRoute('teacher.lessons.create')}
                                     onError={handleNavigationError}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-blue-700"
+                                    className="teacher-quick-action group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm sm:min-h-0 sm:p-4"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-blue-600" />
                                     <span className="text-xs font-medium text-center mt-2">
@@ -555,7 +628,7 @@ export default function TeacherDashboard({
                                 <Link
                                     href={safeRoute('teacher.assignments.create')}
                                     onError={handleNavigationError}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                                    className="teacher-quick-action group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm sm:min-h-0 sm:p-4"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-emerald-600" />
                                     <span className="text-xs font-medium text-center mt-2">
@@ -567,7 +640,7 @@ export default function TeacherDashboard({
                                 <Link
                                     href={safeRoute('teacher.quizzes.create')}
                                     onError={handleNavigationError}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-700"
+                                    className="teacher-quick-action group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 hover:shadow-sm sm:min-h-0 sm:p-4"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-purple-600" />
                                     <span className="text-xs font-medium text-center mt-2">
@@ -579,7 +652,7 @@ export default function TeacherDashboard({
                                 <Link
                                     href={safeRoute('teacher.games.create')}
                                     onError={handleNavigationError}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-amber-700"
+                                    className="teacher-quick-action group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 hover:shadow-sm sm:min-h-0 sm:p-4"
                                 >
                                     <PlusCircleIcon className="w-8 h-8 text-gray-500 group-hover:text-amber-600" />
                                     <span className="text-xs font-medium text-center mt-2">
@@ -590,7 +663,7 @@ export default function TeacherDashboard({
                                 <Link
                                     href={safeRoute('teacher.reports.index')}
                                     onError={handleNavigationError}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-rose-50 border border-gray-200 hover:border-rose-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-rose-700"
+                                    className="teacher-quick-action group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 hover:shadow-sm sm:min-h-0 sm:p-4"
                                 >
                                     <ChartBarIcon className="w-8 h-8 text-gray-500 group-hover:text-rose-600" />
                                     <span className="text-xs font-medium text-center mt-2">Reports</span>
@@ -600,7 +673,7 @@ export default function TeacherDashboard({
                                 <Link
                                     href={messagesRoute}
                                     onError={handleNavigationError}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 hover:border-teal-200 rounded-xl transition-all duration-200 text-gray-700 hover:text-teal-700"
+                                    className="teacher-quick-action group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700 hover:shadow-sm sm:min-h-0 sm:p-4"
                                 >
                                     <InboxIcon className="w-8 h-8 text-gray-500 group-hover:text-teal-600" />
                                     <span className="text-xs font-medium text-center mt-2">

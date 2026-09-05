@@ -24,6 +24,7 @@ class ActivityLogController extends Controller
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'search' => 'nullable|string|max:255',
+            'history_scope' => 'nullable|string|in:recent,all',
         ]);
 
         $activityType = $request->input('activity_type');
@@ -31,8 +32,11 @@ class ActivityLogController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
         $search = $request->input('search');
+        $historyScope = $request->input('history_scope', 'recent');
+        $effectiveDateFrom = $dateFrom ?: ($historyScope === 'recent' ? now()->subDays(30)->toDateString() : null);
 
         $logs = ActivityLog::with('user')
+            // Principal activity logs intentionally show only teacher and student records.
             ->whereIn('user_role', ['teacher', 'student'])
             ->where('user_id', '!=', auth()->id())
             ->when($activityType && $activityType !== 'All Activities', function ($query) use ($activityType) {
@@ -67,8 +71,8 @@ class ActivityLogController extends Controller
                     });
                 });
             })
-            ->when($dateFrom, function ($query) use ($dateFrom) {
-                return $query->whereDate('created_at', '>=', $dateFrom);
+            ->when($effectiveDateFrom, function ($query) use ($effectiveDateFrom) {
+                return $query->whereDate('created_at', '>=', $effectiveDateFrom);
             })
             ->when($dateTo, function ($query) use ($dateTo) {
                 return $query->whereDate('created_at', '<=', $dateTo);
@@ -150,6 +154,7 @@ class ActivityLogController extends Controller
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'search' => $search,
+                'history_scope' => $historyScope,
             ],
             'pagination' => $logs->toArray(), // ✅ PAGINATION DATA
         ]);

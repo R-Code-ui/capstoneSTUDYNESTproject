@@ -29,7 +29,7 @@ export default function StudentEngagement({ stats }) {
     ];
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             {engagementMetrics.map((metric) => (
                 <div key={metric.label} className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
                     <div className={`text-2xl font-bold ${metric.color}`}>{metric.value}</div>

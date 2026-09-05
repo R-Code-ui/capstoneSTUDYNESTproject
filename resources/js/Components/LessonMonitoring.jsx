@@ -15,6 +15,7 @@ export default function LessonMonitoring({ lessons, pagination }) {
             emptyMessage="No lessons found."
             hoverable
             striped
+            responsive
             pagination={pagination}
         />
     );

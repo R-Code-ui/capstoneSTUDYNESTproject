@@ -122,43 +122,6 @@ class StudentManagementController extends Controller
         ]);
     }
 
-    public function export(Request $request)
-    {
-        Gate::authorize('student.manage');
-
-        $assignedGrades = auth()->user()->gradeAssignments()->pluck('grade_level')->all();
-        $validated = $request->validate([
-            'search' => 'nullable|string|max:255',
-            'grade_level' => ['nullable', Rule::in($assignedGrades)],
-            'school_year' => ['nullable', Rule::in(config('school.school_years'))],
-            'gender' => 'nullable|in:male,female',
-            'status' => 'nullable|in:active,inactive',
-        ]);
-
-        $students = User::role('student')->whereIn('grade_level', $assignedGrades)
-            ->when($validated['search'] ?? null, fn ($q, $search) => $q->where(fn ($nested) => $nested->where('name', 'like', "%{$search}%")->orWhere('lrn', 'like', "%{$search}%")))
-            ->when($validated['grade_level'] ?? null, fn ($q, $grade) => $q->where('grade_level', $grade))
-            ->when($validated['gender'] ?? null, fn ($q, $gender) => $q->where('gender', $gender))
-            ->when(($validated['status'] ?? null) === 'active', fn ($q) => $q->where('is_active', true))
-            ->when(($validated['status'] ?? null) === 'inactive', fn ($q) => $q->where('is_active', false))
-            ->when($validated['school_year'] ?? null, fn ($q, $year) => $q->whereHas('enrollments', fn ($e) => $e->where('school_year', $year)->where('status', 'active')))
-            ->with('currentEnrollment')->orderBy('name')->get();
-
-        $filename = 'students' . (!empty($validated['school_year']) ? '_' . str_replace(' ', '_', $validated['school_year']) : '') . '.csv';
-
-        return response()->streamDownload(function () use ($students) {
-            $output = fopen('php://output', 'w');
-            fputcsv($output, ['Student ID', 'Last Name', 'First Name', 'Middle Name', 'Grade Level', 'School Year', 'Gender', 'Status']);
-            foreach ($students as $student) {
-                $parts = preg_split('/\s+/', trim($student->name), -1, PREG_SPLIT_NO_EMPTY);
-                $firstName = $parts[0] ?? '';
-                $lastName = count($parts) > 1 ? array_pop($parts) : '';
-                fputcsv($output, [$student->lrn, $lastName, $firstName, implode(' ', array_slice($parts, 1)), $student->grade_level, $student->currentEnrollment?->school_year ?? '', ucfirst($student->gender ?? ''), $student->is_active ? 'Active' : 'Inactive']);
-            }
-            fclose($output);
-        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
-    }
-
     /**
      * Store a newly created student.
      */

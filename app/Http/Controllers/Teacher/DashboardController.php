@@ -92,10 +92,30 @@ class DashboardController extends Controller
                 return ['id' => $assignment->id, 'title' => $assignment->assignment_title, 'type' => 'assignment', 'due_date' => $assignment->due_date->format('M d'), 'days_left' => max(0, now()->startOfDay()->diffInDays($assignment->due_date->startOfDay(), false))];
             });
 
-        $recentActivity = ActivityLog::where('user_id', $teacher->id)->latest('created_at')->limit(5)->get()->map(function ($log) {
+        // Show only learning activity from students in this teacher's assigned grades.
+        // Login, teacher, and unassigned-grade records are deliberately excluded.
+        $recentActivity = ActivityLog::with('user:id,name,grade_level')
+            ->where('user_role', 'student')
+            ->whereIn('user_id', $studentIds)
+            ->whereIn('related_module', [
+                'Lesson Module',
+                'Assignment Module',
+                'Quiz Module',
+                'Game Module',
+            ])
+            ->latest('created_at')
+            ->limit(5)
+            ->get()
+            ->map(function ($log) {
             $module = strtolower((string) $log->related_module);
             $type = collect(['lesson', 'assignment', 'quiz', 'game', 'message'])->first(fn ($value) => str_contains($module, $value)) ?? 'other';
-            return ['type' => $type, 'title' => $log->activity_description, 'date' => $log->created_at?->diffForHumans() ?? 'Unknown date'];
+            return [
+                'type' => $type,
+                'student' => $log->user?->name ?? 'Unknown student',
+                'grade_level' => $log->user?->grade_level ?? 'N/A',
+                'title' => $log->activity_description,
+                'date' => $log->created_at?->diffForHumans() ?? 'Unknown date',
+            ];
         });
 
         $recentMessages = Message::where(fn ($query) => $query->where('sender_id', $teacher->id)->orWhere('receiver_id', $teacher->id))

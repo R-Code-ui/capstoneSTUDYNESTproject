@@ -2,7 +2,6 @@ import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
-import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'sonner';
 
 // Heroicons
@@ -33,23 +32,29 @@ export default function ProgressShow({ student, progress }) {
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+                    <button type="button" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950" onClick={() => router.visit(route('teacher.progress.index'), {
+                        onError: () => toast.error('Unable to return to progress tracking. Please try again.'),
+                    })} aria-label="Back to Progress List" title="Back to Progress List">
+                        <ArrowLeftIcon className="h-4 w-4" />
+                        Back
+                    </button>
+                    <span className="progress-show-title min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-800" title={`Student Progress: ${student.name}`}>
                         Student Progress: {student.name}
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('teacher.progress.index'), {
-                        onError: () => toast.error('Unable to return to progress tracking. Please try again.'),
-                    })}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                        Back to Progress List
-                    </SecondaryButton>
                 </div>
             }
         >
             <Head title={`Progress: ${student.name}`} />
 
             <style>{`
+                .progress-show-title {
+                    min-width: 0;
+                    max-width: min(100%, 48rem);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
                 .studynest-layout.theme-dark .progress-page .bg-white {
                     background-color: rgb(15 23 42) !important;
                 }
@@ -76,28 +81,28 @@ export default function ProgressShow({ student, progress }) {
                 }
             `}</style>
 
-            <div className="progress-page py-8 sm:py-12">
+            <div className="progress-page py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Student Information ===== */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div>
+                        <div className="p-4 sm:p-6">
+                            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student Name</div>
                                     <div className="font-medium text-gray-800 flex items-center gap-2">
                                         <UserIcon className="w-4 h-4 text-gray-400" />
                                         {student.name}
                                     </div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student ID</div>
                                     <div className="font-medium text-gray-800">{student.lrn}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Grade Level</div>
                                     <div className="font-medium text-gray-800">{student.grade_level}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Overall Progress</div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium text-gray-800">
@@ -139,13 +144,13 @@ export default function ProgressShow({ student, progress }) {
                     <div className="mt-6 grid gap-6 md:grid-cols-2">
                         {/* Lessons */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                     <BookOpenIcon className="w-5 h-5 text-blue-500" />
                                     Lessons
                                 </h3>
                             </div>
-                            <div className="p-6 space-y-2">
+                            <div className="space-y-2 p-4 sm:p-6">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Completed</span>
                                     <span className="font-medium text-gray-800">
@@ -166,13 +171,13 @@ export default function ProgressShow({ student, progress }) {
 
                         {/* Assignments */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                     <ClipboardDocumentListIcon className="w-5 h-5 text-emerald-500" />
                                     Assignments
                                 </h3>
                             </div>
-                            <div className="p-6 space-y-2">
+                            <div className="space-y-2 p-4 sm:p-6">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Submitted</span>
                                     <span className="font-medium text-gray-800">
@@ -193,13 +198,13 @@ export default function ProgressShow({ student, progress }) {
 
                         {/* Quizzes */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                     <DocumentTextIcon className="w-5 h-5 text-purple-500" />
                                     Quizzes
                                 </h3>
                             </div>
-                            <div className="p-6 space-y-2">
+                            <div className="space-y-2 p-4 sm:p-6">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Completed</span>
                                     <span className="font-medium text-gray-800">
@@ -223,13 +228,13 @@ export default function ProgressShow({ student, progress }) {
 
                         {/* Games */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                     <PuzzlePieceIcon className="w-5 h-5 text-amber-500" />
                                     Games
                                 </h3>
                             </div>
-                            <div className="p-6 space-y-2">
+                            <div className="space-y-2 p-4 sm:p-6">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Completed</span>
                                     <span className="font-medium text-gray-800">
@@ -250,13 +255,13 @@ export default function ProgressShow({ student, progress }) {
                     {progress.quizzes.performance && progress.quizzes.performance.length > 0 && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
+                                <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                     <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                         <ChartBarIcon className="w-5 h-5 text-purple-500" />
                                         Quiz Performance Details
                                     </h3>
                                 </div>
-                                <div className="p-6 space-y-3">
+                                <div className="space-y-3 p-4 sm:p-6">
                                     {progress.quizzes.performance.map((quiz, index) => (
                                         <div
                                             key={index}
@@ -293,13 +298,13 @@ export default function ProgressShow({ student, progress }) {
                     {progress.games.performance && progress.games.performance.length > 0 && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
+                                <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                     <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                         <PuzzlePieceIcon className="w-5 h-5 text-amber-500" />
                                         Game Performance Details
                                     </h3>
                                 </div>
-                                <div className="p-6 space-y-3">
+                                <div className="space-y-3 p-4 sm:p-6">
                                     {progress.games.performance.map((game, index) => (
                                         <div
                                             key={index}

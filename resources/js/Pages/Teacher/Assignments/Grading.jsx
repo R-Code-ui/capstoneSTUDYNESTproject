@@ -251,19 +251,24 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
         return list;
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="assignment-page-clamp text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>
+                <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+                    <button type="button" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950" onClick={() => router.visit(route('teacher.assignments.index'), {
+                        onError: () => toast.error('Unable to return to assignments. Please try again.'),
+                    })} aria-label="Back to Assignments" title="Back to Assignments">
+                        <ArrowLeftIcon className="h-4 w-4" />
+                        Back
+                    </button>
+                    <span className="assignment-page-clamp min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>
                         Grading: {assignment.title}
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('teacher.assignments.index'), {
-                        onError: () => toast.error('Unable to return to assignments. Please try again.'),
-                    })}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                        Back to Assignments
-                    </SecondaryButton>
                 </div>
             }
         >
@@ -281,10 +286,14 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                     overflow-wrap: anywhere;
                     word-break: break-word;
                 }
+                .studynest-layout.theme-dark .assignment-grading-actions {
+                    background-color: rgb(15 23 42 / 0.96);
+                    border-color: rgb(51 65 85);
+                }
             `}</style>
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                     <div className={`mb-6 flex flex-col gap-2 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${deadlineStatus === 'expired' ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200' : deadlineStatus === 'late_submission_allowed' ? 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200' : 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200'}`}>
                         <div>
@@ -295,7 +304,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                     </div>
 
                     {/* Statistics Cards */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid gap-4 min-[480px]:grid-cols-2 xl:grid-cols-5">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-blue-600">{statistics.total_students}</div>
                             <div className="text-sm font-medium text-gray-500">Total Students</div>
@@ -323,7 +332,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                     {/* Submissions Table */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="p-6">
+                            <div className="p-4 sm:p-6">
                                 {isLoading && <LoadingSpinner overlay size="lg" />}
 
                                 <Table
@@ -335,6 +344,8 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                                     hoverable
                                     striped
                                     responsive
+                                    responsiveAt="tablet"
+                                    actionsClassName="flex-nowrap"
                                     tableClassName="table-fixed"
                                 />
                             </div>
@@ -351,7 +362,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                 title={`Grade: ${selectedSubmission?.student_name || ''}`}
                 size="md"
             >
-                <form onSubmit={submitGrade} className="space-y-4">
+                <form onSubmit={submitGrade} onFocusCapture={keepFocusedFieldVisible} className="space-y-4 pb-20 sm:pb-0">
                     <div>
                         <InputLabel htmlFor="score" value={`Score (out of ${assignment.total_points})`} />
                         <TextInput
@@ -392,11 +403,11 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                         <InputError message={errors?.status} className="mt-2" />
                     </div>
 
-                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                        <SecondaryButton type="button" onClick={() => { setShowGradeModal(false); setSelectedSubmission(null); }}>
+                    <div className="assignment-grading-actions sticky bottom-0 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0">
+                        <SecondaryButton type="button" className="w-full justify-center sm:w-auto" onClick={() => { setShowGradeModal(false); setSelectedSubmission(null); }}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit" disabled={isLoading}>
+                        <PrimaryButton type="submit" disabled={isLoading} className="w-full justify-center sm:w-auto">
                             {isLoading ? 'Saving...' : 'Save Grade'}
                         </PrimaryButton>
                     </div>
@@ -424,7 +435,7 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                 title={`Record Paper Received: ${selectedStudent?.student_name || ''}`}
                 size="md"
             >
-                <form onSubmit={submitPaper} className="space-y-4">
+                <form onSubmit={submitPaper} onFocusCapture={keepFocusedFieldVisible} className="space-y-4 pb-20 sm:pb-0">
                     <p className="text-sm text-gray-600">
                         Confirm that you received this student's physical paper. You may record a score now or grade it later.
                     </p>
@@ -454,11 +465,11 @@ export default function AssignmentGrading({ assignment, submissions, statistics,
                         <InputError message={errors?.feedback} className="mt-2" />
                     </div>
 
-                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                        <SecondaryButton type="button" onClick={() => { setShowPaperModal(false); setSelectedStudent(null); }}>
+                    <div className="assignment-grading-actions sticky bottom-0 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0">
+                        <SecondaryButton type="button" className="w-full justify-center sm:w-auto" onClick={() => { setShowPaperModal(false); setSelectedStudent(null); }}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit" disabled={isLoading}>
+                        <PrimaryButton type="submit" disabled={isLoading} className="w-full justify-center sm:w-auto">
                             {isLoading ? 'Saving...' : 'Record Paper Received'}
                         </PrimaryButton>
                     </div>

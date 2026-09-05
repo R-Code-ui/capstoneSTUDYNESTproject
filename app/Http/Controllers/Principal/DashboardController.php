@@ -31,16 +31,19 @@ class DashboardController extends Controller
         $totalAnnouncements = Announcement::count();
 
         // Teacher Activity Summary
-        $teachers = User::role('teacher')->with('gradeAssignments')->get();
+        $teachers = User::role('teacher')
+            ->with('gradeAssignments')
+            ->withCount(['lessons', 'assignments', 'quizzes'])
+            ->get();
         $teacherActivity = $teachers->map(function ($teacher) {
             return [
                 'id' => $teacher->id,
                 'name' => $teacher->name,
                 'teacher_id' => $teacher->teacher_id,
                 'grades' => $teacher->gradeAssignments->pluck('grade_level')->toArray(),
-                'lessons_count' => $teacher->lessons()->count(),
-                'assignments_count' => $teacher->assignments()->count(),
-                'quizzes_count' => $teacher->quizzes()->count(),
+                'lessons_count' => $teacher->lessons_count,
+                'assignments_count' => $teacher->assignments_count,
+                'quizzes_count' => $teacher->quizzes_count,
                 'last_activity' => $teacher->last_login_at ? $teacher->last_login_at->diffForHumans() : 'Never',
                 'last_login_at' => $teacher->last_login_at,
                 'is_active' => $teacher->is_active,
@@ -48,15 +51,21 @@ class DashboardController extends Controller
         });
 
         // Student Participation Overview
-        $students = User::role('student')->get();
+        $completedSubmissionStatuses = ['submitted', 'late_submission', 'reviewed', 'graded'];
+        $students = User::role('student')
+            ->withCount([
+                'assignmentSubmissions as completed_assignment_submissions_count' => fn ($query) => $query->whereIn('status', $completedSubmissionStatuses),
+                'quizAttempts as completed_quiz_attempts_count' => fn ($query) => $query->where('status', 'completed'),
+            ])
+            ->get();
         $gradeLevels = ['Grade 4', 'Grade 5', 'Grade 6'];
         $studentParticipation = collect($gradeLevels)->map(function ($grade) use ($students) {
             $gradeStudents = $students->where('grade_level', $grade);
             $total = $gradeStudents->count();
-            $active = $gradeStudents->filter(function ($student) {
-                return $student->assignmentSubmissions()->whereIn('status', ['submitted', 'late_submission', 'reviewed', 'graded'])->count() > 0 ||
-                       $student->quizAttempts()->where('status', 'completed')->count() > 0;
-            })->count();
+            $active = $gradeStudents->filter(fn ($student) =>
+                $student->completed_assignment_submissions_count > 0 ||
+                $student->completed_quiz_attempts_count > 0
+            )->count();
 
             return [
                 'grade_level' => $grade,
@@ -145,7 +154,6 @@ class DashboardController extends Controller
         }
 
         $allSubmissions = \App\Models\AssignmentSubmission::all();
-        $completedSubmissionStatuses = ['submitted', 'late_submission', 'reviewed', 'graded'];
         if ($allSubmissions->isNotEmpty()) {
             $assignmentCompletionRate = round(($allSubmissions->whereIn('status', $completedSubmissionStatuses)->count() / $allSubmissions->count()) * 100);
         }

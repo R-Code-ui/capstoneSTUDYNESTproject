@@ -23,6 +23,7 @@ export default function ActivityLogs({
     const [gradeFilter, setGradeFilter] = useState(filters?.grade_level || '');
     const [dateFrom, setDateFrom] = useState(filters?.date_from || '');
     const [dateTo, setDateTo] = useState(filters?.date_to || '');
+    const [historyScope, setHistoryScope] = useState(filters?.history_scope || 'recent');
     const [selectedLog, setSelectedLog] = useState(null);
     const [showLogDetail, setShowLogDetail] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +57,7 @@ export default function ActivityLogs({
                 grade_level: gradeFilter,
                 date_from: dateFrom,
                 date_to: dateTo,
+                history_scope: historyScope,
                 ...additional,
             },
             preserveState: true,
@@ -69,6 +71,12 @@ export default function ActivityLogs({
         setShowLogDetail(true);
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     const activityTypeOptions = [
         { value: '', label: 'All Activities' },
         ...activity_types.map((type) => ({ value: type, label: type })),
@@ -77,6 +85,10 @@ export default function ActivityLogs({
     const gradeOptions = [
         { value: '', label: 'All Grades' },
         ...grade_levels.map((grade) => ({ value: grade, label: grade })),
+    ];
+    const historyOptions = [
+        { value: 'recent', label: 'Recent 30 Days' },
+        { value: 'all', label: 'All History' },
     ];
 
     const columns = [
@@ -112,6 +124,17 @@ export default function ActivityLogs({
         },
     ];
 
+    const summaryCards = [
+        { label: 'Sign-in Events', value: summary.sign_in_events, tone: 'text-blue-600 dark:text-blue-400' },
+        { label: 'Lesson Activities', value: summary.lesson_activities, tone: 'text-violet-600 dark:text-violet-400' },
+        { label: 'Assignment Activities', value: summary.assignment_activities, tone: 'text-emerald-600 dark:text-emerald-400' },
+        { label: 'Quiz Activities', value: summary.quiz_activities, tone: 'text-amber-600 dark:text-amber-400' },
+        { label: 'Game Activities', value: summary.game_activities, tone: 'text-pink-600 dark:text-pink-400' },
+        { label: 'Announcement Activities', value: summary.announcement_activities, tone: 'text-cyan-600 dark:text-cyan-400' },
+        { label: 'Message Activities', value: summary.message_activities, tone: 'text-indigo-600 dark:text-indigo-400' },
+        { label: 'Other Activities', value: summary.other_activities, tone: 'text-slate-600 dark:text-slate-300' },
+    ];
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-bold text-gray-800">Activity Logs</h2>}
@@ -120,51 +143,35 @@ export default function ActivityLogs({
 
             <div className="py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-                    <div>
-                        <h3 className="text-sm font-semibold text-gray-700">Today&apos;s activity summary</h3>
-                        <p className="mt-1 text-xs text-gray-500">Each event is counted in one category only.</p>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.sign_in_events}</div>
-                            <div className="text-xs font-medium text-gray-500">Sign-in Events</div>
+                    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+                        <div className="flex flex-col gap-1 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 className="font-semibold text-gray-800">Activity overview</h3>
+                                <p className="mt-1 text-sm text-gray-500">Today&apos;s recorded activity, grouped by module.</p>
+                            </div>
+                            <span className="mt-2 inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:mt-0">Today</span>
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.lesson_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Lesson Activities</div>
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            {summaryCards.map((card) => (
+                                <div key={card.label} className="rounded-xl border border-gray-200 bg-gray-50 p-4 transition-colors hover:border-blue-200 hover:bg-blue-50/40 dark:border-slate-700 dark:bg-slate-800/40">
+                                    <div className={`text-2xl font-bold ${card.tone}`}>{card.value ?? 0}</div>
+                                    <div className="mt-1 text-sm font-medium text-gray-600 dark:text-slate-300">{card.label}</div>
+                                </div>
+                            ))}
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.assignment_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Assignment Activities</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.quiz_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Quiz Activities</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.game_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Game Activities</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.announcement_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Announcement Activities</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.message_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Message Activities</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
-                            <div className="text-2xl font-bold text-gray-800">{summary.other_activities}</div>
-                            <div className="text-xs font-medium text-gray-500">Other Activities</div>
-                        </div>
-                    </div>
+                    </section>
 
                     {/* ===== Filters ===== */}
                     {/* 🔧 FIX: Removed overflow-hidden to prevent dropdown clipping */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
+                    <section className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-4 sm:p-6">
+                            <div className="border-b border-gray-200 pb-4">
+                                <h3 className="font-semibold text-gray-800">Filter activity logs</h3>
+                                <p className="mt-1 text-sm text-gray-500">Search by user or activity, then narrow results by type, grade, or date.</p>
+                            </div>
+                            <div className="mt-4 space-y-3" onFocusCapture={keepFocusedFieldVisible}>
+                                <div className="min-w-0">
+                                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Search logs</div>
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
@@ -172,45 +179,54 @@ export default function ActivityLogs({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                                <div>
+                                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Activity type</div>
                                     <FilterDropdown
                                         options={activityTypeOptions}
                                         value={activityTypeFilter}
                                         onChange={(val) => handleFilterChange('activity_type', val)}
                                         placeholder="Activity Type"
                                         size="md"
-                                        className="w-48"
+                                        className="w-full"
                                     />
+                                </div>
+                                <div>
+                                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Record range</div>
+                                    <FilterDropdown
+                                        options={historyOptions}
+                                        value={historyScope}
+                                        onChange={(value) => { setHistoryScope(value); applyFilters({ history_scope: value }); }}
+                                        placeholder="Record range"
+                                        size="md"
+                                        className="w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Grade level</div>
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
                                         onChange={(val) => handleFilterChange('grade', val)}
                                         placeholder="Grade Level"
                                         size="md"
-                                        className="w-40"
+                                        className="w-full"
                                     />
-                                    <input
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                                        className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md text-gray-800 w-36 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
-                                        placeholder="From"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                                        className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md text-gray-800 w-36 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
-                                        placeholder="To"
-                                    />
+                                </div>
+                                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">From date
+                                    <input type="date" value={dateFrom} onChange={(e) => handleFilterChange('date_from', e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:text-sm" />
+                                </label>
+                                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">To date
+                                    <input type="date" value={dateTo} onChange={(e) => handleFilterChange('date_to', e.target.value)} className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 sm:text-sm" />
+                                </label>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
                     {/* ===== Log Table ===== */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div className="p-4 sm:p-6">
                             {isLoading && <LoadingSpinner overlay size="lg" />}
 
                             <Table
@@ -220,6 +236,8 @@ export default function ActivityLogs({
                                 emptyMessage="No activity logs found."
                                 hoverable
                                 striped
+                                responsive
+                                responsiveAt="tablet"
                                 pagination={pagination}
                             />
                         </div>
@@ -232,35 +250,39 @@ export default function ActivityLogs({
                 show={showLogDetail}
                 onClose={() => { setShowLogDetail(false); setSelectedLog(null); }}
                 title="Activity Details"
-                size="md"
+                size="lg"
             >
                 {selectedLog && (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
+                    <div className="space-y-5">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-300">Activity record</p>
+                            <h3 className="mt-1 break-words text-lg font-bold text-gray-800">Log details</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">User</div>
                                 <div className="max-w-[180px] truncate font-medium text-gray-800" title={selectedLog.user || ''}>{selectedLog.user || '—'}</div>
                             </div>
-                            <div>
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">Role</div>
                                 <div className="font-medium text-gray-800">{selectedLog.role}</div>
                             </div>
-                            <div>
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">Date & Time</div>
                                 <div className="font-medium text-gray-800">{selectedLog.date_time}</div>
                             </div>
-                            <div>
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">Module</div>
                                 <div className="max-w-[180px] truncate font-medium text-gray-800" title={selectedLog.module || 'N/A'}>{selectedLog.module || 'N/A'}</div>
                             </div>
-                            <div className="col-span-2">
-                                <div className="text-sm text-gray-500">Activity Description</div>
-                                <div className="mt-1 max-h-32 overflow-y-auto break-words rounded-xl border border-gray-200 bg-gray-50 p-3 font-medium text-gray-800" title={selectedLog.activity || ''}>
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800/70">
+                                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">Activity Description</div>
+                                <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 font-medium text-gray-800 dark:text-slate-100" title={selectedLog.activity || ''}>
                                     {selectedLog.activity}
                                 </div>
                             </div>
-                            <div className="col-span-2">
-                                <div className="text-sm text-gray-500">User ID</div>
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800/70">
+                                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">User ID</div>
                                 <div className="font-medium text-gray-800">{selectedLog.user_id}</div>
                             </div>
                         </div>

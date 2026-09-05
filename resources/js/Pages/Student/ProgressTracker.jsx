@@ -1,6 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import { toast } from 'sonner';
 import {
     BookOpenIcon,
@@ -9,13 +8,11 @@ import {
     RocketLaunchIcon,
     ListBulletIcon,
     CheckCircleIcon,
-    SparklesIcon,
     StarIcon,
     ArrowTrendingUpIcon,
     HeartIcon,
     ArrowRightIcon,
     AcademicCapIcon,
-    ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 export default function ProgressTracker({
@@ -36,12 +33,6 @@ export default function ProgressTracker({
         if (progress >= 80) return 'Excellent';
         if (progress >= 60) return 'Needs Monitoring';
         return 'Needs Support';
-    };
-
-    const getStatusBadge = (progress) => {
-        if (progress >= 80) return 'bg-emerald-100 text-emerald-800';
-        if (progress >= 60) return 'bg-amber-100 text-amber-800';
-        return 'bg-red-100 text-red-800';
     };
 
     const getActivityIcon = (type) => {
@@ -113,7 +104,7 @@ export default function ProgressTracker({
         >
             <Head title="My Progress" />
 
-            <div className="student-progress-page py-12">
+            <div className="student-progress-page pt-3 pb-10 sm:pt-4 sm:pb-10">
                 <style>{`
                     .student-progress-page .progress-overall-card,
                     .student-progress-page .progress-pending-panel {
@@ -275,14 +266,20 @@ export default function ProgressTracker({
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-red-600 { color: #fda4af !important; }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-amber-600 { color: #fcd34d !important; }
                     .studynest-layout.theme-dark .student-progress-page .progress-color-card .text-emerald-600 { color: #6ee7b7 !important; }
-                    @media (max-width: 640px) {
+                    .student-progress-page .progress-pending-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+                    @media (hover: hover) and (pointer: fine) {
+                        .student-progress-page .progress-pending-card:hover { transform: translateY(-2px); }
+                    }
+                    @media (hover: none), (prefers-reduced-motion: reduce) {
+                        .student-progress-page .progress-pending-card { transform: none !important; transition-duration: .01ms !important; }
+                    }
+                    @media (max-width: 639px) {
                         .student-progress-page { padding-top: 1.25rem; padding-bottom: 1.25rem; }
                         .student-progress-page .progress-overall-card { padding: 1rem; }
                         .student-progress-page .progress-pending-panel > div { padding-left: 1rem; padding-right: 1rem; }
-                        .student-progress-page .progress-pending-card .flex.items-center { align-items: flex-start; }
                     }
                 `}</style>
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:px-8">
                     {/* ===== Grade Level ===== */}
                     {/* 🔧 FIX: Removed "Grade:" label, just show the grade, reduced margin */}
                     <div className="mb-3">
@@ -334,7 +331,7 @@ export default function ProgressTracker({
                     </div>
 
                     {/* ===== Progress Summary Cards ===== */}
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
                         {[
                             {
                                 title: 'Lessons',
@@ -382,7 +379,7 @@ export default function ProgressTracker({
                                 <div
                                     key={item.title}
                                     data-progress-tone={index}
-                                    className="progress-color-card rounded-xl border shadow-sm p-6"
+                                    className="progress-color-card rounded-xl border p-4 shadow-sm sm:p-6"
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`flex items-center justify-center w-12 h-12 rounded-full bg-white/70 backdrop-blur-sm ${item.iconColor}`}>
@@ -453,24 +450,24 @@ export default function ProgressTracker({
                                                     onError={() => toast.error('Unable to open this activity. Please try again.')}
                                                     className="block"
                                                 >
-                                                    <div data-progress-tone={index % 10} className="progress-pending-card rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden">
-                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-3">
-                                                            <div className="flex items-center gap-4 min-w-0">
-                                                                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex-shrink-0">
+                                                    <div data-progress-tone={index % 10} className="progress-pending-card overflow-hidden rounded-xl border shadow-sm hover:shadow-md">
+                                                        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                                            <div className="flex w-full min-w-0 items-start gap-3 sm:items-center sm:gap-4">
+                                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-sm">
                                                                     {getActivityIcon(activity.type)}
                                                                 </div>
                                                                 <div className="min-w-0">
-                                                                    <div className="font-medium text-gray-800 truncate max-w-full" title={activity.title}>
+                                                                    <div className="break-words font-medium text-gray-800" title={activity.title}>
                                                                         {activity.title}
                                                                     </div>
-                                                                    <div className="text-sm text-gray-600 truncate max-w-full">
+                                                                    <div className="break-words text-sm text-gray-600">
                                                                         {activity.subject ? `${activity.subject} • ` : ''}
                                                                         {getActivityTypeLabel(activity.type)}
                                                                         {activity.due_date && ` • Due: ${activity.due_date}`}
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                            <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
                                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                                                     activity.status === 'Not Started' || activity.status === 'Not Submitted' || activity.status === 'Not Taken'
                                                                         ? 'bg-gray-200 text-gray-800'
@@ -492,10 +489,10 @@ export default function ProgressTracker({
                                         <p className="text-sm text-gray-500">
                                             Showing <span className="font-semibold text-gray-800">{(pagination.current_page - 1) * pagination.per_page + 1}</span> to <span className="font-semibold text-gray-800">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> of <span className="font-semibold text-gray-800">{pagination.total}</span> activities
                                         </p>
-                                        <nav aria-label="Pending activities pagination" className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
-                                            <button type="button" onClick={() => changePendingPage(pagination.current_page - 1)} disabled={pagination.current_page === 1} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-white hover:text-gray-800 disabled:cursor-not-allowed disabled:text-gray-400">Previous</button>
+                                        <nav aria-label="Pending activities pagination" className="flex w-full items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 sm:w-auto">
+                                            <button type="button" onClick={() => changePendingPage(pagination.current_page - 1)} disabled={pagination.current_page === 1} className="min-h-11 flex-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-white hover:text-gray-800 disabled:cursor-not-allowed disabled:text-gray-400 sm:flex-none">Previous</button>
                                             <span className="min-w-[36px] rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm">{pagination.current_page}</span>
-                                            <button type="button" onClick={() => changePendingPage(pagination.current_page + 1)} disabled={pagination.current_page === pagination.last_page} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-white hover:text-gray-800 disabled:cursor-not-allowed disabled:text-gray-400">Next</button>
+                                            <button type="button" onClick={() => changePendingPage(pagination.current_page + 1)} disabled={pagination.current_page === pagination.last_page} className="min-h-11 flex-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-white hover:text-gray-800 disabled:cursor-not-allowed disabled:text-gray-400 sm:flex-none">Next</button>
                                         </nav>
                                     </div>
                                 )}

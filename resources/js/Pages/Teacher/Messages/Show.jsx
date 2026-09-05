@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Card from '@/Components/Card';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -11,7 +10,6 @@ import { toast } from 'sonner';
 import {
     ArrowLeftIcon,
     PaperAirplaneIcon,
-    TrashIcon,
 } from '@heroicons/react/24/outline';
 
 const CATEGORIES = [
@@ -74,6 +72,11 @@ export default function MessagesShow({ student, messages }) {
         });
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -112,14 +115,31 @@ export default function MessagesShow({ student, messages }) {
                     background-color: rgb(30 41 59);
                     border-color: rgb(96 165 250);
                 }
+                .studynest-layout.theme-dark .message-conversation-shell .message-choice.is-selected {
+                    background-color: rgb(37 99 235) !important;
+                    color: rgb(255 255 255) !important;
+                    border-color: rgb(96 165 250) !important;
+                    box-shadow: 0 0 0 2px rgb(96 165 250 / 0.28);
+                }
+                .message-conversation-shell textarea { scroll-margin-block: 7rem; }
+                .studynest-layout.theme-dark .message-composer-actions { background-color: rgb(15 23 42 / 0.96); border-color: rgb(51 65 85); }
             `}</style>
 
-            <div className="teacher-message-show py-12">
+            <div className="teacher-message-show py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <style>{`
                     .teacher-message-show .student-chat-text,
                     .teacher-message-show .student-incoming-message {
                         overflow-wrap: anywhere;
                         word-break: break-word;
+                    }
+                    .studynest-layout.theme-dark .teacher-message-show .student-incoming-message {
+                        background: #334155 !important;
+                        color: #f1f5f9 !important;
+                    }
+                    .studynest-layout.theme-dark .teacher-message-show .direct-message-sender { color: #cbd5e1 !important; }
+                    .studynest-layout.theme-dark .teacher-message-show .direct-message-avatar {
+                        background: #3730a3 !important;
+                        color: #e0e7ff !important;
                     }
                     @media (max-width: 640px) {
                         .teacher-message-show { padding-top: 1.25rem; padding-bottom: 1.25rem; }
@@ -128,35 +148,28 @@ export default function MessagesShow({ student, messages }) {
                 `}</style>
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
                     <div className="message-conversation-shell bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* ===== Thread ===== */}
-                            <div className="overflow-y-auto px-1 py-2 max-h-[55vh] min-h-[300px]">
+                            <div className="max-h-[60vh] min-h-[300px] space-y-1 overflow-y-auto px-1 py-2">
                                 {messages.length === 0 ? (
                                     <p className="text-center text-sm text-gray-400 py-10">
                                         No messages yet. Say hello 👋
                                     </p>
                                 ) : (
-                                    messages.map((msg) => (
-                                        <div key={msg.id} className="group relative">
-                                            <ChatBubble message={msg} />
-                                            {msg.is_mine && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setMessageToRemove(msg.id)}
-                                                    className="hidden group-hover:flex absolute -right-1 top-0 text-gray-300 hover:text-red-500"
-                                                    title="Remove message from your messages"
-                                                >
-                                                    <TrashIcon className="w-3.5 h-3.5" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))
+                                    messages.map((msg, index) => {
+                                        const previous = messages[index - 1];
+                                        const next = messages[index + 1];
+                                        const startsGroup = !previous || previous.is_mine !== msg.is_mine || previous.category !== msg.category;
+                                        const endsGroup = !next || next.is_mine !== msg.is_mine || next.category !== msg.category;
+
+                                        return <ChatBubble key={msg.id} message={msg} senderName={student.name} startsGroup={startsGroup} endsGroup={endsGroup} onDelete={msg.is_mine ? () => setMessageToRemove(msg.id) : null} />;
+                                    })
                                 )}
                                 <div ref={bottomRef} />
                             </div>
 
                             {/* ===== Composer ===== */}
-                            <form onSubmit={handleSend} className="border-t border-gray-200 pt-4 mt-2 space-y-2">
+                            <form onSubmit={handleSend} onFocusCapture={keepFocusedFieldVisible} className="message-composer-actions sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-gray-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0">
                                 <div className="flex flex-wrap gap-2">
                                     {CATEGORIES.map((cat) => (
                                         <button
@@ -165,9 +178,10 @@ export default function MessagesShow({ student, messages }) {
                                             onClick={() => setData('category', cat.value)}
                                             className={`message-choice text-xs px-3 py-1 rounded-full border transition ${
                                                 data.category === cat.value
-                                                    ? 'bg-blue-600 text-white border-blue-600'
+                                                    ? 'is-selected bg-blue-600 text-white border-blue-600'
                                                     : 'bg-white text-gray-500 border-gray-200 hover:border-blue-400'
                                             }`}
+                                            aria-pressed={data.category === cat.value}
                                         >
                                             {cat.label}
                                         </button>
@@ -186,7 +200,7 @@ export default function MessagesShow({ student, messages }) {
                                         }}
                                         rows={2}
                                         placeholder="Type a message..."
-                                        className="flex-1 resize-none rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800 text-sm"
+                                        className="flex-1 resize-none rounded-md border-gray-300 text-base text-gray-800 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
                                     />
                                     <PrimaryButton type="submit" disabled={isSubmitting || !data.message.trim()}>
                                         <PaperAirplaneIcon className="w-4 h-4" />

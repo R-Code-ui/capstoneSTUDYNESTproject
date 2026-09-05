@@ -3,7 +3,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/Card';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'sonner';
 
 // Heroicons
@@ -12,7 +11,6 @@ import {
     PencilSquareIcon,
     UserIcon,
     CalendarIcon,
-    EyeIcon,
     TagIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
@@ -33,26 +31,30 @@ export default function AnnouncementsShow({ announcement }) {
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
-                        {announcement.title}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
+                <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center xl:justify-between xl:gap-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+                        <Link
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950"
+                            href={route('teacher.announcements.index')}
+                            onError={handleNavigationError}
+                            aria-label="Back to Announcements"
+                            title="Back to Announcements"
+                        >
+                            <ArrowLeftIcon className="h-4 w-4" /> Back
+                        </Link>
+                        <span className="announcement-show-title min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-800" title={announcement.title}>
+                            {announcement.title}
+                        </span>
+                    </div>
+                    <div className="flex w-full flex-col items-end gap-2 xl:ml-auto xl:w-auto xl:flex-row xl:shrink-0">
                         {announcement.can_modify && (
-                            <Link href={route('teacher.announcements.edit', announcement.id)} onError={handleNavigationError}>
-                                <SecondaryButton>
-                                    <PencilSquareIcon className="w-4 h-4 mr-1" />
-                                    Edit
-                                </SecondaryButton>
+                            <Link className="w-auto" href={route('teacher.announcements.edit', announcement.id)} onError={handleNavigationError}>
+                                <PrimaryButton className="min-h-11 w-auto justify-center">
+                                    <PencilSquareIcon className="mr-1 h-4 w-4" />
+                                    Edit Announcement
+                                </PrimaryButton>
                             </Link>
                         )}
-                        <Link href={route('teacher.announcements.index')} onError={handleNavigationError}>
-                            <PrimaryButton>
-                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                                Back to List
-                            </PrimaryButton>
-                        </Link>
                     </div>
                 </div>
             }
@@ -81,11 +83,11 @@ export default function AnnouncementsShow({ announcement }) {
                 }
             `}</style>
 
-            <div className="py-12">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Announcement Details ===== */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6 space-y-6">
+                        <div className="space-y-6 p-4 sm:p-6">
                             {/* Header */}
                             <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                                 <div>
@@ -114,12 +116,12 @@ export default function AnnouncementsShow({ announcement }) {
                             </div>
 
                             {/* Meta Info */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
-                                <div>
+                            <div className="grid grid-cols-1 gap-3 border-t border-gray-200 pt-4 min-[420px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Category</div>
                                     <div className="font-medium text-gray-800">{announcement.category}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Target Audience</div>
                                     <div className="font-medium text-gray-800">
                                         {announcement.target_audience === 'all_grades'
@@ -127,24 +129,17 @@ export default function AnnouncementsShow({ announcement }) {
                                             : announcement.target_audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                     </div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Publish Date</div>
                                     <div className="font-medium text-gray-800">{announcement.publish_date}</div>
                                 </div>
-                                <div>
-                                    <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                                        <EyeIcon className="w-4 h-4" />
-                                        Views
-                                    </div>
-                                    <div className="font-medium text-gray-800">{announcement.view_count}</div>
-                                </div>
                                 {announcement.expiration_date && (
-                                    <div>
+                                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                         <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Expiration Date</div>
                                         <div className="font-medium text-gray-800">{announcement.expiration_date}</div>
                                     </div>
                                 )}
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Pinned</div>
                                     <div className="font-medium text-gray-800">{announcement.is_pinned ? 'Yes' : 'No'}</div>
                                 </div>

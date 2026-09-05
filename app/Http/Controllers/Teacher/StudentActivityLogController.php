@@ -49,6 +49,7 @@ class StudentActivityLogController extends Controller
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'search' => ['nullable', 'string', 'max:255'],
+            'history_scope' => ['nullable', 'string', Rule::in(['recent', 'all'])],
         ]);
 
         $activityType = $request->input('activity_type');
@@ -56,6 +57,8 @@ class StudentActivityLogController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
         $search = $request->input('search');
+        $historyScope = $request->input('history_scope', 'recent');
+        $effectiveDateFrom = $dateFrom ?: ($historyScope === 'recent' ? now()->subDays(30)->toDateString() : null);
 
         $logs = $this->studentLogsQuery()
             ->when($activityType && $activityType !== 'All Activities', function ($query) use ($activityType) {
@@ -74,7 +77,7 @@ class StudentActivityLogController extends Controller
             ->when($gradeLevel, function ($query) use ($gradeLevel) {
                 $query->whereHas('user', fn ($student) => $student->where('grade_level', $gradeLevel));
             })
-            ->when($dateFrom, fn ($query) => $query->whereDate('created_at', '>=', $dateFrom))
+            ->when($effectiveDateFrom, fn ($query) => $query->whereDate('created_at', '>=', $effectiveDateFrom))
             ->when($dateTo, fn ($query) => $query->whereDate('created_at', '<=', $dateTo))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
@@ -120,6 +123,7 @@ class StudentActivityLogController extends Controller
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'search' => $search,
+                'history_scope' => $historyScope,
             ],
             'pagination' => $logs->toArray(),
         ]);

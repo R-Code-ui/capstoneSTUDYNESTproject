@@ -10,7 +10,7 @@ export default function TeacherProfile({ teacher }) {
     return (
         <div className="space-y-6">
             {/* ===== Basic Information ===== */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="min-w-0">
                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Teacher Name</div>
                     <div className="truncate font-medium text-gray-800" title={teacher.name || ''}>{teacher.name || '—'}</div>
@@ -30,7 +30,7 @@ export default function TeacherProfile({ teacher }) {
             </div>
 
             {/* ===== Activity Summary ===== */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
                 <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{safeNumber(teacher.total_lessons)}</div>
                     <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Total Lessons</div>

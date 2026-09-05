@@ -260,6 +260,7 @@ class MessageGroupController extends Controller
                 'body' => $message->body,
                 'sender_id' => $message->sender_id,
                 'sender_name' => $message->sender->name,
+                'is_own' => $message->sender_id === auth()->id(),
                 'can_delete' => $message->sender_id === auth()->id(),
                 'created_at' => $message->created_at->format('M d, Y g:i A'),
             ])->values(),

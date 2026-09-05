@@ -168,8 +168,7 @@ class AssignmentController extends Controller
             'assignment_type' => 'required|string|in:homework,worksheet,performance_task,project,reflection_activity,practice_exercise,reading_assignment',
             'instructions' => 'required|string',
             'total_points' => 'required|integer|min:1|max:100',
-            'estimated_time' => 'nullable|integer',
-            'allow_late_submission' => 'boolean',
+            'allow_late_submission' => 'required|boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
             'resource_urls' => 'nullable|array|max:10',
@@ -279,7 +278,6 @@ class AssignmentController extends Controller
                 'assignment_type' => $assignment->assignment_type,
                 'instructions' => $assignment->instructions,
                 'total_points' => $assignment->total_points,
-                'estimated_time' => $assignment->estimated_time,
                 'allow_late_submission' => $assignment->allow_late_submission,
                 'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                 'due_time' => $assignment->due_time,
@@ -359,7 +357,6 @@ class AssignmentController extends Controller
                 'assignment_type' => $assignment->assignment_type,
                 'instructions' => $assignment->instructions,
                 'total_points' => $assignment->total_points,
-                'estimated_time' => $assignment->estimated_time,
                 'allow_late_submission' => $assignment->allow_late_submission,
                 'due_date' => $assignment->due_date ? $assignment->due_date->format('Y-m-d') : '—',
                 'due_time' => $assignment->due_time,
@@ -407,8 +404,7 @@ class AssignmentController extends Controller
             'assignment_type' => 'required|string|in:homework,worksheet,performance_task,project,reflection_activity,practice_exercise,reading_assignment',
             'instructions' => 'required|string',
             'total_points' => 'required|integer|min:1|max:100',
-            'estimated_time' => 'nullable|integer',
-            'allow_late_submission' => 'boolean',
+            'allow_late_submission' => 'required|boolean',
             'due_date' => 'required|date',
             'due_time' => 'required',
             'resource_urls' => 'nullable|array|max:10',
@@ -435,14 +431,18 @@ class AssignmentController extends Controller
         $wasPublished = $assignment->isCurrentlyPublished();
         app(PublicationManager::class)->normalize($validated, $assignment);
 
-        if (Carbon::parse($validated['due_date'] . ' ' . $validated['due_time'])->lte(now())) {
+        $requestedDueAt = Carbon::parse($validated['due_date'] . ' ' . $validated['due_time']);
+        $currentDueAt = $assignment->dueAt();
+        $deadlineChanged = !$currentDueAt || !$requestedDueAt->equalTo($currentDueAt);
+
+        if ($deadlineChanged && $requestedDueAt->lte(now())) {
             return redirect()->back()
                 ->withErrors(['due_date' => 'The due date and time must be in the future.'])
                 ->withInput();
         }
 
         app(PublicationManager::class)->ensureDeadlineAfterPublication(
-            Carbon::parse($validated['due_date'] . ' ' . $validated['due_time']),
+            $requestedDueAt,
             $validated['publish_date'],
             'due_date'
         );

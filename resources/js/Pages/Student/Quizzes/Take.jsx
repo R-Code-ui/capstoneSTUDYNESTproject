@@ -16,6 +16,14 @@ import {
     ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 
+const keepFocusedFieldVisible = (event) => {
+    if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+    window.setTimeout(() => {
+        event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }, 150);
+};
+
 export default function QuizzesTake({ attempt, quiz, questions }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -24,6 +32,8 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     const [timeUp, setTimeUp] = useState(false);
     const [confirmingSubmission, setConfirmingSubmission] = useState(false);
     const submittingRef = useRef(false);
+    const autoSubmitTriggeredRef = useRef(false);
+    const answersRef = useRef({});
 
     const totalQuestions = questions.length;
 
@@ -34,31 +44,37 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                 initialAnswers[q.id] = q.user_answer;
             }
         });
+        answersRef.current = initialAnswers;
         setAnswers(initialAnswers);
     }, [questions]);
 
     useEffect(() => {
+        autoSubmitTriggeredRef.current = false;
+        setTimeUp(false);
+    }, [attempt.id]);
+
+    useEffect(() => {
         if (attempt.time_limit) {
-            const storedStart = sessionStorage.getItem(`quiz_${attempt.id}_start`);
-            let startTime;
+            // The server calculates this from the attempt's creation time, so a
+            // refresh or a different browser tab cannot restart the countdown.
+            const remainingSeconds = Math.max(0, Number(attempt.time_remaining_seconds ?? 0));
+            const endTime = Date.now() + remainingSeconds * 1000;
+            let interval = null;
 
-            if (storedStart) {
-                startTime = new Date(parseInt(storedStart));
-            } else {
-                startTime = new Date();
-                sessionStorage.setItem(`quiz_${attempt.id}_start`, startTime.getTime().toString());
-            }
-
-            const endTime = new Date(startTime.getTime() + attempt.time_limit * 60000);
+            sessionStorage.removeItem(`quiz_${attempt.id}_start`);
 
             const updateTimer = () => {
-                const now = new Date();
-                const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+                const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
 
                 if (remaining <= 0) {
                     setTimeRemaining('0:00');
                     setTimeUp(true);
-                    handleSubmit(true);
+
+                    if (!autoSubmitTriggeredRef.current) {
+                        autoSubmitTriggeredRef.current = true;
+                        if (interval) clearInterval(interval);
+                        handleSubmit(true);
+                    }
                     return;
                 }
 
@@ -68,19 +84,25 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
             };
 
             updateTimer();
-            const interval = setInterval(updateTimer, 1000);
+            if (!autoSubmitTriggeredRef.current) {
+                interval = setInterval(updateTimer, 1000);
+            }
 
             return () => {
-                clearInterval(interval);
+                if (interval) clearInterval(interval);
             };
         }
-    }, [attempt.id, attempt.time_limit]);
+    }, [attempt.id, attempt.time_limit, attempt.time_remaining_seconds]);
 
     const handleAnswer = (questionId, answer) => {
-        setAnswers((prev) => ({
-            ...prev,
-            [questionId]: answer,
-        }));
+        setAnswers((prev) => {
+            const updatedAnswers = {
+                ...prev,
+                [questionId]: answer,
+            };
+            answersRef.current = updatedAnswers;
+            return updatedAnswers;
+        });
     };
 
     const handleNext = () => {
@@ -117,11 +139,14 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         if (autoSubmit) toast.info("Time's up. Submitting your quiz automatically.");
 
         router.post(route('student.quizzes.submit', attempt.id), {
-            answers: answers,
+            // A timer effect otherwise captures the answers from its first render.
+            answers: answersRef.current,
         }, {
             preserveState: true,
             onSuccess: () => toast.success(autoSubmit ? 'Quiz submitted automatically.' : 'Quiz submitted successfully.'),
-            onError: () => toast.error('Unable to submit the quiz. Please try again.'),
+            onError: () => toast.error(autoSubmit
+                ? 'Time is up, but automatic submission failed. Please use Submit Quiz to try again.'
+                : 'Unable to submit the quiz. Please try again.'),
             onFinish: () => {
                 submittingRef.current = false;
                 setIsSubmitting(false);
@@ -148,7 +173,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                         {question.choices && Object.entries(question.choices).map(([key, value]) => (
                             <label
                                 key={key}
-                                className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                                className={`student-answer-option flex min-h-[52px] items-start gap-3 rounded-xl border-2 p-3 cursor-pointer transition-colors ${
                                     userAnswer === key
                                         ? 'border-blue-600 bg-blue-50'
                                         : 'border-gray-200 hover:border-blue-300'
@@ -160,9 +185,9 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                     value={key}
                                     checked={userAnswer === key}
                                     onChange={() => handleAnswer(question.id, key)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-600"
+                                    className="mt-0.5 h-5 w-5 shrink-0 text-blue-600 focus:ring-blue-600"
                                 />
-                                <span className="text-gray-700">
+                                <span className="min-w-0 break-words text-gray-700">
                                     <span className="font-medium">{key}.</span> {value}
                                 </span>
                             </label>
@@ -176,7 +201,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                         {['True', 'False'].map((option) => (
                             <label
                                 key={option}
-                                className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                                className={`student-answer-option flex min-h-[52px] items-center gap-3 rounded-xl border-2 p-3 cursor-pointer transition-colors ${
                                     userAnswer === option
                                         ? 'border-blue-600 bg-blue-50'
                                         : 'border-gray-200 hover:border-blue-300'
@@ -188,7 +213,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                     value={option}
                                     checked={userAnswer === option}
                                     onChange={() => handleAnswer(question.id, option)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-600"
+                                    className="h-5 w-5 shrink-0 text-blue-600 focus:ring-blue-600"
                                 />
                                 <span className="text-gray-700">{option}</span>
                             </label>
@@ -201,9 +226,11 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                     <div className="mt-4">
                         <input
                             type="text"
+                            inputMode="text"
+                            autoComplete="off"
                             value={userAnswer}
                             onChange={(e) => handleAnswer(question.id, e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-gray-800 transition-colors"
+                            className="min-h-12 w-full rounded-xl border-2 border-gray-300 px-4 py-3 text-base text-gray-800 transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
                             placeholder="Type your answer..."
                         />
                     </div>
@@ -217,11 +244,11 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
+                <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
+                    <span className="min-w-0 max-w-full break-words text-lg font-semibold leading-tight text-gray-800 sm:text-xl" title={quiz.title}>
                         {quiz.title}
                     </span>
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end sm:gap-4">
                         {timeRemaining !== null && (
                             <div className={`text-lg font-bold flex items-center gap-1 ${
                                 timeRemaining === '0:00' ? 'text-red-600' : 'text-gray-700'
@@ -239,7 +266,10 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
         >
             <Head title={`Taking: ${quiz.title}`} />
 
-            <div className="student-quiz-take-page py-4">
+            <div
+                className="student-quiz-take-page py-4 pb-[max(7rem,calc(5rem+env(safe-area-inset-bottom)))] sm:py-6 sm:pb-8"
+                onFocusCapture={keepFocusedFieldVisible}
+            >
                 <style>{`
                     .studynest-layout.theme-dark .student-quiz-take-page .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page .bg-gray-200 { background-color: rgb(51 65 85) !important; }
@@ -255,22 +285,34 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                     .studynest-layout.theme-dark .student-quiz-take-page input[type="text"] { background-color: rgb(30 41 59) !important; color: rgb(226 232 240) !important; border-color: rgb(71 85 105) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page input[type="radio"] { accent-color: rgb(59 130 246); }
                     .student-quiz-take-page .break-words { overflow-wrap: anywhere; word-break: break-word; }
-                    @media (max-width: 640px) { .student-quiz-take-page .p-6 { padding: 1rem; } }
+                    .student-quiz-take-page input,
+                    .student-quiz-take-page select,
+                    .student-quiz-take-page textarea { scroll-margin-block: 9rem; }
+                    .student-answer-option { transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease; }
+                    @media (max-width: 639px) {
+                        .student-quiz-take-page input:not([type="checkbox"]):not([type="radio"]),
+                        .student-quiz-take-page select,
+                        .student-quiz-take-page textarea { font-size: 16px; }
+                    }
+                    @media (hover: none), (prefers-reduced-motion: reduce) {
+                        .student-quiz-take-page * { scroll-behavior: auto !important; }
+                        .student-answer-option { transition-duration: 0.01ms !important; }
+                    }
                 `}</style>
                 <div className="mx-auto max-w-3xl px-4 sm:px-6">
                     {isSubmitting && <LoadingSpinner overlay size="lg" text="Submitting your quiz..." />}
 
                     {timeUp && (
-                        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                            <ClockIcon className="w-5 h-5 text-red-500" />
+                        <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4">
+                            <ClockIcon className="h-5 w-5 shrink-0 text-red-500" />
                             <p className="text-red-600 font-medium">
                                 Time's up! Your quiz is being submitted automatically.
                             </p>
                         </div>
                     )}
 
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
+                    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                        <div className="p-4 sm:p-6">
                             {/* Progress Bar */}
                             <div className="mb-6">
                                 <div className="flex justify-between text-sm text-gray-500 mb-1">
@@ -290,28 +332,28 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                 <div className="text-sm text-gray-500">
                                     Question {currentQuestionIndex + 1} of {totalQuestions}
                                 </div>
-                                <div className="text-lg font-medium text-gray-800 break-words line-clamp-3" title={currentQuestion.text}>
+                                <div className="text-lg font-semibold leading-relaxed text-gray-800 break-words" title={currentQuestion.text}>
                                     {currentQuestion.text}
                                 </div>
                                 {renderQuestion(currentQuestion)}
                             </div>
 
                             {/* Navigation Buttons */}
-                            <div className="flex flex-wrap justify-between mt-8 pt-6 border-t border-gray-200">
-                                <div>
+                            <div className="sticky bottom-0 z-20 -mx-4 mt-8 flex flex-col-reverse gap-3 border-t border-gray-200 bg-white/95 px-4 pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:flex-row sm:justify-between sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-6">
+                                <div className="w-full sm:w-auto">
                                     {!isFirstQuestion && (
-                                        <SecondaryButton onClick={handlePrevious}>
+                                        <SecondaryButton className="min-h-11 w-full justify-center sm:w-auto" onClick={handlePrevious}>
                                             ← Previous
                                         </SecondaryButton>
                                     )}
                                 </div>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex w-full gap-3 sm:w-auto">
                                     {isLastQuestion ? (
-                                        <PrimaryButton onClick={() => handleSubmit(false)}>
+                                        <PrimaryButton className="min-h-11 w-full justify-center sm:w-auto" onClick={() => handleSubmit(false)}>
                                             Submit Quiz
                                         </PrimaryButton>
                                     ) : (
-                                        <PrimaryButton onClick={handleNext}>
+                                        <PrimaryButton className="min-h-11 w-full justify-center sm:w-auto" onClick={handleNext}>
                                             Next →
                                         </PrimaryButton>
                                     )}
@@ -322,12 +364,12 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
 
                     {/* Question Navigator */}
                     <div className="mt-6">
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                             <div className="px-6 py-4 border-b border-gray-200">
                                 <h3 className="text-sm font-semibold text-gray-700">Question Navigator</h3>
                             </div>
-                            <div className="p-6">
-                                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                            <div className="p-4 sm:p-6">
+                                <div className="grid grid-cols-5 gap-2 sm:grid-cols-8 lg:grid-cols-10">
                                     {questions.map((q, index) => {
                                         const isAnswered = answers[q.id] !== null && answers[q.id] !== undefined && answers[q.id] !== '';
                                         const isCurrent = index === currentQuestionIndex;
@@ -337,7 +379,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
                                                 key={q.id}
                                                 onClick={() => setCurrentQuestionIndex(index)}
                                                 className={`
-                                                    py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1
+                                                    min-h-11 rounded-xl px-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1
                                                     ${isCurrent ? 'ring-2 ring-blue-600' : ''}
                                                     ${isAnswered
                                                         ? 'bg-emerald-500 text-white hover:bg-emerald-600'

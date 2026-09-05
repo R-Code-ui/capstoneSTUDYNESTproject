@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+    import { useState, useCallback } from 'react';
 import GameShell from './GameShell';
 
 export default function AreaBlocks({ content, onComplete, onExit, onProgress, initialState }) {
@@ -32,6 +32,7 @@ export default function AreaBlocks({ content, onComplete, onExit, onProgress, in
 
     const handleCheck = () => {
         const selectedCells = [...filled].map((index) => ({
+            // A row runs top-to-bottom; a column runs left-to-right on the grid.
             row: Math.floor(index / round.gridCols),
             col: index % round.gridCols,
         }));
@@ -86,16 +87,22 @@ export default function AreaBlocks({ content, onComplete, onExit, onProgress, in
 
                     <div
                         className="grid gap-1 bg-white p-2 rounded-2xl shadow-inner border border-lime-100"
-                        style={{ gridTemplateColumns: `repeat(${round.gridCols}, minmax(0, 1fr))` }}
+                        style={{
+                            gridTemplateColumns: `repeat(${round.gridCols}, minmax(0, 1fr))`,
+                            gridTemplateRows: `repeat(${round.gridRows}, minmax(0, 1fr))`,
+                        }}
                     >
                         {Array.from({ length: totalCells }).map((_, idx) => {
+                            const row = Math.floor(idx / round.gridCols);
+                            const col = idx % round.gridCols;
                             const isFilled = filled.has(idx);
                             return (
                                 <button
                                     key={idx}
                                     type="button"
-                                    onClick={() => toggleCell(idx)}
+                                    onClick={() => toggleCell(row * round.gridCols + col)}
                                     disabled={!!feedback}
+                                    aria-label={`Row ${row + 1}, column ${col + 1}`}
                                     className={`w-4 h-4 sm:w-8 sm:h-8 rounded-md border transition
                                         ${isFilled ? 'bg-lime-500 border-lime-600' : 'bg-gray-50 border-gray-200 hover:border-lime-300'}
                                     `}
@@ -103,6 +110,10 @@ export default function AreaBlocks({ content, onComplete, onExit, onProgress, in
                             );
                         })}
                     </div>
+
+                    <p className="text-center text-xs font-semibold text-gray-400">
+                        Rows go down; columns go across.
+                    </p>
 
                     <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">
                         Filled: {filled.size} / {round.target}

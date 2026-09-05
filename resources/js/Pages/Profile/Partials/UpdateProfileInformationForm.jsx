@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
 export default function UpdateProfileInformationForm({ mustVerifyEmail, status }) {
     const user = usePage().props.auth.user;
@@ -37,7 +38,7 @@ export default function UpdateProfileInformationForm({ mustVerifyEmail, status }
 
                     <TextInput
                         id="name"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full text-base sm:text-sm"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         required
@@ -84,12 +85,20 @@ export default function UpdateProfileInformationForm({ mustVerifyEmail, status }
 
                     <Transition
                         show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
+                        enter="transform transition duration-300 ease-out"
+                        enterFrom="translate-x-2 opacity-0"
+                        enterTo="translate-x-0 opacity-100"
+                        leave="transform transition duration-200 ease-in"
+                        leaveFrom="translate-x-0 opacity-100"
+                        leaveTo="translate-x-2 opacity-0"
                     >
-                        <p className="text-sm text-gray-600">Saved.</p>
+                        <p
+                            role="status"
+                            className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        >
+                            <CheckCircleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                            Changes saved
+                        </p>
                     </Transition>
                 </div>
             </form>

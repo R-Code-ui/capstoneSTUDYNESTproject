@@ -72,7 +72,7 @@ export default function PrincipalReports({ grade_levels = [], school_years = [] 
                 <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
                     <section className="report-hero rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-5 sm:p-7">
                         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Principal reports</p>
-                        <h1 className="mt-1 text-2xl font-bold text-slate-900">Generate clear school reports</h1>
+                        <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">Generate clear school reports</h1>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Choose a report, set its scope, then download a professional PDF for school records or presentation.</p>
                     </section>
 
@@ -82,8 +82,8 @@ export default function PrincipalReports({ grade_levels = [], school_years = [] 
                             {reports.map((report) => {
                                 const Icon = report.icon;
                                 const isSelected = report.key === reportType;
-                                return <button key={report.key} type="button" onClick={() => setReportType(report.key)} className={`report-choice rounded-xl border p-5 text-left transition-all ${isSelected ? 'report-choice-selected border-blue-600 bg-blue-50 ring-2 ring-blue-600/20' : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm'}`}>
-                                    <span className={`mb-4 inline-flex rounded-lg p-2.5 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}><Icon className="h-6 w-6" /></span>
+                                return <button key={report.key} type="button" onClick={() => setReportType(report.key)} className={`report-choice rounded-xl border p-4 text-left transition-all sm:p-5 ${isSelected ? 'report-choice-selected border-blue-600 bg-blue-50 ring-2 ring-blue-600/20' : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm'}`}>
+                                    <span className={`mb-3 inline-flex rounded-lg p-2.5 sm:mb-4 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}><Icon className="h-6 w-6" /></span>
                                     <h4 className="font-semibold text-slate-900">{report.title}</h4>
                                     <p className="mt-2 text-sm leading-5 text-slate-600">{report.description}</p>
                                 </button>;
@@ -97,11 +97,11 @@ export default function PrincipalReports({ grade_levels = [], school_years = [] 
                             <span className="mt-2 inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:mt-0">PDF download</span>
                         </div>
                         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <label className="block text-sm font-medium text-slate-700">Grade Level<select value={gradeLevel} onChange={(event) => setGradeLevel(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600"><option value="all">All Grades</option>{grade_levels.map((grade) => <option key={grade} value={grade}>{grade}</option>)}</select></label>
-                            {needsStudentStatus && <label className="block text-sm font-medium text-slate-700">Student Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600"><option value="active">Active Students</option><option value="inactive">Inactive Students</option><option value="all">All Students</option></select></label>}
-                            {needsSchoolYear && <label className="block text-sm font-medium text-slate-700">School Year<select value={schoolYear} onChange={(event) => setSchoolYear(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-blue-600 focus:ring-blue-600">{school_years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>}
+                            <label className="block text-sm font-medium text-slate-700">Grade Level<select value={gradeLevel} onChange={(event) => setGradeLevel(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 py-2.5 text-base shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"><option value="all">All Grades</option>{grade_levels.map((grade) => <option key={grade} value={grade}>{grade}</option>)}</select></label>
+                            {needsStudentStatus && <label className="block text-sm font-medium text-slate-700">Student Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 py-2.5 text-base shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"><option value="active">Active Students</option><option value="inactive">Inactive Students</option><option value="all">All Students</option></select></label>}
+                            {needsSchoolYear && <label className="block text-sm font-medium text-slate-700">School Year<select value={schoolYear} onChange={(event) => setSchoolYear(event.target.value)} className="mt-1 block w-full rounded-lg border-slate-300 py-2.5 text-base shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm">{school_years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>}
                         </div>
-                        <div className="mt-6 flex justify-end border-t border-slate-200 pt-5"><PrimaryButton onClick={generatePdf} disabled={isGenerating} className="inline-flex items-center gap-2"><DocumentTextIcon className="h-5 w-5" />{isGenerating ? 'Generating...' : 'Generate PDF'}</PrimaryButton></div>
+                        <div className="mt-6 border-t border-slate-200 pt-5"><PrimaryButton onClick={generatePdf} disabled={isGenerating} className="inline-flex w-full items-center justify-center gap-2 sm:ml-auto sm:w-auto"><DocumentTextIcon className="h-5 w-5" />{isGenerating ? 'Generating...' : 'Generate PDF'}</PrimaryButton></div>
                     </section>
                 </div>
             </div>

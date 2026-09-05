@@ -1,4 +1,3 @@
-import Checkbox from '@/Components/Checkbox';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -8,12 +7,13 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
     CheckCircleIcon,
+    CheckIcon,
     EyeIcon,
     EyeSlashIcon,
 } from '@heroicons/react/24/outline';
 
 export default function Login({ status, canResetPassword }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, transform, post, processing, errors, reset } = useForm({
         username: '',
         password: '',
         remember: false,
@@ -22,6 +22,11 @@ export default function Login({ status, canResetPassword }) {
 
     const submit = (e) => {
         e.preventDefault();
+
+        transform((formData) => ({
+            ...formData,
+            remember: formData.remember ? 1 : 0,
+        }));
 
         post(route('login'), {
             onFinish: () => reset('password'),
@@ -87,15 +92,22 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
-                    <label className="flex items-center cursor-pointer select-none group">
-                        <Checkbox
+                    <label htmlFor="remember" className="flex min-h-11 items-center cursor-pointer select-none rounded-lg px-1.5 group">
+                        <input
+                            id="remember"
+                            type="checkbox"
                             name="remember"
+                            value="1"
                             checked={data.remember}
                             onChange={(e) =>
-                                setData('remember', e.target.checked)
+                                setData('remember', Boolean(e.target.checked))
                             }
+                            className="peer sr-only"
                         />
-                        <span className="ms-2.5 text-xs sm:text-sm text-slate-700 font-semibold group-hover:text-slate-900 transition">
+                        <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 border-slate-400 bg-white text-white transition-colors peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2 dark:border-slate-500 dark:bg-slate-950 dark:peer-checked:border-blue-400 dark:peer-checked:bg-blue-500 dark:peer-focus-visible:ring-blue-300 dark:peer-focus-visible:ring-offset-slate-900">
+                            <CheckIcon className={`h-3.5 w-3.5 transition-all ${data.remember ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`} strokeWidth={3} />
+                        </span>
+                        <span className="ms-2.5 text-xs sm:text-sm text-slate-700 font-semibold transition group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-white">
                             Remember me
                         </span>
                     </label>

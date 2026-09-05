@@ -38,7 +38,6 @@ export default function StudentManagement({
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState('');
     const [confirmation, setConfirmation] = useState(null);
-    const [isExporting, setIsExporting] = useState(false);
 
     const { errors } = usePage().props;
 
@@ -95,26 +94,6 @@ export default function StudentManagement({
     const handleSortChange = (value) => {
         setSort(value);
         applyFilters({ sort: value });
-    };
-
-    const handleExport = () => {
-        if (isExporting) return;
-
-        const params = new URLSearchParams({ search: search || '', grade_level: gradeFilter || '', school_year: schoolYearFilter || '', gender: genderFilter || '', status: statusFilter || '' });
-        setIsExporting(true);
-        const toastId = toast.loading('Preparing your student export download...');
-        const exportWindow = window.open(`${route('teacher.students.export')}?${params.toString()}`, '_blank');
-
-        if (!exportWindow) {
-            toast.dismiss(toastId);
-            toast.error('Your browser blocked the export download. Please allow pop-ups and try again.');
-            setIsExporting(false);
-            return;
-        }
-
-        exportWindow.opener = null;
-        toast.success('Your student export download has started.', { id: toastId });
-        setIsExporting(false);
     };
 
     const openConfirmation = (action, user) => setConfirmation({ action, user });
@@ -270,19 +249,21 @@ export default function StudentManagement({
         { label: 'Delete', icon: <DeleteIcon />, color: 'danger', onClick: () => openConfirmation('delete', row) },
     ];
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => {
+            event.target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest',
+            });
+        }, 150);
+    };
+
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-4">
-                    <h2 className="text-xl font-bold text-gray-800">Student Management</h2>
-                    <PrimaryButton onClick={handleExport} disabled={isExporting} className="inline-flex items-center gap-2 whitespace-nowrap">
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" />
-                        </svg>
-                        {isExporting ? 'Preparing Export...' : 'Export CSV'}
-                    </PrimaryButton>
-                </div>
-            }
+            header={<h2 className="text-xl font-bold text-gray-800">Student Management</h2>}
         >
             <Head title="Student Management" />
 
@@ -339,15 +320,40 @@ export default function StudentManagement({
                     outline: 2px solid rgb(37 99 235);
                     outline-offset: 2px;
                 }
+                .student-form-scroll-region {
+                    scroll-padding-block: 5rem 8rem;
+                }
+                .student-form-scroll-region input,
+                .student-form-scroll-region select {
+                    scroll-margin-block: 5rem 8rem;
+                }
+                @media (max-width: 639px) {
+                    .student-form-scroll-region input,
+                    .student-form-scroll-region select {
+                        font-size: 16px;
+                    }
+                }
             `}</style>
 
-            <div className="py-6 sm:py-10">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div className="p-4 sm:p-6">
                             {/* Filters & Actions */}
-                            <div className="space-y-3">
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                            <div className="space-y-4" onFocusCapture={keepFocusedFieldVisible}>
+                                <div className="border-b border-gray-200 pb-4">
+                                    <h3 className="font-semibold text-gray-800">Find students</h3>
+                                    <p className="mt-1 text-sm text-gray-500">Use the filters below to narrow your class list.</p>
+                                </div>
+                                <div className="min-w-0">
+                                    <SearchBar
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search by student ID or name..."
+                                        size="md"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
@@ -388,19 +394,9 @@ export default function StudentManagement({
                                         size="md"
                                         className="w-full"
                                     />
-                                </div>
-                                <div className="flex flex-col gap-3 sm:flex-row">
-                                    <div className="min-w-0 flex-1">
-                                        <SearchBar
-                                            value={search}
-                                            onChange={handleSearch}
-                                            placeholder="Search by student ID or name..."
-                                            size="md"
-                                        />
-                                    </div>
                                     <PrimaryButton
                                         onClick={() => { setSelectedUser(null); setGender(''); setShowCreateModal(true); }}
-                                        className="justify-center whitespace-nowrap sm:min-w-[152px]"
+                                        className="min-h-11 w-full justify-center whitespace-nowrap xl:w-auto"
                                     >
                                         + Add Student
                                     </PrimaryButton>
@@ -419,9 +415,10 @@ export default function StudentManagement({
                                     emptyMessage="No students found."
                                     hoverable
                                     bordered
-                                    tableClassName="min-w-[720px]"
                                     headerClassName="border-b border-slate-200 bg-transparent text-slate-600"
                                     rowClassName="border-slate-100"
+                                    responsive
+                                    responsiveAt="tablet"
                                     pagination={pagination}
                                 />
                             </div>
@@ -465,7 +462,8 @@ export default function StudentManagement({
                 show={showCreateModal || showEditModal}
                 onClose={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); setGender(''); }}
                 title={showCreateModal ? 'Add Student' : 'Edit Student'}
-                size="lg"
+                size="2xl"
+                bodyClassName="py-3 sm:py-4"
             >
                 <form
                     onSubmit={(e) => {
@@ -501,7 +499,8 @@ export default function StudentManagement({
                             onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
-                    className="space-y-4"
+                    className="student-form-scroll-region grid grid-cols-1 gap-x-5 gap-y-3 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] sm:grid-cols-2 sm:gap-y-4"
+                    onFocusCapture={keepFocusedFieldVisible}
                 >
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />
 
@@ -623,11 +622,11 @@ export default function StudentManagement({
                         <InputError message={errors?.gender} className="mt-2" />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); setGender(''); }}>
+                    <div className="sticky bottom-0 z-10 col-span-full -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:-mx-6 sm:px-6">
+                        <SecondaryButton className="w-full justify-center" type="button" onClick={() => { setShowCreateModal(false); setShowEditModal(false); setSelectedUser(null); setGender(''); }}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit">
+                        <PrimaryButton className="w-full justify-center" type="submit">
                             {showCreateModal ? 'Create' : 'Update'}
                         </PrimaryButton>
                     </div>
@@ -661,6 +660,7 @@ export default function StudentManagement({
                         });
                     }}
                     className="space-y-4"
+                    onFocusCapture={keepFocusedFieldVisible}
                 >
                     <div>
                         <PasswordInput
@@ -676,11 +676,11 @@ export default function StudentManagement({
                         />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                        <SecondaryButton type="button" onClick={() => { setShowResetModal(false); setSelectedUser(null); setPassword(''); }}>
+                    <div className="sticky bottom-0 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white px-4 pt-4 pb-1 dark:border-slate-700 dark:bg-slate-900 sm:-mx-6 sm:px-6">
+                        <SecondaryButton className="w-full justify-center" type="button" onClick={() => { setShowResetModal(false); setSelectedUser(null); setPassword(''); }}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit">Reset Password</PrimaryButton>
+                        <PrimaryButton className="w-full justify-center" type="submit">Reset Password</PrimaryButton>
                     </div>
                 </form>
             </Modal>

@@ -79,29 +79,27 @@ export default function TeacherProfilePage({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <h2 className="principal-profile-heading min-w-0 flex-1 truncate text-xl font-bold text-gray-800" title={`Teacher Profile: ${teacher.name}`}>
+                <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+                    <button
+                        type="button"
+                        onClick={handleBackToList}
+                        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950"
+                        aria-label="Back to Teacher Monitoring"
+                        title="Back to Teacher Monitoring"
+                    >
+                        ← Back
+                    </button>
+                    <h2 className="principal-profile-heading min-w-0 flex-1 text-xl font-bold text-gray-800" title={`Teacher Profile: ${teacher.name}`}>
                         Teacher Profile: {teacher.name}
                     </h2>
-                    <div className="flex gap-2">
-                        <SecondaryButton onClick={handleBackToList}>
-                            Back to List
-                        </SecondaryButton>
-                    </div>
                 </div>
             }
         >
             <Head title={`Teacher Profile: ${teacher.name}`} />
 
             <style>{`
-                .principal-profile-heading {
-                    max-width: 420px;
-                }
-                @media (max-width: 639px) {
-                    .principal-profile-heading {
-                        max-width: calc(100vw - 8rem);
-                    }
-                }
+                .principal-profile-heading { max-width: 420px; }
+                @media (max-width: 639px) { .principal-profile-heading { max-width: 100%; } }
             `}</style>
 
             <div className="py-6 sm:py-10">
@@ -112,7 +110,7 @@ export default function TeacherProfilePage({
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-700">Basic Information</h3>
                         </div>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             <TeacherProfile teacher={formattedTeacher} />
                         </div>
                     </div>
@@ -122,7 +120,7 @@ export default function TeacherProfilePage({
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-700">Student Engagement Overview</h3>
                         </div>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             <StudentEngagement stats={formattedClassroomStats} />
                         </div>
                     </div>
@@ -132,7 +130,7 @@ export default function TeacherProfilePage({
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-700">Lesson Monitoring</h3>
                         </div>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             <LessonMonitoring lessons={formattedLessons} pagination={lessons_pagination} />
                         </div>
                     </div>
@@ -142,7 +140,7 @@ export default function TeacherProfilePage({
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-700">Assignment Monitoring</h3>
                         </div>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             <AssignmentMonitoring assignments={formattedAssignments} pagination={assignments_pagination} />
                         </div>
                     </div>
@@ -152,7 +150,7 @@ export default function TeacherProfilePage({
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-700">Quiz Monitoring</h3>
                         </div>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             <QuizMonitoring quizzes={formattedQuizzes} pagination={quizzes_pagination} />
                         </div>
                     </div>

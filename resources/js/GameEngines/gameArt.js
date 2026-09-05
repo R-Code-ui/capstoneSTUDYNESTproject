@@ -2,6 +2,7 @@ const ART_BY_GAME = {
     'Word Builder': { icon: '\u{1F524}', label: 'Letter lab', theme: 'from-violet-500 to-fuchsia-500' },
     'Sentence Scramble': { icon: '\u{1F9E9}', label: 'Word puzzle', theme: 'from-sky-500 to-indigo-500' },
     'Rhyme Match': { icon: '\u{1F3B5}', label: 'Rhyme time', theme: 'from-pink-500 to-rose-500' },
+    'Alphabetical Order': { icon: '\u{1F524}', label: 'ABC sort', theme: 'from-violet-500 to-purple-500' },
     'Letter Hunt': { icon: '\u{1F50E}', label: 'Letter quest', theme: 'from-emerald-500 to-teal-500' },
     'Balloon Pop Math': { icon: '\u{1F388}', label: 'Balloon party', theme: 'from-cyan-500 to-blue-500' },
     'Sorting Baskets': { icon: '\u{1F9FA}', label: 'Sort it out', theme: 'from-amber-500 to-orange-500' },
@@ -24,6 +25,10 @@ const ART_BY_GAME = {
     'Idiom Match': { icon: '\u{1F4AC}', label: 'Idiom explorer', theme: 'from-orange-500 to-amber-500' },
     'Coordinate Plane Treasure Hunt': { icon: '\u{1F5FA}\uFE0F', label: 'Treasure map', theme: 'from-emerald-500 to-cyan-500' },
     'Percent Bar Builder': { icon: '\u{1F4C8}', label: 'Percent power', theme: 'from-violet-500 to-indigo-500' },
+    'Homophone Match': { icon: '\u{1F50A}', label: 'Sound match', theme: 'from-violet-500 to-fuchsia-500' },
+    'Prefix Power': { icon: '\u{1F9E9}', label: 'Prefix builder', theme: 'from-cyan-500 to-blue-500' },
+    'Multiplication Frenzy': { icon: '\u{2716}\uFE0F', label: 'Multiply!', theme: 'from-amber-500 to-orange-500' },
+    'Division Dash': { icon: '\u{2797}', label: 'Division dash', theme: 'from-emerald-500 to-teal-500' },
 };
 
 export function getGameArt(title, type) {

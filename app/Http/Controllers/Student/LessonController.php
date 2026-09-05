@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\LessonResource;
 use App\Models\ActivityLog;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -148,6 +149,8 @@ class LessonController extends Controller
             $user->completedLessons()->syncWithoutDetaching([$lesson->id => [
             'completed_at' => now(),
             ]]);
+
+            app(StudyNestNotificationService::class)->lessonCompleted($lesson, $user);
         }
 
         // ✅ Log: student completed lesson

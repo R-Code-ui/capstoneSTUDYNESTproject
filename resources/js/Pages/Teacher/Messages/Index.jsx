@@ -51,6 +51,11 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
         });
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -88,10 +93,10 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                 }
             `}</style>
 
-            <div className="teacher-messages-index py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="teacher-messages-index py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div onFocusCapture={keepFocusedFieldVisible} className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             <div className="mb-4">
                                 <SearchBar
                                     value={search}
@@ -106,7 +111,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                     <label htmlFor="message-grade-filter" className="block text-sm font-medium text-gray-700 mb-1">
                                         Grade Level
                                     </label>
-                                    <select id="message-grade-filter" value={gradeLevel} onChange={(e) => handleGradeChange(e.target.value)} className="w-full sm:w-56 rounded-md border-gray-300 shadow-sm text-sm">
+                                    <select id="message-grade-filter" value={gradeLevel} onChange={(e) => handleGradeChange(e.target.value)} className="w-full rounded-md border-gray-300 text-base shadow-sm sm:text-sm xl:w-56">
                                         <option value="">All Assigned Grades</option>
                                         {assigned_grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
                                     </select>

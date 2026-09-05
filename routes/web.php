@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Principal\DashboardController;
 use App\Http\Controllers\Principal\UserManagementController;
+use App\Http\Controllers\Principal\StudentDirectoryController;
 use App\Http\Controllers\Principal\TeacherMonitoringController;
 use App\Http\Controllers\Principal\AnnouncementController;
 use App\Http\Controllers\Principal\ReportController;
@@ -89,6 +90,8 @@ Route::middleware(['auth', 'force.password.change'])->group(function () {
         Route::delete('/users/archive/{id}', [UserManagementController::class, 'archive'])->name('users.archive');
         Route::post('/users/restore/{id}', [UserManagementController::class, 'restore'])->name('users.restore');
         Route::delete('/users/{id}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+
+        Route::get('/students', [StudentDirectoryController::class, 'index'])->name('students.index');
 
         Route::get('/teachers', [TeacherMonitoringController::class, 'index'])->name('teachers.index');
         Route::get('/teachers/{id}', [TeacherMonitoringController::class, 'show'])->name('teachers.show');
@@ -221,7 +224,6 @@ Route::middleware(['auth', 'force.password.change'])->group(function () {
 
         // ===== Student Management (Teacher) =====
         Route::get('/students', [StudentManagementController::class, 'index'])->name('students.index');
-        Route::get('/students/export', [StudentManagementController::class, 'export'])->name('students.export');
         Route::post('/students', [StudentManagementController::class, 'store'])->name('students.store');
         Route::put('/students/{id}', [StudentManagementController::class, 'update'])->name('students.update');
         Route::put('/students/reset-password/{id}', [StudentManagementController::class, 'resetPassword'])->name('students.reset-password');

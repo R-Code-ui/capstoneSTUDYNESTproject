@@ -24,6 +24,7 @@ export default function QuizMonitoring({ quizzes, pagination }) {
             emptyMessage="No quizzes found."
             hoverable
             striped
+            responsive
             pagination={pagination}
         />
     );

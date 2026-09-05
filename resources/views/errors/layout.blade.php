@@ -7,10 +7,12 @@
     <title>{{ $status }} · {{ $title }} | StudyNest</title>
     <script>
         (() => {
-            if (localStorage.getItem('studynest-theme') === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0b1220');
-            }
+            try {
+                if (localStorage.getItem('studynest-theme') === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0b1220');
+                }
+            } catch {}
         })();
     </script>
     <style>
@@ -55,7 +57,8 @@
             <h1 id="error-title">{{ $title }}</h1>
             <p class="message">{{ $message }}</p>
             <div class="actions">
-                <button type="button" class="button" onclick="goBack()">← Go back</button>
+                <button type="button" class="button" onclick="goBack()">&larr; Go back</button>
+                <button type="button" id="safe-destination-button" class="button secondary" onclick="goToSafeDestination()">Dashboard</button>
             </div>
         </section>
     </main>
@@ -63,26 +66,31 @@
         const updateThemeButton = () => document.querySelector('.theme-toggle').textContent = document.documentElement.classList.contains('dark') ? '☀' : '☾';
         const toggleTheme = () => {
             const dark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('studynest-theme', dark ? 'dark' : 'light');
+            try { localStorage.setItem('studynest-theme', dark ? 'dark' : 'light'); } catch {}
             document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0b1220' : '#f8fbff');
             updateThemeButton();
         };
+        const getStoredInternalUrl = (key) => {
+            try {
+                const value = sessionStorage.getItem(key);
+                if (!value) return null;
+                const url = new URL(value, window.location.origin);
+                return url.origin === window.location.origin && url.href !== window.location.href ? url.href : null;
+            } catch {
+                return null;
+            }
+        };
+        const getSafeDestination = () => getStoredInternalUrl('studynest-dashboard-url') || @json(url('/login'));
         const goBack = () => {
-            const fallbackUrl = @json(url('/'));
-            const currentUrl = window.location.href;
-
-            // A direct error-page visit has no useful browser history. In that
-            // case, take the user somewhere safe instead of leaving the button idle.
-            if (!document.referrer || new URL(document.referrer).origin !== window.location.origin) {
-                window.location.assign(fallbackUrl);
+            if (window.history.length > 1) {
+                window.history.back();
                 return;
             }
 
-            window.history.back();
-            window.setTimeout(() => {
-                if (window.location.href === currentUrl) window.location.assign(fallbackUrl);
-            }, 350);
+            window.location.assign(getStoredInternalUrl('studynest-last-valid-url') || getSafeDestination());
         };
+        const goToSafeDestination = () => window.location.assign(getSafeDestination());
+        document.querySelector('#safe-destination-button').textContent = getSafeDestination().endsWith('/login') ? 'Sign in' : 'Dashboard';
         updateThemeButton();
     </script>
 </body>

@@ -99,14 +99,29 @@ export default function AssignmentsIndex({
         return colors[status] || 'text-gray-500';
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => {
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<span className="text-xl font-semibold leading-tight text-gray-800">My Assignments</span>}
         >
             <Head title="My Assignments" />
 
-            <div className="student-assignments-page py-4">
+            <div onFocusCapture={keepFocusedFieldVisible} className="student-assignments-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6">
                 <style>{`
+                    .student-assignments-page input,
+                    .student-assignments-page select,
+                    .student-assignments-page textarea { scroll-margin-block: 7rem; }
+                    @media (max-width: 639px) {
+                        .student-assignments-page input,
+                        .student-assignments-page select,
+                        .student-assignments-page textarea { font-size: 16px; }
+                    }
                     .studynest-layout.theme-dark .student-assignments-page [data-card-tone="0"] {
                         background-image: linear-gradient(135deg, rgb(30 58 95), rgb(74 41 70)) !important;
                         background-color: rgb(30 58 95) !important;
@@ -158,10 +173,14 @@ export default function AssignmentsIndex({
                             padding: 1rem;
                         }
                     }
+                    @media (hover: none), (prefers-reduced-motion: reduce) {
+                        .student-assignment-card:hover { transform: none; }
+                        .student-assignment-card { transition-duration: 0.01ms !important; }
+                    }
                 `}</style>
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Filters */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1">
@@ -200,7 +219,7 @@ export default function AssignmentsIndex({
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
                                         {assignments.map((assignment, index) => {
                                             const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
                                             // ✅ Score display logic: show slash only if total_points exists
@@ -214,7 +233,7 @@ export default function AssignmentsIndex({
                                                 <div
                                                     key={assignment.id}
                                                     data-card-tone={index % 5}
-                                                    className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                                                    className={`student-assignment-card overflow-hidden rounded-2xl border border-gray-200/60 bg-gradient-to-br ${gradient.from} ${gradient.to} shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md`}
                                                 >
                                                     <div className="p-6">
                                                         <div className="flex items-start justify-between gap-2">
@@ -228,7 +247,7 @@ export default function AssignmentsIndex({
                                                                 <StatusBadge status={getDeadlineStatus(assignment)} size="sm" />
                                                             </div>
                                                         </div>
-                                                        <h3 className="mt-3 text-lg font-semibold text-gray-800 truncate max-w-full" title={assignment.title}>
+                                                        <h3 className="mt-3 max-w-full break-words text-lg font-semibold text-gray-800" title={assignment.title}>
                                                             {assignment.title}
                                                         </h3>
                                                         <div className="mt-2 flex flex-wrap gap-2">
@@ -252,7 +271,7 @@ export default function AssignmentsIndex({
                                                             <Link
                                                                 href={route('student.assignments.show', assignment.id)}
                                                                 onError={() => toast.error('Unable to open this assignment. Please try again.')}
-                                                                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                                                                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700 sm:w-auto"
                                                             >
                                                                 <DocumentTextIcon className="w-4 h-4 mr-1" />
                                                                 Open Assignment

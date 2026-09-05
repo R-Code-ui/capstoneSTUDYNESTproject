@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import GameShell from './GameShell';
 
-const SVG_SIZE = 320;
-const PADDING = 20;
+const SVG_SIZE = 360;
+const PADDING = 28;
 
 export default function CoordinatePlaneTreasureHunt({ content, onComplete, onExit, onProgress, initialState }) {
     const rounds = content.rounds;
@@ -76,7 +76,7 @@ export default function CoordinatePlaneTreasureHunt({ content, onComplete, onExi
                         <span className="text-2xl font-black text-teal-600">({round.x}, {round.y})</span>
                     </div>
 
-                    <svg viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`} className="w-full max-w-[320px] h-auto aspect-square bg-white rounded-2xl shadow-lg border border-teal-100">
+                    <svg viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`} className="w-full max-w-[360px] h-auto aspect-square bg-white rounded-2xl shadow-lg border border-teal-100">
                         {gridLines.map((v) => (
                             <line
                                 key={`v-${v}`}
@@ -105,7 +105,9 @@ export default function CoordinatePlaneTreasureHunt({ content, onComplete, onExi
                                         key={`${px}-${py}`}
                                         cx={toScreenX(px)}
                                         cy={toScreenY(py)}
-                                        r={isSelected || isTarget ? 8 : 5}
+                                        r={isSelected || isTarget ? 14 : 11}
+                                        stroke="transparent"
+                                        strokeWidth="16"
                                         fill={
                                             isSelected && feedback === 'correct' ? '#22c55e'
                                             : isSelected && feedback === 'incorrect' ? '#ef4444'

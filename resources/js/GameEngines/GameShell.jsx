@@ -22,10 +22,17 @@ export default function GameShell({ title, description, roundLabel, onExit, chil
                 )}
             </div>
 
-            <div className="student-game-surface relative isolate flex min-h-[60vh] flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(79,70,229,0.16)] backdrop-blur sm:p-6 md:p-8 lg:min-h-[68vh] lg:p-10">
+            <div className="student-game-surface touch-manipulation relative isolate flex min-h-[60vh] flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(79,70,229,0.16)] backdrop-blur sm:p-6 md:p-8 lg:min-h-[68vh] lg:p-10">
                 <div className="pointer-events-none absolute -left-16 -top-16 -z-10 h-48 w-48 rounded-full bg-fuchsia-100/70 blur-2xl" />
                 <div className="pointer-events-none absolute -bottom-20 -right-12 -z-10 h-56 w-56 rounded-full bg-cyan-100/80 blur-2xl" />
+                <div className={`pointer-events-none absolute -right-16 -top-16 -z-10 h-44 w-44 rounded-full bg-gradient-to-br ${art.theme} opacity-10`} aria-hidden="true" />
                 <span className="pointer-events-none absolute right-5 top-3 -z-10 text-7xl opacity-10 sm:right-10 sm:text-8xl" aria-hidden="true">{art.icon}</span>
+                <div className="mb-2 flex justify-center">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${art.theme} px-3 py-1 text-xs font-black uppercase tracking-wider text-white shadow-sm`}>
+                        <span aria-hidden="true">{art.icon}</span>
+                        {art.label}
+                    </span>
+                </div>
                 <h2 className="mb-1 text-center text-xl font-black tracking-tight text-slate-900 sm:text-2xl lg:text-3xl">
                     {title}
                 </h2>

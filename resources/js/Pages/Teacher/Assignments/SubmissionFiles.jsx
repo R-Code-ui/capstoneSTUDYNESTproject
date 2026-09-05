@@ -67,11 +67,11 @@ export default function SubmissionFiles({ submission, assignment, student }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <span className="assignment-page-clamp text-xl font-semibold leading-tight text-gray-800">
                         {student.name} – Submitted Files
                     </span>
-                    <SecondaryButton onClick={() => router.visit(route('teacher.assignments.grade', assignment.id), {
+                    <SecondaryButton className="w-full justify-center sm:w-auto" onClick={() => router.visit(route('teacher.assignments.grade', assignment.id), {
                         onError: () => toast.error('Unable to return to grading. Please try again.'),
                     })}>
                         <ArrowLeftIcon className="w-4 h-4 mr-1" />
@@ -101,10 +101,10 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                 }
             `}</style>
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     {/* Student & Assignment Info */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+                    <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
                         <h2 className="text-lg font-semibold text-gray-800 mb-2">{student.name}</h2>
                         <p className="text-sm text-gray-500">
                             Assignment: <span className="assignment-page-clamp submission-assignment-title font-medium text-gray-700" title={assignment.title}>{assignment.title}</span>
@@ -119,10 +119,10 @@ export default function SubmissionFiles({ submission, assignment, student }) {
 
                     {/* Files List */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200">
+                        <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                             <h3 className="text-sm font-semibold text-gray-700">Files ({files.length + (hasLegacyFile ? 1 : 0)})</h3>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="space-y-4 p-4 sm:p-6">
                             {files.length === 0 && !hasLegacyFile ? (
                                 <p className="text-gray-500 text-center py-8">No files have been submitted.</p>
                             ) : (
@@ -139,9 +139,9 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                             key={idx}
                                             className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4"
                                         >
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex min-w-0 items-center gap-4">
                                                 {getIcon(file.mime)}
-                                                <div>
+                                                <div className="min-w-0">
                                                     <div className="font-medium text-gray-800 break-words">{file.name}</div>
                                                     <div className="text-sm text-gray-500">
                                                         {file.mime ? file.mime.split('/').pop().toUpperCase() : 'Unknown'} – {formatSize(file.size)}
@@ -149,16 +149,16 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                                     {isOfficeFile(file) && <p className="mt-1 text-xs text-amber-600">Download to open in Microsoft {officeApplication(file)}.</p>}
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2 shrink-0">
+                                            <div className="flex w-full gap-2 sm:w-auto sm:shrink-0">
                                                 {!isOfficeFile(file) && <button
                                                     onClick={() => viewFile(file, idx)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 sm:flex-none sm:py-1.5"
                                                 >
                                                     <EyeIcon className="w-4 h-4" /> View
                                                 </button>}
                                                 <button
                                                     onClick={() => downloadFile(file, idx)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"
+                                                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 sm:flex-none sm:py-1.5"
                                                 >
                                                     <ArrowDownTrayIcon className="w-4 h-4" /> Download
                                                 </button>
@@ -172,9 +172,9 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                     {/* Legacy single file */}
                                     {hasLegacyFile && (
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-4">
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex min-w-0 items-center gap-4">
                                                 {getIcon('')}
-                                                <div>
+                                                <div className="min-w-0">
                                                     <div className="font-medium text-gray-800 break-words">
                                                         {submission.file_name || 'File'}
                                                     </div>
@@ -182,16 +182,16 @@ export default function SubmissionFiles({ submission, assignment, student }) {
                                                     {isOfficeFile({ name: submission.file_name, path: submission.file_path }) && <p className="mt-1 text-xs text-amber-600">Download to open in Microsoft {officeApplication({ name: submission.file_name, path: submission.file_path })}.</p>}
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2 shrink-0">
+                                            <div className="flex w-full gap-2 sm:w-auto sm:shrink-0">
                                                 {!isOfficeFile({ name: submission.file_name, path: submission.file_path }) && <button
                                                     onClick={() => viewFile({}, 0)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                                                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 sm:flex-none sm:py-1.5"
                                                 >
                                                     <EyeIcon className="w-4 h-4" /> View
                                                 </button>}
                                                 <button
                                                     onClick={() => downloadFile({}, 0)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"
+                                                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 sm:flex-none sm:py-1.5"
                                                 >
                                                     <ArrowDownTrayIcon className="w-4 h-4" /> Download
                                                 </button>

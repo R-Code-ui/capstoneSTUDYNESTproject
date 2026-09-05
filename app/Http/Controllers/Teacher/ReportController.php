@@ -44,7 +44,7 @@ class ReportController extends Controller
         $assignedGrades = $teacher->gradeAssignments()->pluck('grade_level')->all();
 
         $validated = $request->validate([
-            'report_type' => ['required', Rule::in(['student_directory', 'assignment_completion', 'quiz_performance', 'student_progress'])],
+            'report_type' => ['required', Rule::in(['student_directory', 'lesson_report', 'assignment_completion', 'quiz_performance', 'student_progress'])],
             'grade_level' => ['required', Rule::in($assignedGrades)],
             'status' => ['nullable', Rule::in(['all', 'active', 'inactive'])],
             'school_year' => ['nullable', Rule::in(config('school.school_years'))],
@@ -60,6 +60,7 @@ class ReportController extends Controller
 
         [$title, $columns, $rows, $summary] = match ($validated['report_type']) {
             'student_directory' => $this->studentDirectory($grade, $status),
+            'lesson_report' => $this->lessonReport($teacher->id, $grade, $schoolYear, $subject, $trimester),
             'assignment_completion' => $this->assignmentCompletion($teacher->id, $grade, $status, $schoolYear, $subject, $trimester),
             'quiz_performance' => $this->quizPerformance($teacher->id, $grade, $status, $schoolYear, $subject, $trimester),
             'student_progress' => $this->studentProgress($teacher->id, $grade, $status, $schoolYear, $subject, $trimester),
@@ -88,6 +89,30 @@ class ReportController extends Controller
         $students = $this->students($grade, $status)->with('currentEnrollment')->orderBy('name')->get();
         $rows = $students->values()->map(fn (User $student, int $index) => $this->studentDetails($student, $index))->all();
         return ['Student Directory Report', [], $rows, ['Total Students' => $students->count(), 'Active Students' => $students->where('is_active', true)->count(), 'Inactive Students' => $students->where('is_active', false)->count()]];
+    }
+
+    private function lessonReport(int $teacherId, string $grade, ?string $schoolYear, string $subject, string $trimester): array
+    {
+        $lessons = $this->contentQuery(Lesson::query(), $teacherId, $grade, $schoolYear, $subject, $trimester)
+            ->orderBy('week_number')
+            ->orderBy('lesson_title')
+            ->get();
+
+        $rows = $lessons->values()->map(fn (Lesson $lesson, int $index) => [
+            'no' => $index + 1,
+            'lesson_title' => $lesson->lesson_title,
+            'subject' => $lesson->subject ?: '—',
+            'week' => $lesson->week_number ? 'Week ' . preg_replace('/^week\s*/i', '', trim((string) $lesson->week_number)) : '—',
+            'term' => $lesson->trimester ?: '—',
+            'published' => $lesson->publish_date?->format('M j, Y') ?: 'Published',
+        ])->all();
+
+        return [
+            'Lesson Report',
+            ['no' => 'No.', 'lesson_title' => 'Lesson Title', 'subject' => 'Subject', 'week' => 'Week', 'term' => 'Term', 'published' => 'Published'],
+            $rows,
+            ['Published Lessons' => $lessons->count(), 'Grade Level' => $grade, 'School Year' => $schoolYear ?: 'All'],
+        ];
     }
 
     private function assignmentCompletion(int $teacherId, string $grade, string $status, ?string $schoolYear, string $subject, string $trimester): array

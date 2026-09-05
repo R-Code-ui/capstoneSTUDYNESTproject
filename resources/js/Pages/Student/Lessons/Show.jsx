@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
-import StudentResources from '@/Components/StudentResources';
+import LessonResources from '@/Components/LessonResources';
 import { ConfirmModal } from '@/Components/Modal';
 import { toast } from 'sonner';
 
@@ -30,6 +29,8 @@ import {
 export default function LessonsShow({ lesson, related_activities }) {
     const [isLoading, setIsLoading] = useState(false);
     const [confirmingCompletion, setConfirmingCompletion] = useState(false);
+    const [selectingResources, setSelectingResources] = useState(false);
+    const hasDownloadableResources = lesson.resources?.some((resource) => resource.type !== 'url');
 
     const getResourceIcon = (type) => {
         switch (type) {
@@ -68,42 +69,70 @@ export default function LessonsShow({ lesson, related_activities }) {
     };
 
     const openResource = (url, action) => {
-        const resourceWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        // `noopener` makes some browsers return null even after opening the tab.
+        // Open first so a null result reliably indicates an actually blocked pop-up.
+        const resourceWindow = window.open(url, '_blank');
         if (!resourceWindow) {
             toast.error(`Your browser blocked the resource ${action}. Please allow pop-ups and try again.`);
             return;
         }
+        // Keep the opened resource isolated from this page.
         resourceWindow.opener = null;
+    };
+
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => {
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 150);
     };
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={lesson.title}>
-                        {lesson.title}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                        {!lesson.is_completed && (
-                            <PrimaryButton onClick={handleMarkComplete} disabled={isLoading}>
-                                <CheckCircleIcon className="w-4 h-4 mr-1" />
-                                {isLoading ? 'Marking...' : 'Mark as Completed'}
-                            </PrimaryButton>
-                        )}
-                        <SecondaryButton onClick={() => router.visit(route('student.lessons.index'), {
-                            onError: () => toast.error('Unable to return to lessons. Please try again.'),
-                        })}>
-                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                            Back to Lessons
-                        </SecondaryButton>
+                <div className="flex w-full min-w-0 items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+                        <Link
+                            href={route('student.lessons.index')}
+                            onError={() => toast.error('Unable to return to lessons. Please try again.')}
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950"
+                            aria-label="Back to Lessons"
+                            title="Back to Lessons"
+                        >
+                            <ArrowLeftIcon className="h-4 w-4" /> Back
+                        </Link>
+                        <span className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={lesson.title}>
+                            {lesson.title}
+                        </span>
                     </div>
+                    {!lesson.is_completed && (
+                        <PrimaryButton className="hidden shrink-0 xl:inline-flex" onClick={handleMarkComplete} disabled={isLoading}>
+                            <CheckCircleIcon className="mr-1 h-4 w-4" />
+                            {isLoading ? 'Marking...' : 'Mark as Completed'}
+                        </PrimaryButton>
+                    )}
                 </div>
             }
         >
             <Head title={lesson.title} />
 
-            <div className="student-lesson-show-page py-4">
+            <div onFocusCapture={keepFocusedFieldVisible} className="student-lesson-show-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6">
                 <style>{`
+                    .student-lesson-show-page input,
+                    .student-lesson-show-page select,
+                    .student-lesson-show-page textarea {
+                        scroll-margin-block: 7rem;
+                    }
+
+                    @media (max-width: 639px) {
+                        .student-lesson-show-page input:not([type="checkbox"]),
+                        .student-lesson-show-page select,
+                        .student-lesson-show-page textarea {
+                            font-size: 16px;
+                        }
+                    }
+
                     .studynest-layout.theme-dark .student-lesson-show-page .bg-white {
                         background-color: rgb(15 23 42) !important;
                         border-color: rgb(51 65 85) !important;
@@ -159,7 +188,7 @@ export default function LessonsShow({ lesson, related_activities }) {
 
                     {/* Lesson Information */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6 space-y-4">
+                        <div className="space-y-4 p-4 sm:p-6">
                             <div className="flex flex-wrap items-center gap-3">
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     {lesson.subject}
@@ -180,8 +209,8 @@ export default function LessonsShow({ lesson, related_activities }) {
                                 </span>
                             </div>
 
-                            <div>
-                                <h3 className="min-w-0 max-w-full truncate text-2xl font-bold text-gray-800 flex items-center gap-2" title={lesson.title}>
+                            <div className="xl:hidden">
+                                <h3 className="flex min-w-0 max-w-full items-start gap-2 break-words text-2xl font-bold text-gray-800" title={lesson.title}>
                                     <BookOpenIcon className="w-6 h-6 text-blue-500 shrink-0" />
                                     {lesson.title}
                                 </h3>
@@ -193,19 +222,26 @@ export default function LessonsShow({ lesson, related_activities }) {
                                     {lesson.description}
                                 </div>
                             </div>
+
+                            {!lesson.is_completed && (
+                                <PrimaryButton className="w-full justify-center xl:hidden" onClick={handleMarkComplete} disabled={isLoading}>
+                                    <CheckCircleIcon className="mr-1 h-4 w-4" />
+                                    {isLoading ? 'Marking...' : 'Mark as Completed'}
+                                </PrimaryButton>
+                            )}
                         </div>
                     </div>
 
                     {/* Lesson Content */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                     <BookOpenIcon className="w-5 h-5 text-blue-500" />
                                     Lesson Content
                                 </h3>
                             </div>
-                            <div className="p-6">
+                            <div className="p-4 sm:p-6">
                                 <div className="prose prose-blue max-w-none text-gray-700 break-words">
                                     <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
                                 </div>
@@ -217,13 +253,22 @@ export default function LessonsShow({ lesson, related_activities }) {
                     {lesson.resources && lesson.resources.length > 0 && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
-                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                        <PaperClipIcon className="w-5 h-5 text-gray-500" />
+                                <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                        <PaperClipIcon className="h-5 w-5 text-blue-500" />
                                         Learning Resources
                                     </h3>
+                                    {hasDownloadableResources && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectingResources((current) => !current)}
+                                            className={`inline-flex min-h-10 w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition-colors sm:w-auto ${selectingResources ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                                        >
+                                            {selectingResources ? 'Cancel selection' : 'Select files'}
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="p-4 sm:p-6"><StudentResources resources={lesson.resources} viewUrl={(id) => route('student.lessons.view-resource', id)} downloadUrl={(id) => route('student.lessons.download-resource', id)} onView={(url) => openResource(url, 'viewer')} onDownload={(url) => openResource(url, 'download')} /></div>
+                                <div className="p-3 sm:p-6"><LessonResources resources={lesson.resources} viewUrl={(id) => route('student.lessons.view-resource', id)} downloadUrl={(id) => route('student.lessons.download-resource', id)} onView={(url) => openResource(url, 'viewer')} onDownload={(url) => openResource(url, 'download')} selectionMode={selectingResources} onExitSelection={() => setSelectingResources(false)} /></div>
                             </div>
                         </div>
                     )}
@@ -232,28 +277,28 @@ export default function LessonsShow({ lesson, related_activities }) {
                     {(related_activities.assignment || related_activities.quiz || related_activities.game) && (
                         <div className="mt-6">
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200">
+                                <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                     <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                         <LinkIcon className="w-5 h-5 text-gray-500" />
                                         Related Activities
                                     </h3>
                                 </div>
-                                <div className="p-6">
+                                <div className="p-4 sm:p-6">
                                     <div className="flex flex-wrap gap-3">
                                         {related_activities.assignment && (
-                                            <Link href={route('student.assignments.show', related_activities.assignment.id)} onError={() => toast.error('Unable to open the related assignment. Please try again.')} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors">
+                                            <Link href={route('student.assignments.show', related_activities.assignment.id)} onError={() => toast.error('Unable to open the related assignment. Please try again.')} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-amber-700 sm:w-auto">
                                                 <ClipboardDocumentListIcon className="w-4 h-4" />
                                                 Open Assignment: {related_activities.assignment.title}
                                             </Link>
                                         )}
                                         {related_activities.quiz && (
-                                            <Link href={route('student.quizzes.show', related_activities.quiz.id)} onError={() => toast.error('Unable to open the related quiz. Please try again.')} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors">
+                                            <Link href={route('student.quizzes.show', related_activities.quiz.id)} onError={() => toast.error('Unable to open the related quiz. Please try again.')} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-purple-700 sm:w-auto">
                                                 <ChartBarIcon className="w-4 h-4" />
                                                 Take Quiz: {related_activities.quiz.title}
                                             </Link>
                                         )}
                                         {related_activities.game && (
-                                            <Link href={route('student.games.show', related_activities.game.id)} onError={() => toast.error('Unable to open the related game. Please try again.')} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors">
+                                            <Link href={route('student.games.show', related_activities.game.id)} onError={() => toast.error('Unable to open the related game. Please try again.')} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-emerald-700 sm:w-auto">
                                                 <PuzzlePieceIcon className="w-4 h-4" />
                                                 Play Game: {related_activities.game.title}
                                             </Link>
@@ -267,7 +312,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                     {/* Completion Status */}
                     <div className="mt-6">
                         {lesson.is_completed ? (
-                            <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-6">
+                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:p-6">
                                 <div className="flex items-center gap-3 text-emerald-700">
                                     <CheckCircleIcon className="w-6 h-6" />
                                     <div>
@@ -277,7 +322,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-6">
+                            <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4 sm:p-6">
                                 <div className="flex items-center gap-3 text-yellow-700">
                                     <BookOpenIcon className="w-6 h-6" />
                                     <div>

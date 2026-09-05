@@ -199,6 +199,11 @@ class QuizController extends Controller
         if ($questions->isEmpty()) {
             return redirect()->back()->with('error', 'This quiz does not have any active questions.');
         }
+
+        if ($quiz->shuffle_questions) {
+            $questions = $questions->shuffle()->values();
+        }
+
         $questionSnapshot = QuizAttempt::snapshotFromQuestions($questions);
 
         $attempt = QuizAttempt::create([
@@ -244,12 +249,19 @@ class QuizController extends Controller
             $attempt->update(['question_snapshot' => $questions->all()]);
         }
         $answers = is_array($attempt->answers) ? $attempt->answers : (json_decode($attempt->answers, true) ?? []);
+        $expiresAt = $quiz->time_limit
+            ? $attempt->created_at->copy()->addMinutes($quiz->time_limit)
+            : null;
+        $timeRemainingSeconds = $expiresAt
+            ? max(0, (int) ceil(now()->diffInSeconds($expiresAt, false)))
+            : null;
 
         return Inertia::render('Student/Quizzes/Take', [
             'attempt' => [
                 'id'             => $attempt->id,
                 'attempt_number' => $attempt->attempt_number,
                 'time_limit'     => $quiz->time_limit,
+                'time_remaining_seconds' => $timeRemainingSeconds,
             ],
             'quiz' => [
                 'id'              => $quiz->id,
@@ -294,7 +306,8 @@ class QuizController extends Controller
         }
 
         $validated = $request->validate([
-            'answers' => 'required|array',
+            // A timed quiz must still submit successfully when no answer was entered.
+            'answers' => 'present|array',
         ]);
 
         $answers = $validated['answers'];

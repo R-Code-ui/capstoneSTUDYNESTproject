@@ -8,7 +8,7 @@ import {
     EllipsisVerticalIcon, MoonIcon, PencilSquareIcon, PresentationChartLineIcon,
     PuzzlePieceIcon, RectangleStackIcon, SunIcon, UserCircleIcon, UsersIcon, XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // ============================================================
 // HELPER: Safely get route – returns null if route doesn't exist
@@ -51,6 +51,8 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = auth.user;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+    const [isMobileDrawerMounted, setIsMobileDrawerMounted] = useState(false);
+    const mobileDrawerCloseTimer = useRef(null);
     const [darkMode, setDarkMode] = useState(() =>
         typeof window !== 'undefined' && localStorage.getItem('studynest-theme') === 'dark'
     );
@@ -59,6 +61,22 @@ export default function AuthenticatedLayout({ header, children }) {
         document.documentElement.classList.toggle('dark', darkMode);
         localStorage.setItem('studynest-theme', darkMode ? 'dark' : 'light');
     }, [darkMode]);
+
+    useEffect(() => () => {
+        if (mobileDrawerCloseTimer.current) clearTimeout(mobileDrawerCloseTimer.current);
+    }, []);
+
+    const openMobileDrawer = () => {
+        if (mobileDrawerCloseTimer.current) clearTimeout(mobileDrawerCloseTimer.current);
+        setIsMobileDrawerMounted(true);
+        requestAnimationFrame(() => setShowingNavigationDropdown(true));
+    };
+
+    const closeMobileDrawer = () => {
+        setShowingNavigationDropdown(false);
+        if (mobileDrawerCloseTimer.current) clearTimeout(mobileDrawerCloseTimer.current);
+        mobileDrawerCloseTimer.current = setTimeout(() => setIsMobileDrawerMounted(false), 260);
+    };
 
     // Determine user role for navigation
     const userRole = user?.roles?.[0]?.name || null;
@@ -70,6 +88,7 @@ export default function AuthenticatedLayout({ header, children }) {
         if (userRole === 'principal') {
             const dashboard = safeRoute('principal.dashboard');
             const users = safeRoute('principal.users.index');
+            const students = safeRoute('principal.students.index');
             const teachers = safeRoute('principal.teachers.index');
             const announcements = safeRoute('principal.announcements.index');
             const reports = safeRoute('principal.reports.index');
@@ -77,6 +96,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
             if (dashboard) links.push({ href: dashboard, label: 'Dashboard', icon: navIcons.dashboard, routeName: 'principal.dashboard' });
             if (users) links.push({ href: users, label: 'User Management', icon: navIcons.users, routeName: 'principal.users.*' });
+            if (students) links.push({ href: students, label: 'Student Directory', icon: navIcons.users, routeName: 'principal.students.*' });
             if (teachers) links.push({ href: teachers, label: 'Teacher Monitoring', icon: navIcons.teachers, routeName: 'principal.teachers.*' });
             if (announcements) links.push({ href: announcements, label: 'Announcements', icon: navIcons.announcements, routeName: 'principal.announcements.*' });
             if (reports) links.push({ href: reports, label: 'Reports', icon: navIcons.reports, routeName: 'principal.reports.*' });
@@ -263,6 +283,12 @@ export default function AuthenticatedLayout({ header, children }) {
                 .studynest-layout.theme-dark .notification-action:hover {
                     color: rgb(199 210 254) !important;
                 }
+                .studynest-mobile-drawer-backdrop { will-change: opacity; }
+                .studynest-mobile-drawer-panel { will-change: transform; }
+                @media (prefers-reduced-motion: reduce) {
+                    .studynest-mobile-drawer-backdrop,
+                    .studynest-mobile-drawer-panel { transition-duration: 0.01ms !important; }
+                }
                 @media (prefers-color-scheme: dark) {
                 .studynest-layout.theme-light .dark\\:bg-slate-950 { background-color: rgb(248 250 252) !important; }
                 .studynest-layout.theme-light .dark\\:bg-slate-900 { background-color: rgb(255 255 255) !important; }
@@ -280,10 +306,10 @@ export default function AuthenticatedLayout({ header, children }) {
                     .studynest-layout.theme-light .dark\\:hover\\:bg-slate-600:hover { background-color: rgb(248 250 252) !important; }
                 }
             `}</style>
-            <div className={`studynest-layout ${darkMode ? 'theme-dark' : 'theme-light'} min-h-screen bg-slate-50 font-sans antialiased text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100 flex flex-col md:flex-row`}>
+            <div className={`studynest-layout ${darkMode ? 'theme-dark' : 'theme-light'} min-h-screen bg-slate-50 font-sans antialiased text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100 flex flex-col xl:flex-row`}>
 
                 {/* ===== DESKTOP SIDEBAR (Clean White) ===== */}
-                <aside className="hidden md:flex md:w-72 md:flex-shrink-0 flex-col bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-slate-800 z-20">
+                <aside className="hidden xl:flex xl:w-72 xl:flex-shrink-0 flex-col bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-slate-800 z-20">
                     {/* Brand Logo Header */}
                     <div className="h-20 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
                         <Link href="/" className="flex items-center gap-3">
@@ -306,11 +332,11 @@ export default function AuthenticatedLayout({ header, children }) {
                 </aside>
 
                 {/* ===== MOBILE TOPBAR ===== */}
-                <div className="md:hidden sticky top-0 flex h-16 items-center justify-between px-4 bg-white/95 border-b border-slate-200 dark:bg-slate-900/95 dark:border-slate-800 shadow-sm z-30 backdrop-blur">
+                <div className="xl:hidden sticky top-0 flex h-16 items-center justify-between px-4 bg-white/95 border-b border-slate-200 dark:bg-slate-900/95 dark:border-slate-800 shadow-sm z-30 backdrop-blur">
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
-                            onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
+                            onClick={() => showingNavigationDropdown ? closeMobileDrawer() : openMobileDrawer()}
                             aria-label={showingNavigationDropdown ? 'Close navigation menu' : 'Open navigation menu'}
                             aria-expanded={showingNavigationDropdown}
                             className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:text-slate-300 ${showingNavigationDropdown ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
@@ -333,28 +359,28 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 </div>
                 {/* ===== MOBILE NAVIGATION DRAWER ===== */}
-                {showingNavigationDropdown && (
-                <div className="fixed inset-0 z-50 md:hidden">
+                {isMobileDrawerMounted && (
+                <div className="fixed inset-0 z-50 xl:hidden">
                     <button
                         type="button"
                         aria-label="Close navigation"
-                        onClick={() => setShowingNavigationDropdown(false)}
-                        className={`absolute inset-0 bg-slate-950/55 transition-opacity duration-200 ${showingNavigationDropdown ? 'opacity-100' : 'opacity-0'}`}
+                        onClick={closeMobileDrawer}
+                        className={`studynest-mobile-drawer-backdrop absolute inset-0 bg-slate-950/55 transition-opacity duration-200 ${showingNavigationDropdown ? 'opacity-100' : 'opacity-0'}`}
                     />
-                    <aside className={`absolute inset-y-0 left-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 ${showingNavigationDropdown ? 'translate-x-0' : '-translate-x-full'}`}>
+                    <aside className={`studynest-mobile-drawer-panel absolute inset-y-0 left-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 ${showingNavigationDropdown ? 'translate-x-0' : '-translate-x-full'}`}>
                         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
-                            <Link href="/" onClick={() => setShowingNavigationDropdown(false)} className="flex items-center gap-2">
+                            <Link href="/" onClick={closeMobileDrawer} className="flex items-center gap-2">
                                 <img src="/storage/images/studynestLogo.png" alt="StudyNest Logo" className="h-7 w-auto object-contain" />
                                 <span className="font-extrabold text-sm tracking-wider text-slate-800 dark:text-white">STUDYNEST</span>
                             </Link>
-                            <button type="button" onClick={() => setShowingNavigationDropdown(false)} aria-label="Close navigation" className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                            <button type="button" onClick={closeMobileDrawer} aria-label="Close navigation" className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                                 <XMarkIcon className="h-5 w-5" />
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto space-y-1 p-3">
                             <div className="mb-2 flex items-center justify-between px-2 pt-2"><span className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">Workspace</span><span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">{userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'Member'}</span></div>
                             <nav className="space-y-1" aria-label="Mobile navigation">
-                                {navLinks.map((link) => { const Icon = link.icon; const active = route().current(link.routeName); return <Link key={link.href} href={link.href} onClick={() => setShowingNavigationDropdown(false)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${active ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800'}`}><Icon className="h-5 w-5" />{link.label}{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-500" />}</Link>; })}
+                                {navLinks.map((link) => { const Icon = link.icon; const active = route().current(link.routeName); return <Link key={link.href} href={link.href} onClick={closeMobileDrawer} className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${active ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800'}`}><Icon className="h-5 w-5" />{link.label}{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-500" />}</Link>; })}
                             </nav>
                         </div>
                         <div className="border-t border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
@@ -368,7 +394,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 {/* ===== MAIN CONTENT AREA ===== */}
                 <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden bg-slate-50 dark:bg-slate-950">
                     {/* ===== TOP HEADER BAR (Clean, Light) ===== */}
-                    <header className="hidden md:flex h-20 items-center justify-between px-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+                    <header className="hidden xl:flex h-20 items-center justify-between px-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="text-lg font-bold text-slate-800">
                             {/* Empty - no header text displayed */}
                         </div>
@@ -380,12 +406,17 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <Dropdown.Trigger>
                                     <button
                                         type="button"
-                                        className="flex items-center gap-3 p-1.5 rounded-full hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition-colors"
+                                        className="flex max-w-[20rem] items-center gap-3 rounded-full p-1.5 transition-colors hover:bg-slate-100/70 dark:hover:bg-slate-800/70"
                                     >
                                         <Avatar user={user} small />
-                                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user.name}</span>
+                                        <span
+                                            className="min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200"
+                                            title={user.name}
+                                        >
+                                            {user.name}
+                                        </span>
                                         <svg
-                                            className="h-4 w-4 text-slate-400"
+                                            className="h-4 w-4 shrink-0 text-slate-400"
                                             xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 20 20"
                                             fill="currentColor"

@@ -19,6 +19,11 @@ import {
     BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 
+const keepFocusedFieldVisible = (event) => {
+    if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+    window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+};
+
 // Soft gradient combinations for cards
 const GRADIENT_COLORS = [
     { from: 'from-blue-100', to: 'to-pink-100' },
@@ -116,7 +121,7 @@ export default function AnnouncementsIndex({
         >
             <Head title="Announcements" />
 
-            <div className="student-announcements-page py-12">
+            <div className="student-announcements-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6" onFocusCapture={keepFocusedFieldVisible}>
                 <style>{`
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone="pinned"] {
                         background-image: linear-gradient(135deg, rgb(30 41 59), rgb(15 23 42)) !important;
@@ -138,15 +143,25 @@ export default function AnnouncementsIndex({
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-yellow-100"] { background-color: rgb(146 64 14 / 0.4) !important; color: rgb(253 230 138) !important; }
                     .studynest-layout.theme-dark .student-announcements-page [data-card-tone] [class~="bg-red-100"] { background-color: rgb(185 28 28 / 0.35) !important; color: rgb(254 202 202) !important; }
                     .studynest-layout.theme-dark .student-announcements-page > div > .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
-                    @media (max-width: 640px) { .student-announcements-page .p-5, .student-announcements-page .p-6 { padding: 1rem; } }
+                    .student-announcements-page input,
+                    .student-announcements-page select,
+                    .student-announcements-page textarea { scroll-margin-block: 8rem; }
+                    .student-announcement-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+                    @media (max-width: 639px) {
+                        .student-announcements-page input:not([type="checkbox"]):not([type="radio"]),
+                        .student-announcements-page select,
+                        .student-announcements-page textarea { font-size: 16px; }
+                    }
+                    @media (hover: hover) and (pointer: fine) { .student-announcement-card:hover { transform: translateY(-2px); } }
+                    @media (hover: none), (prefers-reduced-motion: reduce) { .student-announcement-card { transform: none !important; transition-duration: 0.01ms !important; } }
                 `}</style>
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:px-8">
                     {/* 🔧 FIX: Removed overflow-hidden from Card container */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Filters */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_13rem] xl:items-center">
+                                <div className="min-w-0 sm:col-span-2 xl:col-span-1">
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
@@ -154,7 +169,7 @@ export default function AnnouncementsIndex({
                                         size="md"
                                     />
                                 </div>
-                                <div className="w-full sm:w-48">
+                                <div className="min-w-0 sm:col-span-2 xl:col-span-1">
                                     <FilterDropdown
                                         options={categoryOptions}
                                         value={categoryFilter}
@@ -193,13 +208,13 @@ export default function AnnouncementsIndex({
                                                 onError={() => toast.error('Unable to open this announcement. Please try again.')}
                                                 className="block"
                                             >
-                                                <div data-card-tone="pinned" className={`bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border-2 border-yellow-400 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
+                                                <div data-card-tone="pinned" className={`student-announcement-card bg-gradient-to-br from-yellow-50 to-amber-50 overflow-hidden rounded-2xl border-2 border-yellow-400 shadow-sm hover:shadow-md ${
                                                     announcement.is_read
                                                         ? 'opacity-90'
                                                         : ''
                                                 }`}>
                                                     <div className="p-5">
-                                                        <div className="flex flex-col sm:flex-row items-start gap-4">
+                                                        <div className="flex items-start gap-3 sm:gap-4">
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex flex-wrap items-center gap-2">
                                                                     <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-600">
@@ -220,7 +235,7 @@ export default function AnnouncementsIndex({
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <h3 className="mt-2 text-lg font-semibold text-gray-800 truncate max-w-full" title={announcement.title}>
+                                                                <h3 className="mt-2 max-w-full break-words text-lg font-semibold text-gray-800" title={announcement.title}>
                                                                     {announcement.title}
                                                                 </h3>
                                                                 <p className="mt-1 text-sm text-gray-600 line-clamp-2 break-words">
@@ -251,13 +266,13 @@ export default function AnnouncementsIndex({
                                                     onError={() => toast.error('Unable to open this announcement. Please try again.')}
                                                     className="block"
                                                 >
-                                                    <div data-card-tone={index % 5} className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden ${
+                                                <div data-card-tone={index % 5} className={`student-announcement-card bg-gradient-to-br ${gradient.from} ${gradient.to} overflow-hidden rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-md ${
                                                         announcement.is_read
                                                             ? 'opacity-90'
                                                             : ''
                                                     }`}>
                                                         <div className="p-5">
-                                                            <div className="flex flex-col sm:flex-row items-start gap-4">
+                                                            <div className="flex items-start gap-3 sm:gap-4">
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex flex-wrap items-center gap-2">
                                                                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityBadge(announcement.priority)}`}>
@@ -274,7 +289,7 @@ export default function AnnouncementsIndex({
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <h3 className="mt-2 text-lg font-semibold text-gray-800 truncate max-w-full" title={announcement.title}>
+                                                                    <h3 className="mt-2 max-w-full break-words text-lg font-semibold text-gray-800" title={announcement.title}>
                                                                         {announcement.title}
                                                                     </h3>
                                                                     <p className="mt-1 text-sm text-gray-600 line-clamp-2 break-words">

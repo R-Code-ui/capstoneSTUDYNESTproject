@@ -199,6 +199,14 @@ export default function LessonsEdit({
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+        window.setTimeout(() => {
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }, 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<span className="text-xl font-semibold leading-tight text-gray-800">Edit Lesson</span>}
@@ -220,12 +228,21 @@ export default function LessonsEdit({
                     background-color: rgb(30 41 59);
                     color: rgb(226 232 240);
                 }
+                .lesson-form-shell input,
+                .lesson-form-shell select,
+                .lesson-form-shell textarea {
+                    scroll-margin-block: 7rem;
+                }
+                .studynest-layout.theme-dark .lesson-form-actions {
+                    background-color: rgb(15 23 42 / 0.96);
+                    border-color: rgb(51 65 85);
+                }
             `}</style>
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     <div className="lesson-form-shell bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmit} onFocusCapture={keepFocusedFieldVisible} className="space-y-6 p-4 pb-24 sm:p-6 sm:pb-6">
 
                             {/* ===== Section 1: Curriculum Information ===== */}
                             <div>
@@ -546,11 +563,11 @@ export default function LessonsEdit({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
-                                <SecondaryButton type="button" onClick={() => router.visit(route('teacher.lessons.index'))}>
+                            <div className="lesson-form-actions sticky bottom-3 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-10px_18px_-18px_rgba(15,23,42,0.55)] backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0 sm:shadow-none">
+                                <SecondaryButton type="button" onClick={() => router.visit(route('teacher.lessons.index'))} className="w-full justify-center sm:w-auto">
                                     Cancel
                                 </SecondaryButton>
-                                <PrimaryButton type="submit" disabled={isSubmitting}>
+                                <PrimaryButton type="submit" disabled={isSubmitting} className="w-full justify-center sm:w-auto">
                                     {isSubmitting ? 'Updating...' : 'Update Lesson'}
                                 </PrimaryButton>
                             </div>

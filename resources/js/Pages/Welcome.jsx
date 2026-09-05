@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import {
     AcademicCapIcon,
@@ -14,10 +14,12 @@ import {
     UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
-export default function Welcome({ auth, laravelVersion, phpVersion }) {
+export default function Welcome({ auth }) {
     const [activeRoleTab, setActiveRoleTab] = useState('student');
     const [openFaq, setOpenFaq] = useState(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
+    const mobileMenuCloseTimer = useRef(null);
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window === 'undefined') return false;
         return localStorage.getItem('studynest-theme') === 'dark';
@@ -27,6 +29,22 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
         document.documentElement.classList.toggle('dark', isDarkMode);
         localStorage.setItem('studynest-theme', isDarkMode ? 'dark' : 'light');
     }, [isDarkMode]);
+
+    useEffect(() => () => {
+        if (mobileMenuCloseTimer.current) clearTimeout(mobileMenuCloseTimer.current);
+    }, []);
+
+    const openMobileMenu = () => {
+        if (mobileMenuCloseTimer.current) clearTimeout(mobileMenuCloseTimer.current);
+        setIsMobileMenuMounted(true);
+        requestAnimationFrame(() => setIsMobileMenuOpen(true));
+    };
+
+    const closeMobileMenu = () => {
+        setIsMobileMenuOpen(false);
+        if (mobileMenuCloseTimer.current) clearTimeout(mobileMenuCloseTimer.current);
+        mobileMenuCloseTimer.current = setTimeout(() => setIsMobileMenuMounted(false), 260);
+    };
 
     const toggleFaq = (index) => {
         setOpenFaq(openFaq === index ? null : index);
@@ -85,6 +103,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     pointer-events: none;
                     user-select: none;
                     z-index: 1;
+                }
+                .welcome-mobile-menu { will-change: max-height, opacity, transform; }
+                @media (prefers-reduced-motion: reduce) {
+                    .welcome-mobile-menu { transition-duration: 0.01ms !important; }
                 }
 
                 /* Modern UI theme: clean blue-and-slate styling without external packages */
@@ -313,7 +335,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 {/* ========================================================= */}
                 {/* 100% STICKY TOP NAVIGATION BAR                            */}
                 {/* ========================================================= */}
-                <header className={`fixed left-1/2 top-6 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden border border-white bg-white/90 shadow-lg shadow-slate-900/10 backdrop-blur-xl ${isMobileMenuOpen ? 'rounded-3xl' : 'rounded-full'}`}>
+                <header className={`fixed left-1/2 top-6 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden border border-white bg-white/90 shadow-lg shadow-slate-900/10 backdrop-blur-xl transition-[border-radius] duration-[250ms] ${isMobileMenuMounted ? 'rounded-3xl' : 'rounded-full'}`}>
                     <nav className="px-4 sm:px-6 lg:px-8 h-16 sm:h-[4.5rem] flex items-center justify-between">
 
                         {/* Brand Logo & Name */}
@@ -377,7 +399,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
                             {/* Mobile Hamburger Button */}
                             <button
-                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                onClick={() => isMobileMenuOpen ? closeMobileMenu() : openMobileMenu()}
                                 type="button"
                                 className={`inline-flex lg:hidden h-10 w-10 items-center justify-center rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-[#4ECDC4] ${isMobileMenuOpen ? 'bg-[#4ECDC4]/15 text-[#168f87]' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
                                 aria-expanded={isMobileMenuOpen}
@@ -398,46 +420,46 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     </nav>
 
                     {/* Mobile Dropdown Navigation Menu */}
-                    {isMobileMenuOpen && (
-                        <div className="lg:hidden border-t border-slate-200 bg-white/95 px-4 pb-4 pt-3 font-bold text-sm text-slate-700">
+                    {isMobileMenuMounted && (
+                        <div className={`welcome-mobile-menu lg:hidden overflow-hidden border-t border-slate-200 bg-white/95 px-4 font-bold text-sm text-slate-700 transition-[max-height,opacity,transform,padding] duration-[250ms] ease-out ${isMobileMenuOpen ? 'max-h-96 translate-y-0 pb-4 pt-3 opacity-100' : 'max-h-0 -translate-y-2 py-0 opacity-0'}`}>
                             <a
                                 href="#home"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={closeMobileMenu}
                                 className="block px-3 py-2 rounded-xl hover:bg-slate-100 hover:text-[#FF6B6B] transition"
                             >
                                 Home
                             </a>
                             <a
                                 href="#about"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={closeMobileMenu}
                                 className="block px-3 py-2 rounded-xl hover:bg-slate-100 hover:text-[#FF6B6B] transition"
                             >
                                 About
                             </a>
                             <a
                                 href="#features"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={closeMobileMenu}
                                 className="block px-3 py-2 rounded-xl hover:bg-slate-100 hover:text-[#FF6B6B] transition"
                             >
                                 Features
                             </a>
                             <a
                                 href="#roles"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={closeMobileMenu}
                                 className="block px-3 py-2 rounded-xl hover:bg-slate-100 hover:text-[#FF6B6B] transition"
                             >
                                 Portals
                             </a>
                             <a
                                 href="#faq"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={closeMobileMenu}
                                 className="block px-3 py-2 rounded-xl hover:bg-slate-100 hover:text-[#FF6B6B] transition"
                             >
                                 FAQ
                             </a>
                             <a
                                 href="#get-started"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={closeMobileMenu}
                                 className="block px-3 py-2 rounded-xl hover:bg-slate-100 hover:text-[#FF6B6B] transition"
                             >
                                 Get Started
@@ -794,11 +816,11 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800">Teacher Management Portal</h3>
-                                        <p className="text-xs text-slate-500 font-bold">Assigned Grade-Level Management Scope</p>
+                                        <p className="text-xs text-slate-500 font-bold">Manage students within your assigned grade level</p>
                                     </div>
                                 </div>
                                 <div className="grid sm:grid-cols-2 gap-3 pt-4 text-xs sm:text-sm font-semibold text-slate-700">
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><BookOpenIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Lesson & Module Creation</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><UserGroupIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Student Management for Your Assigned Grade</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><DocumentTextIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Assignment Review & Submission Grading</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><AcademicCapIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Online Quiz Maker & Automated Scoring</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><PuzzlePieceIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Assign Educational Learning Games</span></div>
@@ -820,7 +842,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     </div>
                                 </div>
                                 <div className="grid sm:grid-cols-2 gap-3 pt-4 text-xs sm:text-sm font-semibold text-slate-700">
-                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><UserGroupIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Teacher & Student User Account Management</span></div>
+                                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><UserGroupIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Teacher User Account Management</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><BuildingOfficeIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Teacher Grade-Level Assignment Matrix</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><ChartBarIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>School-Wide Academic Reports & Summaries</span></div>
                                     <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2"><MegaphoneIcon className="h-5 w-5 shrink-0 text-blue-600" /> <span>Global School Announcements Creation</span></div>
@@ -926,18 +948,22 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 {/* ========================================================= */}
                 {/* FOOTER                                                    */}
                 {/* ========================================================= */}
-                <footer className="relative z-10 mt-12 sm:mt-20 border-t border-blue-500/30 bg-slate-950 py-8 text-center text-slate-400">
-                    <div className="max-w-7xl mx-auto px-4">
-                        <p className="text-xs sm:text-sm font-bold text-white">
-                            © {new Date().getFullYear()} StudyNest — Learning Management System
-                        </p>
-                        <p className="mt-1 text-[11px] sm:text-xs text-slate-400 font-medium">
-                            Ilijan Sur Elementary School • Key Stage 2 Learners
-                        </p>
-                        <div className="mt-4 inline-flex items-center gap-3 bg-slate-900 px-4 py-1.5 rounded-full border border-slate-700 text-[11px] font-mono text-slate-400">
-                            <span>Laravel v{laravelVersion}</span>
-                            <span className="text-slate-300">•</span>
-                            <span>PHP v{phpVersion}</span>
+                <footer className="relative z-10 mt-12 border-t border-blue-400/20 bg-slate-950 py-8 text-slate-400 sm:mt-20 sm:py-10">
+                    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 text-center sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:text-left lg:px-8">
+                        <div className="flex flex-col items-center gap-2 sm:items-start">
+                            <div className="flex items-center gap-2 text-white">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/15 text-blue-300" aria-hidden="true">
+                                    <AcademicCapIcon className="h-5 w-5" />
+                                </span>
+                                <span className="text-sm font-extrabold tracking-wide">StudyNest</span>
+                            </div>
+                            <p className="text-xs font-medium text-slate-400">
+                                Learning Management System for Key Stage 2 Learners
+                            </p>
+                        </div>
+                        <div className="border-t border-slate-800 pt-5 text-xs sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+                            <p className="font-semibold text-slate-200">© {new Date().getFullYear()} StudyNest. All rights reserved.</p>
+                            <p className="mt-1 text-slate-400">Ilijan Sur Elementary School</p>
                         </div>
                     </div>
                 </footer>

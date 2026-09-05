@@ -17,6 +17,7 @@ export default function AssignmentMonitoring({ assignments, pagination }) {
             emptyMessage="No assignments found."
             hoverable
             striped
+            responsive
             pagination={pagination}
         />
     );

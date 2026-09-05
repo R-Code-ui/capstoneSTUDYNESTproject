@@ -43,14 +43,14 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
         <AuthenticatedLayout
             header={
                 // 🔧 FIX: Added w-full to push button to the right
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <span className="assignment-page-clamp text-xl font-semibold leading-tight text-gray-800">
                         Attempt Details: {quiz_title}
                     </span>
-                    <Link href={route('teacher.quizzes.results', attempt.quiz_id)} onError={() => toast.error('Unable to return to quiz results. Please try again.')}>
-                        <SecondaryButton>
+                    <Link className="ml-auto min-w-0" href={route('teacher.quizzes.results', attempt.quiz_id)} onError={() => toast.error('Unable to return to quiz results. Please try again.')}>
+                        <SecondaryButton className="w-full justify-center sm:w-auto">
                             <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                            Back to Results
+                            <span className="sm:hidden">Back</span><span className="hidden sm:inline">Back to Results</span>
                         </SecondaryButton>
                     </Link>
                 </div>
@@ -58,26 +58,27 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
         >
             <Head title={`Attempt Details: ${attempt.student_name}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <style>{`.assignment-page-clamp { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }`}</style>
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Student Information ===== */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div>
+                        <div className="p-4 sm:p-6">
+                            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student</div>
                                     <div className="font-medium text-gray-800 flex items-center gap-2">
                                         <UserIcon className="w-4 h-4 text-gray-400" />
                                         {attempt.student_name}
                                     </div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student ID</div>
                                     <div className="font-medium text-gray-800">
                                         {attempt.student_lrn}
                                     </div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Score</div>
                                     <div className="font-medium text-gray-800">
                                         {attempt.score} / {attempt.total_questions}
@@ -86,20 +87,20 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
                                         </span>
                                     </div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Status</div>
                                     <StatusBadge
                                         status={attempt.status === 'completed' ? 'completed' : 'in_progress'}
                                         label={attempt.status === 'completed' ? 'Completed' : 'In Progress'}
                                     />
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Attempt Number</div>
                                     <div className="font-medium text-gray-800">
                                         Attempt {attempt.attempt_number}
                                     </div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Completed At</div>
                                     <div className="font-medium text-gray-800 flex items-center gap-2">
                                         <ClockIcon className="w-4 h-4 text-gray-400" />
@@ -113,10 +114,10 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
                     {/* ===== Questions and Answers ===== */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700">Question-by-Question Breakdown</h3>
                             </div>
-                            <div className="p-6">
+                            <div className="p-4 sm:p-6">
                                 {questions.length === 0 ? (
                                     <p className="text-gray-500">No questions found.</p>
                                 ) : (
@@ -124,7 +125,7 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
                                         {questions.map((question, index) => (
                                             <div
                                                 key={index}
-                                                className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                                                className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4"
                                             >
                                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                                                     <div className="flex items-start gap-3">
@@ -157,7 +158,7 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
 
                                                 {/* Multiple Choice Options */}
                                                 {question.question_type === 'multiple_choice' && question.choices && (
-                                                    <div className="mt-3 ml-8 space-y-1 text-sm">
+                                                    <div className="mt-3 space-y-1 text-sm sm:ml-8">
                                                         <div className={question.correct_answer === 'A' ? 'text-emerald-600 font-medium' : 'text-gray-600'}>
                                                             A. {question.choices.A}
                                                             {question.correct_answer === 'A' && ' ✅'}
@@ -185,7 +186,7 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
 
                                                 {/* Identification */}
                                                 {question.question_type === 'identification' && (
-                                                    <div className="mt-3 ml-8 text-sm">
+                                                    <div className="mt-3 text-sm sm:ml-8">
                                                         <div className="space-y-1">
                                                             <div>
                                                                 <span className="text-gray-500">Correct answer: </span>
@@ -205,7 +206,7 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
 
                                                 {/* True/False */}
                                                 {question.question_type === 'true_false' && (
-                                                    <div className="mt-3 ml-8 text-sm">
+                                                    <div className="mt-3 text-sm sm:ml-8">
                                                         <div className="space-y-1">
                                                             <div>
                                                                 <span className="text-gray-500">Correct answer: </span>
@@ -233,11 +234,11 @@ export default function AttemptDetails({ attempt, questions, quiz_title }) {
                     {/* ===== Summary ===== */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700">Summary</h3>
                             </div>
-                            <div className="p-6">
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div className="p-4 sm:p-6">
+                                <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
                                     <div className="text-center">
                                         <div className="text-2xl font-bold text-blue-600">
                                             {questions.filter(q => q.is_correct).length}

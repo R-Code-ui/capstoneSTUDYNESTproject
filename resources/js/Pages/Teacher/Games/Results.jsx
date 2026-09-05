@@ -1,7 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table, { StatusBadge } from '@/Components/Table';
-import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'sonner';
 
 // Heroicons
@@ -68,28 +67,35 @@ export default function GameResults({ game, results, pagination, statistics }) {
     return (
         <AuthenticatedLayout
             header={
-                // 🔧 FIX: Added w-full to push buttons to the right
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="text-xl font-semibold leading-tight text-gray-800">
+                <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+                    <button type="button" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950" onClick={() => router.visit(route('teacher.games.index'), {
+                        onError: () => toast.error('Unable to return to games. Please try again.'),
+                    })} aria-label="Back to Games" title="Back to Games">
+                        <ArrowLeftIcon className="h-4 w-4" />
+                        Back
+                    </button>
+                    <span className="game-results-title min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-800" title={`Game Results: ${game.title}`}>
                         Game Results: {game.title}
                     </span>
-                    <div className="flex flex-wrap gap-2">
-                        <SecondaryButton onClick={() => router.visit(route('teacher.games.index'), {
-                            onError: () => toast.error('Unable to return to games. Please try again.'),
-                        })}>
-                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                            Back to Games
-                        </SecondaryButton>
-                    </div>
                 </div>
             }
         >
             <Head title={`Results: ${game.title}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <style>{`
+                .game-results-title {
+                    min-width: 0;
+                    max-width: min(100%, 48rem);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            `}</style>
+
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Statistics ===== */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-blue-600">{statistics.total_students}</div>
                             <div className="text-sm font-medium text-gray-500">Total Students</div>
@@ -109,7 +115,7 @@ export default function GameResults({ game, results, pagination, statistics }) {
                     </div>
 
                     {/* ===== More Statistics ===== */}
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="mt-6 grid gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4">
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                             <div className="text-2xl font-bold text-indigo-600">{statistics.participation_rate}%</div>
                             <div className="text-sm font-medium text-gray-500">Participation Rate</div>
@@ -131,20 +137,21 @@ export default function GameResults({ game, results, pagination, statistics }) {
                     {/* ===== Results Table ===== */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700">Student Participation</h3>
                             </div>
-                            <div className="p-6">
-                                <div className="overflow-x-auto">
+                            <div className="p-4 sm:p-6">
                                     <Table
                                         columns={columns}
                                         rows={results}
                                         emptyMessage="No results found."
                                         hoverable
                                         striped
+                                        compact
+                                        responsive
+                                        responsiveAt="tablet"
                                         pagination={pagination}
                                     />
-                                </div>
                             </div>
                         </div>
                     </div>

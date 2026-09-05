@@ -54,6 +54,11 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
         });
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -73,7 +78,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
         >
             <Head title="Messages" />
 
-            <div className="student-messages-index py-12">
+            <div className="student-messages-index py-6 pb-[max(5.5rem,calc(4rem+env(safe-area-inset-bottom)))] sm:py-10" onFocusCapture={keepFocusedFieldVisible}>
                 <style>{`
                     .student-messages-index .student-messages-shell {
                         background: #ffffff;
@@ -112,20 +117,33 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                     .studynest-layout.theme-dark .student-messages-index .student-message-card button:hover {
                         background-color: rgb(255 255 255 / 0.24) !important;
                     }
-                    @media (max-width: 640px) {
-                        .student-messages-index { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+                    .student-messages-index input,
+                    .student-messages-index select,
+                    .student-messages-index textarea { scroll-margin-block: 8rem; }
+                    .student-message-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+                    @media (max-width: 639px) {
                         .student-messages-index .student-messages-shell { border-radius: 0.75rem; }
                         .student-messages-index .student-message-card button { gap: 0.65rem; padding: 0.75rem; }
                         .student-messages-index .student-message-card button > div:nth-child(2) { min-width: 0; }
+                        .student-messages-index input:not([type="checkbox"]):not([type="radio"]),
+                        .student-messages-index select,
+                        .student-messages-index textarea { font-size: 16px; }
                     }
                     @keyframes message-action-float {
                         0%, 100% { transform: translateY(0); }
                         50% { transform: translateY(-8px); }
                     }
+                    @media (hover: hover) and (pointer: fine) {
+                        .student-message-card:hover { transform: translateY(-2px); }
+                    }
+                    @media (hover: none), (prefers-reduced-motion: reduce) {
+                        .student-message-card { transform: none !important; transition-duration: .01ms !important; }
+                        .student-message-compose-fab { animation: none !important; }
+                    }
                 `}</style>
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 xl:px-8">
                     <div className="student-messages-shell bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             <div className="mb-4">
                                 <SearchBar
                                     value={search}
@@ -159,7 +177,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                         return (
                                             <div key={conv.teacher_id} className="flex items-center">
                                                 <div className="flex-1 min-w-0">
-                                                    <div data-message-tone={index % GRADIENT_COLORS.length} className={`student-message-card bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden`}>
+                                                    <div data-message-tone={index % GRADIENT_COLORS.length} className={`student-message-card bg-gradient-to-br ${gradient.from} ${gradient.to} overflow-hidden rounded-2xl border border-gray-200/60 shadow-sm hover:border-blue-300 hover:shadow-md`}>
                                                         <ConversationListItem
                                                             conversation={conv}
                                                             onClick={() =>
@@ -175,8 +193,9 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                                         e.stopPropagation();
                                                         setConversationToRemove({ teacherId: conv.teacher_id, teacherName: conv.name });
                                                     }}
-                                                    className="ml-2 p-2 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
-                                                    title="Remove conversation from your messages"
+                                                    className="ml-2 inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                                                    aria-label={`Remove conversation with ${conv.name}`}
+                                                    title="Remove conversation"
                                                 >
                                                     <TrashIcon className="w-4 h-4" />
                                                 </button>
@@ -202,7 +221,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                     href={route('student.messages.create')}
                     onError={() => toast.error('Unable to open the new-message form. Please try again.')}
                     aria-label="Ask a teacher"
-                    className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 motion-safe:animate-[message-action-float_2.75s_ease-in-out_infinite] dark:focus-visible:ring-offset-slate-950"
+                    className="student-message-compose-fab fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-40 inline-flex min-h-11 items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 motion-safe:animate-[message-action-float_2.75s_ease-in-out_infinite] dark:focus-visible:ring-offset-slate-950 sm:right-6"
                 >
                     <ChatBubbleLeftRightIcon className="h-5 w-5" />
                     Ask

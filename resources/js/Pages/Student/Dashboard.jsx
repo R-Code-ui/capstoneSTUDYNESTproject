@@ -98,8 +98,8 @@ export default function StudentDashboard({
                     position: relative;
                     isolation: isolate;
                     overflow: hidden;
-                    background: linear-gradient(118deg, rgb(37 99 235), rgb(99 102 241) 54%, rgb(168 85 247));
-                    box-shadow: 0 18px 38px rgb(79 70 229 / 0.2);
+                    background: linear-gradient(118deg, rgb(37 99 235), rgb(124 58 237) 54%, rgb(217 70 239));
+                    box-shadow: 0 20px 42px rgb(79 70 229 / 0.26);
                 }
                 .student-dashboard-hero::before,
                 .student-dashboard-hero::after {
@@ -121,6 +121,13 @@ export default function StudentDashboard({
                     border-color: rgb(191 219 254);
                     box-shadow: 0 16px 32px rgb(15 23 42 / 0.08);
                 }
+                .student-dashboard-section--rose > div:first-child { background: linear-gradient(100deg, rgb(255 241 242), rgb(255 255 255)); }
+                .student-dashboard-section--blue > div:first-child { background: linear-gradient(100deg, rgb(239 246 255), rgb(255 255 255)); }
+                .student-dashboard-section--emerald > div:first-child { background: linear-gradient(100deg, rgb(236 253 245), rgb(255 255 255)); }
+                .student-dashboard-section--purple > div:first-child { background: linear-gradient(100deg, rgb(250 245 255), rgb(255 255 255)); }
+                .student-dashboard-section--amber > div:first-child { background: linear-gradient(100deg, rgb(255 251 235), rgb(255 255 255)); }
+                .student-dashboard-section--indigo > div:first-child { background: linear-gradient(100deg, rgb(238 242 255), rgb(255 255 255)); }
+                .student-dashboard-section--sky > div:first-child { background: linear-gradient(100deg, rgb(240 249 255), rgb(255 255 255)); }
                 .student-dashboard-item {
                     position: relative;
                     overflow: hidden;
@@ -150,27 +157,34 @@ export default function StudentDashboard({
                 }
                 .student-dashboard-link:hover { transform: translateX(2px); }
                 .studynest-layout.theme-dark .student-dashboard-page {
-                    background: radial-gradient(circle at 8% 5%, rgb(30 27 75 / 0.4), transparent 24rem), rgb(2 6 23);
+                    background: radial-gradient(circle at 8% 5%, rgb(30 64 175 / 0.16), transparent 24rem), radial-gradient(circle at 94% 14%, rgb(88 28 135 / 0.12), transparent 24rem), rgb(15 23 42);
                 }
                 .studynest-layout.theme-dark .student-dashboard-hero {
-                    background: linear-gradient(118deg, rgb(30 64 175), rgb(67 56 202) 54%, rgb(107 33 168));
+                    background: linear-gradient(118deg, rgb(30 64 175), rgb(67 56 202) 54%, rgb(109 40 160));
                 }
                 .studynest-layout.theme-dark .student-dashboard-section {
-                    background-color: rgb(15 23 42) !important;
-                    border-color: rgb(51 65 85) !important;
-                    box-shadow: 0 16px 32px rgb(0 0 0 / 0.18);
+                    background-color: rgb(23 32 51) !important;
+                    border-color: rgb(43 58 82) !important;
+                    box-shadow: 0 10px 24px rgb(2 6 23 / 0.16);
                 }
                 .studynest-layout.theme-dark .student-dashboard-section > div:first-child {
-                    background: linear-gradient(100deg, rgb(30 41 59), rgb(15 23 42)) !important;
-                    border-color: rgb(51 65 85) !important;
+                    background: linear-gradient(100deg, rgb(27 39 61), rgb(23 32 51)) !important;
+                    border-color: rgb(43 58 82) !important;
                 }
+                .studynest-layout.theme-dark .student-dashboard-section--rose > div:first-child { background: linear-gradient(100deg, rgb(80 21 45), rgb(23 32 51)) !important; }
+                .studynest-layout.theme-dark .student-dashboard-section--blue > div:first-child { background: linear-gradient(100deg, rgb(29 52 96), rgb(23 32 51)) !important; }
+                .studynest-layout.theme-dark .student-dashboard-section--emerald > div:first-child { background: linear-gradient(100deg, rgb(16 73 66), rgb(23 32 51)) !important; }
+                .studynest-layout.theme-dark .student-dashboard-section--purple > div:first-child { background: linear-gradient(100deg, rgb(67 37 112), rgb(23 32 51)) !important; }
+                .studynest-layout.theme-dark .student-dashboard-section--amber > div:first-child { background: linear-gradient(100deg, rgb(94 60 27), rgb(23 32 51)) !important; }
+                .studynest-layout.theme-dark .student-dashboard-section--indigo > div:first-child { background: linear-gradient(100deg, rgb(42 48 105), rgb(23 32 51)) !important; }
+                .studynest-layout.theme-dark .student-dashboard-section--sky > div:first-child { background: linear-gradient(100deg, rgb(20 74 94), rgb(23 32 51)) !important; }
                 .studynest-layout.theme-dark .student-dashboard-section > div:first-child .text-gray-800,
                 .studynest-layout.theme-dark .student-dashboard-section > div:first-child .text-gray-700 {
                     color: rgb(241 245 249) !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-section:hover {
-                    border-color: rgb(99 102 241) !important;
-                    box-shadow: 0 20px 40px rgb(0 0 0 / 0.28);
+                    border-color: rgb(79 100 139) !important;
+                    box-shadow: 0 16px 30px rgb(2 6 23 / 0.22);
                 }
                 .studynest-layout.theme-dark .student-dashboard-page .student-dashboard-item {
                     border-color: rgb(51 65 85) !important;
@@ -184,7 +198,8 @@ export default function StudentDashboard({
                 }
                 @media (hover: none) {
                     .student-dashboard-section:hover,
-                    .student-dashboard-item:hover { transform: none; }
+                    .student-dashboard-item:hover,
+                    .student-dashboard-page .group:hover { transform: none; }
                 }
                 @media (prefers-reduced-motion: reduce) {
                     .student-dashboard-page *,
@@ -222,7 +237,11 @@ export default function StudentDashboard({
                     z-index: 0;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page .bg-white {
-                    background-color: rgb(15 23 42) !important;
+                    background-color: rgb(23 32 51) !important;
+                }
+                .studynest-layout.theme-dark .student-dashboard-page [class~="bg-white/70"] {
+                    background-color: rgb(37 51 74) !important;
+                    box-shadow: none !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page [class~="from-blue-50/80"] {
                     background-image: none !important;
@@ -232,23 +251,23 @@ export default function StudentDashboard({
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-blue-50"],
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-blue-50/80"],
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-blue-50/50"] {
-                    background-color: rgb(23 37 84 / 0.75) !important;
+                    background-color: rgb(30 50 91 / 0.72) !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-emerald-50"],
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-emerald-50/50"] {
-                    background-color: rgb(6 78 59 / 0.55) !important;
+                    background-color: rgb(17 77 67 / 0.62) !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-purple-50/50"] {
-                    background-color: rgb(59 7 100 / 0.5) !important;
+                    background-color: rgb(63 42 104 / 0.62) !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-amber-50/50"] {
-                    background-color: rgb(120 53 15 / 0.45) !important;
+                    background-color: rgb(90 60 36 / 0.60) !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-rose-50/50"] {
-                    background-color: rgb(136 19 55 / 0.4) !important;
+                    background-color: rgb(82 36 58 / 0.62) !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page [class~="bg-indigo-50"] {
-                    background-color: rgb(30 27 75 / 0.75) !important;
+                    background-color: rgb(45 45 104 / 0.70) !important;
                 }
                 .studynest-layout.theme-dark .student-dashboard-page .text-gray-800,
                 .studynest-layout.theme-dark .student-dashboard-page .text-gray-700 {
@@ -264,7 +283,7 @@ export default function StudentDashboard({
                 .studynest-layout.theme-dark .student-dashboard-page [class~="border-emerald-100"],
                 .studynest-layout.theme-dark .student-dashboard-page [class~="border-purple-100"],
                 .studynest-layout.theme-dark .student-dashboard-page [class~="border-amber-100"] {
-                    border-color: rgb(51 65 85) !important;
+                    border-color: rgb(43 58 82) !important;
                 }
             `}</style>
 
@@ -309,11 +328,11 @@ export default function StudentDashboard({
             >
                 <Head title="Student Dashboard" />
 
-                <div className="student-dashboard-page py-4 relative z-10">
+                <div className="student-dashboard-page relative z-10 py-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-7">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                         {/* ===== Welcome Section ===== */}
-                        <div className="student-dashboard-hero mb-6 rounded-3xl border border-indigo-300/40 p-5 text-white sm:p-7 sm:pr-[20rem]">
+                        <div className="student-dashboard-hero mb-6 rounded-3xl border border-indigo-300/40 p-5 text-white sm:p-7 xl:pr-[20rem]">
                             <div>
                                 <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-50 ring-1 ring-white/20">
                                     <SparklesIcon className="h-4 w-4" />
@@ -328,12 +347,12 @@ export default function StudentDashboard({
                                     {grade_level} Student
                                 </p>
                             </div>
-                            <div className="mt-5 grid grid-cols-2 gap-2 sm:absolute sm:right-7 sm:top-1/2 sm:mt-0 sm:min-w-[17rem] sm:-translate-y-1/2">
-                                <div className="rounded-2xl bg-white/14 px-3 py-3 ring-1 ring-white/15 backdrop-blur-sm">
+                            <div className="mt-5 grid grid-cols-2 gap-2 xl:absolute xl:right-7 xl:top-1/2 xl:mt-0 xl:min-w-[17rem] xl:-translate-y-1/2">
+                                <div className="rounded-2xl bg-white/14 px-3 py-3 ring-1 ring-white/15">
                                     <div className="text-xl font-extrabold">{progress_summary?.lessons?.completed || 0}</div>
                                     <div className="text-[11px] font-semibold text-indigo-100">Lessons done</div>
                                 </div>
-                                <div className="rounded-2xl bg-white/14 px-3 py-3 ring-1 ring-white/15 backdrop-blur-sm">
+                                <div className="rounded-2xl bg-white/14 px-3 py-3 ring-1 ring-white/15">
                                     <div className="flex items-center gap-1 text-xl font-extrabold"><TrophyIcon className="h-5 w-5 text-amber-200" />{progress_summary?.quizzes?.average || 0}%</div>
                                     <div className="text-[11px] font-semibold text-indigo-100">Quiz average</div>
                                 </div>
@@ -342,7 +361,7 @@ export default function StudentDashboard({
 
                         {/* ===== Recent Announcements ===== */}
                         <Card
-                            className="student-dashboard-section"
+                            className="student-dashboard-section student-dashboard-section--rose"
                             headerClassName="bg-gradient-to-r from-rose-50 to-white"
                             bodyClassName="p-4 sm:p-5"
                             title={
@@ -400,7 +419,7 @@ export default function StudentDashboard({
                         <div className="mt-6 grid gap-6 md:grid-cols-2">
                             {/* Recent Lessons */}
                             <Card
-                                className="student-dashboard-section"
+                                className="student-dashboard-section student-dashboard-section--blue"
                                 headerClassName="bg-gradient-to-r from-blue-50 to-white"
                                 bodyClassName="p-4 sm:p-5"
                                 title={
@@ -460,7 +479,7 @@ export default function StudentDashboard({
 
                             {/* Upcoming Assignments */}
                             <Card
-                                className="student-dashboard-section"
+                                className="student-dashboard-section student-dashboard-section--emerald"
                                 headerClassName="bg-gradient-to-r from-emerald-50 to-white"
                                 bodyClassName="p-4 sm:p-5"
                                 title={
@@ -528,7 +547,7 @@ export default function StudentDashboard({
                         <div className="mt-6 grid gap-6 md:grid-cols-2">
                             {/* Available Quizzes */}
                             <Card
-                                className="student-dashboard-section"
+                                className="student-dashboard-section student-dashboard-section--purple"
                                 headerClassName="bg-gradient-to-r from-purple-50 to-white"
                                 bodyClassName="p-4 sm:p-5"
                                 title={
@@ -600,7 +619,7 @@ export default function StudentDashboard({
 
                             {/* Assigned Games */}
                             <Card
-                                className="student-dashboard-section"
+                                className="student-dashboard-section student-dashboard-section--amber"
                                 headerClassName="bg-gradient-to-r from-amber-50 to-white"
                                 bodyClassName="p-4 sm:p-5"
                                 title={
@@ -674,7 +693,7 @@ export default function StudentDashboard({
                         {/* ===== Learning Progress Summary ===== */}
                         <div className="mt-6">
                             <Card
-                                className="student-dashboard-section"
+                                className="student-dashboard-section student-dashboard-section--indigo"
                                 headerClassName="bg-gradient-to-r from-indigo-50 to-white"
                                 bodyClassName="p-4 sm:p-6"
                                 title={
@@ -684,7 +703,7 @@ export default function StudentDashboard({
                                     </div>
                                 }
                             >
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
                                     <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3 text-center transition hover:-translate-y-0.5 hover:shadow-sm">
                                         <div className="text-2xl font-bold text-blue-600">
                                             {progress_summary?.lessons?.completed || 0}/{progress_summary?.lessons?.total || 0}
@@ -740,8 +759,8 @@ export default function StudentDashboard({
 
                         {/* ===== Quick Access Buttons ===== */}
                         <div className="mt-6">
-                            <Card className="student-dashboard-section" headerClassName="bg-gradient-to-r from-slate-50 to-white" bodyClassName="p-4 sm:p-5" title={<span className="font-semibold text-gray-700">Quick Access</span>}>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                            <Card className="student-dashboard-section student-dashboard-section--sky" headerClassName="bg-gradient-to-r from-slate-50 to-white" bodyClassName="p-4 sm:p-5" title={<span className="font-semibold text-gray-700">Quick Access</span>}>
+                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
                                     {[
                                         { icon: BookOpenIcon, color: 'blue', bg: 'bg-blue-50', hover: 'hover:bg-blue-100', text: 'text-blue-600', label: 'Lessons', route: 'student.lessons.index' },
                                         { icon: ClipboardDocumentListIcon, color: 'emerald', bg: 'bg-emerald-50', hover: 'hover:bg-emerald-100', text: 'text-emerald-600', label: 'Assignments', route: 'student.assignments.index' },

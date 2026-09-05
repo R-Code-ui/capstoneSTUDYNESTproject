@@ -4,11 +4,13 @@ import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
 export default function DeleteUserForm({ className = '' }) {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const passwordInput = useRef();
 
     const {
@@ -45,6 +47,11 @@ export default function DeleteUserForm({ className = '' }) {
         reset();
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <section className={`space-y-6 ${className}`}>
             <header>
@@ -65,7 +72,7 @@ export default function DeleteUserForm({ className = '' }) {
             </DangerButton>
 
             <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="p-6">
+                <form onSubmit={deleteUser} onFocusCapture={keepFocusedFieldVisible} className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
                     <h2 className="text-lg font-medium text-gray-900">
                         Are you sure you want to delete your account?
                     </h2>
@@ -84,19 +91,30 @@ export default function DeleteUserForm({ className = '' }) {
                             className="sr-only"
                         />
 
-                        <TextInput
-                            id="password"
-                            type="password"
-                            name="password"
-                            ref={passwordInput}
-                            value={data.password}
-                            onChange={(e) =>
-                                setData('password', e.target.value)
-                            }
-                            className="mt-1 block w-3/4"
-                            isFocused
-                            placeholder="Password"
-                        />
+                        <div className="relative sm:w-3/4">
+                            <TextInput
+                                id="password"
+                                type={isPasswordVisible ? 'text' : 'password'}
+                                name="password"
+                                ref={passwordInput}
+                                value={data.password}
+                                onChange={(e) =>
+                                    setData('password', e.target.value)
+                                }
+                                className="mt-1 block w-full pr-12 text-base sm:text-sm"
+                                isFocused
+                                placeholder="Password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setIsPasswordVisible((visible) => !visible)}
+                                className="absolute right-1 top-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-400 dark:hover:bg-slate-800"
+                                aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                                title={isPasswordVisible ? 'Hide password' : 'Show password'}
+                            >
+                                {isPasswordVisible ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                            </button>
+                        </div>
 
                         <InputError
                             message={errors.password}

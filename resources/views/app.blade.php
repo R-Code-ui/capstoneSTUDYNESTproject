@@ -3,6 +3,20 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#f8fafc">
+
+        <script>
+            (() => {
+                try {
+                    const isDark = localStorage.getItem('studynest-theme') === 'dark';
+                    document.documentElement.classList.toggle('dark', isDark);
+                    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+                    document.querySelector('meta[name="theme-color"]').setAttribute('content', isDark ? '#0f172a' : '#f8fafc');
+                } catch {
+                    document.documentElement.style.colorScheme = 'light';
+                }
+            })();
+        </script>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 

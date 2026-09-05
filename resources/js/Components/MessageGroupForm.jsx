@@ -131,6 +131,11 @@ export default function MessageGroupForm({
             : post(route('teacher.messages.groups.store'), options);
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout header={<span className="text-xl font-semibold text-gray-800">{editing ? 'Edit Group' : 'Create Group'}</span>}>
             <Head title={editing ? 'Edit Group' : 'Create Group'} />
@@ -164,9 +169,15 @@ export default function MessageGroupForm({
                     background-color: rgb(30 64 175 / 0.45);
                     color: rgb(191 219 254);
                 }
+                .message-group-form input, .message-group-form textarea { scroll-margin-block: 7rem; }
+                .studynest-layout.theme-dark .message-group-actions { background-color: rgb(15 23 42 / 0.96); border-color: rgb(51 65 85); }
+                @media (max-width: 639px) {
+                    .message-group-form input:not([type="checkbox"]),
+                    .message-group-form textarea { font-size: 16px; }
+                }
             `}</style>
-            <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-                <form onSubmit={submit} className="message-group-form space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mx-auto max-w-3xl px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-10 lg:px-8">
+                <form onSubmit={submit} onFocusCapture={keepFocusedFieldVisible} className="message-group-form space-y-6 rounded-xl border border-slate-200 bg-white p-4 pb-24 shadow-sm sm:p-6 sm:pb-6">
                     <div>
                         <InputLabel htmlFor="name" value="Group name" required />
                         <TextInput id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} className="mt-1 block w-full" required />
@@ -294,9 +305,9 @@ export default function MessageGroupForm({
                         <InputError message={errors['member_ids.0']} className="mt-1" />
                     </div>
 
-                    <div className="flex justify-end gap-3 border-t border-slate-200 pt-5">
-                        <SecondaryButton type="button" onClick={() => router.visit(route('teacher.messages.index'))}>Cancel</SecondaryButton>
-                        <PrimaryButton disabled={processing || data.grade_levels.length === 0 || data.member_ids.length === 0}>{processing ? 'Saving...' : editing ? 'Save Changes' : 'Create Group'}</PrimaryButton>
+                    <div className="message-group-actions sticky bottom-3 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-slate-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0">
+                        <SecondaryButton type="button" className="w-full justify-center sm:w-auto" onClick={() => router.visit(route('teacher.messages.index'))}>Cancel</SecondaryButton>
+                        <PrimaryButton className="w-full justify-center sm:w-auto" disabled={processing || data.grade_levels.length === 0 || data.member_ids.length === 0}>{processing ? 'Saving...' : editing ? 'Save Changes' : 'Create Group'}</PrimaryButton>
                     </div>
                 </form>
             </div>

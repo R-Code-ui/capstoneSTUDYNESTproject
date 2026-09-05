@@ -29,27 +29,32 @@ export default function QuizzesShow({ quiz, questions = [], questionsPagination 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <span className="quiz-show-title text-xl font-semibold leading-tight text-gray-800" title={quiz.quiz_title}>
-                        {quiz.quiz_title}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                        <Link href={route('teacher.quizzes.results', quiz.id)} onError={handleNavigationError}>
-                            <SecondaryButton>
-                                <ChartBarIcon className="w-4 h-4 mr-1" />
-                                Results
+                <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center xl:justify-between xl:gap-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+                        <Link
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950"
+                            href={route('teacher.quizzes.index')}
+                            onError={handleNavigationError}
+                            aria-label="Back to Quizzes"
+                            title="Back to Quizzes"
+                        >
+                            <ArrowLeftIcon className="h-4 w-4" /> Back
+                        </Link>
+                        <span className="quiz-show-title min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-800" title={quiz.quiz_title}>
+                            {quiz.quiz_title}
+                        </span>
+                    </div>
+                    <div className="flex w-full flex-row flex-wrap justify-end gap-2 xl:ml-auto xl:w-auto xl:shrink-0">
+                        <Link className="w-auto" href={route('teacher.quizzes.results', quiz.id)} onError={handleNavigationError}>
+                            <SecondaryButton className="min-h-11 w-auto justify-center">
+                                <ChartBarIcon className="mr-1 h-4 w-4" />
+                                View Results
                             </SecondaryButton>
                         </Link>
-                        <Link href={route('teacher.quizzes.edit', quiz.id)} onError={handleNavigationError}>
-                            <SecondaryButton>
-                                <PencilSquareIcon className="w-4 h-4 mr-1" />
-                                Edit
-                            </SecondaryButton>
-                        </Link>
-                        <Link href={route('teacher.quizzes.index')} onError={handleNavigationError}>
-                            <PrimaryButton>
-                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                                Back to List
+                        <Link className="w-auto" href={route('teacher.quizzes.edit', quiz.id)} onError={handleNavigationError}>
+                            <PrimaryButton className="min-h-11 w-auto justify-center">
+                                <PencilSquareIcon className="mr-1 h-4 w-4" />
+                                Edit Quiz
                             </PrimaryButton>
                         </Link>
                     </div>
@@ -77,60 +82,60 @@ export default function QuizzesShow({ quiz, questions = [], questionsPagination 
                 }
             `}</style>
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                     {/* ===== Basic Information ===== */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div>
+                        <div className="p-4 sm:p-6">
+                            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Grade Level</div>
                                     <div className="font-medium text-gray-800">{quiz.grade_level}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Subject</div>
                                     <div className="font-medium text-gray-800">{quiz.subject}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Type</div>
                                     <div className="font-medium text-gray-800">{getTypeLabel(quiz.quiz_type)}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Status</div>
                                     <StatusBadge status={quiz.status} />
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Questions</div>
                                     <div className="font-medium text-gray-800">{quiz.total_questions}</div>
                                 </div>
                                 {/* ✅ Display Attempts Allowed (total including practice) */}
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         Allowed Attempts (incl. practice)
                                     </div>
                                     <div className="font-medium text-gray-800">{quiz.attempts_allowed}</div>
                                 </div>
                                 {quiz.time_limit && (
-                                    <div>
+                                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                         <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Time Limit</div>
                                         <div className="font-medium text-gray-800">{quiz.time_limit} minutes</div>
                                     </div>
                                 )}
                                 {quiz.passing_score && (
-                                    <div>
+                                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                         <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Passing Score</div>
                                         <div className="font-medium text-gray-800">{quiz.passing_score}%</div>
                                     </div>
                                 )}
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Shuffle Questions</div>
                                     <div className="font-medium text-gray-800">{quiz.shuffle_questions ? 'Yes' : 'No'}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Publish Date</div>
                                     <div className="font-medium text-gray-800">{quiz.publish_date}</div>
                                 </div>
-                                <div>
+                                <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Created At</div>
                                     <div className="font-medium text-gray-800">{quiz.created_at}</div>
                                 </div>
@@ -141,10 +146,10 @@ export default function QuizzesShow({ quiz, questions = [], questionsPagination 
                     {/* ===== Questions ===== */}
                     <div className="mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
                                 <h3 className="text-sm font-semibold text-gray-700">Questions</h3>
                             </div>
-                            <div className="p-6">
+                            <div className="p-4 sm:p-6">
                                 {questions.length === 0 ? (
                                     <p className="text-gray-500">No questions available.</p>
                                 ) : (

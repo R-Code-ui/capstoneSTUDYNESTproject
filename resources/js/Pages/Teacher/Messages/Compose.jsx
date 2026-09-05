@@ -93,6 +93,11 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
         });
     };
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<span className="text-xl font-semibold leading-tight text-gray-800">New Message</span>}
@@ -126,6 +131,12 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                     background-color: rgb(30 41 59);
                     border-color: rgb(96 165 250);
                 }
+                .studynest-layout.theme-dark .message-compose-shell .message-choice.is-selected {
+                    background-color: rgb(37 99 235) !important;
+                    color: rgb(255 255 255) !important;
+                    border-color: rgb(96 165 250) !important;
+                    box-shadow: 0 0 0 2px rgb(96 165 250 / 0.28);
+                }
                 .studynest-layout.theme-dark .message-compose-shell .selected-student-chip {
                     background-color: rgb(30 41 59) !important;
                     border-color: rgb(59 130 246 / 0.55) !important;
@@ -147,14 +158,20 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                 .studynest-layout.theme-dark .message-compose-shell .selected-student-remove:hover {
                     color: rgb(226 232 240) !important;
                 }
+                .message-compose-shell input, .message-compose-shell textarea { scroll-margin-block: 7rem; }
+                .studynest-layout.theme-dark .message-compose-actions { background-color: rgb(15 23 42 / 0.96); border-color: rgb(51 65 85); }
+                @media (max-width: 639px) {
+                    .message-compose-shell input,
+                    .message-compose-shell textarea { font-size: 16px; }
+                }
             `}</style>
 
-            <div className="py-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="message-compose-shell bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+                        <form onSubmit={handleSubmit} onFocusCapture={keepFocusedFieldVisible} className="space-y-6 p-4 pb-24 sm:p-8 sm:pb-8">
                             {/* ===== Grade Selection ===== */}
                             <div>
                                 <InputLabel value="Select Grade Level" required />
@@ -218,7 +235,7 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                                             setDropdownOpen(true);
                                                         }}
                                                         onFocus={() => setDropdownOpen(true)}
-                                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        className="w-full rounded-xl border border-gray-300 py-2.5 pl-10 pr-4 text-base text-gray-800 focus:border-transparent focus:ring-2 focus:ring-blue-500 sm:text-sm"
                                                     />
                                                     <svg
                                                         className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -284,9 +301,10 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                             onClick={() => setData('category', cat.value)}
                                             className={`message-choice flex items-center gap-1.5 text-sm px-4 py-2 rounded-full border transition ${
                                                 data.category === cat.value
-                                                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                                    ? 'is-selected bg-blue-600 text-white border-blue-600 shadow-sm'
                                                     : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
                                             }`}
+                                            aria-pressed={data.category === cat.value}
                                         >
                                             <span>{cat.emoji}</span>
                                             {cat.label}
@@ -312,12 +330,12 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                                <SecondaryButton type="button" onClick={() => router.visit(route('teacher.messages.index'))}>
+                            <div className="message-compose-actions sticky bottom-3 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0">
+                                <SecondaryButton type="button" className="w-full justify-center sm:w-auto" onClick={() => router.visit(route('teacher.messages.index'))}>
                                     <ArrowLeftIcon className="w-4 h-4 mr-1" />
                                     Cancel
                                 </SecondaryButton>
-                                <PrimaryButton
+                                <PrimaryButton className="w-full justify-center sm:w-auto"
                                     type="submit"
                                     disabled={isSubmitting || !data.receiver_id || !data.category || !data.message}
                                 >

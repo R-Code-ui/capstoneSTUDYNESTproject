@@ -1,6 +1,5 @@
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'sonner';
 import {
     MapPinIcon,
@@ -12,6 +11,11 @@ import {
     ArrowLeftIcon,
     MegaphoneIcon,
 } from '@heroicons/react/24/outline';
+
+const keepFocusedFieldVisible = (event) => {
+    if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+    window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+};
 
 export default function AnnouncementsShow({ announcement }) {
     const getPriorityBadge = (priority) => {
@@ -55,22 +59,23 @@ export default function AnnouncementsShow({ announcement }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                    <h2 className="min-w-0 max-w-full truncate text-xl font-semibold leading-tight text-gray-800" title={announcement.title}>
-                        {announcement.title}
-                    </h2>
-                    <SecondaryButton onClick={() => router.visit(route('student.announcements.index'), {
-                        onError: () => toast.error('Unable to return to announcements. Please try again.'),
-                    })}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                        Back to Announcements
-                    </SecondaryButton>
+                <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+                    <Link
+                        href={route('student.announcements.index')}
+                        onError={() => toast.error('Unable to return to announcements. Please try again.')}
+                        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950"
+                        aria-label="Back to Announcements"
+                        title="Back to Announcements"
+                    >
+                        <ArrowLeftIcon className="h-4 w-4" /> Back
+                    </Link>
+                    <h2 className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={announcement.title}>{announcement.title}</h2>
                 </div>
             }
         >
             <Head title={announcement.title} />
 
-            <div className="student-announcement-show-page py-12">
+            <div className="student-announcement-show-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6" onFocusCapture={keepFocusedFieldVisible}>
                 <style>{`
                     .studynest-layout.theme-dark .student-announcement-show-page > div > .bg-white { background-image: linear-gradient(135deg, rgb(30 41 59), rgb(15 23 42)) !important; background-color: rgb(30 41 59) !important; border-color: rgb(100 116 139) !important; }
                     .studynest-layout.theme-dark .student-announcement-show-page .text-gray-800,
@@ -83,12 +88,22 @@ export default function AnnouncementsShow({ announcement }) {
                     .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-yellow-100"] { background-color: rgb(120 53 15 / 0.45) !important; color: rgb(253 230 138) !important; }
                     .studynest-layout.theme-dark .student-announcement-show-page [class~="bg-red-100"] { background-color: rgb(127 29 29 / 0.45) !important; color: rgb(254 202 202) !important; }
                     .student-announcement-show-page .break-words { overflow-wrap: anywhere; word-break: break-word; }
-                    @media (max-width: 640px) { .student-announcement-show-page .p-6 { padding: 1rem; } }
+                    .student-announcement-show-page input,
+                    .student-announcement-show-page select,
+                    .student-announcement-show-page textarea { scroll-margin-block: 8rem; }
+                    .student-announcement-detail-card { transition: transform 180ms ease, box-shadow 180ms ease; }
+                    @media (max-width: 639px) {
+                        .student-announcement-show-page input:not([type="checkbox"]):not([type="radio"]),
+                        .student-announcement-show-page select,
+                        .student-announcement-show-page textarea { font-size: 16px; }
+                    }
+                    @media (hover: hover) and (pointer: fine) { .student-announcement-detail-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgb(15 23 42 / .08); } }
+                    @media (hover: none), (prefers-reduced-motion: reduce) { .student-announcement-detail-card { transform: none !important; transition-duration: .01ms !important; } }
                 `}</style>
-                <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-4xl px-4 sm:px-6 xl:px-8">
                     {/* ===== Announcement Details ===== */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-6 space-y-6">
+                    <div className="student-announcement-detail-card overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                        <div className="space-y-5 p-4 sm:p-6">
                             {/* Header */}
                             <div className="flex flex-wrap items-start justify-between gap-4">
                                 <div className="flex-1 min-w-0">
@@ -112,9 +127,9 @@ export default function AnnouncementsShow({ announcement }) {
                                         </span>
                                     </div>
 
-                                    <h3 className="mt-3 max-w-full truncate text-2xl font-bold text-gray-800" title={announcement.title}>
+                                    <h1 className="mt-3 max-w-full break-words text-xl font-bold text-gray-800 sm:text-2xl xl:hidden" title={announcement.title}>
                                         {announcement.title}
-                                    </h3>
+                                    </h1>
 
                                     <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-500">
                                         <span>Posted by {announcement.posted_by}</span>
@@ -136,7 +151,7 @@ export default function AnnouncementsShow({ announcement }) {
                             {/* Content */}
                             <div className="pt-6 border-t border-gray-200">
                                 <div className="prose prose-blue max-w-none">
-                                    <div className="text-gray-700 whitespace-pre-wrap break-words line-clamp-6" title={announcement.content}>
+                                    <div className="text-gray-700 whitespace-pre-wrap break-words" title={announcement.content}>
                                         {announcement.content}
                                     </div>
                                 </div>

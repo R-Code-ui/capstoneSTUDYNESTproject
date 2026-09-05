@@ -15,6 +15,14 @@ import {
     CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
+const keepFocusedFieldVisible = (event) => {
+    if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+
+    window.setTimeout(() => {
+        event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }, 150);
+};
+
 // Soft gradient combinations for cards
 const GRADIENT_COLORS = [
     { from: 'from-blue-100', to: 'to-pink-100' },
@@ -116,7 +124,10 @@ export default function QuizzesIndex({
         >
             <Head title="My Quizzes" />
 
-            <div className="student-quizzes-page py-4">
+            <div
+                className="student-quizzes-page py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-6"
+                onFocusCapture={keepFocusedFieldVisible}
+            >
                 <style>{`
                     .studynest-layout.theme-dark .student-quizzes-page [data-card-tone="0"] { background-image: linear-gradient(135deg, rgb(30 58 95), rgb(74 41 70)) !important; background-color: rgb(30 58 95) !important; border-color: rgb(71 98 133) !important; }
                     .studynest-layout.theme-dark .student-quizzes-page [data-card-tone="1"] { background-image: linear-gradient(135deg, rgb(91 57 31), rgb(75 70 27)) !important; background-color: rgb(91 57 31) !important; border-color: rgb(133 105 53) !important; }
@@ -152,14 +163,28 @@ export default function QuizzesIndex({
                     .studynest-layout.theme-dark .student-quizzes-page [class~="bg-white/70"],
                     .studynest-layout.theme-dark .student-quizzes-page [class~="bg-white/50"] { background-color: rgb(15 23 42 / 0.58) !important; color: rgb(226 232 240) !important; }
                     .studynest-layout.theme-dark .student-quizzes-page > div > .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
-                    @media (max-width: 640px) { .student-quizzes-page .p-6 { padding: 1rem; } }
+                    .student-quizzes-page input,
+                    .student-quizzes-page select,
+                    .student-quizzes-page textarea { scroll-margin-block: 8rem; }
+                    .student-quiz-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+                    @media (max-width: 639px) {
+                        .student-quizzes-page input:not([type="checkbox"]):not([type="radio"]),
+                        .student-quizzes-page select,
+                        .student-quizzes-page textarea { font-size: 16px; }
+                    }
+                    @media (hover: hover) and (pointer: fine) {
+                        .student-quiz-card:hover { transform: translateY(-3px); }
+                    }
+                    @media (hover: none), (prefers-reduced-motion: reduce) {
+                        .student-quiz-card { transform: none !important; transition-duration: 0.01ms !important; }
+                    }
                 `}</style>
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:px-8">
+                    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+                        <div className="p-4 sm:p-6">
                             {/* Filters */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_13rem_13rem] xl:items-center">
+                                <div className="min-w-0 sm:col-span-2 xl:col-span-1">
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
@@ -167,8 +192,7 @@ export default function QuizzesIndex({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex flex-wrap gap-3">
-                                    <div className="w-full sm:w-40">
+                                <div className="min-w-0">
                                         <FilterDropdown
                                             options={subjectOptions}
                                             value={subjectFilter}
@@ -177,8 +201,8 @@ export default function QuizzesIndex({
                                             size="md"
                                             className="w-full"
                                         />
-                                    </div>
-                                    <div className="w-full sm:w-40">
+                                </div>
+                                <div className="min-w-0">
                                         <FilterDropdown
                                             options={statusOptions}
                                             value={statusFilter}
@@ -187,7 +211,6 @@ export default function QuizzesIndex({
                                             size="md"
                                             className="w-full"
                                         />
-                                    </div>
                                 </div>
                             </div>
 
@@ -207,7 +230,7 @@ export default function QuizzesIndex({
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:gap-6">
                                         {quizzes.map((quiz, index) => {
                                             const gradient = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
                                             const hasRemainingAttempts = quiz.attempts_used < quiz.attempts_allowed;
@@ -215,9 +238,9 @@ export default function QuizzesIndex({
                                                 <div
                                                     key={quiz.id}
                                                     data-card-tone={index % 5}
-                                                    className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                                                    className={`student-quiz-card bg-gradient-to-br ${gradient.from} ${gradient.to} overflow-hidden rounded-2xl border border-gray-200/60 shadow-sm hover:border-blue-300 hover:shadow-md`}
                                                 >
-                                                    <div className="p-6">
+                                                    <div className="p-4 sm:p-5 xl:p-6">
                                                         <div className="flex flex-wrap items-start justify-between gap-2">
                                                             <div className="flex flex-wrap gap-2">
                                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
@@ -232,11 +255,11 @@ export default function QuizzesIndex({
                                                             </span>
                                                         </div>
 
-                                                        <h3 className="mt-3 text-lg font-semibold text-gray-800 truncate max-w-full" title={quiz.title}>
+                                                        <h3 className="mt-3 max-w-full break-words text-lg font-semibold text-gray-800" title={quiz.title}>
                                                             {quiz.title}
                                                         </h3>
 
-                                                        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                                                        <div className="mt-3 grid grid-cols-1 gap-2 text-sm min-[400px]:grid-cols-2">
                                                             <div>
                                                                 <span className="text-gray-600">Questions:</span>
                                                                 <span className="ml-1 font-medium text-gray-800">{quiz.questions}</span>
@@ -276,7 +299,7 @@ export default function QuizzesIndex({
                                                                         : route('student.quizzes.show', quiz.id)
                                                                 }
                                                                 onError={() => toast.error('Unable to open this quiz. Please try again.')}
-                                                                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors w-full shadow-sm"
+                                                                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                                             >
                                                                 {quiz.status === 'completed' ? (
                                                                     <>
@@ -301,7 +324,7 @@ export default function QuizzesIndex({
                                                                 <Link
                                                                     href={route('student.quizzes.show', quiz.id)}
                                                                     onError={() => toast.error('Unable to open this quiz. Please try again.')}
-                                                                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors w-full shadow-sm"
+                                                                    className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-emerald-600 bg-white/70 px-4 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                                                                 >
                                                                     <DocumentTextIcon className="w-4 h-4 mr-1" />
                                                                     Practice

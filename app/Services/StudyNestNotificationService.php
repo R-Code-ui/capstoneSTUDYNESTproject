@@ -187,6 +187,35 @@ class StudyNestNotificationService
         ));
     }
 
+    public function lessonCompleted(Lesson $lesson, User $student): void
+    {
+        $lesson->loadMissing('teacher');
+        $teacher = $lesson->teacher;
+
+        // A completion alert is sent only to the lesson's active teacher when
+        // that teacher still has access to the student's and lesson's grade.
+        if (
+            !$teacher
+            || !$teacher->isTeacher()
+            || !$teacher->is_active
+            || $student->grade_level !== $lesson->grade_level
+            || !$teacher->gradeAssignments()->where('grade_level', $lesson->grade_level)->exists()
+        ) {
+            return;
+        }
+
+        $this->send(collect([$teacher]), new StudyNestNotification(
+            'lesson_completed',
+            'Lesson Completed',
+            $student->name . ' completed "' . $lesson->lesson_title . '".',
+            'normal',
+            route('teacher.lessons.show', $lesson->id),
+            'lesson',
+            'lesson',
+            $lesson->id
+        ));
+    }
+
     public function gamePublished(Game $game): void
     {
         $students = User::role('student')->where('grade_level', $game->grade_level)->where('is_active', true)->get();

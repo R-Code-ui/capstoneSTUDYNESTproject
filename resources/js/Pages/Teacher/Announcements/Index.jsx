@@ -262,6 +262,11 @@ export default function AnnouncementsIndex({
         }
     ];
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -272,13 +277,13 @@ export default function AnnouncementsIndex({
         >
             <Head title="Announcements" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Filters */}
-                            <div className="flex flex-col gap-4 lg:flex-row">
-                                <div className="flex-1">
+                            <div onFocusCapture={keepFocusedFieldVisible} className="space-y-3">
+                                <div className="min-w-0">
                                     <SearchBar
                                         value={search}
                                         onChange={handleSearch}
@@ -286,14 +291,14 @@ export default function AnnouncementsIndex({
                                         size="md"
                                     />
                                 </div>
-                                <div className="flex flex-wrap gap-3 lg:justify-end">
+                                <div className="grid grid-cols-1 gap-3 min-[460px]:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                                     <FilterDropdown
                                         options={gradeOptions}
                                         value={gradeFilter}
                                         onChange={(val) => handleFilterChange('grade', val)}
                                         placeholder="Audience"
                                         size="md"
-                                        className="w-40"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={categoryOptions}
@@ -301,7 +306,7 @@ export default function AnnouncementsIndex({
                                         onChange={(val) => handleFilterChange('category', val)}
                                         placeholder="Category"
                                         size="md"
-                                        className="w-40"
+                                        className="w-full"
                                     />
                                     <FilterDropdown
                                         options={statusOptions}
@@ -309,7 +314,7 @@ export default function AnnouncementsIndex({
                                         onChange={(val) => handleFilterChange('status', val)}
                                         placeholder="Status"
                                         size="md"
-                                        className="w-36"
+                                        className="w-full min-[460px]:col-span-2 xl:col-auto"
                                     />
                                     <FilterDropdown
                                         options={authorOptions}
@@ -317,11 +322,11 @@ export default function AnnouncementsIndex({
                                         onChange={(val) => handleFilterChange('author', val)}
                                         placeholder="Source"
                                         size="md"
-                                        className="w-40"
+                                        className="w-full"
                                     />
                                     <PrimaryButton
                                         onClick={() => router.visit(route('teacher.announcements.create'))}
-                                        className="shrink-0"
+                                        className="min-h-11 w-full justify-center whitespace-nowrap xl:col-auto xl:w-auto"
                                     >
                                         <PlusIcon className="mr-1 h-4 w-4" />
                                         Create Announcement
@@ -345,6 +350,9 @@ export default function AnnouncementsIndex({
                                     emptyMessage="No announcements found. Create your first announcement!"
                                     hoverable
                                     striped
+                                    compact
+                                    responsive
+                                    responsiveAt="tablet"
                                     pagination={pagination}
                                 />
                             </div>

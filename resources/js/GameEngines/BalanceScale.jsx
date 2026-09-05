@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { DndContext, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, pointerWithin, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import GameShell from './GameShell';
 
 function DraggableWeight({ id, value, onClick }) {
@@ -75,9 +75,9 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
-        if (!over || over.id !== 'right-pan' || status !== 'playing') return;
+        if (status !== 'playing' || String(over?.id) !== 'right-pan') return;
 
-        placeWeight(active.id);
+        placeWeight(String(active.id));
     };
 
     const placeWeight = (weightId) => {
@@ -116,7 +116,11 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
             onExit={onExit}
         >
             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-3xl border border-indigo-100 shadow-inner">
-                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={pointerWithin}
+                    onDragEnd={handleDragEnd}
+                >
                     <div className="flex flex-col items-center gap-8 mb-8">
                         <div className="flex items-end justify-center gap-8 w-full max-w-sm">
                             <div className="flex flex-col items-center">
@@ -131,7 +135,7 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
                             <div className="flex flex-col items-center">
                                 <div
                                     ref={setNodeRef}
-                                    className={`w-28 h-28 rounded-3xl border-4 border-dashed flex flex-wrap items-center justify-center gap-2 p-3 shadow-lg ${
+                                    className={`w-32 h-32 sm:w-36 sm:h-36 rounded-3xl border-4 border-dashed flex flex-wrap items-center justify-center gap-2 p-3 shadow-lg ${
                                         status === 'balanced' ? 'border-green-500 bg-green-100'
                                         : status === 'tooHeavy' ? 'border-red-500 bg-red-100'
                                         : isOver ? 'border-indigo-500 bg-indigo-50'
@@ -156,7 +160,7 @@ export default function BalanceScale({ content, onComplete, onExit, onProgress, 
 
                     <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-white shadow-sm">
                         <p className="text-center text-sm font-bold text-gray-400 mb-4 uppercase">
-                            Drag or tap weights to add them to the scale
+                            Tap weights to add them to the scale
                         </p>
                         <div className="flex flex-wrap gap-3 justify-center min-h-[4rem]">
                             {bank.map((tile) => (

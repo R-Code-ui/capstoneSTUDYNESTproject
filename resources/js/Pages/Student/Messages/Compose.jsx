@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import { toast } from 'sonner';
 import {
@@ -64,13 +63,30 @@ export default function MessagesCompose({ teachers }) {
         ...teachers.map((teacher) => ({ value: teacher.id, label: teacher.name })),
     ];
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
-            header={<span className="text-xl font-semibold leading-tight text-gray-800">Ask Teacher</span>}
+            header={
+                <div className="w-full">
+                    <Link href={route('student.messages.index')} onError={() => toast.error('Unable to return to messages. Please try again.')} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800 xl:hidden">
+                        <ArrowLeftIcon className="h-4 w-4" /> Back to Messages
+                    </Link>
+                    <div className="hidden w-full items-center justify-between gap-4 xl:flex">
+                        <span className="text-xl font-semibold leading-tight text-gray-800">Ask Teacher</span>
+                        <Link href={route('student.messages.index')} onError={() => toast.error('Unable to return to messages. Please try again.')} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-slate-800">
+                            <ArrowLeftIcon className="h-4 w-4" /> Back to Messages
+                        </Link>
+                    </div>
+                </div>
+            }
         >
             <Head title="Ask Teacher" />
 
-            <div className="student-message-compose py-12">
+            <div className="student-message-compose py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <style>{`
                     .studynest-layout.theme-dark .student-message-compose .student-message-form {
                         background: #0f172a !important;
@@ -87,17 +103,28 @@ export default function MessagesCompose({ teachers }) {
                         color: #e2e8f0;
                     }
                     .studynest-layout.theme-dark .student-message-compose textarea::placeholder { color: #94a3b8 !important; }
-                    .student-message-compose textarea { overflow-wrap: anywhere; }
-                    @media (max-width: 640px) {
-                        .student-message-compose { padding-top: 1.25rem; padding-bottom: 1.25rem; }
-                        .student-message-compose form { padding: 1rem; }
+                    .studynest-layout.theme-dark .student-message-compose .message-choice:not(.is-selected) {
+                        background-color: rgb(15 23 42) !important;
+                        border-color: rgb(71 85 105) !important;
+                        color: rgb(203 213 225) !important;
+                    }
+                    .studynest-layout.theme-dark .student-message-compose .message-choice:not(.is-selected):hover { background-color: rgb(30 41 59) !important; border-color: rgb(96 165 250) !important; }
+                    .studynest-layout.theme-dark .student-message-compose .student-message-compose-actions { background-color: rgb(15 23 42 / .97) !important; border-color: rgb(51 65 85) !important; }
+                    .student-message-compose input,
+                    .student-message-compose select,
+                    .student-message-compose textarea { scroll-margin-block: 8rem; }
+                    .student-message-compose textarea { overflow-wrap: anywhere; word-break: break-word; }
+                    @media (max-width: 639px) {
+                        .student-message-compose input:not([type="checkbox"]):not([type="radio"]),
+                        .student-message-compose select,
+                        .student-message-compose textarea { font-size: 16px; }
                     }
                 `}</style>
-                <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                    <div className="student-message-form bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="mx-auto max-w-3xl px-4 sm:px-6 xl:px-8">
+                    <div className="student-message-form overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmit} onFocusCapture={keepFocusedFieldVisible} className="space-y-6 p-4 pb-24 sm:p-6 sm:pb-6">
                             {/* ===== Recipient ===== */}
                             <div>
                                 <InputLabel htmlFor="receiver_id" value="Select Teacher" required />
@@ -107,7 +134,7 @@ export default function MessagesCompose({ teachers }) {
                                         id="receiver_id"
                                         value={data.receiver_id}
                                         onChange={(e) => setData('receiver_id', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800 pl-10"
+                                        className="mt-1 block min-h-11 w-full rounded-xl border-gray-300 pl-10 text-base text-gray-800 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
                                         required
                                     >
                                         {teacherOptions.map((opt) => (
@@ -130,7 +157,7 @@ export default function MessagesCompose({ teachers }) {
                                                 key={cat.value}
                                                 type="button"
                                                 onClick={() => setData('category', cat.value)}
-                                                className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition ${
+                                                className={`message-choice ${data.category === cat.value ? 'is-selected' : ''} flex min-h-11 items-center gap-1.5 rounded-full border px-4 py-2 text-sm transition ${
                                                     data.category === cat.value
                                                         ? 'bg-blue-600 text-white border-blue-600'
                                                         : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
@@ -153,7 +180,7 @@ export default function MessagesCompose({ teachers }) {
                                     value={data.message}
                                     onChange={(e) => setData('message', e.target.value)}
                                     rows={6}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-gray-800"
+                                    className="mt-1 block w-full rounded-xl border-gray-300 text-base text-gray-800 shadow-sm focus:border-blue-600 focus:ring-blue-600 sm:text-sm"
                                     required
                                     placeholder="Write your question or message here..."
                                 />
@@ -161,14 +188,9 @@ export default function MessagesCompose({ teachers }) {
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
-                                <SecondaryButton type="button" onClick={() => router.visit(route('student.messages.index'), {
-                                    onError: () => toast.error('Unable to return to messages. Please try again.'),
-                                })}>
-                                    <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                                    Cancel
-                                </SecondaryButton>
+                            <div className="student-message-compose-actions sticky bottom-0 z-10 -mx-4 flex border-t border-gray-200 bg-white/95 px-4 pt-4 pb-[max(.25rem,env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0">
                                 <PrimaryButton
+                                    className="min-h-11 w-full justify-center sm:w-auto"
                                     type="submit"
                                     disabled={isSubmitting || !data.receiver_id || !data.category || !data.message}
                                 >

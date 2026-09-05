@@ -91,6 +91,11 @@ export default function GamesCreate({
         { value: 'numeracy', label: 'Numeracy' },
     ];
 
+    const keepFocusedFieldVisible = (event) => {
+        if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+    };
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Assign Game</h2>}
@@ -135,14 +140,16 @@ export default function GamesCreate({
                     border-color: rgb(71 85 105);
                     background-color: rgb(15 23 42);
                 }
+                .game-form-shell input, .game-form-shell select, .game-form-shell textarea { scroll-margin-block: 7rem; }
+                .studynest-layout.theme-dark .game-form-actions { background-color: rgb(15 23 42 / 0.96); border-color: rgb(51 65 85); }
             `}</style>
 
-            <div className="py-12">
+            <div className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10">
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="game-form-shell bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         {isSubmitting && <LoadingSpinner overlay size="lg" />}
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmit} onFocusCapture={keepFocusedFieldVisible} className="space-y-6 p-4 pb-24 sm:p-6 sm:pb-6">
                             {/* ===== Grade Level ===== */}
                             <div>
                                 <InputLabel htmlFor="grade_level" value="Grade Level" required />
@@ -293,11 +300,11 @@ export default function GamesCreate({
                             </div>
 
                             {/* ===== Actions ===== */}
-                            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                                <SecondaryButton type="button" onClick={() => router.visit(route('teacher.games.index'))}>
+                            <div className="game-form-actions sticky bottom-3 z-10 -mx-4 grid grid-cols-2 gap-3 border-t border-gray-200 bg-white/95 px-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:bg-transparent sm:px-0 sm:pb-0">
+                                <SecondaryButton type="button" className="w-full justify-center sm:w-auto" onClick={() => router.visit(route('teacher.games.index'))}>
                                     Cancel
                                 </SecondaryButton>
-                                <PrimaryButton type="submit" disabled={isSubmitting}>
+                                <PrimaryButton type="submit" disabled={isSubmitting} className="w-full justify-center sm:w-auto">
                                     {isSubmitting ? 'Assigning...' : 'Assign Game'}
                                 </PrimaryButton>
                             </div>

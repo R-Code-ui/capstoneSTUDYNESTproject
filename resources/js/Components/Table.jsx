@@ -81,6 +81,35 @@ function PaginationControls({ pagination }) {
             .replace(/&raquo;|»/g, '')
             .trim();
 
+    // Laravel may provide a link for every page. Keep the control compact so
+    // pagination never needs its own horizontal scrollbar.
+    const numericLinks = displayLinks.filter((link) => /^\d+$/.test(getLinkLabel(link)));
+    const previousLink = displayLinks.find((link) => link.isPrevious || /previous/i.test(getLinkLabel(link)));
+    const nextLink = displayLinks.find((link) => link.isNext || /^next$/i.test(getLinkLabel(link)));
+    const compactLinks = (() => {
+        if (numericLinks.length <= 7) return displayLinks;
+
+        const linksByPage = new Map(numericLinks.map((link) => [Number(getLinkLabel(link)), link]));
+        const visiblePages = [...new Set([
+            1,
+            ...Array.from({ length: 5 }, (_, index) => current_page - 2 + index)
+                .filter((page) => page > 1 && page < last_page),
+            last_page,
+        ])].sort((a, b) => a - b);
+        const compact = [];
+
+        if (previousLink) compact.push(previousLink);
+        visiblePages.forEach((page, index) => {
+            const priorPage = visiblePages[index - 1];
+            if (index > 0 && page - priorPage > 1) {
+                compact.push({ url: null, label: '...', active: false });
+            }
+            if (linksByPage.has(page)) compact.push(linksByPage.get(page));
+        });
+        if (nextLink) compact.push(nextLink);
+        return compact;
+    })();
+
     const from = total > 0 ? (current_page - 1) * per_page + 1 : 0;
     const to = Math.min(current_page * per_page, total);
 
@@ -104,17 +133,18 @@ function PaginationControls({ pagination }) {
             </div>
 
             {/* Controls */}
-            <nav aria-label="Pagination" className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/60">
-                {displayLinks.map((link, index) => {
+            <nav aria-label="Pagination" className="flex w-full items-center justify-between gap-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 p-1 sm:w-auto sm:justify-start dark:border-slate-700 dark:bg-slate-800/60">
+                {compactLinks.map((link, index) => {
                     const label = getLinkLabel(link);
                     const isPrevious = link.isPrevious || /previous/i.test(label);
                     const isNext = link.isNext || /^next$/i.test(label);
+                    const mobileVisibility = (!isPrevious && !isNext && !link.active) ? 'hidden sm:inline-flex' : 'inline-flex';
 
                     if (link.url === null) {
                         return (
                             <span
                                 key={index}
-                                className="px-3 py-2 text-sm text-slate-400 dark:text-slate-500"
+                                className="hidden px-3 py-2 text-sm text-slate-400 sm:inline-flex dark:text-slate-500"
                             >
                                 {label}
                             </span>
@@ -128,7 +158,7 @@ function PaginationControls({ pagination }) {
                                 href={link.url}
                                 preserveScroll
                                 preserveState
-                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                             >
                                 <ChevronLeftIcon className="w-4 h-4" />
                                 Previous
@@ -143,7 +173,7 @@ function PaginationControls({ pagination }) {
                                 href={link.url}
                                 preserveScroll
                                 preserveState
-                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                             >
                                 Next
                                 <ChevronRightIcon className="w-4 h-4" />
@@ -158,7 +188,7 @@ function PaginationControls({ pagination }) {
                             preserveScroll
                             preserveState
                             className={`
-                                min-w-[36px] rounded-lg px-3 py-2 text-center text-sm font-semibold transition-colors
+                                ${mobileVisibility} min-w-[36px] shrink-0 rounded-lg px-3 py-2 text-center text-sm font-semibold transition-colors
                                 ${
                                     link.active
                                         ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-500'
@@ -193,6 +223,8 @@ export default function Table({
     bordered = false,
     compact = false,
     responsive = false,
+    responsiveAt = 'mobile',
+    actionsClassName = '',
     renderCell,
     pagination = null,
 }) {
@@ -284,7 +316,7 @@ export default function Table({
     };
 
     return (
-        <div className={`${responsive ? 'teacher-responsive-table-wrapper' : 'overflow-x-auto'} ${className}`}>
+        <div className={`${responsive ? `overflow-x-auto teacher-responsive-table-wrapper teacher-responsive-table-wrapper--${responsiveAt}` : 'overflow-x-auto'} ${className}`}>
             {responsive && (
                 <style>{`
                     @media (max-width: 639px) {
@@ -343,9 +375,24 @@ export default function Table({
                             color: rgb(148 163 184);
                         }
                     }
+                    @media (min-width: 640px) and (max-width: 1279px) {
+                        .teacher-responsive-table-wrapper--tablet { overflow-x: visible; }
+                        .teacher-responsive-table--tablet { display: block; width: 100%; }
+                        .teacher-responsive-table--tablet thead { display: none; }
+                        .teacher-responsive-table--tablet tbody,
+                        .teacher-responsive-table--tablet tr,
+                        .teacher-responsive-table--tablet td { display: block; width: 100%; }
+                        .teacher-responsive-table--tablet tr { margin-bottom: 0.9rem; border: 1px solid rgb(226 232 240 / 0.8); border-radius: 0.9rem; padding: 0.6rem; }
+                        .teacher-responsive-table--tablet td { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border: 0; padding: 0.7rem 0.65rem; text-align: right; }
+                        .teacher-responsive-table--tablet td::before { flex: 0 0 38%; color: rgb(100 116 139); content: attr(data-label); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-align: left; text-transform: uppercase; }
+                        .teacher-responsive-table--tablet td > * { min-width: 0; max-width: 62%; }
+                        .teacher-responsive-table--tablet td:last-child > div { justify-content: flex-start; }
+                        .studynest-layout.theme-dark .teacher-responsive-table--tablet tr { border-color: rgb(51 65 85); }
+                        .studynest-layout.theme-dark .teacher-responsive-table--tablet td::before { color: rgb(148 163 184); }
+                    }
                 `}</style>
             )}
-            <table className={`${responsive ? 'teacher-responsive-table' : ''} w-full text-sm text-left text-gray-600 ${tableClassName}`}>
+            <table className={`${responsive ? `teacher-responsive-table teacher-responsive-table--${responsiveAt}` : ''} w-full text-sm text-left text-gray-600 ${tableClassName}`}>
                 <thead className={`text-xs font-semibold text-gray-500 uppercase bg-gray-50 ${headerClassName}`}>
                     <tr>
                         {displayColumns.map((column, index) => {
@@ -437,7 +484,7 @@ export default function Table({
                                     {hasActions() && (
                                         <td data-label="Actions" className={`px-4 py-3 text-left ${compact ? 'px-3 py-2' : ''}`}>
                                             {rowActions.length > 0 ? (
-                                                <div className="flex flex-wrap justify-start gap-1">
+                                                <div className={`flex flex-wrap justify-start gap-1 ${actionsClassName}`}>
                                                     {rowActions.map((action, actionIndex) => (
                                                     <button
                                                         key={actionIndex}
@@ -446,7 +493,7 @@ export default function Table({
                                                             action.onClick(row);
                                                         }}
                                                         className={`
-                                                            group relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-xs font-medium transition-all duration-150
+                                                            group relative inline-flex h-9 ${action.showLabel ? 'gap-1.5 px-3' : 'w-9'} items-center justify-center rounded-lg text-xs font-medium transition-all duration-150
                                                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900
                                                             ${action.color === 'danger' ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40' : ''}
                                                             ${action.color === 'success' ? 'text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40' : ''}
@@ -463,6 +510,7 @@ export default function Table({
                                                         ) : (
                                                             <span className="sr-only">{action.label}</span>
                                                         )}
+                                                        {action.showLabel && <span>{action.label}</span>}
                                                         <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-slate-100 dark:text-slate-900">
                                                             {action.label}
                                                             <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-100" />

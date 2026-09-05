@@ -5,6 +5,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import { ConfirmModal } from '@/Components/Modal';
 import { toast } from 'sonner';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 import gameDefinitions from '@/GameEngines/gameDefinitions';
 
@@ -116,7 +117,7 @@ function shuffled(items, seed) {
 
 function varyRound(round, seed) {
     const varied = { ...round };
-    ['numbers', 'coins', 'items', 'options', 'letters', 'cells', 'weights', 'categories',
+    ['numbers', 'coins', 'items', 'options', 'choices', 'prefixes', 'letters', 'cells', 'weights', 'categories',
      'wordBank', 'correctWords', 'distractorWords', 'scrambled', 'pairs'].forEach((field, index) => {
         if (Array.isArray(varied[field])) varied[field] = shuffled(varied[field], seed + index + 1);
     });
@@ -169,6 +170,11 @@ function sanitizeProgress(progress, content) {
 
     return safeProgress;
 }
+
+const keepFocusedFieldVisible = (event) => {
+    if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+    window.setTimeout(() => event.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 150);
+};
 
 export default function GamesPlay({ result, game, preview = false }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -261,14 +267,13 @@ export default function GamesPlay({ result, game, preview = false }) {
 
     if (!definition || !EngineComponent || definition.comingSoon) {
         return (
-            <AuthenticatedLayout header={<div className="flex justify-between"><h2>{game.title}</h2><SecondaryButton onClick={() => router.visit(route('student.games.index'), { onError: () => toast.error('Unable to return to games. Please try again.') })}>Back to Games</SecondaryButton></div>}>
+            <AuthenticatedLayout header={<div className="w-full"><button type="button" onClick={() => router.visit(route('student.games.index'), { onError: () => toast.error('Unable to return to games. Please try again.') })} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800"><ArrowLeftIcon className="h-4 w-4" /> Back to Games</button></div>}>
                 <Head title={`Playing: ${game.title}`} />
-                <div className="min-h-screen p-6 flex items-center justify-center bg-white">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm max-w-md w-full text-center p-10">
+                <div className="flex min-h-[100dvh] items-center justify-center bg-white p-4 sm:p-6">
+                    <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm sm:p-10">
                         <div className="text-6xl mb-6">🚀</div>
                         <h3 className="text-2xl font-bold text-gray-800 mb-2">Coming Soon!</h3>
                         <p className="text-gray-600 mb-8">This game isn't available to play yet. Check back later or ask your teacher!</p>
-                        <SecondaryButton onClick={() => router.visit(route('student.games.index'), { onError: () => toast.error('Unable to return to games. Please try again.') })} className="px-8 py-3 rounded-full font-bold hover:scale-105">Back to Games</SecondaryButton>
                     </div>
                 </div>
             </AuthenticatedLayout>
@@ -277,11 +282,14 @@ export default function GamesPlay({ result, game, preview = false }) {
 
     return (
         <AuthenticatedLayout header={
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">{game.title}</h2>
+            <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                    <h2 className="break-words text-lg font-semibold leading-tight text-gray-800 sm:text-xl">{game.title}</h2>
                     {preview && <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700">Teacher preview</span>}
                 </div>
+                <button type="button" onClick={handleExit} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800">
+                    <ArrowLeftIcon className="h-4 w-4" /> Back to Games
+                </button>
             </div>
         }>
             <Head title={`Playing: ${game.title}`} />
@@ -321,16 +329,37 @@ export default function GamesPlay({ result, game, preview = false }) {
                     color: #1e293b !important;
                     background-color: #ffffff !important;
                 }
+                .student-game-play-stage input,
+                .student-game-play-stage select,
+                .student-game-play-stage textarea { scroll-margin-block: 9rem; }
+                .student-game-play-stage button,
+                .student-game-play-stage svg {
+                    -webkit-tap-highlight-color: transparent;
+                    touch-action: manipulation;
+                }
+                .student-game-play-stage [aria-roledescription="draggable"] {
+                    -webkit-user-select: none;
+                    user-select: none;
+                    touch-action: none;
+                }
+                .student-game-play-stage .student-game-shell > div:first-child > button { display: none !important; }
+                .student-game-play-stage .student-game-shell > div:first-child { justify-content: flex-end; }
                 @media (max-width: 640px) {
                     .student-game-play-stage { padding-top: 1rem !important; padding-bottom: 1rem !important; }
                     .student-game-play-stage .student-game-surface { border-radius: 1.25rem !important; padding: 1rem !important; }
+                    .student-game-play-stage input:not([type="checkbox"]):not([type="radio"]),
+                    .student-game-play-stage select,
+                    .student-game-play-stage textarea { font-size: 16px; }
+                }
+                @media (hover: none), (prefers-reduced-motion: reduce) {
+                    .student-game-play-stage .animate-in { animation: none !important; }
                 }
             `}</style>
 
-            <div className="student-game-play-stage relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-sky-50 to-amber-50 py-8">
+            <div className="student-game-play-stage relative min-h-[100dvh] overflow-x-hidden bg-gradient-to-br from-indigo-50 via-sky-50 to-amber-50 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-8" onFocusCapture={keepFocusedFieldVisible}>
                 <div className="pointer-events-none absolute left-0 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-200/40 blur-3xl" />
                 <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 translate-x-1/3 translate-y-1/3 rounded-full bg-cyan-200/40 blur-3xl" />
-                <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 xl:px-8">
                     {previewComplete && (
                         <div className="relative mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-center font-bold text-emerald-700 shadow-sm">
                             Preview complete — no student result was created.
