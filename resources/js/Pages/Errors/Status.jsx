@@ -70,7 +70,7 @@ export default function Status({ status = 500 }) {
                 <div className="error-status-orb two" aria-hidden="true" />
                 <button type="button" className="error-status-theme-toggle" aria-label="Toggle color theme" title="Toggle color theme" onClick={() => setIsDarkMode((value) => !value)}>{isDarkMode ? '☀' : '☾'}</button>
                 <section className="error-status-card" aria-labelledby="error-status-title">
-                    <div className="error-status-logo"><img src="/storage/images/studynestLogo.png" alt="StudyNest logo" /></div>
+                    <div className="error-status-logo"><img src="/images/studynestLogo.png" alt="StudyNest logo" /></div>
                     <p className="error-status-eyebrow">StudyNest · Error {status}</p>
                     <div className="error-status-code" aria-hidden="true">{status}</div>
                     <h1 id="error-status-title" className="error-status-title">{title}</h1>

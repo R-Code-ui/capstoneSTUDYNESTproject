@@ -70,7 +70,7 @@ export default function GuestLayout({ children, heading = 'Welcome Back!' }) {
                     position: fixed;
                     inset: 0;
                     z-index: 0;
-                    background-image: url('/storage/images/studynestbackgroundschool.jpeg');
+                    background-image: url('/images/studynestbackgroundschool.jpeg');
                     background-size: cover;
                     background-position: center;
                 }
@@ -165,7 +165,7 @@ export default function GuestLayout({ children, heading = 'Welcome Back!' }) {
                     <div className="auth-panel flex flex-col items-center border-b border-white/30 px-6 pb-5 pt-7 text-center sm:px-8">
                         <Link href="/" className="transition transform hover:scale-105 inline-block">
                             <img
-                                src="/storage/images/studynestLogo.png"
+                                src="/images/studynestLogo.png"
                                 alt="StudyNest Logo"
                                 className="h-14 sm:h-16 w-auto object-contain drop-shadow-sm"
                             />

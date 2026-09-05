@@ -314,7 +314,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     <div className="h-20 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
                         <Link href="/" className="flex items-center gap-3">
                             <img
-                                src="/storage/images/studynestLogo.png"
+                                src="/images/studynestLogo.png"
                                 alt="StudyNest Logo"
                                 className="h-8 w-auto object-contain"
                             />
@@ -345,7 +345,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </button>
                         <Link href="/" className="flex items-center gap-2">
                             <img
-                                src="/storage/images/studynestLogo.png"
+                                src="/images/studynestLogo.png"
                                 alt="StudyNest Logo"
                                 className="h-7 w-auto object-contain"
                             />
@@ -370,7 +370,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     <aside className={`studynest-mobile-drawer-panel absolute inset-y-0 left-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900 ${showingNavigationDropdown ? 'translate-x-0' : '-translate-x-full'}`}>
                         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
                             <Link href="/" onClick={closeMobileDrawer} className="flex items-center gap-2">
-                                <img src="/storage/images/studynestLogo.png" alt="StudyNest Logo" className="h-7 w-auto object-contain" />
+                                <img src="/images/studynestLogo.png" alt="StudyNest Logo" className="h-7 w-auto object-contain" />
                                 <span className="font-extrabold text-sm tracking-wider text-slate-800 dark:text-white">STUDYNEST</span>
                             </Link>
                             <button type="button" onClick={closeMobileDrawer} aria-label="Close navigation" className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">

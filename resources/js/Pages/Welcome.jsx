@@ -341,7 +341,7 @@ export default function Welcome({ auth }) {
                         {/* Brand Logo & Name */}
                         <a href="#home" className="flex items-center gap-2 sm:gap-3 group shrink-0">
                             <img
-                                src="/storage/images/studynestLogo.png"
+                                src="/images/studynestLogo.png"
                                 alt="StudyNest Logo"
                                 className="h-9 sm:h-12 w-auto object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
                             />
@@ -476,7 +476,7 @@ export default function Welcome({ auth }) {
                     {/* School background with a dark overlay for readable text */}
                     <div className="absolute inset-0 z-0">
                         <img
-                            src="/storage/images/studynestbackgroundschool.jpeg"
+                            src="/images/studynestbackgroundschool.jpeg"
                             alt="Ilijan Sur Elementary School"
                             className="w-full h-full object-cover object-center"
                         />
@@ -544,7 +544,7 @@ export default function Welcome({ auth }) {
                                             {/* Showcase Frame */}
                                             <div className="rounded-3xl bg-white/95 p-6 sm:p-8 shadow-2xl backdrop-blur-md border border-white flex items-center justify-center transition duration-300 hover:scale-105 group">
                                                 <img
-                                                    src="/storage/images/studynestLogo.png"
+                                                    src="/images/studynestLogo.png"
                                                     alt="StudyNest Main Logo"
                                                     className="w-full max-w-[170px] sm:max-w-[220px] h-auto object-contain drop-shadow-md transform transition duration-300 group-hover:rotate-2"
                                                 />

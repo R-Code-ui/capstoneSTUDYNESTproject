@@ -51,7 +51,7 @@
         <div class="orb orb-two" aria-hidden="true"></div>
         <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme" onclick="toggleTheme()">☾</button>
         <section class="error-card" aria-labelledby="error-title">
-            <div class="brand"><img src="{{ asset('storage/images/studynestLogo.png') }}" alt="StudyNest logo"></div>
+            <div class="brand"><img src="{{ asset('images/studynestLogo.png') }}" alt="StudyNest logo"></div>
             <p class="eyebrow">StudyNest · Error {{ $status }}</p>
             <div class="status" aria-hidden="true">{{ $status }}</div>
             <h1 id="error-title">{{ $title }}</h1>
