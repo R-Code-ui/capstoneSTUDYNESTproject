@@ -17,7 +17,7 @@ function DraggableWord({ id, word, matched, selected, onClick }) {
             {...attributes}
             disabled={matched}
             onClick={onClick}
-            className={`w-full px-5 py-4 rounded-2xl font-bold shadow-lg touch-none select-none ${matched ? 'bg-green-400 text-white cursor-default opacity-60' : 'bg-indigo-500 text-white cursor-grab active:cursor-grabbing border-b-4 border-indigo-700'} ${selected ? 'ring-4 ring-indigo-200' : ''}`}
+            className={`w-full min-w-0 break-words rounded-2xl px-2 py-2 text-xs font-bold leading-snug shadow-lg touch-none select-none sm:px-5 sm:py-4 sm:text-base ${matched ? 'bg-green-400 text-white cursor-default opacity-60' : 'bg-indigo-500 text-white cursor-grab active:cursor-grabbing border-b-4 border-indigo-700'} ${selected ? 'ring-4 ring-indigo-200' : ''}`}
         >
             {word}
         </button>
@@ -27,7 +27,7 @@ function DraggableWord({ id, word, matched, selected, onClick }) {
 function DroppableTarget({ id, word, matched, wrong, selected, onClick }) {
     const { setNodeRef, isOver } = useDroppable({ id, disabled: matched });
     return (
-        <button type="button" ref={setNodeRef} disabled={matched} onClick={onClick} className={`w-full px-5 py-4 rounded-2xl border-4 border-dashed text-center font-bold flex items-center justify-center min-h-[64px] ${matched ? 'bg-green-50 border-green-300 text-green-700 cursor-default' : wrong ? 'bg-red-50 border-red-300 text-red-600' : isOver || selected ? 'bg-indigo-50 border-indigo-400 text-indigo-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
+        <button type="button" ref={setNodeRef} disabled={matched} onClick={onClick} className={`flex min-h-12 w-full min-w-0 items-center justify-center break-words rounded-2xl border-4 border-dashed px-2 py-2 text-center text-xs font-bold leading-snug sm:min-h-[64px] sm:px-5 sm:py-4 sm:text-base ${matched ? 'bg-green-50 border-green-300 text-green-700 cursor-default' : wrong ? 'bg-red-50 border-red-300 text-red-600' : isOver || selected ? 'bg-indigo-50 border-indigo-400 text-indigo-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
             {word}
         </button>
     );
@@ -99,15 +99,15 @@ export default function MatchTheMeaning({ content, onComplete, onExit, onProgres
 
     return (
         <GameShell title="Match the Meaning" description={content.description} onExit={onExit}>
-            <div className="max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-3xl border border-indigo-100 shadow-xl">
+            <div className="mx-auto w-full max-w-2xl rounded-3xl border border-indigo-100 bg-white p-4 shadow-xl sm:p-6">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8">
-                        <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-8">
+                        <div className="flex min-w-0 flex-col gap-2 sm:gap-4">
                             {pairs.map((p) => (
                                 <DraggableWord key={p.word} id={`word-${p.word}`} word={p.word} matched={matchedWords.includes(p.word)} selected={selectedWord === p.word} onClick={() => !matchedWords.includes(p.word) && setSelectedWord(selectedWord === p.word ? null : p.word)} />
                             ))}
                         </div>
-                        <div className="flex flex-col gap-4">
+                        <div className="flex min-w-0 flex-col gap-2 sm:gap-4">
                             {rightOrder.map((w) => {
                                 const matchedPair = pairs.find((p) => p.match === w && matchedWords.includes(p.word));
                                 return <DroppableTarget key={w} id={`target-${w}`} word={w} matched={!!matchedPair} wrong={wrongTarget === w} selected={selectedWord !== null} onClick={() => handleSelectTarget(w)} />;

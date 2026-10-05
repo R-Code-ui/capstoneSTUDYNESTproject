@@ -89,7 +89,7 @@ export default function TeacherProfilePage({
                     >
                         ← Back
                     </button>
-                    <h2 className="principal-profile-heading min-w-0 flex-1 text-xl font-bold text-gray-800" title={`Teacher Profile: ${teacher.name}`}>
+                    <h2 className="principal-profile-heading min-w-0 flex-1 truncate text-xl font-bold text-gray-800" title={`Teacher Profile: ${teacher.name}`}>
                         Teacher Profile: {teacher.name}
                     </h2>
                 </div>

@@ -240,13 +240,13 @@ export default function QuizzesIndex({
                                                     data-card-tone={index % 5}
                                                     className={`student-quiz-card bg-gradient-to-br ${gradient.from} ${gradient.to} overflow-hidden rounded-2xl border border-gray-200/60 shadow-sm hover:border-blue-300 hover:shadow-md`}
                                                 >
-                                                    <div className="p-4 sm:p-5 xl:p-6">
+                                                    <div className="min-w-0 p-4 sm:p-5 xl:p-6">
                                                         <div className="flex flex-wrap items-start justify-between gap-2">
-                                                            <div className="flex flex-wrap gap-2">
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
+                                                            <div className="flex min-w-0 flex-wrap gap-2">
+                                                                <span className="inline-flex max-w-full items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm" title={quiz.subject}>
                                                                     {quiz.subject}
                                                                 </span>
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
+                                                                <span className="inline-flex max-w-full items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm" title={getTypeLabel(quiz.type)}>
                                                                     {getTypeLabel(quiz.type)}
                                                                 </span>
                                                             </div>
@@ -255,7 +255,7 @@ export default function QuizzesIndex({
                                                             </span>
                                                         </div>
 
-                                                        <h3 className="mt-3 max-w-full break-words text-lg font-semibold text-gray-800" title={quiz.title}>
+                                                        <h3 className="mt-3 line-clamp-3 max-w-full break-words text-lg font-semibold text-gray-800" title={quiz.title}>
                                                             {quiz.title}
                                                         </h3>
 

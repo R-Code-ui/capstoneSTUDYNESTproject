@@ -96,8 +96,8 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                             <span className="sm:hidden">Back</span>
                         </Link>
                         <div className="min-w-0">
-                            <h1 className="truncate text-xl font-semibold text-slate-800">{group.name}</h1>
-                            <p className="text-xs text-slate-500">{group.members.length} members{group.subject ? ` · ${group.subject.name}` : ''}</p>
+                            <h1 className="truncate text-xl font-semibold text-slate-800" title={group.name || ''}>{group.name}</h1>
+                            <p className="truncate text-xs text-slate-500">{group.members.length} members{group.subject ? ` · ${group.subject.name}` : ''}</p>
                         </div>
                     </div>
                     {canManage && (
@@ -117,6 +117,13 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                         overflow-wrap: anywhere;
                         word-break: break-word;
                         min-width: 0;
+                    }
+                    .teacher-group-conversation .group-message-sender {
+                        min-width: 0;
+                        max-width: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
                     }
                     .teacher-group-conversation .group-message-input {
                         overflow-wrap: anywhere;
@@ -180,7 +187,7 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                                     </div>
                                 )}
                                 <div className={`group-message-bubble ${isOwn ? 'is-own bg-blue-600 text-white' : 'is-other bg-slate-100 text-slate-800'} max-w-[75%] min-w-0 rounded-2xl px-4 py-2.5`}>
-                                    <div className={`${!isOwn && startsGroup ? 'flex' : 'hidden'} mb-1 items-center gap-2`}>
+                                    <div className={`${!isOwn && startsGroup ? 'flex' : 'hidden'} group-message-sender mb-1 items-center gap-2`}>
                                         <p className="min-w-0 break-words text-xs font-bold text-slate-500">{message.sender_name}{message.sender_id === group.owner_id ? ' · Teacher' : ''}</p>
                                     </div>
                                     <div className="flex items-start gap-2">
@@ -213,7 +220,7 @@ export default function MessageGroupConversation({ group, isTeacher = false, can
                         <ChevronDownIcon className={`h-5 w-5 text-slate-400 transition-transform xl:hidden ${showMembers ? 'rotate-180' : ''}`} />
                     </button>
                     <div className={`${showMembers ? 'block' : 'hidden'} mt-4 space-y-3 xl:block`}>
-                        {group.members.map((member) => <div key={member.id} className="flex items-center justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-700">{member.name}</p><p className="text-xs text-slate-400">{member.is_owner ? 'Group owner' : member.grade_level}</p></div>{canManage && !member.is_owner && <button title="Remove member" onClick={() => setConfirmation({ action: 'removeMember', member })} className="text-xs text-red-500 hover:text-red-700">Remove</button>}</div>)}
+                        {group.members.map((member) => <div key={member.id} className="flex items-center justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-700" title={member.name || ''}>{member.name}</p><p className="truncate text-xs text-slate-400" title={member.is_owner ? 'Group owner' : member.grade_level || ''}>{member.is_owner ? 'Group owner' : member.grade_level}</p></div>{canManage && !member.is_owner && <button title="Remove member" onClick={() => setConfirmation({ action: 'removeMember', member })} className="text-xs text-red-500 hover:text-red-700">Remove</button>}</div>)}
                     </div>
                 </aside>
             </div>

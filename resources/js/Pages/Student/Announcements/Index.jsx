@@ -213,7 +213,7 @@ export default function AnnouncementsIndex({
                                                         ? 'opacity-90'
                                                         : ''
                                                 }`}>
-                                                    <div className="p-5">
+                                                    <div className="min-w-0 p-5">
                                                         <div className="flex items-start gap-3 sm:gap-4">
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex flex-wrap items-center gap-2">
@@ -235,18 +235,18 @@ export default function AnnouncementsIndex({
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <h3 className="mt-2 max-w-full break-words text-lg font-semibold text-gray-800" title={announcement.title}>
+                                                                <h3 className="mt-2 line-clamp-2 max-w-full break-words text-lg font-semibold text-gray-800" title={announcement.title}>
                                                                     {announcement.title}
                                                                 </h3>
-                                                                <p className="mt-1 text-sm text-gray-600 line-clamp-2 break-words">
+                                                                <p className="mt-1 line-clamp-2 break-words text-sm text-gray-600" title={announcement.content}>
                                                                     {announcement.content}
                                                                 </p>
-                                                                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                                                                    <span>{announcement.category}</span>
+                                                                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-3 text-xs text-gray-500">
+                                                                    <span className="inline-block max-w-full truncate align-bottom" title={announcement.category}>{announcement.category}</span>
                                                                     <span>•</span>
-                                                                    <span>By {announcement.posted_by}</span>
+                                                                    <span className="inline-block max-w-full truncate align-bottom" title={announcement.posted_by}>By {announcement.posted_by}</span>
                                                                     <span>•</span>
-                                                                    <span>{announcement.created_at}</span>
+                                                                    <span className="inline-block max-w-full truncate align-bottom" title={announcement.created_at}>{announcement.created_at}</span>
                                                                 </div>
                                                             </div>
                                                             <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -271,7 +271,7 @@ export default function AnnouncementsIndex({
                                                             ? 'opacity-90'
                                                             : ''
                                                     }`}>
-                                                        <div className="p-5">
+                                                        <div className="min-w-0 p-5">
                                                             <div className="flex items-start gap-3 sm:gap-4">
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex flex-wrap items-center gap-2">
@@ -289,18 +289,18 @@ export default function AnnouncementsIndex({
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <h3 className="mt-2 max-w-full break-words text-lg font-semibold text-gray-800" title={announcement.title}>
+                                                                    <h3 className="mt-2 line-clamp-2 max-w-full break-words text-lg font-semibold text-gray-800" title={announcement.title}>
                                                                         {announcement.title}
                                                                     </h3>
-                                                                    <p className="mt-1 text-sm text-gray-600 line-clamp-2 break-words">
+                                                                    <p className="mt-1 line-clamp-2 break-words text-sm text-gray-600" title={announcement.content}>
                                                                         {announcement.content}
                                                                     </p>
-                                                                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                                                                        <span>{announcement.category}</span>
+                                                                    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-3 text-xs text-gray-500">
+                                                                        <span className="inline-block max-w-full truncate align-bottom" title={announcement.category}>{announcement.category}</span>
                                                                         <span>•</span>
-                                                                        <span>By {announcement.posted_by}</span>
+                                                                        <span className="inline-block max-w-full truncate align-bottom" title={announcement.posted_by}>By {announcement.posted_by}</span>
                                                                         <span>•</span>
-                                                                        <span>{announcement.created_at}</span>
+                                                                        <span className="inline-block max-w-full truncate align-bottom" title={announcement.created_at}>{announcement.created_at}</span>
                                                                     </div>
                                                                 </div>
                                                                 <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />

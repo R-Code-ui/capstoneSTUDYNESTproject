@@ -37,7 +37,7 @@ export default function ChatBubble({
             )}
             <div className={`flex min-w-0 max-w-[75%] flex-col ${isMine ? 'items-end' : 'items-start'}`}>
                 {!isMine && startsGroup && (
-                    <p className="direct-message-sender mb-1 max-w-full truncate px-1 text-xs font-semibold text-slate-500">
+                    <p className="direct-message-sender mb-1 max-w-full truncate px-1 text-xs font-semibold text-slate-500" title={senderRole ? `${senderName} · ${senderRole}` : senderName}>
                         {senderName}{senderRole ? ` · ${senderRole}` : ''}
                     </p>
                 )}

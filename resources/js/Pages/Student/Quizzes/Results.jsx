@@ -52,7 +52,7 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                     >
                         <ArrowLeftIcon className="h-4 w-4" /> Back
                     </button>
-                    <span className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
+                    <span className="min-w-0 flex-1 truncate text-xl font-semibold leading-tight text-gray-800" title={`Quiz Results: ${quiz.title}`}>
                         Quiz Results: {quiz.title}
                     </span>
                 </div>
@@ -110,7 +110,7 @@ export default function QuizzesResults({ attempt, quiz, questions }) {
                         className={`student-quiz-result-summary student-result-card overflow-hidden rounded-2xl border ${passed ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-sky-50' : 'border-red-500 bg-gradient-to-br from-rose-50 to-amber-50'} border-t-4 shadow-sm`}
                     >
                         <div className="px-4 py-7 text-center sm:p-8">
-                            <h1 className="mb-4 break-words text-xl font-bold text-gray-800 xl:hidden">{quiz.title}</h1>
+                            <h1 className="mb-4 line-clamp-2 break-words text-xl font-bold text-gray-800 xl:hidden" title={quiz.title}>{quiz.title}</h1>
                             <div className="text-6xl mb-4">
                                 {passed ? (
                                     <CheckCircleIcon className="w-20 h-20 mx-auto text-emerald-500" />

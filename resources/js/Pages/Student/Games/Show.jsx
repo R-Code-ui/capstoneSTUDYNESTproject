@@ -127,9 +127,9 @@ export default function GamesShow({
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
                                     {difficultyLabel} level
                                 </span>
-                                <span className="text-sm text-gray-500 flex items-center gap-1">
-                                    <UserIcon className="w-4 h-4" />
-                                    {game.teacher}
+                                <span className="flex w-full min-w-0 items-center gap-1 text-sm text-gray-500" title={game.teacher}>
+                                    <UserIcon className="h-4 w-4 shrink-0" />
+                                    <span className="min-w-0 flex-1 truncate">{game.teacher}</span>
                                 </span>
                                 {game.due_date && (
                                     <span className="text-sm text-gray-500 flex items-center gap-1">

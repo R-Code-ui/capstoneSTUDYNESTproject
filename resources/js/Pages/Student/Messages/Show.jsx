@@ -88,14 +88,14 @@ export default function MessagesShow({ teacher, messages }) {
                     <Link href={route('student.messages.index')} onError={() => toast.error('Unable to return to messages. Please try again.')} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800 xl:hidden">
                         <ArrowLeftIcon className="h-4 w-4" /> Back to Messages
                     </Link>
-                    <div className="hidden w-full items-center justify-between gap-4 xl:flex">
-                        <div className="min-w-0">
-                            <div className="break-words text-xl font-semibold leading-tight text-gray-800">{teacher.name}</div>
-                            <div className="text-xs text-gray-400">Teacher</div>
-                        </div>
+                    <div className="hidden w-full min-w-0 items-center gap-3 xl:flex">
                         <Link href={route('student.messages.index')} onError={() => toast.error('Unable to return to messages. Please try again.')} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-slate-800">
                             <ArrowLeftIcon className="h-4 w-4" /> Back to Messages
                         </Link>
+                        <div className="min-w-0">
+                            <div className="truncate text-xl font-semibold leading-tight text-gray-800" title={teacher.name}>{teacher.name}</div>
+                            <div className="text-xs text-gray-400">Teacher</div>
+                        </div>
                     </div>
                 </div>
             }
@@ -151,7 +151,7 @@ export default function MessagesShow({ teacher, messages }) {
                         <div className="p-4 sm:p-6">
                             <div className="mb-3 flex items-center gap-3 border-b border-gray-200 pb-3 xl:hidden">
                                 <div className="direct-message-avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">{teacher.name?.charAt(0)}</div>
-                                <div className="min-w-0"><p className="break-words font-bold text-gray-800">{teacher.name}</p><p className="text-xs text-gray-500">Teacher</p></div>
+                                <div className="min-w-0"><p className="truncate font-bold text-gray-800" title={teacher.name}>{teacher.name}</p><p className="text-xs text-gray-500">Teacher</p></div>
                             </div>
                             {/* ===== Thread ===== */}
                             <div className="max-h-[60vh] min-h-[300px] space-y-1 overflow-y-auto px-1 py-2">

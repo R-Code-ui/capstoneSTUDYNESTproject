@@ -282,7 +282,7 @@ export default function PrincipalDashboard({
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <p className="truncate font-semibold text-gray-900 dark:text-white" title={teacher.name}>{teacher.name || 'â€”'}</p>
-                                                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Last sign-in: {teacher.last_activity || 'â€”'}</p>
+                                                    <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400" title={teacher.last_activity || ''}>Last sign-in: {teacher.last_activity || 'â€”'}</p>
                                                 </div>
                                                 <StatusBadge status={teacher.is_active ? 'active' : 'inactive'} />
                                             </div>
@@ -309,7 +309,7 @@ export default function PrincipalDashboard({
                                 {student_participation.map((grade) => (
                                     <div key={grade.grade_level} className="space-y-1">
                                         <div className="flex items-start justify-between gap-3 text-sm">
-                                            <span className="font-medium text-gray-700">{grade.grade_level}</span>
+                                            <span className="min-w-0 truncate font-medium text-gray-700" title={grade.grade_level || ''}>{grade.grade_level}</span>
                                             <span className="shrink-0 text-gray-500">{grade.active_students} / {grade.total_students} ({grade.participation_rate}%)</span>
                                         </div>
                                         <div className="w-full bg-gray-100 rounded-full h-2">
@@ -363,7 +363,7 @@ export default function PrincipalDashboard({
                                                 <div className="block max-w-[260px] truncate text-sm font-medium text-gray-800" title={announcement.title || ''}>{announcement.title || '—'}</div>
                                                 <div className="mt-1 flex flex-col gap-1 text-xs text-gray-500 sm:flex-row sm:justify-between">
                                                     <span className="max-w-[150px] truncate" title={announcement.posted_by || ''}>By {announcement.posted_by || '—'}</span>
-                                                    <span className="shrink-0">{announcement.date}</span>
+                                                    <span className="max-w-full truncate sm:max-w-[140px]" title={announcement.date || ''}>{announcement.date}</span>
                                                 </div>
                                             </div>
                                         ))
@@ -384,11 +384,11 @@ export default function PrincipalDashboard({
                             ) : (
                                 recent_activities.map((activity, index) => (
                                     <div key={index} className="principal-dashboard-item flex flex-col gap-1 rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-slate-800 sm:flex-row sm:items-center sm:justify-between">
-                                        <div className="min-w-0 text-gray-600" title={`${activity.teacher || ''} ${activity.action || ''}`}>
+                                        <div className="min-w-0 truncate text-gray-600" title={`${activity.teacher || ''} ${activity.action || ''}`}>
                                             <span className="font-medium text-gray-800">{activity.teacher || '—'}</span>
                                             <span className="text-gray-500"> {activity.action || ''}</span>
                                         </div>
-                                        <span className="text-xs text-gray-400 sm:ml-2 sm:shrink-0">{activity.date}</span>
+                                        <span className="max-w-full truncate text-xs text-gray-400 sm:ml-2 sm:max-w-[140px] sm:shrink-0" title={activity.date || ''}>{activity.date}</span>
                                     </div>
                                 ))
                             )}
@@ -401,7 +401,7 @@ export default function PrincipalDashboard({
                             <h3 className="text-sm font-semibold text-gray-700">Quick Navigation</h3>
                         </div>
                         <div className="p-4 sm:p-6">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                                 <Link
                                     href={route('principal.users.index')}
                                     onError={handleNavigationError}
@@ -418,6 +418,15 @@ export default function PrincipalDashboard({
                                 >
                                     <UsersIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-emerald-600" />
                                     <span className="text-xs font-medium text-center">Teacher Monitoring</span>
+                                </Link>
+
+                                <Link
+                                    href={route('principal.students.index')}
+                                    onError={handleNavigationError}
+                                    className="principal-dashboard-quick-link group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-700 transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-200 dark:hover:bg-gray-700/60 sm:min-h-0 sm:p-4"
+                                >
+                                    <AcademicCapIcon className="w-6 h-6 mb-2 text-gray-500 group-hover:text-blue-600" />
+                                    <span className="text-xs font-medium text-center">Student Directory</span>
                                 </Link>
 
                                 <Link

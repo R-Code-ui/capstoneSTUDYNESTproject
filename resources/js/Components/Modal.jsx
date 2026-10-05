@@ -215,6 +215,7 @@ export function ConfirmModal({
     size = 'sm',
     danger = false,
     icon = null,
+    messageClassName = '',
 }) {
     const colorClasses = {
         blue: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
@@ -304,8 +305,8 @@ export function ConfirmModal({
                 ) : (
                     <div className="mx-auto flex-shrink-0 sm:mx-0">{icons[iconType]}</div>
                 )}
-                <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <p className="text-sm text-gray-500">
+                <div className="mt-3 min-w-0 flex-1 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <p className={`min-w-0 break-words text-sm text-gray-500 ${messageClassName}`}>
                         {message}
                     </p>
                 </div>

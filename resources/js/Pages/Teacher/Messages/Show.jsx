@@ -80,15 +80,15 @@ export default function MessagesShow({ student, messages }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-3">
+                <div className="flex w-full min-w-0 items-center gap-3">
                     <SecondaryButton onClick={() => router.visit(route('teacher.messages.index'))}>
                         <ArrowLeftIcon className="w-4 h-4" />
                     </SecondaryButton>
-                    <div>
-                        <div className="text-xl font-semibold leading-tight text-gray-800">
+                    <div className="min-w-0">
+                        <div className="truncate text-xl font-semibold leading-tight text-gray-800" title={student.name || ''}>
                             {student.name}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="truncate text-xs text-gray-400">
                             {student.grade_level}{student.lrn ? ` • Student ID: ${student.lrn}` : ''}
                         </div>
                     </div>

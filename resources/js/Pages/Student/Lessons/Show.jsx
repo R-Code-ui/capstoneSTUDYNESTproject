@@ -102,7 +102,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                         >
                             <ArrowLeftIcon className="h-4 w-4" /> Back
                         </Link>
-                        <span className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={lesson.title}>
+                        <span className="min-w-0 flex-1 truncate text-xl font-semibold leading-tight text-gray-800" title={lesson.title}>
                             {lesson.title}
                         </span>
                     </div>
@@ -190,7 +190,7 @@ export default function LessonsShow({ lesson, related_activities }) {
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="space-y-4 p-4 sm:p-6">
                             <div className="flex flex-wrap items-center gap-3">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="inline-flex max-w-full items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title={lesson.subject || ''}>
                                     {lesson.subject}
                                 </span>
                                 {lesson.is_completed && (
@@ -199,20 +199,20 @@ export default function LessonsShow({ lesson, related_activities }) {
                                         Completed
                                     </span>
                                 )}
-                                <span className="text-sm text-gray-500 flex items-center gap-1">
+                                <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-sm text-gray-500" title={lesson.teacher || ''}>
                                     <UserIcon className="w-4 h-4" />
-                                    {lesson.teacher}
+                                    <span className="truncate">{lesson.teacher}</span>
                                 </span>
-                                <span className="text-sm text-gray-500 flex items-center gap-1">
+                                <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-sm text-gray-500" title={lesson.publish_date || ''}>
                                     <CalendarIcon className="w-4 h-4" />
-                                    {lesson.publish_date}
+                                    <span className="truncate">{lesson.publish_date}</span>
                                 </span>
                             </div>
 
                             <div className="xl:hidden">
-                                <h3 className="flex min-w-0 max-w-full items-start gap-2 break-words text-2xl font-bold text-gray-800" title={lesson.title}>
+                                <h3 className="flex min-w-0 max-w-full items-start gap-2 text-2xl font-bold text-gray-800" title={lesson.title}>
                                     <BookOpenIcon className="w-6 h-6 text-blue-500 shrink-0" />
-                                    {lesson.title}
+                                    <span className="line-clamp-2 min-w-0">{lesson.title}</span>
                                 </h3>
                             </div>
 
@@ -286,21 +286,21 @@ export default function LessonsShow({ lesson, related_activities }) {
                                 <div className="p-4 sm:p-6">
                                     <div className="flex flex-wrap gap-3">
                                         {related_activities.assignment && (
-                                            <Link href={route('student.assignments.show', related_activities.assignment.id)} onError={() => toast.error('Unable to open the related assignment. Please try again.')} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-amber-700 sm:w-auto">
+                                            <Link href={route('student.assignments.show', related_activities.assignment.id)} onError={() => toast.error('Unable to open the related assignment. Please try again.')} className="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-amber-700 sm:w-auto sm:max-w-full" title={`Open Assignment: ${related_activities.assignment.title || ''}`}>
                                                 <ClipboardDocumentListIcon className="w-4 h-4" />
-                                                Open Assignment: {related_activities.assignment.title}
+                                                <span className="truncate">Open Assignment: {related_activities.assignment.title}</span>
                                             </Link>
                                         )}
                                         {related_activities.quiz && (
-                                            <Link href={route('student.quizzes.show', related_activities.quiz.id)} onError={() => toast.error('Unable to open the related quiz. Please try again.')} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-purple-700 sm:w-auto">
+                                            <Link href={route('student.quizzes.show', related_activities.quiz.id)} onError={() => toast.error('Unable to open the related quiz. Please try again.')} className="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-purple-700 sm:w-auto sm:max-w-full" title={`Take Quiz: ${related_activities.quiz.title || ''}`}>
                                                 <ChartBarIcon className="w-4 h-4" />
-                                                Take Quiz: {related_activities.quiz.title}
+                                                <span className="truncate">Take Quiz: {related_activities.quiz.title}</span>
                                             </Link>
                                         )}
                                         {related_activities.game && (
-                                            <Link href={route('student.games.show', related_activities.game.id)} onError={() => toast.error('Unable to open the related game. Please try again.')} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-emerald-700 sm:w-auto">
+                                            <Link href={route('student.games.show', related_activities.game.id)} onError={() => toast.error('Unable to open the related game. Please try again.')} className="inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-emerald-700 sm:w-auto sm:max-w-full" title={`Play Game: ${related_activities.game.title || ''}`}>
                                                 <PuzzlePieceIcon className="w-4 h-4" />
-                                                Play Game: {related_activities.game.title}
+                                                <span className="truncate">Play Game: {related_activities.game.title}</span>
                                             </Link>
                                         )}
                                     </div>

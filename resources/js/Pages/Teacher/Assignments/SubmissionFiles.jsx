@@ -1,7 +1,6 @@
 import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'sonner';
 import {
     ArrowLeftIcon,
@@ -67,16 +66,16 @@ export default function SubmissionFiles({ submission, assignment, student }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <span className="assignment-page-clamp text-xl font-semibold leading-tight text-gray-800">
+                <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+                    <span className="assignment-page-clamp min-w-0 flex-1 text-xl font-semibold leading-tight text-gray-800">
                         {student.name} – Submitted Files
                     </span>
-                    <SecondaryButton className="w-full justify-center sm:w-auto" onClick={() => router.visit(route('teacher.assignments.grade', assignment.id), {
+                    <button type="button" className="order-first inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-blue-300 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-950" onClick={() => router.visit(route('teacher.assignments.grade', assignment.id), {
                         onError: () => toast.error('Unable to return to grading. Please try again.'),
-                    })}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                        Back to Grading
-                    </SecondaryButton>
+                    })} aria-label="Back to Grading" title="Back to Grading">
+                        <ArrowLeftIcon className="h-4 w-4" />
+                        Back
+                    </button>
                 </div>
             }
         >

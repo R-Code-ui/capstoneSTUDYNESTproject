@@ -235,29 +235,29 @@ export default function AssignmentsIndex({
                                                     data-card-tone={index % 5}
                                                     className={`student-assignment-card overflow-hidden rounded-2xl border border-gray-200/60 bg-gradient-to-br ${gradient.from} ${gradient.to} shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md`}
                                                 >
-                                                    <div className="p-6">
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
+                                                    <div className="min-w-0 p-6">
+                                                        <div className="flex min-w-0 items-start justify-between gap-2">
+                                                            <span className="inline-flex max-w-[40%] min-w-0 items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm" title={assignment.subject || ''}>
                                                                 {assignment.subject}
                                                             </span>
-                                                            <div className="flex flex-wrap justify-end gap-1.5">
+                                                            <div className="flex min-w-0 flex-wrap justify-end gap-1.5">
                                                                 <span className={`text-xs font-medium ${getStatusColor(assignment.status)} bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm`}>
                                                                     {getStatusLabel(assignment.status)}
                                                                 </span>
                                                                 <StatusBadge status={getDeadlineStatus(assignment)} size="sm" />
                                                             </div>
                                                         </div>
-                                                        <h3 className="mt-3 max-w-full break-words text-lg font-semibold text-gray-800" title={assignment.title}>
+                                                        <h3 className="mt-3 line-clamp-3 max-w-full break-words text-lg font-semibold text-gray-800" title={assignment.title}>
                                                             {assignment.title}
                                                         </h3>
                                                         <div className="mt-2 flex flex-wrap gap-2">
-                                                            <span className="text-sm text-gray-700 bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                                            <span className="max-w-full truncate rounded-full bg-white/50 px-2 py-0.5 text-sm text-gray-700 backdrop-blur-sm" title={assignment.assignment_type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''}>
                                                                 {assignment.assignment_type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                                             </span>
                                                             {assignment.due_date && (
-                                                                <span className="text-sm text-gray-700 flex items-center gap-1 bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                                                <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-white/50 px-2 py-0.5 text-sm text-gray-700 backdrop-blur-sm" title={assignment.due_date}>
                                                                     <CalendarIcon className="w-3 h-3" />
-                                                                    {assignment.due_date}
+                                                                    <span className="truncate">{assignment.due_date}</span>
                                                                 </span>
                                                             )}
                                                         </div>

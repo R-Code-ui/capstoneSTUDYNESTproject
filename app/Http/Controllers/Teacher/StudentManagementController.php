@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\StudyNestNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Gate;
@@ -170,6 +171,8 @@ class StudentManagementController extends Controller
             ]);
         });
 
+        app(StudyNestNotificationService::class)->studentAccountCreated($user, $teacher);
+
         // Return to the first page without any active filters so the newly
         // created student is immediately visible at the top of the table.
         return redirect()
@@ -209,6 +212,9 @@ class StudentManagementController extends Controller
             return redirect()->back()->with('error', 'You are not assigned to this grade level.');
         }
 
+        $previousGradeLevel = $user->grade_level;
+        $previousSchoolYear = $user->currentEnrollment?->school_year;
+        $previousLrn = $user->lrn;
         $name = trim($validated['first_name'] . ' ' . ($validated['middle_name'] ? $validated['middle_name'] . ' ' : '') . $validated['last_name']);
 
         DB::transaction(function () use ($user, $validated, $name) {
@@ -220,18 +226,35 @@ class StudentManagementController extends Controller
             'is_active' => $validated['is_active'] ?? $user->is_active,
             ]);
 
-            $current = $user->enrollments()->where('status', 'active')->latest('id')->first();
-            if ($current && $current->school_year === $validated['school_year'] && $current->grade_level === $validated['grade_level']) {
-                $current->update(['enrolled_at' => $current->enrolled_at ?? now()]);
-            } else {
-                $user->enrollments()->where('status', 'active')->update(['status' => 'completed']);
-                $user->enrollments()->create([
-                    'school_year' => $validated['school_year'],
-                    'grade_level' => $validated['grade_level'],
-                    'status' => 'active',
-                ]);
-            }
+            $user->enrollments()
+                ->where('status', 'active')
+                ->where('school_year', '!=', $validated['school_year'])
+                ->update(['status' => 'completed']);
+
+            $enrollment = $user->enrollments()->firstOrNew([
+                'school_year' => $validated['school_year'],
+            ]);
+
+            $enrollment->fill([
+                'grade_level' => $validated['grade_level'],
+                'status' => 'active',
+                'enrolled_at' => $enrollment->enrolled_at ?? now(),
+            ])->save();
         });
+
+        $notifications = app(StudyNestNotificationService::class);
+
+        if ($previousGradeLevel !== $validated['grade_level']) {
+            $notifications->studentGradeLevelChanged($user, $previousGradeLevel, $validated['grade_level']);
+        }
+
+        if ($previousSchoolYear !== $validated['school_year']) {
+            $notifications->studentSchoolYearChanged($user, $previousSchoolYear, $validated['school_year']);
+        }
+
+        if ($previousLrn !== $validated['lrn']) {
+            $notifications->studentLoginIdChanged($user, $validated['lrn']);
+        }
 
         return redirect()->back()->with('success', 'Student updated successfully!');
     }
@@ -260,6 +283,8 @@ class StudentManagementController extends Controller
             'password' => Hash::make($validated['new_password']),
             'must_change_password' => false,
         ]);
+
+        app(StudyNestNotificationService::class)->passwordChanged($user, $teacher);
 
         return redirect()->back()->with('success', 'Password reset successfully!');
     }
@@ -301,7 +326,12 @@ class StudentManagementController extends Controller
             abort(403);
         }
 
+        $wasInactive = !$user->is_active;
         $user->update(['is_active' => true]);
+
+        if ($wasInactive) {
+            app(StudyNestNotificationService::class)->studentAccountRestored($user);
+        }
 
         return redirect()->back()->with('success', 'Student restored successfully!');
     }

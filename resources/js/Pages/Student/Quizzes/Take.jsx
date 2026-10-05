@@ -244,8 +244,8 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
-                    <span className="min-w-0 max-w-full break-words text-lg font-semibold leading-tight text-gray-800 sm:text-xl" title={quiz.title}>
+                <div className="flex w-full min-w-0 flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
+                    <span className="w-full min-w-0 truncate text-lg font-semibold leading-tight text-gray-800 sm:flex-1 sm:text-xl" title={quiz.title}>
                         {quiz.title}
                     </span>
                     <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end sm:gap-4">
@@ -272,6 +272,7 @@ export default function QuizzesTake({ attempt, quiz, questions }) {
             >
                 <style>{`
                     .studynest-layout.theme-dark .student-quiz-take-page .bg-white { background-color: rgb(15 23 42) !important; border-color: rgb(51 65 85) !important; }
+                    .studynest-layout.theme-dark .student-quiz-take-page .bg-white\\/95 { background-color: rgb(15 23 42 / 0.95) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page .bg-gray-200 { background-color: rgb(51 65 85) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page .bg-gray-50 { background-color: rgb(30 41 59) !important; }
                     .studynest-layout.theme-dark .student-quiz-take-page .border-gray-200,

@@ -35,13 +35,13 @@ function Basket({ id, label, count, onClick, active }) {
             ref={setNodeRef}
             onClick={onClick}
             disabled={!onClick}
-            className={`flex-1 min-h-[160px] rounded-3xl border-4 border-dashed flex flex-col items-center justify-center gap-3
+            className={`flex-1 min-h-[120px] rounded-3xl border-4 border-dashed flex flex-col items-center justify-center gap-2 sm:min-h-[160px] sm:gap-3
                 ${onClick ? 'cursor-pointer' : 'cursor-default'}
                 ${isOver || active ? 'border-indigo-400 bg-indigo-50' : 'border-indigo-200 bg-white'}
             `}
         >
-            <span className="text-xl font-black text-indigo-900">{label}</span>
-            <div className="bg-indigo-100 px-4 py-1 rounded-full text-sm font-bold text-indigo-600">
+            <span className="text-base font-black text-indigo-900 sm:text-xl">{label}</span>
+            <div className="rounded-full bg-indigo-100 px-2 py-1 text-xs font-bold text-indigo-600 sm:px-4 sm:text-sm">
                 {count} items
             </div>
         </button>
@@ -130,25 +130,27 @@ export default function SortingBaskets({ content, onComplete, onExit, onProgress
 
     return (
         <GameShell title="Sorting Baskets" description={content.description} onExit={onExit}>
-            <div className="max-w-2xl mx-auto flex flex-col gap-8 p-6 bg-white rounded-3xl border border-indigo-100 shadow-xl">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-3xl border border-indigo-100 bg-white p-4 shadow-xl sm:p-6">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="flex flex-wrap gap-4 justify-center min-h-[5rem] p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                        {items.filter((i) => !i.placed).map((it) => (
-                            <DraggableItem
-                                key={it.id}
-                                id={it.id}
-                                value={it.value}
-                                placed={it.placed}
-                                selected={selectedItem === it.id}
-                                onClick={() => handleSelectItem(it.id)}
-                            />
-                        ))}
+                    <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-col sm:gap-6">
+                        <div className="grid min-h-[5rem] grid-cols-2 justify-items-center gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 p-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-4 sm:p-4">
+                            {items.filter((i) => !i.placed).map((it) => (
+                                <DraggableItem
+                                    key={it.id}
+                                    id={it.id}
+                                    value={it.value}
+                                    placed={it.placed}
+                                    selected={selectedItem === it.id}
+                                    onClick={() => handleSelectItem(it.id)}
+                                />
+                            ))}
+                        </div>
+                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:gap-6">
+                            <Basket id="basket-A" label={round.basketA} count={basketACount} onClick={() => selectedItem && placeItem(selectedItem, round.basketA)} active={selectedItem !== null} />
+                            <Basket id="basket-B" label={round.basketB} count={basketBCount} onClick={() => selectedItem && placeItem(selectedItem, round.basketB)} active={selectedItem !== null} />
+                        </div>
+                        <p className="col-span-2 text-center text-xs font-medium uppercase tracking-widest text-slate-500 sm:text-sm">Tap an item, then tap a basket to sort it, or drag to sort.</p>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                        <Basket id="basket-A" label={round.basketA} count={basketACount} onClick={() => selectedItem && placeItem(selectedItem, round.basketA)} active={selectedItem !== null} />
-                        <Basket id="basket-B" label={round.basketB} count={basketBCount} onClick={() => selectedItem && placeItem(selectedItem, round.basketB)} active={selectedItem !== null} />
-                    </div>
-                    <p className="text-center text-sm text-slate-500 font-medium uppercase tracking-widest">Tap an item, then tap a basket to sort it, or drag to sort.</p>
                 </DndContext>
                 {finished && (
                     <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-200">

@@ -160,9 +160,9 @@ export default function StudentDirectory({
                         <p className="text-sm text-slate-600 dark:text-slate-400">This directory provides read-only student information.</p>
                         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {details.map(([label, value]) => (
-                                <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                                    <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</dt>
-                                    <dd className="mt-1 break-words text-sm font-medium text-slate-800 dark:text-slate-100">{value}</dd>
+                                <div key={label} className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+                                    <dt className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title={label}>{label}</dt>
+                                    <dd className="mt-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100" title={String(value ?? '')}>{value}</dd>
                                 </div>
                             ))}
                         </dl>

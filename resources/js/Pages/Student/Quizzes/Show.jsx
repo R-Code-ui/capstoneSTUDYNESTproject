@@ -55,7 +55,7 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
         <AuthenticatedLayout
             header={
                 <div className="flex w-full min-w-0 items-center">
-                    <span className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
+                    <span className="min-w-0 flex-1 truncate text-xl font-semibold leading-tight text-gray-800" title={quiz.title}>
                         {quiz.title}
                     </span>
                 </div>
@@ -110,23 +110,23 @@ export default function QuizzesShow({ quiz, can_take, current_attempt }) {
                     {/* ===== Quiz Information ===== */}
                     <div className="student-quiz-info-card overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                         <div className="space-y-5 p-4 sm:p-6">
-                            <div className="flex flex-wrap items-center gap-3">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <span className="inline-flex max-w-full items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title={quiz.subject}>
                                     {quiz.subject}
                                 </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span className="inline-flex max-w-full items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title={getTypeLabel(quiz.type)}>
                                     {getTypeLabel(quiz.type)}
                                 </span>
-                                <span className="text-sm text-gray-500 flex items-center gap-1">
+                                <span className="flex min-w-0 max-w-full items-center gap-1 text-sm text-gray-500" title={quiz.teacher}>
                                     <UserIcon className="w-4 h-4" />
-                                    {quiz.teacher}
+                                    <span className="truncate">{quiz.teacher}</span>
                                 </span>
                             </div>
 
                             <div className="xl:hidden">
-                                <h1 className="flex min-w-0 max-w-full items-start gap-2 break-words text-xl font-bold text-gray-800 sm:text-2xl" title={quiz.title}>
+                                <h1 className="flex min-w-0 max-w-full items-start gap-2 text-xl font-bold text-gray-800 sm:text-2xl" title={quiz.title}>
                                     <DocumentTextIcon className="w-6 h-6 text-blue-500 shrink-0" />
-                                    {quiz.title}
+                                    <span className="line-clamp-2 min-w-0 break-words">{quiz.title}</span>
                                 </h1>
                             </div>
 

@@ -103,7 +103,7 @@ export default function AreaBlocks({ content, onComplete, onExit, onProgress, in
                                     onClick={() => toggleCell(row * round.gridCols + col)}
                                     disabled={!!feedback}
                                     aria-label={`Row ${row + 1}, column ${col + 1}`}
-                                    className={`w-4 h-4 sm:w-8 sm:h-8 rounded-md border transition
+                                    className={`w-7 h-7 ${round.gridCols >= 10 ? 'max-sm:w-6 max-sm:h-6' : ''} sm:w-8 sm:h-8 rounded-md border transition
                                         ${isFilled ? 'bg-lime-500 border-lime-600' : 'bg-gray-50 border-gray-200 hover:border-lime-300'}
                                     `}
                                 />

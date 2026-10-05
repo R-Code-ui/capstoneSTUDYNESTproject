@@ -53,18 +53,18 @@ export default function NumberLineRunner({ content, onComplete, onExit, onProgre
 
     return (
         <GameShell title="Number Line Runner" description={content.description} roundLabel={`Round ${roundIndex + 1} of ${rounds.length}`} onExit={onExit}>
-            <div className="flex flex-col items-center gap-8 p-6 bg-blue-50 rounded-3xl border border-blue-100 shadow-inner max-w-2xl mx-auto">
-                <div className="bg-white px-8 py-5 rounded-2xl shadow-sm border border-blue-100 text-center">
-                    <p className="text-xl font-bold text-gray-800">
+            <div className="mx-auto flex w-full max-w-2xl min-w-0 flex-col items-center gap-5 rounded-3xl border border-blue-100 bg-blue-50 p-4 shadow-inner sm:gap-8 sm:p-6">
+                <div className="w-full min-w-0 max-w-full break-words rounded-2xl border border-blue-100 bg-white px-4 py-4 text-center shadow-sm sm:px-8 sm:py-5">
+                    <p className="text-base font-bold leading-relaxed text-gray-800 sm:text-xl">
                         Start at <span className="text-blue-600 px-2 py-1 bg-blue-100 rounded-lg font-black">{round.start}</span>.
                         Jump {round.operation === '+' ? 'forward' : 'backward'}
                         <span className="text-blue-600 font-black px-1"> {round.steps} </span> spaces.
                     </p>
-                    <p className="text-sm text-blue-400 font-medium mt-2">Click where you land!</p>
+                    <p className="mt-2 text-sm font-medium text-blue-400">Click where you land!</p>
                 </div>
 
-                <div className="w-full overflow-x-auto py-4">
-                    <div className="flex items-center justify-center gap-3 min-w-max px-4">
+                <div className="w-full overflow-x-hidden py-2 sm:overflow-x-auto sm:py-4">
+                    <div className="grid w-full grid-cols-4 justify-items-center gap-2 px-1 sm:flex sm:min-w-max sm:items-center sm:justify-center sm:gap-3 sm:px-4">
                         {numbers.map((num) => {
                             const isStart = num === round.start;
                             const isSelected = selected === num;

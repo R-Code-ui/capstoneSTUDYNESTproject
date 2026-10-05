@@ -233,6 +233,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                 onConfirm={handleDeleteConversation}
                 title="Remove conversation?"
                 message={`Remove the conversation with ${conversationToRemove?.teacherName || 'this teacher'} from your messages? The teacher will still see it.`}
+                messageClassName="line-clamp-3 break-words"
                 confirmText="Remove"
                 cancelText="Cancel"
                 danger

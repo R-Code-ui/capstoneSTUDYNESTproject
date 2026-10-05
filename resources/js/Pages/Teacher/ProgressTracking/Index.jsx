@@ -305,17 +305,17 @@ export default function ProgressIndex({
                                         {at_risk_students.map((student) => (
                                             <div
                                                 key={student.student_id}
-                                                className="support-student-card flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
+                                                className="support-student-card flex min-w-0 items-center justify-between gap-3 p-3 bg-red-50 rounded-lg border border-red-200"
                                             >
-                                                <div>
-                                                    <div className="font-medium text-gray-800">{student.name}</div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="truncate font-medium text-gray-800" title={student.name}>{student.name}</div>
                                                     <div className="text-sm text-red-600">
                                                         Progress: {student.overall_progress}%
                                                     </div>
                                                 </div>
                                                 <button
                                                     onClick={() => viewStudentProgress(student.student_id)}
-                                                    className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                                                    className="shrink-0 px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
                                                 >
                                                     View
                                                 </button>

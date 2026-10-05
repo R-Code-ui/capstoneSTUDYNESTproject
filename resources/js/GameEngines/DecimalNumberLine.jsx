@@ -72,8 +72,8 @@ export default function DecimalNumberLine({ content, onComplete, onExit, onProgr
                         </span>
                     </div>
 
-                    <div className="w-full overflow-x-auto">
-                        <div className="flex items-center gap-1 min-w-max px-4 py-6">
+                    <div className="w-full overflow-x-hidden sm:overflow-x-auto">
+                        <div className="grid w-full grid-cols-4 justify-items-center gap-2 px-2 py-4 sm:flex sm:min-w-max sm:items-center sm:gap-1 sm:px-4 sm:py-6">
                             {numbers.map((num) => {
                                 const isStart = Math.abs(num - round.start) < 0.01;
                                 const isSelected = selected !== null && Math.abs(selected - num) < 0.01;

@@ -247,12 +247,12 @@ export default function LessonsIndex({
                                                     data-card-tone={index % 5}
                                                     className={`bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-lg border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
                                                 >
-                                                    <div className="p-6">
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm">
+                                                    <div className="min-w-0 p-6">
+                                                        <div className="flex min-w-0 items-start justify-between gap-2">
+                                                            <span className="inline-flex max-w-[55%] min-w-0 items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/70 text-gray-700 backdrop-blur-sm" title={lesson.subject || ''}>
                                                                 {lesson.subject}
                                                             </span>
-                                                            <span className="text-xs text-gray-600 flex items-center gap-1 shrink-0 bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                                            <span className="max-w-[45%] truncate text-xs text-gray-600 flex items-center gap-1 shrink-0 bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm" title={lesson.created_at || ''}>
                                                                 <CalendarIcon className="w-3 h-3" />
                                                                 {lesson.created_at}
                                                             </span>
@@ -260,13 +260,13 @@ export default function LessonsIndex({
                                                         <h3 className="mt-3 text-lg font-semibold text-gray-800 truncate max-w-full" title={lesson.title}>
                                                             {lesson.title}
                                                         </h3>
-                                                        <p className="mt-2 text-sm text-gray-700 line-clamp-2 break-words">
+                                                        <p className="mt-2 text-sm text-gray-700 line-clamp-2 break-words" title={lesson.description || ''}>
                                                             {lesson.description}
                                                         </p>
                                                         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                                                            <span className="text-xs text-gray-700 flex items-center gap-1 bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                                            <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full bg-white/50 px-2 py-0.5 text-xs text-gray-700 backdrop-blur-sm" title={lesson.teacher || ''}>
                                                                 <UserIcon className="w-3 h-3" />
-                                                                {lesson.teacher}
+                                                                <span className="truncate">{lesson.teacher}</span>
                                                             </span>
                                                             <Link
                                                                 href={route('student.lessons.show', lesson.id)}

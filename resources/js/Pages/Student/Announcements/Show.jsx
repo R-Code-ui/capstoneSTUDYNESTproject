@@ -69,7 +69,7 @@ export default function AnnouncementsShow({ announcement }) {
                     >
                         <ArrowLeftIcon className="h-4 w-4" /> Back
                     </Link>
-                    <h2 className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={announcement.title}>{announcement.title}</h2>
+                    <h2 className="min-w-0 flex-1 truncate text-xl font-semibold leading-tight text-gray-800" title={announcement.title}>{announcement.title}</h2>
                 </div>
             }
         >
@@ -122,26 +122,26 @@ export default function AnnouncementsShow({ announcement }) {
                                                 Pinned
                                             </span>
                                         )}
-                                        <span className="text-sm text-gray-500">
+                                        <span className="inline-block max-w-full truncate align-bottom text-sm text-gray-500" title={announcement.category}>
                                             {announcement.category}
                                         </span>
                                     </div>
 
-                                    <h1 className="mt-3 max-w-full break-words text-xl font-bold text-gray-800 sm:text-2xl xl:hidden" title={announcement.title}>
+                                    <h1 className="mt-3 line-clamp-2 max-w-full break-words text-xl font-bold text-gray-800 sm:text-2xl xl:hidden" title={announcement.title}>
                                         {announcement.title}
                                     </h1>
 
-                                    <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                                        <span>Posted by {announcement.posted_by}</span>
+                                    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-3 text-sm text-gray-500">
+                                        <span className="inline-block max-w-full truncate align-bottom" title={announcement.posted_by}>Posted by {announcement.posted_by}</span>
                                         <span>•</span>
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex min-w-0 max-w-full items-center gap-1" title={announcement.created_at}>
                                             <CalendarIcon className="w-4 h-4" />
-                                            {announcement.created_at}
+                                            <span className="truncate">{announcement.created_at}</span>
                                         </span>
                                         {announcement.expiration_date && (
                                             <>
                                                 <span>•</span>
-                                                <span>Expires: {announcement.expiration_date}</span>
+                                                <span className="inline-block max-w-full truncate align-bottom" title={announcement.expiration_date}>Expires: {announcement.expiration_date}</span>
                                             </>
                                         )}
                                     </div>

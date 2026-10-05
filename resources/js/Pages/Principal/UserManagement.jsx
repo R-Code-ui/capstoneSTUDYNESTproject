@@ -405,9 +405,9 @@ export default function UserManagement({
                             ['Date Created', selectedUser.created_at || '—'],
                             ['Account Role', 'Teacher'],
                         ].map(([label, value]) => (
-                            <div key={label} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</div>
-                                <div className="mt-1 break-words font-medium text-gray-800">{value}</div>
+                            <div key={label} className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                <div className="truncate text-xs font-semibold uppercase tracking-wide text-gray-500" title={label}>{label}</div>
+                                <div className="mt-1 truncate font-medium text-gray-800" title={String(value ?? '')}>{value}</div>
                             </div>
                         ))}
                     </div>
@@ -451,7 +451,7 @@ export default function UserManagement({
                             onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
-                    className="principal-teacher-form grid grid-cols-1 gap-x-5 gap-y-3 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] sm:grid-cols-2 sm:gap-y-4"
+                    className="principal-teacher-form grid grid-cols-1 gap-x-5 gap-y-3 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] sm:grid-cols-2 sm:gap-y-4 sm:pb-1"
                     onFocusCapture={keepFocusedFieldVisible}
                 >
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />

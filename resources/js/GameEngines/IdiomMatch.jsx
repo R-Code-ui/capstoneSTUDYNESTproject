@@ -21,7 +21,7 @@ function DraggableIdiom({ id, word, matched, selected, onClick }) {
             {...attributes}
             disabled={matched}
             onClick={onClick}
-            className={`w-full px-4 py-3 rounded-2xl font-black text-sm sm:text-base shadow-lg border-b-4 touch-none select-none text-left
+            className={`w-full min-w-0 break-words rounded-2xl border-b-4 px-2 py-2 text-left text-xs font-black leading-snug shadow-lg touch-none select-none sm:px-4 sm:py-3 sm:text-base
                 ${matched ? 'bg-green-400 border-green-600 text-white cursor-default' : 'bg-amber-500 border-amber-700 text-white cursor-grab active:cursor-grabbing active:scale-95'}
                 ${selected ? 'ring-4 ring-amber-200' : ''}
             `}
@@ -39,7 +39,7 @@ function DroppableMeaning({ id, word, matched, wrong, selected, onClick }) {
             ref={setNodeRef}
             disabled={matched}
             onClick={onClick}
-            className={`w-full px-4 py-3 rounded-2xl border-4 text-center text-sm sm:text-base font-bold shadow-inner transition
+            className={`w-full min-w-0 break-words rounded-2xl border-4 px-2 py-2 text-center text-xs font-bold leading-snug shadow-inner transition sm:px-4 sm:py-3 sm:text-base
                 ${matched
                     ? 'bg-green-100 border-green-400 text-green-700'
                     : wrong
@@ -129,8 +129,8 @@ export default function IdiomMatch({ content, onComplete, onExit, onProgress, in
         <GameShell title="Idiom Match" description={content.description} onExit={onExit}>
             <div className="bg-gradient-to-br from-amber-50 to-yellow-50 p-4 sm:p-6 rounded-3xl border border-amber-100 shadow-inner">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                        <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                        <div className="flex min-w-0 flex-col gap-2 sm:gap-3">
                             {pairs.map((p) => (
                                 <DraggableIdiom
                                     key={p.word}
@@ -142,7 +142,7 @@ export default function IdiomMatch({ content, onComplete, onExit, onProgress, in
                                 />
                             ))}
                         </div>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex min-w-0 flex-col gap-2 sm:gap-3">
                             {rightOrder.map((w) => {
                                 const matchedPair = pairs.find((p) => p.match === w && matchedWords.includes(p.word));
                                 return (

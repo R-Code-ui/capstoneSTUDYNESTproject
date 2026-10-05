@@ -196,11 +196,6 @@ export default function MessageGroupForm({
                                 <legend className="text-sm font-medium text-gray-700">Grades included <span className="text-red-500">*</span></legend>
                                 <p className="mt-1 text-xs text-slate-500">Choose which assigned grades can be added to this group.</p>
                             </div>
-                            {assignedGrades.length > 1 && (
-                                <button type="button" onClick={toggleAllGrades} className="text-xs font-semibold text-blue-600 hover:text-blue-800">
-                                    {allGradesSelected ? 'Clear grades' : 'Select all grades'}
-                                </button>
-                            )}
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {assignedGrades.map((grade) => {
@@ -232,15 +227,6 @@ export default function MessageGroupForm({
                                 <InputLabel value="Students" required />
                                 <p className="mt-1 text-xs text-slate-500">{data.member_ids.length} selected across {data.grade_levels.length} {data.grade_levels.length === 1 ? 'grade' : 'grades'}</p>
                             </div>
-                            {selectedStudentIds.length > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={toggleAllStudents}
-                                    className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                                >
-                                    {allStudentsSelected ? 'Clear all students' : `Select all ${selectedStudentIds.length} students`}
-                                </button>
-                            )}
                         </div>
 
                         {data.grade_levels.length === 0 ? (
@@ -284,8 +270,8 @@ export default function MessageGroupForm({
                                                             <label key={student.id} className="student-row flex cursor-pointer items-center gap-3 border-t border-slate-100 p-3 hover:bg-slate-50">
                                                                 <input type="checkbox" checked={data.member_ids.includes(student.id)} onChange={() => toggleStudent(student.id)} className="rounded border-slate-300 text-blue-600" />
                                                                 <span className="min-w-0 flex-1">
-                                                                    <span className="block text-sm font-medium text-slate-700">{student.name}</span>
-                                                                    {student.lrn && <span className="block text-xs text-slate-400">Student ID: {student.lrn}</span>}
+                                                                    <span className="block truncate text-sm font-medium text-slate-700" title={student.name}>{student.name}</span>
+                                                                    {student.lrn && <span className="block truncate text-xs text-slate-400" title={`Student ID: ${student.lrn}`}>Student ID: {student.lrn}</span>}
                                                                 </span>
                                                             </label>
                                                         ))}

@@ -37,26 +37,26 @@ export default function ConversationListItem({ conversation, onClick }) {
             {/* Main content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                    <span className={`truncate ${isUnread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                    <span className={`truncate ${isUnread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`} title={conversation.name || ''}>
                         {conversation.name}
                     </span>
-                    <span className="text-xs text-gray-400 flex-shrink-0">
+                    <span className="max-w-[7rem] truncate text-xs text-gray-400 flex-shrink-0" title={conversation.last_message_time || ''}>
                         {conversation.last_message_time}
                     </span>
                 </div>
 
                 <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${category.color}`}>
+                    <span className={`max-w-[6rem] truncate text-[11px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${category.color}`} title={category.label || ''}>
                         {category.label}
                     </span>
-                    <span className={`text-sm truncate ${isUnread ? 'text-gray-800' : 'text-gray-500'}`}>
+                    <span className={`text-sm truncate ${isUnread ? 'text-gray-800' : 'text-gray-500'}`} title={`${conversation.is_last_from_me ? 'You: ' : ''}${conversation.last_message || ''}`}>
                         {conversation.is_last_from_me ? 'You: ' : ''}{conversation.last_message}
                     </span>
                 </div>
 
                 {/* Student info */}
                 {conversation.grade_level && (
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="truncate text-xs text-gray-400 mt-1" title={`${conversation.grade_level}${conversation.lrn ? ` • Student ID: ${conversation.lrn}` : ''}`}>
                         {conversation.grade_level}{conversation.lrn ? ` • Student ID: ${conversation.lrn}` : ''}
                     </div>
                 )}

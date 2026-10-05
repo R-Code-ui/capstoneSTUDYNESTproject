@@ -159,6 +159,25 @@ class StudyNestNotificationService
         }
     }
 
+    public function groupCreated(MessageGroup $group): void
+    {
+        $group->loadMissing(['members', 'owner']);
+
+        $recipients = $group->members
+            ->filter(fn (User $member) => $member->isStudent() && $member->is_active);
+
+        $this->send($recipients, new StudyNestNotification(
+            'group_created',
+            'Added to Group Chat',
+            ($group->owner?->name ?? 'Your teacher') . ' added you to "' . $group->name . '".',
+            'normal',
+            route('student.messages.groups.show', $group->id),
+            'message',
+            'message_group',
+            $group->id
+        ));
+    }
+
     public function quizPublished(Quiz $quiz): void
     {
         $students = User::role('student')->where('grade_level', $quiz->grade_level)->where('is_active', true)->get();
@@ -250,6 +269,123 @@ class StudyNestNotificationService
         $this->send(User::role('principal')->where('is_active', true)->where('id', '!=', $actor->id)->get(), new StudyNestNotification(
             'user_' . $action, 'User Account ' . ucfirst($action), $subject->name . ' was ' . $action . '.',
             $action === 'archived' ? 'important' : 'normal', route('principal.users.index'), 'user'
+        ));
+    }
+
+    public function passwordChanged(User $user, ?User $actor = null): void
+    {
+        $actorName = $actor?->name ?: 'a school administrator';
+        $actorDescription = $actor?->isTeacher() ? 'your teacher' : $actorName;
+
+        $this->send(collect([$user]), new StudyNestNotification(
+            'password_changed',
+            'Password Changed',
+            'Your password was changed by ' . $actorDescription . '. Contact the school administrator if you did not expect this change.',
+            'important',
+            $user->isTeacher() ? route('teacher.dashboard') : route('dashboard'),
+            'user'
+        ));
+    }
+
+    public function teacherGradeAssignmentsChanged(User $teacher, array $gradeLevels, ?User $actor = null): void
+    {
+        $actorName = $actor?->name ?: 'a school administrator';
+
+        $this->send(collect([$teacher]), new StudyNestNotification(
+            'teacher_grade_assignments_changed',
+            'Assigned Grades Updated',
+            $actorName . ' updated your assigned grades to: ' . implode(', ', $gradeLevels) . '.',
+            'important',
+            route('teacher.dashboard'),
+            'user'
+        ));
+    }
+
+    public function teacherLoginIdChanged(User $teacher, string $teacherId, ?User $actor = null): void
+    {
+        $actorName = $actor?->name ?: 'a school administrator';
+
+        $this->send(collect([$teacher]), new StudyNestNotification(
+            'teacher_login_id_changed',
+            'Teacher ID Changed',
+            $actorName . ' changed your Teacher ID to ' . $teacherId . '. Use your new Teacher ID the next time you sign in.',
+            'important',
+            route('teacher.dashboard'),
+            'user'
+        ));
+    }
+
+    public function teacherAccountRestored(User $teacher, ?User $actor = null): void
+    {
+        $actorName = $actor?->name ?: 'a school administrator';
+
+        $this->send(collect([$teacher]), new StudyNestNotification(
+            'teacher_account_restored',
+            'Account Restored',
+            'Your teacher account was restored by ' . $actorName . '. You can sign in again.',
+            'important',
+            route('teacher.dashboard'),
+            'user'
+        ));
+    }
+
+    public function studentAccountCreated(User $student, User $teacher): void
+    {
+        $this->send(collect([$student]), new StudyNestNotification(
+            'student_account_created',
+            'Account Created',
+            'Your student account has been created by your teacher.',
+            'normal',
+            route('student.dashboard'),
+            'user'
+        ));
+    }
+
+    public function studentGradeLevelChanged(User $student, ?string $previousGradeLevel, string $gradeLevel): void
+    {
+        $this->send(collect([$student]), new StudyNestNotification(
+            'student_grade_level_changed',
+            'Grade Level Changed',
+            'Your grade level was changed from ' . ($previousGradeLevel ?: 'your previous grade') . ' to ' . $gradeLevel . ' by your teacher.',
+            'important',
+            route('student.dashboard'),
+            'user'
+        ));
+    }
+
+    public function studentSchoolYearChanged(User $student, ?string $previousSchoolYear, string $schoolYear): void
+    {
+        $this->send(collect([$student]), new StudyNestNotification(
+            'student_school_year_changed',
+            'School Year Changed',
+            'Your school year was changed from ' . ($previousSchoolYear ?: 'your previous school year') . ' to ' . $schoolYear . ' by your teacher.',
+            'important',
+            route('student.dashboard'),
+            'user'
+        ));
+    }
+
+    public function studentLoginIdChanged(User $student, string $lrn): void
+    {
+        $this->send(collect([$student]), new StudyNestNotification(
+            'student_login_id_changed',
+            'Student ID Changed',
+            'Your Student ID was changed to ' . $lrn . ' by your teacher. Use your new Student ID the next time you sign in.',
+            'important',
+            route('student.dashboard'),
+            'user'
+        ));
+    }
+
+    public function studentAccountRestored(User $student): void
+    {
+        $this->send(collect([$student]), new StudyNestNotification(
+            'student_account_restored',
+            'Account Restored',
+            'Your student account was restored by your teacher. You can sign in again.',
+            'important',
+            route('student.dashboard'),
+            'user'
         ));
     }
 

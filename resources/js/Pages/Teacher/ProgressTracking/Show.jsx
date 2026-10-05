@@ -89,18 +89,18 @@ export default function ProgressShow({ student, progress }) {
                             <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">
                                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student Name</div>
-                                    <div className="font-medium text-gray-800 flex items-center gap-2">
-                                        <UserIcon className="w-4 h-4 text-gray-400" />
-                                        {student.name}
+                                    <div className="flex min-w-0 items-center gap-2 font-medium text-gray-800">
+                                        <UserIcon className="w-4 h-4 shrink-0 text-gray-400" />
+                                        <span className="truncate" title={student.name}>{student.name}</span>
                                     </div>
                                 </div>
                                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Student ID</div>
-                                    <div className="font-medium text-gray-800">{student.lrn}</div>
+                                    <div className="truncate font-medium text-gray-800" title={student.lrn}>{student.lrn}</div>
                                 </div>
                                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Grade Level</div>
-                                    <div className="font-medium text-gray-800">{student.grade_level}</div>
+                                    <div className="truncate font-medium text-gray-800" title={student.grade_level}>{student.grade_level}</div>
                                 </div>
                                 <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Overall Progress</div>
@@ -265,17 +265,17 @@ export default function ProgressShow({ student, progress }) {
                                     {progress.quizzes.performance.map((quiz, index) => (
                                         <div
                                             key={index}
-                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 gap-2"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100"
                                         >
-                                            <div>
-                                                <div className="font-medium text-gray-800">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate font-medium text-gray-800" title={quiz.quiz_title}>
                                                     {quiz.quiz_title}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
                                                     {quiz.completed_at || 'Not yet completed'}
                                                 </div>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="shrink-0 text-right">
                                                 <div className={`font-bold ${
                                                     quiz.percentage >= 80 ? 'text-emerald-600' :
                                                     quiz.percentage >= 60 ? 'text-yellow-600' :
@@ -308,18 +308,18 @@ export default function ProgressShow({ student, progress }) {
                                     {progress.games.performance.map((game, index) => (
                                         <div
                                             key={index}
-                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 gap-2"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100"
                                         >
-                                            <div>
-                                                <div className="font-medium text-gray-800">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate font-medium text-gray-800" title={game.game_title}>
                                                     {game.game_title}
                                                 </div>
-                                                <div className="text-sm text-gray-500">
+                                                <div className="truncate text-sm text-gray-500">
                                                     {game.game_type?.charAt(0).toUpperCase() + game.game_type?.slice(1)}
                                                     {game.completed_at && ` • ${game.completed_at}`}
                                                 </div>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="shrink-0 text-right">
                                                 <div className={`font-bold ${
                                                     game.score >= 80 ? 'text-emerald-600' :
                                                     game.score >= 60 ? 'text-yellow-600' :

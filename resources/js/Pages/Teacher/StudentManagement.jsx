@@ -173,16 +173,30 @@ export default function StudentManagement({
         { value: 'female', label: 'Female' },
     ];
 
+    const formatStudentName = (row) => [row.first_name, row.middle_name, row.last_name]
+        .filter(Boolean)
+        .join(' ') || '\u2014';
+
     const studentColumns = [
-        { key: 'lrn', label: 'Student ID' },
+        {
+            key: 'lrn',
+            label: 'Student ID',
+            render: (row) => <span className="block max-w-[120px] truncate" title={row.lrn}>{row.lrn}</span>,
+        },
         {
             key: 'student_name',
             label: 'Student Name',
-            render: (row) => [row.first_name, row.middle_name, row.last_name]
-                .filter(Boolean)
-                .join(' ') || 'â€”',
+            render: (row) => (
+                <span className="block max-w-[160px] truncate" title={formatStudentName(row)}>
+                    {formatStudentName(row)}
+                </span>
+            ),
         },
-        { key: 'grade_level', label: 'Grade Level' },
+        {
+            key: 'grade_level',
+            label: 'Grade Level',
+            render: (row) => <span className="block max-w-[80px] truncate" title={row.grade_level}>{row.grade_level}</span>,
+        },
         {
             key: 'gender',
             label: 'Gender',
@@ -268,6 +282,22 @@ export default function StudentManagement({
             <Head title="Student Management" />
 
             <style>{`
+                @media (min-width: 1280px) {
+                    .student-management-table {
+                        table-layout: fixed;
+                    }
+                    .student-management-table th:nth-child(2),
+                    .student-management-table td:nth-child(2) {
+                        max-width: 16rem;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                    .student-management-table th:last-child,
+                    .student-management-table td:last-child {
+                        width: 15rem;
+                    }
+                }
                 .teacher-status-badge {
                     display: inline-flex !important;
                     width: 72px !important;
@@ -412,6 +442,8 @@ export default function StudentManagement({
                                     columns={studentColumns}
                                     rows={students}
                                     actions={studentActions}
+                                    tableClassName="student-management-table"
+                                    actionsClassName="flex-nowrap"
                                     emptyMessage="No students found."
                                     hoverable
                                     bordered
@@ -499,7 +531,7 @@ export default function StudentManagement({
                             onError: () => toast.error('Please correct the highlighted fields and try again.'),
                         });
                     }}
-                    className="student-form-scroll-region grid grid-cols-1 gap-x-5 gap-y-3 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] sm:grid-cols-2 sm:gap-y-4"
+                    className="student-form-scroll-region grid grid-cols-1 gap-x-5 gap-y-3 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] sm:grid-cols-2 sm:gap-y-4 sm:pb-1"
                     onFocusCapture={keepFocusedFieldVisible}
                 >
                     <input type="hidden" name="_method" value={showCreateModal ? 'POST' : 'PUT'} />
@@ -692,6 +724,7 @@ export default function StudentManagement({
                     onConfirm={executeConfirmedAction}
                     title={confirmationDetails[confirmation.action].title}
                     message={confirmationDetails[confirmation.action].message(confirmation.user)}
+                    messageClassName="line-clamp-3"
                     confirmText={confirmationDetails[confirmation.action].confirmText}
                     confirmColor={confirmationDetails[confirmation.action].confirmColor}
                     danger={confirmationDetails[confirmation.action].danger}

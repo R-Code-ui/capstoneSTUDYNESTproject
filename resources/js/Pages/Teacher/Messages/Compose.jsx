@@ -203,15 +203,15 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                         {selectedStudent ? (
                                             // Selected student chip
                                             <div className="selected-student-chip flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex min-w-0 flex-1 items-center gap-2">
                                                     <div className="selected-student-avatar w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-700">
                                                         {selectedStudent.name.charAt(0)}
                                                     </div>
-                                                    <div>
-                                                        <div className="text-sm font-medium text-gray-800">
+                                                    <div className="min-w-0">
+                                                        <div className="truncate text-sm font-medium text-gray-800" title={selectedStudent.name}>
                                                             {selectedStudent.name}
                                                         </div>
-                                                        <div className="text-xs text-gray-500">{selectedStudent.grade_level}</div>
+                                                        <div className="truncate text-xs text-gray-500" title={selectedStudent.grade_level || ''}>{selectedStudent.grade_level}</div>
                                                     </div>
                                                 </div>
                                                 <button
@@ -265,11 +265,11 @@ export default function MessagesCompose({ assigned_grades, students_by_grade, ca
                                                                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600">
                                                                         {student.name.charAt(0)}
                                                                     </div>
-                                                                    <div className="flex-1 text-left">
-                                                                        <div className="text-sm font-medium text-gray-800">
+                                                                    <div className="min-w-0 flex-1 text-left">
+                                                                        <div className="truncate text-sm font-medium text-gray-800" title={student.name}>
                                                                             {student.name}
                                                                         </div>
-                                                                        <div className="text-xs text-gray-500">{student.grade_level}</div>
+                                                                        <div className="truncate text-xs text-gray-500" title={student.grade_level || ''}>{student.grade_level}</div>
                                                                     </div>
                                                                     {data.receiver_id === student.id && (
                                                                         <CheckIcon className="w-4 h-4 text-blue-600" />

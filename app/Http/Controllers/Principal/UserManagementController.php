@@ -171,6 +171,14 @@ class UserManagementController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $previousTeacherId = $user->teacher_id;
+        $previousGradeLevels = TeacherGradeAssignment::where('teacher_id', $user->id)
+            ->pluck('grade_level')
+            ->all();
+        $updatedGradeLevels = $validated['grade_levels'];
+        sort($previousGradeLevels);
+        sort($updatedGradeLevels);
+
         DB::transaction(function () use ($user, $validated) {
             $user->update([
                 'name' => $this->formatName($validated),
@@ -186,6 +194,22 @@ class UserManagementController extends Controller
                 ]);
             }
         });
+
+        if ($previousGradeLevels !== $updatedGradeLevels) {
+            app(StudyNestNotificationService::class)->teacherGradeAssignmentsChanged(
+                $user,
+                $updatedGradeLevels,
+                auth()->user(),
+            );
+        }
+
+        if ($previousTeacherId !== $validated['teacher_id']) {
+            app(StudyNestNotificationService::class)->teacherLoginIdChanged(
+                $user,
+                $validated['teacher_id'],
+                auth()->user(),
+            );
+        }
 
         return redirect()->back()->with('success', 'Teacher updated successfully!');
     }
@@ -207,6 +231,8 @@ class UserManagementController extends Controller
             'password' => Hash::make($validated['new_password']),
             'must_change_password' => false,
         ]);
+
+        app(StudyNestNotificationService::class)->passwordChanged($user, auth()->user());
 
         return redirect()->back()->with('success', 'Password reset successfully!');
     }
@@ -233,8 +259,13 @@ class UserManagementController extends Controller
         Gate::authorize('user.manage');
 
         $user = User::role('teacher')->findOrFail($id);
+        $wasInactive = !$user->is_active;
         $user->update(['is_active' => true]);
         app(StudyNestNotificationService::class)->userStatusChanged($user, 'restored', auth()->user());
+
+        if ($wasInactive) {
+            app(StudyNestNotificationService::class)->teacherAccountRestored($user, auth()->user());
+        }
 
         return redirect()->back()->with('success', 'User restored successfully!');
     }

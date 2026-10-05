@@ -182,7 +182,7 @@ export default function LessonResources({
                     {section.key === 'embedded' && <div className="space-y-4">{section.resources.map((resource, index) => (
                         <div key={resource.id} className="lesson-resource-card overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
                             <div className="aspect-video w-full bg-slate-950"><iframe className="h-full w-full" src={resource.embeddedUrl} title={displayName(resource, 'Embedded video', index)} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>
-                            <div className="flex flex-col gap-2 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-4"><span className="min-w-0 break-words font-semibold text-slate-800 dark:text-slate-100">{displayName(resource, 'Embedded video', index)}</span><a href={resource.path} target="_blank" rel="noopener noreferrer" className="shrink-0 font-bold text-blue-700 hover:text-blue-800 dark:text-blue-300">Open source</a></div>
+                            <div className="flex flex-col gap-2 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-4"><span className="min-w-0 truncate font-semibold text-slate-800 dark:text-slate-100" title={displayName(resource, 'Embedded video', index)}>{displayName(resource, 'Embedded video', index)}</span><a href={resource.path} target="_blank" rel="noopener noreferrer" className="shrink-0 font-bold text-blue-700 hover:text-blue-800 dark:text-blue-300">Open source</a></div>
                         </div>
                     ))}</div>}
 
@@ -190,7 +190,7 @@ export default function LessonResources({
                         <div key={resource.id} className="lesson-resource-card overflow-hidden rounded-xl border border-slate-200 bg-slate-950 dark:border-slate-700">
                             <video controls preload="metadata" className="aspect-video w-full" src={storageUrl(resource.path)}>Your browser does not support video playback.</video>
                             <div className="flex flex-col gap-3 bg-white px-3 py-3 text-sm dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-                                <label className={`flex min-w-0 items-center gap-3 ${selectionMode ? 'cursor-pointer' : ''}`}>{selectionMode && <SelectBox resource={resource} selectedIds={selectedIds} onToggle={toggleResource} />}<span className="break-words font-semibold text-slate-800 dark:text-slate-100">{displayName(resource, 'Video file', index)}</span></label>
+                                <label className={`flex min-w-0 items-center gap-3 ${selectionMode ? 'cursor-pointer' : ''}`}>{selectionMode && <SelectBox resource={resource} selectedIds={selectedIds} onToggle={toggleResource} />}<span className="min-w-0 truncate font-semibold text-slate-800 dark:text-slate-100" title={displayName(resource, 'Video file', index)}>{displayName(resource, 'Video file', index)}</span></label>
                                 {!selectionMode && <a href={downloadUrl(resource.id)} target="_blank" rel="noopener noreferrer" className="inline-flex w-full shrink-0 items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 sm:w-auto"><ArrowDownTrayIcon className="h-4 w-4" />Download</a>}
                             </div>
                         </div>
@@ -198,7 +198,7 @@ export default function LessonResources({
 
                     {section.key === 'links' && <div className="space-y-2">{section.resources.map((resource, index) => (
                         <div key={resource.id} className="lesson-resource-card flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="min-w-0"><div className="break-words font-semibold text-slate-800 dark:text-slate-100">{displayName(resource, 'Online resource', index)}</div><p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{resource.path}</p></div>
+                            <div className="min-w-0"><div className="truncate font-semibold text-slate-800 dark:text-slate-100" title={displayName(resource, 'Online resource', index)}>{displayName(resource, 'Online resource', index)}</div><p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400" title={resource.path}>{resource.path}</p></div>
                             <a href={resource.path} target="_blank" rel="noopener noreferrer" className="inline-flex w-full shrink-0 justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 sm:w-auto">Open link</a>
                         </div>
                     ))}</div>}
@@ -208,7 +208,7 @@ export default function LessonResources({
                             <label className={`flex min-w-0 items-start gap-3 ${selectionMode ? 'cursor-pointer' : ''}`}>
                                 {selectionMode && <SelectBox resource={resource} selectedIds={selectedIds} onToggle={toggleResource} />}
                                 <DocumentIcon className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-                                <span className="min-w-0"><span className="block break-words font-semibold text-slate-800 dark:text-slate-100">{displayName(resource, 'Document', index)}</span><span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{isOfficeDocument(resource) ? `Download to open in Microsoft ${officeApplication(resource)}.` : 'PDF or attached document'}</span></span>
+                                <span className="min-w-0"><span className="block truncate font-semibold text-slate-800 dark:text-slate-100" title={displayName(resource, 'Document', index)}>{displayName(resource, 'Document', index)}</span><span className="mt-1 block truncate text-xs text-slate-500 dark:text-slate-400" title={isOfficeDocument(resource) ? `Download to open in Microsoft ${officeApplication(resource)}.` : 'PDF or attached document'}>{isOfficeDocument(resource) ? `Download to open in Microsoft ${officeApplication(resource)}.` : 'PDF or attached document'}</span></span>
                             </label>
                             {!selectionMode && <div className="flex w-full items-center gap-2 sm:w-auto">
                                 {!isOfficeDocument(resource) && <a href={viewUrl(resource.id)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 sm:flex-none">View</a>}
@@ -222,7 +222,7 @@ export default function LessonResources({
                             <a href={viewUrl(resource.id)} target="_blank" rel="noopener noreferrer" className="group block"><img src={storageUrl(resource.path)} alt={displayName(resource, 'Image', index)} loading="lazy" className="aspect-square w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]" /></a>
                             <div className="flex items-center gap-2 px-3 py-3">
                                 {selectionMode && <SelectBox resource={resource} selectedIds={selectedIds} onToggle={toggleResource} />}
-                                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{displayName(resource, 'Image', index)}</span>
+                                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-100" title={displayName(resource, 'Image', index)}>{displayName(resource, 'Image', index)}</span>
                                 {!selectionMode && <a href={downloadUrl(resource.id)} target="_blank" rel="noopener noreferrer" aria-label={`Download ${displayName(resource, 'Image', index)}`} title="Download" className="rounded-lg p-2 text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-slate-700"><ArrowDownTrayIcon className="h-5 w-5" /></a>}
                             </div>
                         </div>

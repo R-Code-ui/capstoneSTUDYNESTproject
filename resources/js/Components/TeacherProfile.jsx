@@ -43,8 +43,8 @@ export default function TeacherProfile({ teacher }) {
                     <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{safeNumber(teacher.total_quizzes)}</div>
                     <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Total Quizzes</div>
                 </div>
-                <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-                    <div className="text-2xl font-bold text-gray-600 dark:text-slate-300">{teacher.last_login || 'Never'}</div>
+                <div className="min-w-0 rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                    <div className="truncate text-2xl font-bold text-gray-600 dark:text-slate-300" title={teacher.last_login || 'Never'}>{teacher.last_login || 'Never'}</div>
                     <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Last Login</div>
                 </div>
             </div>

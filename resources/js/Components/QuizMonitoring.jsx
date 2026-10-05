@@ -11,7 +11,11 @@ export default function QuizMonitoring({ quizzes, pagination }) {
     };
 
     const columns = [
-        { key: 'title', label: 'Title' },
+        {
+            key: 'title',
+            label: 'Title',
+            render: (row) => <span className="block max-w-[240px] truncate" title={row.title || ''}>{row.title || '—'}</span>,
+        },
         { key: 'grade', label: 'Grade' },
         { key: 'type', label: 'Type', render: (row) => getTypeLabel(row.type) },
         { key: 'attempts', label: 'Attempts' },

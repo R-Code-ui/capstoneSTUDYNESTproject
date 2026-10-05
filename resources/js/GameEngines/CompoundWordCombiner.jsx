@@ -21,7 +21,7 @@ function DraggableWord({ id, word, matched, selected, onClick }) {
             {...attributes}
             disabled={matched}
             onClick={onClick}
-            className={`w-full px-4 py-3 rounded-2xl font-black text-lg shadow-lg border-b-4 touch-none select-none
+            className={`w-full min-w-0 break-words rounded-2xl border-b-4 px-2 py-2 text-sm font-black leading-snug shadow-lg touch-none select-none sm:px-4 sm:py-3 sm:text-lg
                 ${matched ? 'bg-green-400 border-green-600 text-white cursor-default' : 'bg-violet-500 border-violet-700 text-white cursor-grab active:cursor-grabbing active:scale-95'}
                 ${selected ? 'ring-4 ring-violet-200' : ''}
             `}
@@ -39,7 +39,7 @@ function DroppableTarget({ id, word, matched, wrong, selected, onClick }) {
             ref={setNodeRef}
             disabled={matched}
             onClick={onClick}
-            className={`w-full px-4 py-3 rounded-2xl border-4 text-center font-black text-lg shadow-inner transition
+            className={`w-full min-w-0 break-words rounded-2xl border-4 px-2 py-2 text-center text-sm font-black leading-snug shadow-inner transition sm:px-4 sm:py-3 sm:text-lg
                 ${matched
                     ? 'bg-green-100 border-green-400 text-green-700 cursor-default'
                     : wrong
@@ -151,8 +151,8 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
         <GameShell title="Compound Word Combiner" description={content.description} onExit={onExit}>
             <div className="bg-gradient-to-br from-violet-50 to-purple-50 p-4 sm:p-6 rounded-3xl border border-violet-100 shadow-inner">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                        <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-6">
+                        <div className="flex min-w-0 flex-col gap-2 sm:gap-3">
                             {pairs.map((p) => (
                                 <DraggableWord
                                     key={p.word}
@@ -164,7 +164,7 @@ export default function CompoundWordCombiner({ content, onComplete, onExit, onPr
                                 />
                             ))}
                         </div>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex min-w-0 flex-col gap-2 sm:gap-3">
                             {rightOrder.map((pair) => {
                                 return (
                                     <DroppableTarget

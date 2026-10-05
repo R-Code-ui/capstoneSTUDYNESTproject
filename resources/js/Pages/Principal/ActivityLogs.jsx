@@ -259,31 +259,31 @@ export default function ActivityLogs({
                             <h3 className="mt-1 break-words text-lg font-bold text-gray-800">Log details</h3>
                         </div>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                            <div className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">User</div>
                                 <div className="max-w-[180px] truncate font-medium text-gray-800" title={selectedLog.user || ''}>{selectedLog.user || '—'}</div>
                             </div>
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                            <div className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">Role</div>
-                                <div className="font-medium text-gray-800">{selectedLog.role}</div>
+                                <div className="truncate font-medium text-gray-800" title={selectedLog.role || ''}>{selectedLog.role}</div>
                             </div>
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                            <div className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">Date & Time</div>
-                                <div className="font-medium text-gray-800">{selectedLog.date_time}</div>
+                                <div className="truncate font-medium text-gray-800" title={selectedLog.date_time || ''}>{selectedLog.date_time}</div>
                             </div>
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                            <div className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-sm text-gray-500">Module</div>
                                 <div className="max-w-[180px] truncate font-medium text-gray-800" title={selectedLog.module || 'N/A'}>{selectedLog.module || 'N/A'}</div>
                             </div>
-                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800/70">
+                            <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">Activity Description</div>
-                                <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 font-medium text-gray-800 dark:text-slate-100" title={selectedLog.activity || ''}>
+                                <div className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-sm leading-6 font-medium text-gray-800 dark:text-slate-100" title={selectedLog.activity || ''}>
                                     {selectedLog.activity}
                                 </div>
                             </div>
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800/70">
+                            <div className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">User ID</div>
-                                <div className="font-medium text-gray-800">{selectedLog.user_id}</div>
+                                <div className="truncate font-medium text-gray-800" title={String(selectedLog.user_id ?? '')}>{selectedLog.user_id}</div>
                             </div>
                         </div>
 

@@ -5,7 +5,6 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import { ConfirmModal } from '@/Components/Modal';
 import { toast } from 'sonner';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 import gameDefinitions from '@/GameEngines/gameDefinitions';
 
@@ -267,7 +266,7 @@ export default function GamesPlay({ result, game, preview = false }) {
 
     if (!definition || !EngineComponent || definition.comingSoon) {
         return (
-            <AuthenticatedLayout header={<div className="w-full"><button type="button" onClick={() => router.visit(route('student.games.index'), { onError: () => toast.error('Unable to return to games. Please try again.') })} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800"><ArrowLeftIcon className="h-4 w-4" /> Back to Games</button></div>}>
+            <AuthenticatedLayout header={<div className="flex w-full min-w-0 items-center gap-3"><button type="button" onClick={() => router.visit(route('student.games.index'), { onError: () => toast.error('Unable to return to games. Please try again.') })} className="inline-flex min-h-11 shrink-0 items-center rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800">← Back</button><h2 className="min-w-0 truncate text-lg font-semibold leading-tight text-gray-800 sm:text-xl" title={game.title}>{game.title}</h2></div>}>
                 <Head title={`Playing: ${game.title}`} />
                 <div className="flex min-h-[100dvh] items-center justify-center bg-white p-4 sm:p-6">
                     <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm sm:p-10">
@@ -282,14 +281,14 @@ export default function GamesPlay({ result, game, preview = false }) {
 
     return (
         <AuthenticatedLayout header={
-            <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex w-full min-w-0 items-center gap-3">
+                <button type="button" onClick={handleExit} className="inline-flex min-h-11 shrink-0 items-center rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800">
+                    ← Back
+                </button>
                 <div className="flex min-w-0 items-center gap-3">
-                    <h2 className="break-words text-lg font-semibold leading-tight text-gray-800 sm:text-xl">{game.title}</h2>
+                    <h2 className="min-w-0 truncate text-lg font-semibold leading-tight text-gray-800 sm:text-xl" title={game.title}>{game.title}</h2>
                     {preview && <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700">Teacher preview</span>}
                 </div>
-                <button type="button" onClick={handleExit} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800">
-                    <ArrowLeftIcon className="h-4 w-4" /> Back to Games
-                </button>
             </div>
         }>
             <Head title={`Playing: ${game.title}`} />

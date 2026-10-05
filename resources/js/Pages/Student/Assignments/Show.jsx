@@ -227,7 +227,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     >
                         <ArrowLeftIcon className="h-4 w-4" /> Back
                     </Link>
-                    <span className="min-w-0 flex-1 break-words text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>{assignment.title}</span>
+                    <span className="min-w-0 flex-1 truncate text-xl font-semibold leading-tight text-gray-800" title={assignment.title}>{assignment.title}</span>
                 </div>
             }
         >
@@ -328,42 +328,42 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="space-y-4 p-4 sm:p-6">
                             <div className="flex flex-wrap items-center gap-3">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="inline-flex max-w-full items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title={assignment.subject || ''}>
                                     {assignment.subject}
                                 </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span className="inline-flex max-w-full items-center truncate px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title={assignment.assignment_type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''}>
                                     {assignment.assignment_type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </span>
                                 {submission && <StatusBadge status={getSubmissionStatusBadge(submission.status)} />}
                                 <StatusBadge status={deadlineStatus} size="sm" />
                             </div>
 
-                            <h3 className="max-w-full break-words text-2xl font-bold text-gray-800 xl:hidden" title={assignment.title}>{assignment.title}</h3>
+                            <h3 className="line-clamp-2 max-w-full text-2xl font-bold text-gray-800 xl:hidden" title={assignment.title}>{assignment.title}</h3>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
-                                <div>
+                                <div className="min-w-0">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
                                         <ClipboardDocumentListIcon className="w-4 h-4" /> Total Points
                                     </div>
-                                    <div className="font-medium text-gray-800">{assignment.total_points}</div>
+                                    <div className="truncate font-medium text-gray-800" title={String(assignment.total_points ?? '')}>{assignment.total_points}</div>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
                                         <CalendarIcon className="w-4 h-4" /> Due Date
                                     </div>
-                                    <div className="font-medium text-gray-800">{assignment.due_date || 'No due date'}</div>
+                                    <div className="truncate font-medium text-gray-800" title={assignment.due_date || 'No due date'}>{assignment.due_date || 'No due date'}</div>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
                                         <ClockIcon className="w-4 h-4" /> Due Time
                                     </div>
-                                    <div className="font-medium text-gray-800">{assignment.due_time || 'No time specified'}</div>
+                                    <div className="truncate font-medium text-gray-800" title={assignment.due_time || 'No time specified'}>{assignment.due_time || 'No time specified'}</div>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1">
                                         <ClockIcon className="w-4 h-4" /> Late Submission
                                     </div>
-                                    <div className="font-medium text-gray-800">{assignment.allow_late_submission ? 'Allowed' : 'Not Allowed'}</div>
+                                    <div className="truncate font-medium text-gray-800" title={assignment.allow_late_submission ? 'Allowed' : 'Not Allowed'}>{assignment.allow_late_submission ? 'Allowed' : 'Not Allowed'}</div>
                                 </div>
                             </div>
 
@@ -520,7 +520,7 @@ export default function AssignmentsShow({ assignment, resources, submission }) {
                                                             <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600">
                                                                 <div className="flex min-w-0 items-start gap-2">
                                                                     <PaperClipIcon className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
-                                                                    <span className="min-w-0 break-all">{file.name}</span>
+                                                                    <span className="min-w-0 truncate" title={file.name}>{file.name}</span>
                                                                     <span className="shrink-0 text-xs text-gray-400">({(file.size / 1024).toFixed(1)} KB)</span>
                                                                 </div>
                                                                 <button type="button" onClick={() => setFileIndexToRemove(index)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30" aria-label={`Remove ${file.name}`}>

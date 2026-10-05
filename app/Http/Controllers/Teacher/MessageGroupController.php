@@ -47,6 +47,8 @@ class MessageGroupController extends Controller
             return $group;
         });
 
+        app(StudyNestNotificationService::class)->groupCreated($group);
+
         return redirect()->route('teacher.messages.groups.show', $group)
             ->with('message', 'Group created successfully.');
     }

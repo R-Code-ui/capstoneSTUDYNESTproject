@@ -629,13 +629,13 @@ export default function PrincipalAnnouncements({
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 flex-1">
                                 <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-300">Announcement</p>
-                                <h3 className="mt-1 break-words text-xl font-bold text-gray-800" title={selectedAnnouncement.title || ''}>
+                                <h3 className="mt-1 line-clamp-3 break-words text-xl font-bold text-gray-800" title={selectedAnnouncement.title || ''}>
                                     {selectedAnnouncement.title}
                                 </h3>
-                                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                                    <span>Category: {selectedAnnouncement.category}</span>
+                                <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2 text-sm text-gray-500">
+                                    <span className="max-w-full truncate" title={`Category: ${selectedAnnouncement.category || ''}`}>Category: {selectedAnnouncement.category}</span>
                                     <span>•</span>
-                                    <span>Audience: {selectedAnnouncement.audience === 'all_grades'
+                                    <span className="max-w-full truncate">Audience: {selectedAnnouncement.audience === 'all_grades'
                                         ? 'All Students'
                                         : selectedAnnouncement.audience?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                     <span>•</span>
@@ -645,8 +645,12 @@ export default function PrincipalAnnouncements({
                                     </span>
                                 </div>
                             </div>
-                            <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-600 sm:w-auto sm:min-w-[190px] sm:text-right dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
-                                <div className="font-medium text-gray-700 dark:text-slate-200">
+                            <div className="w-full min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-600 sm:w-auto sm:min-w-[190px] sm:max-w-[280px] sm:text-right dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
+                                <div className="truncate font-medium text-gray-700 dark:text-slate-200" title={selectedAnnouncement.status === 'scheduled'
+                                    ? `Scheduled: ${selectedAnnouncement.publish_date_label}`
+                                    : selectedAnnouncement.publish_date_label
+                                        ? `Published: ${selectedAnnouncement.publish_date_label}`
+                                        : `Created: ${selectedAnnouncement.created_at}`}>
                                     {selectedAnnouncement.status === 'scheduled'
                                         ? `Scheduled: ${selectedAnnouncement.publish_date_label}`
                                         : selectedAnnouncement.publish_date_label
@@ -655,14 +659,14 @@ export default function PrincipalAnnouncements({
                                 </div>
                                 <div className="mt-1 text-xs">Views: {selectedAnnouncement.view_count}</div>
                                 {selectedAnnouncement.expiration_date && (
-                                    <div className="mt-1 text-xs">Expires: {selectedAnnouncement.expiration_date_label}</div>
+                                    <div className="mt-1 truncate text-xs" title={`Expires: ${selectedAnnouncement.expiration_date_label}`}>Expires: {selectedAnnouncement.expiration_date_label}</div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
+                        <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
                             <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">Message</div>
-                            <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700 dark:text-slate-200" title={selectedAnnouncement.content || ''}>
+                            <div className="mt-2 line-clamp-6 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700 dark:text-slate-200" title={selectedAnnouncement.content || ''}>
                                 {selectedAnnouncement.content}
                             </div>
                         </div>

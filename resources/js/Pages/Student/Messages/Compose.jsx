@@ -25,6 +25,11 @@ const CATEGORY_OPTIONS = [
     { value: 'general_academic_concern', label: 'Concern', icon: ChatBubbleLeftRightIcon },
 ];
 
+const formatTeacherOptionLabel = (name, maxLength = 48) => {
+    const label = String(name || '');
+    return label.length > maxLength ? `${label.slice(0, maxLength).trimEnd()}…` : label;
+};
+
 export default function MessagesCompose({ teachers }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -60,7 +65,7 @@ export default function MessagesCompose({ teachers }) {
 
     const teacherOptions = [
         { value: '', label: 'Select Teacher' },
-        ...teachers.map((teacher) => ({ value: teacher.id, label: teacher.name })),
+        ...teachers.map((teacher) => ({ value: teacher.id, label: formatTeacherOptionLabel(teacher.name) })),
     ];
 
     const keepFocusedFieldVisible = (event) => {
@@ -75,11 +80,11 @@ export default function MessagesCompose({ teachers }) {
                     <Link href={route('student.messages.index')} onError={() => toast.error('Unable to return to messages. Please try again.')} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-blue-300 dark:hover:bg-slate-800 xl:hidden">
                         <ArrowLeftIcon className="h-4 w-4" /> Back to Messages
                     </Link>
-                    <div className="hidden w-full items-center justify-between gap-4 xl:flex">
-                        <span className="text-xl font-semibold leading-tight text-gray-800">Ask Teacher</span>
+                    <div className="hidden w-full min-w-0 items-center gap-3 xl:flex">
                         <Link href={route('student.messages.index')} onError={() => toast.error('Unable to return to messages. Please try again.')} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-slate-800">
                             <ArrowLeftIcon className="h-4 w-4" /> Back to Messages
                         </Link>
+                        <span className="min-w-0 truncate text-xl font-semibold leading-tight text-gray-800">Ask Teacher</span>
                     </div>
                 </div>
             }

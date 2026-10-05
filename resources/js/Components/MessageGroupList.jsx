@@ -84,8 +84,8 @@ export default function MessageGroupList({ groups = [], pagination, routeName, c
                                         <ChatBubbleLeftRightIcon className="h-5 w-5" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="message-group-card-title break-words font-semibold text-slate-800">{group.name}</h3>
-                                        <p className="message-group-card-copy break-words text-xs text-slate-500">
+                                        <h3 className="message-group-card-title truncate font-semibold text-slate-800" title={group.name || ''}>{group.name}</h3>
+                                        <p className="message-group-card-copy truncate text-xs text-slate-500" title={`${group.members_count} members${group.subject ? ` · ${group.subject.name}` : ''}`}>
                                             {group.members_count} members{group.subject ? ` · ${group.subject.name}` : ''}
                                         </p>
                                     </div>
@@ -93,7 +93,7 @@ export default function MessageGroupList({ groups = [], pagination, routeName, c
                                 {group.is_archived && <LockClosedIcon className="h-4 w-4 flex-shrink-0 text-amber-500" title="Archived" />}
                             </div>
                             {group.last_message && (
-                                <p className="message-group-card-copy mt-3 line-clamp-2 break-words text-sm text-slate-500">{group.last_message}</p>
+                                <p className="message-group-card-copy mt-3 line-clamp-2 break-words text-sm text-slate-500" title={group.last_message}>{group.last_message}</p>
                             )}
                             {group.is_archived && <p className="mt-2 text-xs font-medium text-amber-700">Archived</p>}
                             </Link>
@@ -126,6 +126,7 @@ export default function MessageGroupList({ groups = [], pagination, routeName, c
                 message={confirmation?.action === 'archive'
                     ? `Archive “${confirmation?.group?.name || 'this group'}”? Members will keep the history, but new messages will be disabled.`
                     : `Permanently delete “${confirmation?.group?.name || 'this group'}” and all its messages? This action cannot be undone.`}
+                messageClassName="line-clamp-3 break-words"
                 confirmText={confirmation?.action === 'archive' ? 'Archive' : 'Delete permanently'}
                 cancelText="Cancel"
                 danger={confirmation?.action === 'delete'}
