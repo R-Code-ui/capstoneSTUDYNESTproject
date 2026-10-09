@@ -48,7 +48,7 @@ class AssignmentGradingController extends Controller
                 'submitted_at'     => $submission && $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : null,
                 'graded_at'        => $submission && $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i') : null,
             ];
-        });
+        })->sortByDesc(fn ($student) => in_array($student['status'], ['submitted', 'late_submission', 'graded', 'reviewed']))->values();
 
         $perPage = 10;
         $lastPage = max(1, (int) ceil($allStudents->count() / $perPage));

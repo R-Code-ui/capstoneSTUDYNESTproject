@@ -25,7 +25,6 @@ import {
     EnvelopeIcon,
     PlusCircleIcon,
     InboxIcon,
-    ClockIcon,
     ExclamationTriangleIcon,
     MegaphoneIcon,
     BuildingOfficeIcon,
@@ -423,46 +422,26 @@ export default function TeacherDashboard({
                         </Card>
                     </div>
 
-                    {/* ===== Section 4: Upcoming Deadlines & Recent Activity ===== */}
+                    {/* ===== Section 4: Recent Student Activity ===== */}
                     <div className="mt-6 grid min-w-0 gap-6 md:grid-cols-2">
-                        <Card title="Upcoming Deadlines" className="teacher-dashboard-card min-w-0 overflow-hidden" headerClassName="bg-gradient-to-r from-amber-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
-                            {upcoming_deadlines.length === 0 ? (
-                                <p className="text-sm text-gray-500">No upcoming deadlines.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {upcoming_deadlines.map((deadline) => (
-                                        <div
-                                            key={deadline.id}
-                                            className="teacher-dashboard-item flex min-w-0 max-w-full flex-col gap-2 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
-                                        >
-                                            <div className="flex min-w-0 flex-1 items-center gap-3">
-                                                <ClockIcon className="w-5 h-5 text-amber-500" />
-                                                <div className="min-w-0">
-                                                    <div className="teacher-dashboard-clamp font-medium text-gray-800" title={deadline.title}>
-                                                        {deadline.title}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        Due: {deadline.due_date}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <span className="self-start whitespace-nowrap rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-400/15 dark:text-amber-300 sm:self-auto">
-                                                {deadline.days_left === 0
-                                                    ? 'Today'
-                                                    : `${deadline.days_left} day${deadline.days_left > 1 ? 's' : ''} left`}
-                                            </span>
-                                        </div>
-                                    ))}
+                        <Card
+                            className="teacher-dashboard-card min-w-0 overflow-hidden"
+                            headerClassName="bg-gradient-to-r from-violet-50 to-white dark:from-slate-900 dark:to-slate-900"
+                            bodyClassName="p-4 sm:p-6"
+                            header={
+                                <div className="flex items-center justify-between gap-3">
+                                    <h3 className="text-lg font-semibold text-gray-800">Recent Student Activity</h3>
+                                    <Link href={route('teacher.activity-logs.index')} onError={handleNavigationError} className="flex shrink-0 items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+                                        View All →
+                                    </Link>
                                 </div>
-                            )}
-                        </Card>
-
-                        <Card title="Recent Student Activity" className="teacher-dashboard-card min-w-0 overflow-hidden" headerClassName="bg-gradient-to-r from-violet-50 to-white dark:from-slate-900 dark:to-slate-900" bodyClassName="p-4 sm:p-6">
+                            }
+                        >
                             {recent_activity.length === 0 ? (
                                 <p className="text-sm text-gray-500">No recent activity from your assigned students.</p>
                             ) : (
                                 <div className="space-y-3">
-                                    {recent_activity.map((activity, index) => (
+                                    {recent_activity.slice(0, 3).map((activity, index) => (
                                         <div
                                             key={index}
                                             className="teacher-dashboard-item flex min-w-0 max-w-full flex-col gap-2 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
@@ -489,18 +468,25 @@ export default function TeacherDashboard({
                                 </div>
                             )}
                         </Card>
-                    </div>
 
                     {/* ===== Section 5: Recent Announcements ===== */}
-                    <div className="mt-6">
                         <Card
                             className="teacher-dashboard-card min-w-0 overflow-hidden"
                             headerClassName="bg-gradient-to-r from-blue-50 to-white dark:from-slate-900 dark:to-slate-900"
                             bodyClassName="p-4 sm:p-6"
-                            title={
-                                <div className="flex items-center gap-2">
-                                    <MegaphoneIcon className="w-5 h-5 text-blue-500" />
-                                    Recent Announcements
+                            header={
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <MegaphoneIcon className="w-5 h-5 text-blue-500" />
+                                        <h3 className="text-lg font-semibold text-gray-800">Recent Announcements</h3>
+                                    </div>
+                                    <Link
+                                        href={route('teacher.announcements.index')}
+                                        onError={handleNavigationError}
+                                        className="flex shrink-0 items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                                    >
+                                        View All →
+                                    </Link>
                                 </div>
                             }
                         >
@@ -532,15 +518,6 @@ export default function TeacherDashboard({
                                             </div>
                                         </div>
                                     ))}
-                                    <div className="text-center pt-2">
-                                        <Link
-                                            href={route('teacher.announcements.index')}
-                                            onError={handleNavigationError}
-                                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                                        >
-                                            View All Announcements →
-                                        </Link>
-                                    </div>
                                 </div>
                             ) : (
                                 <p className="text-center text-gray-500 py-4">
@@ -567,7 +544,7 @@ export default function TeacherDashboard({
 
                                 {/* List of recent messages */}
                                 {messages.recent && messages.recent.length > 0 ? (
-                                    messages.recent.map((msg, idx) => (
+                                    messages.recent.slice(0, 3).map((msg, idx) => (
                                         <div
                                             key={idx}
                                             className={`teacher-dashboard-item min-w-0 rounded-xl border p-3 ${

@@ -37,7 +37,7 @@ export default function ConversationListItem({ conversation, onClick }) {
             {/* Main content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                    <span className={`truncate ${isUnread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`} title={conversation.name || ''}>
+                    <span className={`min-w-0 flex-1 truncate ${isUnread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`} title={conversation.name || ''}>
                         {conversation.name}
                     </span>
                     <span className="max-w-[7rem] truncate text-xs text-gray-400 flex-shrink-0" title={conversation.last_message_time || ''}>

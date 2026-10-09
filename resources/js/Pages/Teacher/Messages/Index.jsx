@@ -138,7 +138,7 @@ export default function MessagesIndex({ conversations, unread_count, filters, pa
                                 <div className="divide-y divide-gray-100">
                                     {conversations.map((conv) => (
                                         <div key={conv.student_id} className="flex items-center">
-                                            <div className="flex-1">
+                                            <div className="min-w-0 flex-1">
                                                 <ConversationListItem
                                                     conversation={conv}
                                                     onClick={() =>

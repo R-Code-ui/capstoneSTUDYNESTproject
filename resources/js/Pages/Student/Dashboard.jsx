@@ -373,7 +373,7 @@ export default function StudentDashboard({
                         >
                             {recent_announcements && recent_announcements.length > 0 ? (
                                 <div className="space-y-3">
-                                    {recent_announcements.map((announcement) => (
+                                    {recent_announcements.slice(0, 3).map((announcement) => (
                                         <div
                                             key={announcement.id}
                                             className="student-dashboard-item p-3.5 text-rose-500 bg-rose-50/50 rounded-xl border border-rose-100 hover:bg-rose-50"
@@ -431,7 +431,7 @@ export default function StudentDashboard({
                             >
                                 {recent_lessons && recent_lessons.length > 0 ? (
                                     <div className="space-y-3">
-                                        {recent_lessons.map((lesson) => (
+                                        {recent_lessons.slice(0, 3).map((lesson) => (
                                             <div
                                                 key={lesson.id}
                                                 className="student-dashboard-item p-3.5 text-blue-500 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50"
@@ -491,7 +491,7 @@ export default function StudentDashboard({
                             >
                                 {upcoming_assignments && upcoming_assignments.length > 0 ? (
                                     <div className="space-y-3">
-                                        {upcoming_assignments.map((assignment) => (
+                                        {upcoming_assignments.slice(0, 3).map((assignment) => (
                                             <div
                                                 key={assignment.id}
                                                 className="student-dashboard-item p-3.5 text-emerald-500 bg-emerald-50/50 rounded-xl border border-emerald-100 hover:bg-emerald-50"
@@ -559,7 +559,7 @@ export default function StudentDashboard({
                             >
                                 {available_quizzes && available_quizzes.length > 0 ? (
                                     <div className="space-y-3">
-                                        {available_quizzes.map((quiz) => (
+                                        {available_quizzes.slice(0, 3).map((quiz) => (
                                             <div
                                                 key={quiz.id}
                                                 className="student-dashboard-item p-3.5 text-purple-500 bg-purple-50/50 rounded-xl border border-purple-100 hover:bg-purple-50"
@@ -631,7 +631,7 @@ export default function StudentDashboard({
                             >
                                 {assigned_games && assigned_games.length > 0 ? (
                                     <div className="space-y-3">
-                                        {assigned_games.map((game) => (
+                                        {assigned_games.slice(0, 3).map((game) => (
                                             <div
                                                 key={game.id}
                                                 className="student-dashboard-item p-3.5 text-amber-500 bg-amber-50/50 rounded-xl border border-amber-100 hover:bg-amber-50"

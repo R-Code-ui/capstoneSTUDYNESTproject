@@ -255,7 +255,7 @@ export default function PrincipalDashboard({
                                                 </td>
                                             </tr>
                                         ) : (
-                                            teacher_activity.slice(0, 5).map((teacher, index) => (
+                                            teacher_activity.slice(0, 3).map((teacher, index) => (
                                                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
                                                     <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                         <span className="block max-w-[180px] truncate" title={teacher.name || ''}>{teacher.name || '—'}</span>
@@ -277,7 +277,7 @@ export default function PrincipalDashboard({
                                 </div>
                             {teacher_activity.length > 0 && (
                                 <div className="space-y-3 sm:hidden">
-                                    {teacher_activity.slice(0, 5).map((teacher) => (
+                                    {teacher_activity.slice(0, 3).map((teacher) => (
                                         <div key={teacher.id} className="principal-dashboard-item rounded-xl border border-gray-200 bg-gray-50 p-3.5 dark:border-gray-700 dark:bg-slate-800">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">
@@ -298,34 +298,9 @@ export default function PrincipalDashboard({
                         </div>
                     </div>
 
-                    {/* ===== Section 3: Student Participation & Summary ===== */}
+                    {/* ===== Section 3: Academic Summary & Announcements ===== */}
                     <div className="grid gap-6 lg:grid-cols-2">
-                        {/* Student Participation */}
-                        <div className="principal-dashboard-card overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                            <div className="px-6 py-4 border-b border-gray-200">
-                                <h3 className="text-sm font-semibold text-gray-700">Student Participation</h3>
-                            </div>
-                            <div className="space-y-4 p-4 sm:p-6">
-                                {student_participation.map((grade) => (
-                                    <div key={grade.grade_level} className="space-y-1">
-                                        <div className="flex items-start justify-between gap-3 text-sm">
-                                            <span className="min-w-0 truncate font-medium text-gray-700" title={grade.grade_level || ''}>{grade.grade_level}</span>
-                                            <span className="shrink-0 text-gray-500">{grade.active_students} / {grade.total_students} ({grade.participation_rate}%)</span>
-                                        </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-2">
-                                            <div
-                                                className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-                                                style={{ width: `${grade.participation_rate}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Right Column */}
-                        <div className="space-y-6">
-                            {/* Academic Summary */}
+                        {/* Academic Summary */}
                             <div className="principal-dashboard-card overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                                 <div className="px-6 py-4 border-b border-gray-200">
                                     <h3 className="text-sm font-semibold text-gray-700">Academic Summary</h3>
@@ -346,7 +321,7 @@ export default function PrincipalDashboard({
                                 </div>
                             </div>
 
-                            {/* Recent Announcements */}
+                        {/* Recent Announcements */}
                             <div className="principal-dashboard-card overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                                 <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-gray-700">Recent Announcements</h3>
@@ -358,7 +333,7 @@ export default function PrincipalDashboard({
                                     {recent_announcements.length === 0 ? (
                                         <p className="text-sm text-gray-500">No recent announcements.</p>
                                     ) : (
-                                        recent_announcements.map((announcement, index) => (
+                                        recent_announcements.slice(0, 3).map((announcement, index) => (
                                                 <div key={index} className="principal-dashboard-item rounded-xl border border-gray-100 bg-gray-50 p-3 last:pb-3 dark:border-gray-700 dark:bg-slate-800">
                                                 <div className="block max-w-[260px] truncate text-sm font-medium text-gray-800" title={announcement.title || ''}>{announcement.title || '—'}</div>
                                                 <div className="mt-1 flex flex-col gap-1 text-xs text-gray-500 sm:flex-row sm:justify-between">
@@ -370,19 +345,21 @@ export default function PrincipalDashboard({
                                     )}
                                 </div>
                             </div>
-                        </div>
                     </div>
 
                     {/* ===== Section 4: Recent Activities ===== */}
                     <div className="principal-dashboard-card overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                        <div className="px-6 py-4 border-b border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                             <h3 className="text-sm font-semibold text-gray-700">Recent Teacher Activities</h3>
+                            <Link href={route('principal.logs.index')} onError={handleNavigationError} className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                                View All <ArrowRightIcon className="w-3 h-3" />
+                            </Link>
                         </div>
                         <div className="space-y-2 p-4 sm:p-6">
                             {recent_activities.length === 0 ? (
                                 <p className="text-sm text-gray-500">No recent activities.</p>
                             ) : (
-                                recent_activities.map((activity, index) => (
+                                recent_activities.slice(0, 5).map((activity, index) => (
                                     <div key={index} className="principal-dashboard-item flex flex-col gap-1 rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-slate-800 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="min-w-0 truncate text-gray-600" title={`${activity.teacher || ''} ${activity.action || ''}`}>
                                             <span className="font-medium text-gray-800">{activity.teacher || '—'}</span>

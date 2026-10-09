@@ -76,8 +76,7 @@ export default function Status({ status = 500 }) {
                     <h1 id="error-status-title" className="error-status-title">{title}</h1>
                     <p className="error-status-message">{message}</p>
                     <div className="error-status-actions">
-                        <button type="button" className="error-status-button" onClick={goBack}>← Go back</button>
-                        <button type="button" className="error-status-button secondary" onClick={() => window.location.assign(safeUrl)}>{auth?.user ? 'Dashboard' : 'Sign in'}</button>
+                        <button type="button" className="error-status-button" onClick={() => window.location.assign(safeUrl)}>{auth?.user ? 'Dashboard' : 'Sign in'}</button>
                     </div>
                 </section>
             </main>

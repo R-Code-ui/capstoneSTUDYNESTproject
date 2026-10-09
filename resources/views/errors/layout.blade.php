@@ -57,8 +57,7 @@
             <h1 id="error-title">{{ $title }}</h1>
             <p class="message">{{ $message }}</p>
             <div class="actions">
-                <button type="button" class="button" onclick="goBack()">&larr; Go back</button>
-                <button type="button" id="safe-destination-button" class="button secondary" onclick="goToSafeDestination()">Dashboard</button>
+                <button type="button" id="safe-destination-button" class="button" onclick="goToSafeDestination()">Dashboard</button>
             </div>
         </section>
     </main>
